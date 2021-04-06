@@ -1,0 +1,49 @@
+{
+    "model": "cnn",
+    "device": "stm32f415",
+    "algorithm": "tinyaes",
+    "version": "10",
+    "attack_points": [
+        "sub_bytes_out",
+        "sub_bytes_in",
+        "key"
+    ],
+    "attack_bytes": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15"
+    ],
+    "max_trace_len": 20000,
+    "num_shards": 256,
+    "num_traces_per_shard": 256,
+    "batch_size": 32,
+    "epochs": 30,
+    "optimizer_parameters": {
+        "lr": 0.001,
+        "multi_gpu_lr": 0.001
+    },
+    "model_parameters": {
+        "activation": "relu",
+        "initial_filters": 8,
+        "initial_pool_size": 4,
+        "block_kernel_size": 3,
+        "blocks_stack1": 3,
+        "blocks_stack2": 4,
+        "blocks_stack3": 4,
+        "blocks_stack4": 3,
+        "dense_dropout": 0.1
+    }
+}

@@ -1,0 +1,21 @@
+Package            License        Category            Homepage
+-----------------  -------------  ------------------  -------------------------------------------
+tensorflow>=2.2.0  Apache 2.0     notice              https://www.tensorflow.org/
+lief               Apache 2.0     notice              https://github.com/lief-project/LIEF
+treelib            Apache 2.0     notice              https://github.com/caesar0301/treelib
+colorama           BSD            notice              https://github.com/tartley/colorama
+pandas             BSD            notice              http://pandas.pydata.org
+numpy              BSD            notice              https://www.numpy.org
+chipwhisperer      BSD            notice              https://www.chipwhisperer.com
+capstone           BSD            notice              http://www.capstone-engine.org
+intelhex           BSD            notice              https://github.com/python-intelhex/intelhex
+vispy              BSD            notice              http://vispy.org
+pygments           BSD            notice              https://pygments.org/
+Pillow             HPND           notice              https://python-pillow.org
+termcolor          MIT            notice              http://pypi.python.org/pypi/termcolor
+tabulate           MIT            notice              https://github.com/astanin/python-tabulate
+pycm               MIT            notice              https://github.com/sepandhaghighi/pycm
+future-fstrings    MIT            notice              https://github.com/asottile/future-fstrings
+tqdm               MPLv2.0, MIT   reciprocal, notice  https://github.com/tqdm/tqdm
+matplotlib         PSF            notice              https://matplotlib.org
+pyelftools         Public domain  unencumbered        https://github.com/eliben/pyelftools

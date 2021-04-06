@@ -1,0 +1,146 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"Utils common to various SCAAML components"
+from tqdm.auto import tqdm
+import tensorflow as tf
+import numpy as np
+import chipwhisperer as cw
+from glob import glob
+from multiprocessing import Pool
+import time
+from random import randint
+from termcolor import cprint, colored
+
+
+def pretty_hex(val):
+    "convert a value into a pretty hex"
+    s = hex(int(val))
+    s = s[2:]  # remove 0x
+    if len(s) == 1:
+        s = '0' + s
+    return s.upper()
+
+
+def bytelist_to_hex(lst):
+    h = []
+
+    for e in lst:
+        h.append(pretty_hex(e))
+    return " ".join(h)
+
+
+def hex_display(lst, prefix="", color='green'):
+    "display a list of int as colored hex"
+    h = []
+    if len(prefix):
+        prefix += '\t'
+    for e in lst:
+        h.append(pretty_hex(e))
+    cprint(prefix + " ".join(h), color)
+
+
+def get_model_stub(attack_point, attack_byte, config):
+    return '%s-%s-%s-v%s-ap_%s-byte_%s-len_%s' % (
+        config['device'], config['algorithm'], config['model'],
+        config['version'], attack_point, attack_byte, config['max_trace_len'])
+
+
+def get_target_stub(config):
+    return '%s-%s' % (config['device'], config['algorithm'])
+
+
+def get_num_gpu():
+    return len(tf.config.list_physical_devices('GPU'))
+
+
+def tf_cap_memory():
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+
+    if gpus:
+        for gpu in gpus:
+            try:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            except RuntimeError as e:
+                # Memory growth must be set before GPUs have been initialized
+                print(e)
+
+
+def convert_shard_to_cw(info):
+    # avoid trashing the HD by desync multi process
+    time.sleep(randint(0, 100) / 1000)
+    cw_traces = []
+    shard = np.load(info['fname'])
+    # CW traces
+    cts = np.transpose(shard['cts'])
+    pts = np.transpose(shard['pts'])
+    keys = np.transpose(shard['keys'])
+
+    for idx in range(info['num_traces_by_shard']):
+        wave = np.squeeze(shard['traces'][idx])
+        wave = wave[:info['trace_len']]
+
+        t = cw.Trace(wave, pts[idx], cts[idx], keys[idx])
+        cw_traces.append(t)
+    return cw_traces
+
+
+def convert_to_chipwispher_format(filepattern, num_shards, num_traces_by_shard,
+                                  trace_len):
+
+    filemames = glob(filepattern)[:num_shards]
+    num_traces = len(filemames) * num_traces_by_shard
+
+    # creating info for multiprocessing
+    chunks = []
+    for fname in filemames:
+        chunks.append({
+            'fname': fname,
+            'num_traces_by_shard': num_traces_by_shard,
+            'trace_len': trace_len
+        })
+
+    p = Pool()
+    cw_traces = []
+    pb = tqdm(total=num_traces, desc='Converting', unit='traces')
+    for traces in p.imap_unordered(convert_shard_to_cw, chunks):
+        cw_traces.extend(traces)
+        pb.update(num_traces_by_shard)
+
+    pb.close()
+    return cw_traces
+
+
+def display_config(config_name, config):
+    """Pretty print a config object in termimal
+
+    Args:
+        config_name (str): name of the config
+        config (dict): config to display
+    """
+    cprint("[%s]" % config_name, "magenta")
+    cnt = 1
+    for k, v in config.items():
+        if cnt % 2:
+            color = 'cyan'
+        else:
+            color = 'yellow'
+        cprint("%s:%s" % (k, v), color)
+        cnt += 1
+
+
+def from_categorical(predictions):
+    "reverse of categorical"
+    # note: doing it as a list is significanlty fast than a single argmax
+    return [np.argmax(p) for p in predictions]
