@@ -19,14 +19,14 @@ class Dataset():
     def __init__(
         self,
         root_path: str,
+        shortname: str,
         architecture: str,
         implementation: str,
         algorithm: str,
         version: int,
-        chip_id: int,
         firmware_sha256: str,
-        purpose: str,
-        comment: str,
+        description: str,
+        url: str,
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
@@ -39,29 +39,26 @@ class Dataset():
         max_values: Dict[str, int] = {},
     ) -> None:
         self.root_path = root_path
+        self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation
         self.algorithm = algorithm
         self.version = version
         self.compression = compression
-        self.chip_id = chip_id
         self.firmware_sha256 = firmware_sha256
-        self.purpose = purpose
-        self.comment = comment
+        self.description = description
+        self.url = url
 
         self.capture_info = capture_info
         self.measurements_info = measurements_info
         self.attack_points_info = attack_points_info
-
-        if purpose not in ['train', 'holdout']:
-            raise ValueError("Invalid purpose", purpose)
 
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
 
         # create directory -- check if its empty
         self.slug = "%s_%s_%s_v%s_%s" % (algorithm, architecture,
-                                         implementation, version, purpose)
+                                         implementation, version, description)
         self.path = Path(self.root_path) / self.slug
         if self.path.exists():
             cprint("[Warning] Path exist, some files might be over-written",
@@ -100,7 +97,7 @@ class Dataset():
         # write config
         self._write_config()
 
-    def new_shard(self, key: list, part: int, split: str):
+    def new_shard(self, key: list, part: int, split: str, chip_id:int):
         """Initiate a new key
 
         Args:
@@ -125,6 +122,7 @@ class Dataset():
         self.shard_split = split
         self.shard_part = part
         self.shard_key = bytelist_to_hex(key, spacer='')
+        self.chip_id = chip_id
 
         # shard name
         fname = "%s_%s.tfrec" % (self.shard_key, self.shard_part)
@@ -164,7 +162,8 @@ class Dataset():
             "path": str(self.shard_relative_path),
             "examples": stats['examples'],
             "sha256": sha256sum(self.shard_path),
-            "key": self.shard_key
+            "key": self.shard_key,
+            "chip_id": self.chip_id
         })
 
         # update config
@@ -318,12 +317,14 @@ class Dataset():
     @staticmethod
     def summary(dataset_path):
         """Print a summary of the dataset"""
-        lst = [
-            'architecture', 'implementation', 'algorithm', 'version',
-            'chip_id', 'comment', 'purpose', 'compression'
+        lst = ['shortname',
+               'description', 'url',
+               'architecture', 'implementation',
+               'algorithm', 'version', 'compression'
         ]
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
+        print(config)
         cprint("[Dataset Summary]", 'cyan')
         cprint("Info", 'yellow')
         print(tabulate([[k, config[k]] for k in lst]))
@@ -398,14 +399,14 @@ class Dataset():
 
     def _write_config(self):
         config = {
+            "shortname": self.shortname,
             "architecture": self.architecture,
             "implementation": self.implementation,
             "algorithm": self.algorithm,
             "version": self.version,
-            "chip_id": self.chip_id,
             "firmware_sha256": self.firmware_sha256,
-            "comment": self.comment,
-            "purpose": self.purpose,
+            "url": self.url,
+            "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
             "keys_per_split": self.keys_per_split,
@@ -429,13 +430,13 @@ class Dataset():
         config = json.loads(open(fpath).read())
         return Dataset(
             root_path=str(dpath),
+            shortname=config['shortname'],
             architecture=config['architecture'],
             implementation=config['implementation'],
             algorithm=config['algorithm'],
             version=config['version'],
-            comment=config['comment'],
-            purpose=config['purpose'],
-            chip_id=config['chip_id'],
+            url=config['url'],
+            description=config['description'],
             firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
             attack_points_info=config['attack_points_info'],
