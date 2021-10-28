@@ -19,6 +19,8 @@ __pycache__/
 *.prof
 # C extensions
 *.so
+tmp/
+algo_arch_implem_v1_train/
 
 # Distribution / packaging
 .Python

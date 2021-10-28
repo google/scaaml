@@ -33,12 +33,12 @@ def pretty_hex(val):
     return s.upper()
 
 
-def bytelist_to_hex(lst):
+def bytelist_to_hex(lst, spacer=' '):
     h = []
 
     for e in lst:
         h.append(pretty_hex(e))
-    return " ".join(h)
+    return spacer.join(h)
 
 
 def hex_display(lst, prefix="", color='green'):
