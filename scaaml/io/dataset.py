@@ -24,6 +24,7 @@ class Dataset():
         algorithm: str,
         version: int,
         chip_id: int,
+        firmware_sha256: str,
         purpose: str,
         comment: str,
         examples_per_shard: int,
@@ -44,6 +45,7 @@ class Dataset():
         self.version = version
         self.compression = compression
         self.chip_id = chip_id
+        self.firmware_sha256 = firmware_sha256
         self.purpose = purpose
         self.comment = comment
 
@@ -53,6 +55,9 @@ class Dataset():
 
         if purpose not in ['train', 'holdout']:
             raise ValueError("Invalid purpose", purpose)
+
+        if not self.firmware_sha256:
+            raise ValueError("Firmware hash is required")
 
         # create directory -- check if its empty
         self.slug = "%s_%s_%s_v%s_%s" % (algorithm, architecture,
@@ -186,7 +191,7 @@ class Dataset():
 
         trace_seq_len = traces_max_len // trace_block_size
         if traces_max_len % trace_block_size:
-            raise ValueError("trace_max_len must be a multiple of trace_block_size")
+            raise ValueError("trace_max_len must be a multiple of len(traces)")
 
         # boxing
         if isinstance(traces, str):
@@ -348,9 +353,9 @@ class Dataset():
         """Display the content of a given shard"""
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
-        spath = str(Path(fpath) / config['shards_list'][split][shard_id]['path'])
+        spath = Path(fpath) / config['shards_list'][split][shard_id]['path']
         cprint("Reading shard %s" % spath, 'cyan')
-        s = Shard(spath,
+        s = Shard(str(spath),
                   attack_points_info=config['attack_points_info'],
                   measurements_info=config['measurements_info'],
                   compression=config['compression'])
@@ -398,6 +403,7 @@ class Dataset():
             "algorithm": self.algorithm,
             "version": self.version,
             "chip_id": self.chip_id,
+            "firmware_sha256": self.firmware_sha256,
             "comment": self.comment,
             "purpose": self.purpose,
             "compression": self.compression,
@@ -430,6 +436,7 @@ class Dataset():
             comment=config['comment'],
             purpose=config['purpose'],
             chip_id=config['chip_id'],
+            firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
             attack_points_info=config['attack_points_info'],
             capture_info=config['capture_info'],

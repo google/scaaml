@@ -34,7 +34,7 @@ def test_basic_workflow(tmp_path):
     comment = "this is a test"
     purpose = "train"
     example_per_shard = 1
-
+    fw_sha256 = "A2424512D"
     key = np.random.randint(0, 255, 16)
     key2 = np.random.randint(0, 255, 16)
     trace1 = np.random.rand(1024)
@@ -47,6 +47,7 @@ def test_basic_workflow(tmp_path):
                  purpose=purpose,
                  comment=comment,
                  chip_id=chip_id,
+                 firmware_sha256=fw_sha256,
                  examples_per_shard=example_per_shard,
                  measurements_info=minfo,
                  attack_points_info=apinfo)
@@ -65,4 +66,5 @@ def test_basic_workflow(tmp_path):
     slug = ds.slug
     # reload
     ds2 = Dataset.from_config(root_path / slug)
-    ds2.inspect('train', 0, 1)
+    ds2.inspect(root_path / slug, 'train', 0, 1)
+    ds2.summary(root_path / slug)
