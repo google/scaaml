@@ -40,6 +40,8 @@ setup(
     "tensorflow>=2.2.0",
     "future-fstrings",
     "pygments",
+    "chipwhisperer",
+    "scipy"
   ],
   package_data={"": ["*.pickle"]},
   classifiers=[

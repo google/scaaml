@@ -68,13 +68,13 @@ def create_dataset(filepattern,
     cprint('|-x:%s' % str(x.shape), 'green')
 
     # make it a tf dataset
-    cprint("building tf dataset", 'magenta')
-    dataset = tf.data.Dataset.from_tensor_slices((x, y))
-    dataset.cache()
-    if is_training:
-        dataset = dataset.shuffle(shuffle_size, reshuffle_each_iteration=True)
-    dataset = dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
-    return dataset
+    # cprint("building tf dataset", 'magenta')
+    # dataset = tf.data.Dataset.from_tensor_slices((x, y))
+    # dataset.cache()
+    # if is_training:
+    #     dataset = dataset.shuffle(shuffle_size, reshuffle_each_iteration=True)
+    # dataset = dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+    return (x, y)
 
 
 def list_shards(filepattern, num_shards):

@@ -47,7 +47,7 @@ In order to run the notebooks/train models you need to download the following da
 
 | Filename                                                                               | What it is                                                | Download size | Expected Location | SHAS256                                                          |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------- | :-----------: | ----------------- | ---------------------------------------------------------------- |
-| [datasets.zip](https://storage.googleapis.com/scaaml-public/scaaml_intro/datasets.zip) | TinyAES train & test datasets                             |      7GB      | `datasets/`       | 4bf2c6defb79b40b30f01f488e83762396b56daad14a694f64916be2b665b2f8 |
+| [datasets.zip](https://storage.googleapis.com/scaaml-public/scaaml_intro/datasets.zip) | TinyAES train & test datasets                             |     8.2GB     | `datasets/`       | 4bf2c6defb79b40b30f01f488e83762396b56daad14a694f64916be2b665b2f8 |
 | [models.zip](https://storage.googleapis.com/scaaml-public/scaaml_intro/models.zip)     | TinyAES 48 pretrained models - 3 attack points * 16 bytes |     312MB     | `models/`         | 17d7d32cca0ac0db157ae1f5696f6c64bba6d753a8f33802d0d9614bb07d3d9b |
 | [logs.zip](https://storage.googleapis.com/scaaml-public/scaaml_intro/logs.zip)         | Tensorboard training logs (optional)                      |     616MB     | `logs`            | 5b2f43f89990653d64820cca61f15fc6818ee674ae4cc2b4f235cfd9a48f3b28 |
 

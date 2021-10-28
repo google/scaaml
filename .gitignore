@@ -10,7 +10,7 @@ scald/datasets/
 scald/archive/
 scald/deprecated/
 scald/tmp/
-
+*.zip
 .vscode/
 # Byte-compiled / optimized / DLL files
 __pycache__/

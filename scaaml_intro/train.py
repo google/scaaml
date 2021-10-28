@@ -36,7 +36,7 @@ def train_model(config):
     for attack_byte in config['attack_bytes']:
         for attack_point in config['attack_points']:
 
-            g_train = create_dataset(
+            x_train, y_train = create_dataset(
                 TRAIN_GLOB,
                 batch_size=BATCH_SIZE,
                 attack_point=attack_point,
@@ -46,7 +46,7 @@ def train_model(config):
                 max_trace_length=config['max_trace_len'],
                 is_training=True)
 
-            g_test = create_dataset(
+            x_test, y_test = create_dataset(
                 TEST_GLOB,
                 batch_size=BATCH_SIZE,
                 attack_point=attack_point,
@@ -57,9 +57,7 @@ def train_model(config):
                 is_training=False)
 
             # infers shape
-            for data in g_test.take(1):
-                x, y = data
-            input_shape = x.shape[1:]
+            input_shape = x_train.shape[1:]
 
             # reset graph and load a new model
             K.clear_session()
@@ -85,8 +83,8 @@ def train_model(config):
                     TensorBoard(log_dir='logs/' + stub, update_freq='batch')
                 ]
 
-                model.fit(g_train,
-                          validation_data=g_test,
+                model.fit(x_train, y_train,
+                          validation_data=(x_test, y_test),
                           verbose=1,
                           epochs=config['epochs'],
                           callbacks=cb)
