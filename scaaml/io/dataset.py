@@ -153,8 +153,6 @@ class Dataset():
         # update stats
 
         self.examples_per_split[self.shard_split] += stats['examples']
-        print(self.shard_split)
-        print(self.keys_per_split)
         self.keys_per_split[self.shard_split] += 1
 
         # record in shardlist
@@ -324,10 +322,9 @@ class Dataset():
         ]
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
-        print(config)
         cprint("[Dataset Summary]", 'cyan')
         cprint("Info", 'yellow')
-        print(tabulate([[k, config[k]] for k in lst]))
+        print(tabulate([[k, config.get(k, '')] for k in lst]))
 
         cprint("\nAttack Points", 'yellow')
         d = [[k, v['len'], v['max_val']]
