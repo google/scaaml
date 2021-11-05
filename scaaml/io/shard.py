@@ -85,7 +85,6 @@ class Shard():
             if k not in self.measurements_info:
                 raise ValueError("Measurement", k, "not specified")
 
-
         feature = {}
         # attack points as integers
         for ap_name, info in self.attack_points_info.items():

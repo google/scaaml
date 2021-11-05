@@ -57,8 +57,8 @@ class Dataset():
             raise ValueError("Firmware hash is required")
 
         # create directory -- check if its empty
-        self.slug = "%s_%s_%s_v%s_%s" % (algorithm, architecture,
-                                         implementation, version, description)
+        self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
+                                         implementation, version)
         self.path = Path(self.root_path) / self.slug
         if self.path.exists():
             cprint("[Warning] Path exist, some files might be over-written",
@@ -97,7 +97,7 @@ class Dataset():
         # write config
         self._write_config()
 
-    def new_shard(self, key: list, part: int, split: str, chip_id:int):
+    def new_shard(self, key: list, part: int, split: str, chip_id: int):
         """Initiate a new key
 
         Args:
@@ -161,6 +161,7 @@ class Dataset():
             "examples": stats['examples'],
             "sha256": sha256sum(self.shard_path),
             "key": self.shard_key,
+            "part": self.shard_part,
             "chip_id": self.chip_id
         })
 
@@ -169,14 +170,20 @@ class Dataset():
         self.curr_shard = None
 
     @staticmethod
+    def download(url: str):
+        "Download dataset from a given url"
+        raise NotImplementedError("implement me using keras dl mechanism")
+
+    @staticmethod
     def as_tfdataset(dataset_path: str,
                      split: str,
-                     attack_points: Union[List, str],
-                     traces: Union[List, str],
+                     attack_points: Union[List[str], str],
+                     traces: Union[List[str], str],
                      bytes: Union[List, int],
-                     shards: int,
-                     traces_max_len: int = None,
-                     trace_block_size: int = 1,
+                     shards: int = None,
+                     parts: Union[List[int], int] = None,
+                     trace_len: int = None,
+                     step_size: int = 1,
                      batch_size: int = 32,
                      prefetch: int = 10,
                      file_parallelism: int = 1,
@@ -184,10 +191,17 @@ class Dataset():
                      shuffle: int = 1000
                      ) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
+
+        FIXME: restrict shards to specific part if they exists.
+
         """
 
-        trace_seq_len = traces_max_len // trace_block_size
-        if traces_max_len % trace_block_size:
+        if parts:
+            raise NotImplementedError("Implement part filtering")
+
+        # check that the traces can be reshaped as requested
+        reshaped_trace_len = trace_len // step_size
+        if trace_len % step_size:
             raise ValueError("trace_max_len must be a multiple of len(traces)")
 
         # boxing
@@ -225,7 +239,9 @@ class Dataset():
 
             inputs[name]['min'] = tf.constant(dataset.min_values[name])
             inputs[name]['max'] = tf.constant(dataset.max_values[name])
-            inputs[name]['delta'] = tf.constant(inputs[name]['max'] - inputs[name]['min'])
+            delta = tf.constant(inputs[name]['max'] - inputs[name]['min'])
+            inputs[name]['delta'] = delta
+            inputs[name]['shape'] = (reshaped_trace_len, step_size)
 
         # output construction
         outputs = {}  # model outputs
@@ -247,14 +263,14 @@ class Dataset():
                 trace = rec[name]
 
                 # truncate if needed
-                if traces_max_len:
-                    trace = trace[:traces_max_len]
+                if trace_len:
+                    trace = trace[:trace_len]
 
                 # rescale
                 trace = 2 * ((trace - data['min']) / (data['delta'])) - 1
 
                 # reshape
-                trace = tf.reshape(trace, (trace_seq_len, trace_block_size))
+                trace = tf.reshape(trace, (reshaped_trace_len, step_size))
 
                 # assign
                 x[name] = trace
@@ -318,8 +334,8 @@ class Dataset():
         lst = ['shortname',
                'description', 'url',
                'architecture', 'implementation',
-               'algorithm', 'version', 'compression'
-        ]
+               'algorithm', 'version', 'compression']
+
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
         cprint("[Dataset Summary]", 'cyan')
