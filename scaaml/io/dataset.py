@@ -116,8 +116,8 @@ class Dataset():
         if split not in ['train', 'test', 'holdout']:
             raise ValueError("Invalid split, must be: {train, test, holdout}")
 
-        if part < 1 or part > 10:
-            raise ValueError("Invalid part value -- muse be in [1, 10]")
+        if part < 0 or part > 10:
+            raise ValueError("Invalid part value -- muse be in [0, 10]")
 
         self.shard_split = split
         self.shard_part = part
