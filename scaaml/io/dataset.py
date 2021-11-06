@@ -75,8 +75,8 @@ class Dataset():
         cprint("Dataset path: %s" % self.path, 'green')
 
         # current shard tracking
-        self.curr_shard_key = None  # current shard_key
         self.shard_key = None
+        self.prev_shard_key = None  # track key change for counting
         self.shard_path = None
         self.shard_split = None
         self.shard_part = None
@@ -87,7 +87,6 @@ class Dataset():
         self.shards_list = shards_list or defaultdict(list)
 
         # keys counting
-        # keys_per_group[split][gid] = cnt
         self.keys_per_group = keys_per_group or defaultdict(lambda: defaultdict(int))  # noqa
         self.keys_per_split = keys_per_split or defaultdict(int)
 
@@ -174,9 +173,11 @@ class Dataset():
         for k, v in stats['max_values'].items():
             self.max_values[k] = max(self.max_values[k], v)
 
-        # update stats
-        self.keys_per_split[self.shard_split] += 1
-        self.keys_per_group[self.shard_split][self.shard_group] += 1
+        # update key stats only if key changed
+        if self.shard_key != self.prev_shard_key:
+            self.keys_per_split[self.shard_split] += 1
+            self.keys_per_group[self.shard_split][self.shard_group] += 1
+            self.prev_shard_key = self.shard_key
 
         self.examples_per_split[self.shard_split] += stats['examples']
         self.examples_per_group[self.shard_split][self.shard_group] += 1
