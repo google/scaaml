@@ -97,7 +97,8 @@ class Dataset():
         # write config
         self._write_config()
 
-    def new_shard(self, key: list, part: int, split: str, chip_id: int):
+    def new_shard(self, key: list, part: int, group: int, split: str,
+                  chip_id: int):
         """Initiate a new key
 
         Args:
@@ -107,7 +108,15 @@ class Dataset():
             shard represent. Capture are splitted into parts to easily
             allow to restrict the number of traces used per key.
 
+            group: logical group the shard belong to. For example,
+            on AES a group represent a collection of shard that have distinct
+            byte values. It allows to balance the diversity of keys when using
+            a subset of the dataset.
+
             split: the split the shard belongs to {train, test, holdout}
+
+            chip_id: indicate which chip was used for collecting the traces.
+
         """
         # finalize previous shard if need
         if self.curr_shard:
@@ -123,9 +132,11 @@ class Dataset():
         self.shard_part = part
         self.shard_key = bytelist_to_hex(key, spacer='')
         self.chip_id = chip_id
+        self.group = group
 
         # shard name
-        fname = "%s_%s.tfrec" % (self.shard_key, self.shard_part)
+        fname = "%s_%s_%s.tfrec" % (self.group, self.shard_key,
+                                    self.shard_part)
         fname = fname.lower()
         self.shard_relative_path = "%s/%s" % (split, fname)
         self.shard_path = str(self.path / self.shard_relative_path)
@@ -162,6 +173,7 @@ class Dataset():
             "examples": stats['examples'],
             "size": os.stat(self.shard_path).st_size,
             "sha256": sha256sum(self.shard_path).lower(),
+            "group": self.group,
             "key": self.shard_key,
             "part": self.shard_part,
             "chip_id": self.chip_id
