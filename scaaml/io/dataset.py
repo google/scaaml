@@ -126,6 +126,7 @@ class Dataset():
 
         # shard name
         fname = "%s_%s.tfrec" % (self.shard_key, self.shard_part)
+        fname = fname.lower()
         self.shard_relative_path = "%s/%s" % (split, fname)
         self.shard_path = str(self.path / self.shard_relative_path)
 
@@ -159,7 +160,8 @@ class Dataset():
         self.shards_list[self.shard_split].append({
             "path": str(self.shard_relative_path),
             "examples": stats['examples'],
-            "sha256": sha256sum(self.shard_path),
+            "size": os.stat(self.shard_path).st_size,
+            "sha256": sha256sum(self.shard_path).lower(),
             "key": self.shard_key,
             "part": self.shard_part,
             "chip_id": self.chip_id
