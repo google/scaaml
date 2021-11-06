@@ -32,7 +32,9 @@ class Dataset():
         attack_points_info: Dict,
         compression: str = "GZIP",
         shards_list: defaultdict = None,
+        keys_per_group: defaultdict = None,
         keys_per_split: defaultdict = None,
+        examples_per_group: defaultdict = None,
         examples_per_split: defaultdict = None,
         capture_info: dict = {},
         min_values: Dict[str, int] = {},
@@ -81,11 +83,21 @@ class Dataset():
         self.shard_relative_path = None  # for the shardlist
         self.curr_shard = None  # current_ shard object
 
-        # counters - must be passed as param to allow reload.
+        # [counters] - must be passed as param to allow reload.
         self.shards_list = shards_list or defaultdict(list)
+
+        # keys counting
+        # keys_per_group[split][gid] = cnt
+        self.keys_per_group = keys_per_group or defaultdict(lambda: defaultdict(int))  # noqa
         self.keys_per_split = keys_per_split or defaultdict(int)
+
+        # examples counting
+        # keys_per_group[split][gid] = cnt
+        self.examples_per_group = examples_per_group or defaultdict(lambda: defaultdict(int))  # noqa
         self.examples_per_split = examples_per_split or defaultdict(int)
         self.examples_per_shard = examples_per_shard
+
+        # traces extrem values
         self.min_values = min_values
         self.max_values = max_values
         for k in measurements_info.keys():
@@ -130,12 +142,12 @@ class Dataset():
 
         self.shard_split = split
         self.shard_part = part
+        self.shard_group = group
         self.shard_key = bytelist_to_hex(key, spacer='')
-        self.chip_id = chip_id
-        self.group = group
+        self.shard_chip_id = chip_id
 
         # shard name
-        fname = "%s_%s_%s.tfrec" % (self.group, self.shard_key,
+        fname = "%s_%s_%s.tfrec" % (self.shard_group, self.shard_key,
                                     self.shard_part)
         fname = fname.lower()
         self.shard_relative_path = "%s/%s" % (split, fname)
@@ -163,9 +175,11 @@ class Dataset():
             self.max_values[k] = max(self.max_values[k], v)
 
         # update stats
+        self.keys_per_split[self.shard_split] += 1
+        self.keys_per_group[self.shard_split][self.shard_group] += 1
 
         self.examples_per_split[self.shard_split] += stats['examples']
-        self.keys_per_split[self.shard_split] += 1
+        self.examples_per_group[self.shard_split][self.shard_group] += 1
 
         # record in shardlist
         self.shards_list[self.shard_split].append({
@@ -173,10 +187,10 @@ class Dataset():
             "examples": stats['examples'],
             "size": os.stat(self.shard_path).st_size,
             "sha256": sha256sum(self.shard_path).lower(),
-            "group": self.group,
+            "group": self.shard_group,
             "key": self.shard_key,
             "part": self.shard_part,
-            "chip_id": self.chip_id
+            "chip_id": self.shard_chip_id
         })
 
         # update config
@@ -371,6 +385,7 @@ class Dataset():
         for split in config['keys_per_split'].keys():
             d.append([
                 split,
+                len(config['keys_per_group'][split]),
                 config['keys_per_split'][split],
                 config['examples_per_split'][split],
             ])
@@ -436,7 +451,9 @@ class Dataset():
             "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
+            "keys_per_group": self.keys_per_group,
             "keys_per_split": self.keys_per_split,
+            "examples_per_group": self.examples_per_group,
             "examples_per_shard": self.examples_per_shard,
             "examples_per_split": self.examples_per_split,
             "capture_info": self.capture_info,
@@ -470,7 +487,9 @@ class Dataset():
             capture_info=config['capture_info'],
             compression=config['compression'],
             shards_list=config['shards_list'],
+            keys_per_group=config['keys_per_group'],
             keys_per_split=config['keys_per_split'],
+            examples_per_group=config['examples_per_group'],
             examples_per_split=config['examples_per_split'],
             examples_per_shard=config['examples_per_shard'],
             min_values=config['min_values'],

@@ -53,12 +53,13 @@ def test_basic_workflow(tmp_path):
                  attack_points_info=apinfo)
 
     chip_id = 1
-    ds.new_shard(key, 1, 'train', chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
 
     # 256 keys - with uniform bytes
-    ds.new_shard(key2, 1, 'test', chip_id=chip_id)
+
+    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
 
