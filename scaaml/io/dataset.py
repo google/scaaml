@@ -19,44 +19,48 @@ class Dataset():
     def __init__(
         self,
         root_path: str,
+        shortname: str,
         architecture: str,
         implementation: str,
         algorithm: str,
         version: int,
-        chip_id: int,
-        purpose: str,
-        comment: str,
+        firmware_sha256: str,
+        description: str,
+        url: str,
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
         compression: str = "GZIP",
         shards_list: defaultdict = None,
+        keys_per_group: defaultdict = None,
         keys_per_split: defaultdict = None,
+        examples_per_group: defaultdict = None,
         examples_per_split: defaultdict = None,
         capture_info: dict = {},
         min_values: Dict[str, int] = {},
         max_values: Dict[str, int] = {},
     ) -> None:
         self.root_path = root_path
+        self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation
         self.algorithm = algorithm
         self.version = version
         self.compression = compression
-        self.chip_id = chip_id
-        self.purpose = purpose
-        self.comment = comment
+        self.firmware_sha256 = firmware_sha256
+        self.description = description
+        self.url = url
 
         self.capture_info = capture_info
         self.measurements_info = measurements_info
         self.attack_points_info = attack_points_info
 
-        if purpose not in ['train', 'holdout']:
-            raise ValueError("Invalid purpose", purpose)
+        if not self.firmware_sha256:
+            raise ValueError("Firmware hash is required")
 
         # create directory -- check if its empty
-        self.slug = "%s_%s_%s_v%s_%s" % (algorithm, architecture,
-                                         implementation, version, purpose)
+        self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
+                                         implementation, version)
         self.path = Path(self.root_path) / self.slug
         if self.path.exists():
             cprint("[Warning] Path exist, some files might be over-written",
@@ -71,19 +75,28 @@ class Dataset():
         cprint("Dataset path: %s" % self.path, 'green')
 
         # current shard tracking
-        self.curr_shard_key = None  # current shard_key
         self.shard_key = None
+        self.prev_shard_key = None  # track key change for counting
         self.shard_path = None
         self.shard_split = None
         self.shard_part = None
         self.shard_relative_path = None  # for the shardlist
         self.curr_shard = None  # current_ shard object
 
-        # counters - must be passed as param to allow reload.
+        # [counters] - must be passed as param to allow reload.
         self.shards_list = shards_list or defaultdict(list)
+
+        # keys counting
+        self.keys_per_group = keys_per_group or defaultdict(lambda: defaultdict(int))  # noqa
         self.keys_per_split = keys_per_split or defaultdict(int)
+
+        # examples counting
+        # keys_per_group[split][gid] = cnt
+        self.examples_per_group = examples_per_group or defaultdict(lambda: defaultdict(int))  # noqa
         self.examples_per_split = examples_per_split or defaultdict(int)
         self.examples_per_shard = examples_per_shard
+
+        # traces extrem values
         self.min_values = min_values
         self.max_values = max_values
         for k in measurements_info.keys():
@@ -95,7 +108,8 @@ class Dataset():
         # write config
         self._write_config()
 
-    def new_shard(self, key: list, part: int, split: str):
+    def new_shard(self, key: list, part: int, group: int, split: str,
+                  chip_id: int):
         """Initiate a new key
 
         Args:
@@ -105,7 +119,15 @@ class Dataset():
             shard represent. Capture are splitted into parts to easily
             allow to restrict the number of traces used per key.
 
+            group: logical group the shard belong to. For example,
+            on AES a group represent a collection of shard that have distinct
+            byte values. It allows to balance the diversity of keys when using
+            a subset of the dataset.
+
             split: the split the shard belongs to {train, test, holdout}
+
+            chip_id: indicate which chip was used for collecting the traces.
+
         """
         # finalize previous shard if need
         if self.curr_shard:
@@ -114,15 +136,19 @@ class Dataset():
         if split not in ['train', 'test', 'holdout']:
             raise ValueError("Invalid split, must be: {train, test, holdout}")
 
-        if part < 1 or part > 10:
-            raise ValueError("Invalid part value -- muse be in [1, 10]")
+        if part < 0 or part > 10:
+            raise ValueError("Invalid part value -- muse be in [0, 10]")
 
         self.shard_split = split
         self.shard_part = part
+        self.shard_group = group
         self.shard_key = bytelist_to_hex(key, spacer='')
+        self.shard_chip_id = chip_id
 
         # shard name
-        fname = "%s_%s.tfrec" % (self.shard_key, self.shard_part)
+        fname = "%s_%s_%s.tfrec" % (self.shard_group, self.shard_key,
+                                    self.shard_part)
+        fname = fname.lower()
         self.shard_relative_path = "%s/%s" % (split, fname)
         self.shard_path = str(self.path / self.shard_relative_path)
 
@@ -147,19 +173,25 @@ class Dataset():
         for k, v in stats['max_values'].items():
             self.max_values[k] = max(self.max_values[k], v)
 
-        # update stats
+        # update key stats only if key changed
+        if self.shard_key != self.prev_shard_key:
+            self.keys_per_split[self.shard_split] += 1
+            self.keys_per_group[self.shard_split][self.shard_group] += 1
+            self.prev_shard_key = self.shard_key
 
         self.examples_per_split[self.shard_split] += stats['examples']
-        print(self.shard_split)
-        print(self.keys_per_split)
-        self.keys_per_split[self.shard_split] += 1
+        self.examples_per_group[self.shard_split][self.shard_group] += 1
 
         # record in shardlist
         self.shards_list[self.shard_split].append({
             "path": str(self.shard_relative_path),
             "examples": stats['examples'],
-            "sha256": sha256sum(self.shard_path),
-            "key": self.shard_key
+            "size": os.stat(self.shard_path).st_size,
+            "sha256": sha256sum(self.shard_path).lower(),
+            "group": self.shard_group,
+            "key": self.shard_key,
+            "part": self.shard_part,
+            "chip_id": self.shard_chip_id
         })
 
         # update config
@@ -167,14 +199,20 @@ class Dataset():
         self.curr_shard = None
 
     @staticmethod
+    def download(url: str):
+        "Download dataset from a given url"
+        raise NotImplementedError("implement me using keras dl mechanism")
+
+    @staticmethod
     def as_tfdataset(dataset_path: str,
                      split: str,
-                     attack_points: Union[List, str],
-                     traces: Union[List, str],
+                     attack_points: Union[List[str], str],
+                     traces: Union[List[str], str],
                      bytes: Union[List, int],
-                     shards: int,
-                     traces_max_len: int = None,
-                     trace_block_size: int = 1,
+                     shards: int = None,
+                     parts: Union[List[int], int] = None,
+                     trace_len: int = None,
+                     step_size: int = 1,
                      batch_size: int = 32,
                      prefetch: int = 10,
                      file_parallelism: int = 1,
@@ -182,11 +220,18 @@ class Dataset():
                      shuffle: int = 1000
                      ) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
+
+        FIXME: restrict shards to specific part if they exists.
+
         """
 
-        trace_seq_len = traces_max_len // trace_block_size
-        if traces_max_len % trace_block_size:
-            raise ValueError("trace_max_len must be a multiple of trace_block_size")
+        if parts:
+            raise NotImplementedError("Implement part filtering")
+
+        # check that the traces can be reshaped as requested
+        reshaped_trace_len = trace_len // step_size
+        if trace_len % step_size:
+            raise ValueError("trace_max_len must be a multiple of len(traces)")
 
         # boxing
         if isinstance(traces, str):
@@ -223,7 +268,9 @@ class Dataset():
 
             inputs[name]['min'] = tf.constant(dataset.min_values[name])
             inputs[name]['max'] = tf.constant(dataset.max_values[name])
-            inputs[name]['delta'] = tf.constant(inputs[name]['max'] - inputs[name]['min'])
+            delta = tf.constant(inputs[name]['max'] - inputs[name]['min'])
+            inputs[name]['delta'] = delta
+            inputs[name]['shape'] = (reshaped_trace_len, step_size)
 
         # output construction
         outputs = {}  # model outputs
@@ -245,14 +292,14 @@ class Dataset():
                 trace = rec[name]
 
                 # truncate if needed
-                if traces_max_len:
-                    trace = trace[:traces_max_len]
+                if trace_len:
+                    trace = trace[:trace_len]
 
                 # rescale
                 trace = 2 * ((trace - data['min']) / (data['delta'])) - 1
 
                 # reshape
-                trace = tf.reshape(trace, (trace_seq_len, trace_block_size))
+                trace = tf.reshape(trace, (reshaped_trace_len, step_size))
 
                 # assign
                 x[name] = trace
@@ -313,15 +360,16 @@ class Dataset():
     @staticmethod
     def summary(dataset_path):
         """Print a summary of the dataset"""
-        lst = [
-            'architecture', 'implementation', 'algorithm', 'version',
-            'chip_id', 'comment', 'purpose', 'compression'
-        ]
+        lst = ['shortname',
+               'description', 'url',
+               'architecture', 'implementation',
+               'algorithm', 'version', 'compression']
+
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
         cprint("[Dataset Summary]", 'cyan')
         cprint("Info", 'yellow')
-        print(tabulate([[k, config[k]] for k in lst]))
+        print(tabulate([[k, config.get(k, '')] for k in lst]))
 
         cprint("\nAttack Points", 'yellow')
         d = [[k, v['len'], v['max_val']]
@@ -338,6 +386,7 @@ class Dataset():
         for split in config['keys_per_split'].keys():
             d.append([
                 split,
+                len(config['keys_per_group'][split]),
                 config['keys_per_split'][split],
                 config['examples_per_split'][split],
             ])
@@ -348,9 +397,9 @@ class Dataset():
         """Display the content of a given shard"""
         fpath = Dataset._get_config_path(dataset_path)
         config = json.loads(open(fpath).read())
-        spath = str(Path(fpath) / config['shards_list'][split][shard_id]['path'])
+        spath = Path(fpath) / config['shards_list'][split][shard_id]['path']
         cprint("Reading shard %s" % spath, 'cyan')
-        s = Shard(spath,
+        s = Shard(str(spath),
                   attack_points_info=config['attack_points_info'],
                   measurements_info=config['measurements_info'],
                   compression=config['compression'])
@@ -393,16 +442,19 @@ class Dataset():
 
     def _write_config(self):
         config = {
+            "shortname": self.shortname,
             "architecture": self.architecture,
             "implementation": self.implementation,
             "algorithm": self.algorithm,
             "version": self.version,
-            "chip_id": self.chip_id,
-            "comment": self.comment,
-            "purpose": self.purpose,
+            "firmware_sha256": self.firmware_sha256,
+            "url": self.url,
+            "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
+            "keys_per_group": self.keys_per_group,
             "keys_per_split": self.keys_per_split,
+            "examples_per_group": self.examples_per_group,
             "examples_per_shard": self.examples_per_shard,
             "examples_per_split": self.examples_per_split,
             "capture_info": self.capture_info,
@@ -423,19 +475,22 @@ class Dataset():
         config = json.loads(open(fpath).read())
         return Dataset(
             root_path=str(dpath),
+            shortname=config['shortname'],
             architecture=config['architecture'],
             implementation=config['implementation'],
             algorithm=config['algorithm'],
             version=config['version'],
-            comment=config['comment'],
-            purpose=config['purpose'],
-            chip_id=config['chip_id'],
+            url=config['url'],
+            description=config['description'],
+            firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
             attack_points_info=config['attack_points_info'],
             capture_info=config['capture_info'],
             compression=config['compression'],
             shards_list=config['shards_list'],
+            keys_per_group=config['keys_per_group'],
             keys_per_split=config['keys_per_split'],
+            examples_per_group=config['examples_per_group'],
             examples_per_split=config['examples_per_split'],
             examples_per_shard=config['examples_per_shard'],
             min_values=config['min_values'],
