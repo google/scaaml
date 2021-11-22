@@ -3,7 +3,8 @@
 
 class AESSBOX:
     """Provides functions for getting attack points when provided with key,
-      plaintext pair:
+    plaintext pair. Attack points:
+    key: The key itself.
     sub_bytes_in: key xor plaintext (what goes into AES SBOX).
     sub_bytes_out: each byte of sub_bytes_in is remapped using the SBOX
       (what goes out of the SBOX).
@@ -28,23 +29,48 @@ class AESSBOX:
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16,
     ]  # yapf: disable
 
+    # Number of classes used in ML. We are predicting a single byte => 256.
+    _MAX_VAL = 256
+
+    # Length of the key in bytes
+    KEY_LENGTH = 16
+
+    # Length of the plaintext in bytes
+    PLAINTEXT_LENGTH = 16
+
+    # The attack points info used in scaaml.io.Dataset.
+    ATTACK_POINTS_INFO = {
+        'sub_bytes_in': {
+            'len': 16,
+            'max_val': _MAX_VAL,
+        },
+        'sub_bytes_out': {
+            'len': 16,
+            'max_val': _MAX_VAL,
+        },
+        'key': {
+            'len': 16,
+            'max_val': _MAX_VAL,
+        }
+    }
+
     @staticmethod
-    def key(key: bytearray, text: bytearray) -> bytearray:
+    def key(key: bytearray, plaintext: bytearray) -> bytearray:
         """Return the key. Useful for getting all attack points."""
-        assert len(key) == len(text)
+        assert len(key) == len(plaintext)
         return key
 
     @staticmethod
-    def sub_bytes_in(key: bytearray, text: bytearray) -> bytearray:
+    def sub_bytes_in(key: bytearray, plaintext: bytearray) -> bytearray:
         """Return what goes into the SBOX."""
-        assert len(key) == len(text)
-        return bytearray(x ^ y for (x, y) in zip(key, text))
+        assert len(key) == len(plaintext)
+        return bytearray(x ^ y for (x, y) in zip(key, plaintext))
 
     @staticmethod
-    def sub_bytes_out(key: bytearray, text: bytearray) -> bytearray:
+    def sub_bytes_out(key: bytearray, plaintext: bytearray) -> bytearray:
         """Return what goes out of the SBOX."""
-        assert len(key) == len(text)
-        return bytearray(AESSBOX._SB[x ^ y] for (x, y) in zip(key, text))
+        assert len(key) == len(plaintext)
+        return bytearray(AESSBOX._SB[x ^ y] for (x, y) in zip(key, plaintext))
 
     @classmethod
     def get_attack_point(cls, name: str, **kwargs: bytearray) -> bytearray:
@@ -53,7 +79,7 @@ class AESSBOX:
         Typical usage example:
           attack_point_names = ['key', 'sub_bytes_in', 'sub_bytes_out']
           attack_points = {
-              ap: AESSBOX.get_attack_point(ap, key=key, text=text)
+              ap: AESSBOX.get_attack_point(ap, key=key, plaintext=plaintext)
               for ap in attack_point_names
           }
         """

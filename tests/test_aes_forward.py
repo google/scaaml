@@ -108,12 +108,12 @@ def test_attack_points():
     ])
     # yapf: enable
 
-    assert AESSBOX.get_attack_point('key', key=key, text=text) == key
+    assert AESSBOX.get_attack_point('key', key=key, plaintext=text) == key
     assert AESSBOX.get_attack_point(
-        'sub_bytes_in', key=key, text=text) == AESSBOX.sub_bytes_in(key=key,
-                                                                    text=text)
+        'sub_bytes_in', key=key, plaintext=text) == AESSBOX.sub_bytes_in(key=key,
+                                                                    plaintext=text)
     assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
-                                    text=text) == AESSBOX.sub_bytes_out(
-                                        key=key, text=text)
+                                    plaintext=text) == AESSBOX.sub_bytes_out(
+                                        key=key, plaintext=text)
     assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
-                                    text=text) == sub_bytes_out
+                                    plaintext=text) == sub_bytes_out
