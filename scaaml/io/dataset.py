@@ -108,6 +108,43 @@ class Dataset():
         # write config
         self._write_config()
 
+    @staticmethod
+    def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
+        """Return filename of the shard. When updating this method also update
+        Dataset._shard_info_from_name.
+
+        Args:
+          shard_group: The group this shard belongs to.
+          shard_key: The key contained in this shard (hex encoded).
+          shard_part: The part this shard belongs to.
+
+        Returns: Lowercase filename of the shard (including .tfrec filetype).
+        """
+        sname = "%s_%s_%s.tfrec" % (shard_group, shard_key, shard_part)
+        return sname.lower()
+
+    @staticmethod
+    def _shard_info_from_name(shard_name: str) -> Dict[str, Union[int, str]]:
+        """Inverse of Dataset._shard_name. This method is used by
+        Dataset.cleanup_shards to count how many shards per group or part are
+        left.
+
+        Args:
+          shard_name: The filename of the shard as returned by
+            Dataset._shard_name or with a parent directory.
+
+        Returns: A dictionary representation of Dataset._shard_name kwargs.
+        """
+        for dir_separator in ['\\', '/']:
+            if dir_separator in shard_name:
+                shard_name = shard_name.split(dir_separator)[-1]
+        parts = shard_name.split('_')
+        kwargs = {}
+        kwargs['shard_group'] = int(parts[0])
+        kwargs['shard_key'] = parts[1]
+        kwargs['shard_part'] = int(parts[2].split('.')[0])
+        return kwargs
+
     def new_shard(self, key: list, part: int, group: int, split: str,
                   chip_id: int):
         """Initiate a new key
@@ -146,9 +183,8 @@ class Dataset():
         self.shard_chip_id = chip_id
 
         # shard name
-        fname = "%s_%s_%s.tfrec" % (self.shard_group, self.shard_key,
+        fname = Dataset._shard_name(self.shard_group, self.shard_key,
                                     self.shard_part)
-        fname = fname.lower()
         self.shard_relative_path = "%s/%s" % (split, fname)
         self.shard_path = str(self.path / self.shard_relative_path)
 
@@ -386,11 +422,11 @@ class Dataset():
         for split in config['keys_per_split'].keys():
             d.append([
                 split,
-                len(config['keys_per_group'][split]),
+                len(config['shards_list'][split]),
                 config['keys_per_split'][split],
                 config['examples_per_split'][split],
             ])
-        print(tabulate(d, ['split', 'num_keys', 'num_examples']))
+        print(tabulate(d, ['split', 'num_shards', 'num_keys', 'num_examples']))
 
     @staticmethod
     def inspect(dataset_path, split, shard_id, num_example):
@@ -498,38 +534,100 @@ class Dataset():
         )
 
     @staticmethod
-    def _get_config_path(path):
-        return str(Path(path) / 'info.json')
+    def _get_config_path(path) -> Path:
+        return Path(path) / 'info.json'
 
     @staticmethod
-    def cleanup_shards(dataset_path):
-        "remove non_existing shards from the config"
-        dpath = Path(dataset_path)
-        fpath = Dataset._get_config_path(dataset_path)
-        config = json.loads(open(fpath).read())
-        stats = []
+    def _cleanup_shards(dataset_path: Path, print_info: bool = True):
+        """Returns an updated config which contains only shards that correspond
+        to existing files.
+
+        Args:
+          dataset_path: The directory of the dataset. It is assumed that there
+            is a file dataset_path/'info.json' (see Dataset._get_config_path)
+            with the configuration in JSON format and subdirectories train,
+            test, holdout.
+          print_info: Print how many shards were removed and how many were kept.
+
+        Returns: Updated configuration to be written using json.dump.
+        """
+        config = json.loads(Dataset._get_config_path(dataset_path).read_text())
+        stats = []  # Statistic how many were kept and removed in each split.
         new_shards_list = defaultdict(list)
         for split, slist in config['shards_list'].items():
             kept = 0
             removed = 0
             for s in slist:
-                spath = Path(dpath / s['path'])
+                spath = dataset_path / s['path']  # The shard.
                 if spath.exists():
                     new_shards_list[split].append(s)
                     kept += 1
                 else:
                     removed += 1
-
+            assert kept + removed == len(slist)
+            assert len(new_shards_list[split]) == kept
             stats.append([split, kept, removed])
 
-        # save old config
-        sav_path = str(fpath) + ".sav.%d.json" % (time())
-        cprint("Saving old config to %s" % sav_path, 'cyan')
-        with open(sav_path, 'w+') as o:
-            json.dump(config, o)
-
         config['shards_list'] = new_shards_list
-        with open(fpath, 'w+') as o:
-            json.dump(config, o)
+        examples_per_split = {}
+        examples_per_group = {}
+        keys_per_group = {}
+        for split, slist in config['shards_list'].items():
+            examples_per_split[split] = config['examples_per_shard'] * len(
+                config['shards_list'][split])
+            # Zero examples per a group is a valid option.
+            examples_per_group[split] = {
+                k: 0
+                for k in config['examples_per_group'][split]
+            }
+            names_keys_per_group = {
+                k: set()
+                for k in config['keys_per_group'][split]
+            }
+            key_names_per_split = set()
+            for s in slist:
+                shard_info = Dataset._shard_info_from_name(s['path'])
+                # String representation of the shard group ('0', '1', '2', ...).
+                ssg = str(shard_info['shard_group'])
+                examples_per_group[split][ssg] += config['examples_per_shard']
+                key_names_per_split.add(shard_info['shard_key'])
+                names_keys_per_group[ssg].add(shard_info['shard_key'])
+            # We suppose that each shard contains at most one key.
+            config['keys_per_group'][split] = {
+                k: len(names_keys_per_group[k])
+                for k in config['keys_per_group'][split]
+            }
+            config['keys_per_split'][split] = len(key_names_per_split)
+
+        config['examples_per_split'] = examples_per_split
+        config['examples_per_group'] = examples_per_group
+        if print_info:
+            print(tabulate(stats, headers=['split', 'kept', 'removed']))
+        return config
+
+    @staticmethod
+    def cleanup_shards(dataset_path):
+        """Remove non_existing shards from the config and update the config.
+        Makes a backup of the old config named info.json.sav.{time()}.json.
+
+        Args:
+          dataset_path: The directory of the dataset.
+
+        Example use:
+          Dataset.cleanup_shards(
+              dataset_path='/mnt/storage/chipwhisperer/test_cleanup')
+        """
+        fpath = Dataset._get_config_path(dataset_path)
+
+        # Save the old config.
+        save_path = Path(f'{str(fpath)}.sav.{time()}.json')
+        assert not save_path.exists()  # Do not overwrite.
+        save_path.write_text(fpath.read_text())
+        cprint("Saving old config to %s" % save_path, 'cyan')
+
+        # Rewrite with the new config.
         cprint("Writing cleaned config", 'green')
-        print(tabulate(stats, headers=['split', 'kept', 'removed']))
+        new_config = Dataset._cleanup_shards(dataset_path=Path(dataset_path),
+                                             print_info=True)
+        with open(fpath, 'w+') as o:
+            json.dump(new_config, o)
