@@ -13,6 +13,7 @@ from scaaml.utils import bytelist_to_hex
 from time import time
 from .utils import sha256sum
 from .shard import Shard
+import os
 
 
 class Dataset():
@@ -214,8 +215,8 @@ class Dataset():
                      trace_len: int = None,
                      step_size: int = 1,
                      batch_size: int = 32,
-                     prefetch: int = 10,
-                     file_parallelism: int = 1,
+                     prefetch: int = os.cpu_count() + 1,
+                     file_parallelism: int = os.cpu_count(),
                      parallelism: int = os.cpu_count(),
                      shuffle: int = 1000
                      ) -> Union[tf.data.Dataset, Dict, Dict]:
@@ -325,9 +326,10 @@ class Dataset():
         # with tf.device('/cpu:0'):
         # shuffle the shard order
         ds = tf.data.Dataset.from_tensor_slices(shards_paths)
-
+        ds = ds.repeat()
         # shuffle shard order
         ds = ds.shuffle(num_shards)
+
         # This is the tricky part, we are using the interleave function to
         # do the sampling as requested by the user. This is not the
         # standard use of the function or an obvious way to do it but
@@ -336,16 +338,15 @@ class Dataset():
         # deterministic=False is not an error, it is what allows us to
         # create random batch
         ds = ds.interleave(
-            lambda x: tf.data.TFRecordDataset(x,
-                                            compression_type=dataset.compression),  # noqa
-            cycle_length=num_shards,
+            lambda x: tf.data.TFRecordDataset(x, compression_type=dataset.compression),  # noqa
+            cycle_length=file_parallelism,
             block_length=1,
             num_parallel_calls=file_parallelism,
             deterministic=False)
         # decode to records
-        ds = ds.map(from_tfrecord, num_parallel_calls=parallelism)
+        ds = ds.map(from_tfrecord, num_parallel_calls=tf.data.AUTOTUNE)
         # process them
-        ds = ds.map(process_record, num_parallel_calls=parallelism)
+        ds = ds.map(process_record, num_parallel_calls=tf.data.AUTOTUNE)
 
         # # randomize
         ds = ds.shuffle(shuffle)
@@ -353,7 +354,7 @@ class Dataset():
         # # batching with repeat
         ds = ds.repeat()
         ds = ds.batch(batch_size)
-        ds = ds.prefetch(prefetch)
+        ds = ds.prefetch(tf.data.AUTOTUNE)
 
         return ds, inputs, outputs
 
