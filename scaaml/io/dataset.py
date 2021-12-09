@@ -248,12 +248,13 @@ class Dataset():
                      bytes: Union[List, int],
                      shards: int = None,
                      parts: Union[List[int], int] = None,
+                     trace_start: int = 0,
                      trace_len: int = None,
                      step_size: int = 1,
                      batch_size: int = 32,
-                     prefetch: int = os.cpu_count() + 1,
+                     prefetch: int = tf.data.AUTOTUNE,
                      file_parallelism: int = os.cpu_count(),
-                     parallelism: int = os.cpu_count(),
+                     parallelism: int = tf.data.AUTOTUNE,
                      shuffle: int = 1000
                      ) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
@@ -329,6 +330,9 @@ class Dataset():
                 trace = rec[name]
 
                 # truncate if needed
+                if trace_start:
+                    trace = trace[trace_start:]
+
                 if trace_len:
                     trace = trace[:trace_len]
 
@@ -380,9 +384,9 @@ class Dataset():
             num_parallel_calls=file_parallelism,
             deterministic=False)
         # decode to records
-        ds = ds.map(from_tfrecord, num_parallel_calls=tf.data.AUTOTUNE)
+        ds = ds.map(from_tfrecord, num_parallel_calls=parallelism)
         # process them
-        ds = ds.map(process_record, num_parallel_calls=tf.data.AUTOTUNE)
+        ds = ds.map(process_record, num_parallel_calls=parallelism)
 
         # # randomize
         ds = ds.shuffle(shuffle)
@@ -390,7 +394,7 @@ class Dataset():
         # # batching with repeat
         ds = ds.repeat()
         ds = ds.batch(batch_size)
-        ds = ds.prefetch(tf.data.AUTOTUNE)
+        ds = ds.prefetch(prefetch)
 
         return ds, inputs, outputs
 
