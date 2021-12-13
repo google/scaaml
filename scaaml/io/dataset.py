@@ -3,7 +3,7 @@ import math
 import json
 import os
 import tensorflow as tf
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Literal
 from pathlib import Path
 from termcolor import cprint
 from collections import defaultdict
@@ -434,19 +434,37 @@ class Dataset():
         print(tabulate(d, ['split', 'num_shards', 'num_keys', 'num_examples']))
 
     @staticmethod
-    def inspect(dataset_path, split, shard_id, num_example):
-        """Display the content of a given shard"""
-        fpath = Dataset._get_config_path(dataset_path)
-        config = json.loads(open(fpath).read())
-        spath = Path(fpath) / config['shards_list'][split][shard_id]['path']
-        cprint("Reading shard %s" % spath, 'cyan')
-        s = Shard(str(spath),
+    def inspect(dataset_path,
+                split: Literal['train', 'test', 'holdout'],
+                shard_id: int,
+                num_example: int,
+                verbose: bool = True):
+        """Display the content of a given shard.
+
+        Args:
+          dataset_path: Root path to the dataset.
+          split: The split to inspect.
+          shard_id: Index into the shards_list.
+          num_example: How many examples to return. If -1 or larger than
+            examples_per_shard, all examples are taken.
+          verbose: Print debugging output to stdout.
+
+        Returns: tf TakeDataset object.
+        """
+        conf_path = Dataset._get_config_path(dataset_path)
+        config = json.loads(conf_path.read_text())
+        shard_path = Path(
+            dataset_path) / config['shards_list'][split][shard_id]['path']
+        if verbose:
+            cprint(f'Reading shard {shard_path}', 'cyan')
+        s = Shard(str(shard_path),
                   attack_points_info=config['attack_points_info'],
                   measurements_info=config['measurements_info'],
                   compression=config['compression'])
         data = s.read(num=num_example)
-        print(data)
-        return(data)
+        if verbose:
+            print(data)
+        return data
 
     def check(self):
         """Check the dataset integrity"""

@@ -1,8 +1,59 @@
 import numpy as np
 import copy
 import json
+from pathlib import Path
+from unittest.mock import patch
 
 from scaaml.io import Dataset
+from scaaml.io.shard import Shard
+
+
+@patch.object(Path, 'read_text')
+@patch.object(Shard, '__init__')
+@patch.object(Shard, 'read')
+def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
+    split = 'test'
+    shard_id = 0
+    num_example = 5
+    mock_shard_init.return_value = None
+    config = {
+        'shards_list': {
+            'test': [{
+                'path': 'test/0_abcd_1.tfrec'
+            }, {
+                'path': 'test/2_ef12_3.tfrec'
+            }],
+            'train': [{
+                'path': 'train/2_dcea_0.tfrec'
+            }, {
+                'path': 'train/3_beef_1.tfrec'
+            }],
+        },
+        'attack_points_info': {
+            'ap_info': 'something'
+        },
+        'measurements_info': {
+            'm_info': 'else'
+        },
+        'compression': 'GZIP',
+    }
+    mock_read_text.return_value = json.dumps(config)
+    dir_dataset_ok = Path('/home/notanuser')
+
+    x = Dataset.inspect(dir_dataset_ok,
+                        split=split,
+                        shard_id=shard_id,
+                        num_example=num_example)
+
+    shard_filename = str(dir_dataset_ok /
+                         config['shards_list'][split][shard_id]['path'])
+    mock_shard_init.assert_called_once_with(
+        shard_filename,
+        attack_points_info=config['attack_points_info'],
+        measurements_info=config['measurements_info'],
+        compression=config['compression'])
+    mock_shard_read.assert_called_once_with(num=num_example)
+    assert x == mock_shard_read.return_value
 
 
 def test_basic_workflow(tmp_path):
