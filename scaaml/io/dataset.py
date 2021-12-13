@@ -2,18 +2,20 @@
 import math
 import json
 import os
-import tensorflow as tf
-from typing import Dict, List, Union
-from pathlib import Path
-from termcolor import cprint
 from collections import defaultdict
-from tqdm.auto import tqdm
-from tabulate import tabulate
-from scaaml.utils import bytelist_to_hex
 from time import time
-from .utils import sha256sum
+from typing import Dict, List, Union, Literal
+from pathlib import Path
+
+from tabulate import tabulate
+from termcolor import cprint
+from tqdm.auto import tqdm
+import numpy as np
+import tensorflow as tf
+
+from scaaml.utils import bytelist_to_hex
+import scaaml.io.utils as siutils
 from .shard import Shard
-import os
 
 
 class Dataset():
@@ -224,7 +226,7 @@ class Dataset():
             "path": str(self.shard_relative_path),
             "examples": stats['examples'],
             "size": os.stat(self.shard_path).st_size,
-            "sha256": sha256sum(self.shard_path).lower(),
+            "sha256": siutils.sha256sum(self.shard_path).lower(),
             "group": self.shard_group,
             "key": self.shard_key,
             "part": self.shard_part,
@@ -434,55 +436,194 @@ class Dataset():
         print(tabulate(d, ['split', 'num_shards', 'num_keys', 'num_examples']))
 
     @staticmethod
-    def inspect(dataset_path, split, shard_id, num_example):
-        """Display the content of a given shard"""
-        fpath = Dataset._get_config_path(dataset_path)
-        config = json.loads(open(fpath).read())
-        spath = Path(fpath) / config['shards_list'][split][shard_id]['path']
-        cprint("Reading shard %s" % spath, 'cyan')
-        s = Shard(str(spath),
+    def inspect(dataset_path,
+                split: Literal['train', 'test', 'holdout'],
+                shard_id: int,
+                num_example: int,
+                verbose: bool = True):
+        """Display the content of a given shard.
+
+        Args:
+          dataset_path: Root path to the dataset.
+          split: The split to inspect.
+          shard_id: Index into the shards_list.
+          num_example: How many examples to return. If -1 or larger than
+            examples_per_shard, all examples are taken.
+          verbose: Print debugging output to stdout.
+
+        Returns: tf TakeDataset object.
+        """
+        conf_path = Dataset._get_config_path(dataset_path)
+        config = json.loads(conf_path.read_text())
+        shard_path = Path(
+            dataset_path) / config['shards_list'][split][shard_id]['path']
+        if verbose:
+            cprint(f'Reading shard {shard_path}', 'cyan')
+        s = Shard(str(shard_path),
                   attack_points_info=config['attack_points_info'],
                   measurements_info=config['measurements_info'],
                   compression=config['compression'])
         data = s.read(num=num_example)
-        print(data)
-        return(data)
+        if verbose:
+            print(data)
+        return data
 
-    def check(self):
-        """Check the dataset integrity"""
-        # check examples are balances
-        seen_keys = {}  # use to ensure keys are not reused
+    def check(self, deep_check: bool = True, show_progressbar: bool = True):
+        """Check the dataset integrity. Check integrity of metadata in config
+        and also that no key from the train is in the test.
 
-        for split, expected_examples in self.examples_per_split.items():
-            slist = self.shards_list[split]
+        Args:
+          deep_check: When checking that keys in test and train splits are
+            disjoint inspect train shards (set to True if a single train shard
+            may contain multiple different keys).
+          show_progressbar: Use tqdm to show a progressbar for different checks.
+
+        Raises: ValueError if the dataset is inconsistent.
+        """
+        if show_progressbar:
+            pbar = tqdm
+        else:
+            # Redefine tqdm to the identity function returning the first unnamed
+            # parameter.
+            pbar = lambda *args, **kwargs: args[0]
+
+        Dataset._check_metadata(config=self._get_config_dictionary())
+        Dataset._check_sha256sums(shards_list=self.shards_list,
+                                  dpath=Path(self.path),
+                                  pbar=pbar)
+        # Ensure that no keys in the train split are present in the test split.
+        if 'test' in self.examples_per_split and 'train' in self.examples_per_split:
+            self._check_disjoint_keys(pbar=pbar, deep_check=deep_check)
+
+    def _check_disjoint_keys(self, pbar, deep_check: bool = True):
+        """Check that no key in the train split is present in the test split.
+
+        Args:
+          pbar: Either tqdm.tqdm or an identity function (in order not to
+            print).
+          deep_check: When checking that keys in test and train splits are
+            disjoint inspect train shards (set to True if a single train shard
+            may contain multiple different keys).
+
+        Raises: ValueError if some key from train is present in test.
+        """
+        seen_keys = set()
+        for i in range(len(self.shards_list['test'])):
+            for example in Dataset.inspect(
+                    dataset_path=self.path,
+                    split='test',
+                    shard_id=i,
+                    num_example=self.examples_per_shard,
+                    verbose=False).as_numpy_iterator():
+                seen_keys.add(example['key'].astype(np.uint8).tobytes())
+        if deep_check:
+            Dataset._deep_check(seen_keys=seen_keys,
+                                dpath=self.path,
+                                train_shards=self.shards_list['train'],
+                                pbar=pbar,
+                                examples_per_shard=self.examples_per_shard)
+        else:
+            Dataset._shallow_check(seen_keys=seen_keys,
+                                   train_shards=self.shards_list['train'],
+                                   pbar=pbar)
+
+    @staticmethod
+    def _check_sha256sums(shards_list, dpath: Path, pbar):
+        """Check the metadata of this dataset.
+
+        Args:
+          shards_list: Dictionary with information about each shard.
+            Use _get_config_dictionary()['shards_list']
+          dpath: Root path of the dataset.
+          pbar: Either tqdm.tqdm or an identity function (in order not to
+            print).
+
+        Raises: ValueError if some hash does not match.
+        """
+        for split, slist in shards_list.items():
+            for sinfo in pbar(slist, desc=f'Checking sha for {split}'):
+                shard_path = dpath / sinfo['path']
+                sha_hash = siutils.sha256sum(shard_path)
+                if sha_hash != sinfo['sha256']:
+                    raise ValueError(sinfo['path'], "SHA256 miss-match")
+
+    @staticmethod
+    def _check_metadata(config):
+        """Check the metadata of this dataset.
+
+        Args:
+          config: A dictionary representing the metadata.
+
+        Raises: ValueError if some metadata do not match.
+        """
+        for split, expected_examples in config['examples_per_split'].items():
+            slist = config['shards_list'][split]
             # checking we have the rigt number of shards
-            if len(slist) != self.keys_per_split[split]:
-                raise ValueError("Num shards in shard_list != self.shards")
+            if len(slist) != expected_examples // config['examples_per_shard']:
+                raise ValueError("Num shards in shard_list != "
+                                 "examples_per_split // examples_per_shard")
+            # Check that expected_examples is a multiple of examples_per_shard.
+            if expected_examples % config['examples_per_shard']:
+                raise ValueError("expected_examples is not divisible by "
+                                 "examples_per_shard")
 
-            pb = tqdm(total=len(slist), desc="Checking %s split" % split)
             actual_examples = 0
             for sinfo in slist:
-
-                # no key reuse
-                if sinfo['key'] in seen_keys:
-                    raise ValueError("Duplicate key", sinfo['key'])
-                else:
-                    seen_keys[sinfo['key']] = 1
-
                 actual_examples += sinfo['examples']
-                shard_path = self.path / sinfo['path']
-                sh = sha256sum(shard_path)
-                if sh != sinfo['sha256']:
-                    raise ValueError(sinfo['path'], "SHA256 miss-match")
-                pb.update()
-
-            pb.close()
 
             if actual_examples != expected_examples:
                 raise ValueError("sum example don't match top_examples")
 
-    def _write_config(self):
-        config = {
+    @staticmethod
+    def _shallow_check(seen_keys, train_shards, pbar):
+        """Check just what is in self.shards_list info (do not parse all
+        shards).
+
+        Args:
+          seen_keys: Set of all keys that are present in the test split.
+          train_shards: Description of train shards (self.shards_list['train']).
+          pbar: Either tqdm.tqdm or an identity function (in order not to
+            print).
+        """
+        for shard in pbar(train_shards, desc='Checking test key uniqueness'):
+            k = shard['key'].lower()
+            list_k = [int(k[2 * i:2 * i + 2], 16) for i in range(len(k) // 2)]
+            cur_key = np.array(list_k, dtype=np.uint8).tobytes()
+            if cur_key in seen_keys:
+                raise ValueError(
+                    f'Duplicate key: {k} in test split, in {shard}')
+
+    @staticmethod
+    def _deep_check(seen_keys, dpath, train_shards, pbar,
+                    examples_per_shard: int):
+        """Check all keys from all shards (parse all shards in the train split).
+
+        Args:
+          seen_keys: Set of all keys that are present in the test split.
+          dpath: Root path of this dataset.
+          train_shards: Description of train shards (self.shards_list['train']).
+          pbar: Either tqdm.tqdm or an identity function (in order not to
+            print).
+          examples_per_shard: Number of examples in each shard.
+        """
+        for i in pbar(range(len(train_shards)),
+                      desc='Checking test key uniqueness'):
+            for j, example in enumerate(
+                    Dataset.inspect(
+                        dataset_path=dpath,
+                        split='train',
+                        shard_id=i,
+                        num_example=examples_per_shard,
+                        verbose=False).as_numpy_iterator()):
+                cur_key = example['key'].astype(np.uint8).tobytes()
+                if cur_key in seen_keys:
+                    raise ValueError(
+                        f'Duplicate key: {cur_key} in test split, in '
+                        f'{train_shards[i]}')
+
+    def _get_config_dictionary(self):
+        """Return dictionary of information about this dataset."""
+        return {
             "shortname": self.shortname,
             "architecture": self.architecture,
             "implementation": self.implementation,
@@ -505,8 +646,10 @@ class Dataset():
             "max_values": self.max_values,
         }
 
-        with open(self._get_config_path(self.path), 'w+') as o:
-            o.write(json.dumps(config))
+    def _write_config(self):
+        """Save configuration as json."""
+        with open(self._get_config_path(self.path), 'w+') as f:
+            json.dump(self._get_config_dictionary(), f)
 
     @staticmethod
     def from_config(dataset_path: str):
@@ -562,10 +705,10 @@ class Dataset():
         for split, slist in config['shards_list'].items():
             kept = 0
             removed = 0
-            for s in slist:
-                spath = dataset_path / s['path']  # The shard.
+            for shard in slist:
+                spath = dataset_path / shard['path']  # The shard.
                 if spath.exists():
-                    new_shards_list[split].append(s)
+                    new_shards_list[split].append(shard)
                     kept += 1
                 else:
                     removed += 1
@@ -590,8 +733,8 @@ class Dataset():
                 for k in config['keys_per_group'][split]
             }
             key_names_per_split = set()
-            for s in slist:
-                shard_info = Dataset._shard_info_from_name(s['path'])
+            for shard in slist:
+                shard_info = Dataset._shard_info_from_name(shard['path'])
                 # String representation of the shard group ('0', '1', '2', ...).
                 ssg = str(shard_info['shard_group'])
                 examples_per_group[split][ssg] += config['examples_per_shard']
