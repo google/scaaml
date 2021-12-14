@@ -10,6 +10,53 @@ from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 
 
+def test_close_shard(tmp_path):
+    minfo = {
+        "trace1": {
+            "type": "power",
+            "len": 1024,
+        }
+    }
+    apinfo = {
+        "key": {
+            "len": 16,
+            "max_val": 256
+        },
+    }
+    ds = Dataset(root_path=tmp_path,
+                 shortname='short_name',
+                 architecture='arch',
+                 implementation='implementation',
+                 algorithm='algorithm',
+                 version=1,
+                 description='description',
+                 url='url',
+                 firmware_sha256='abc1234',
+                 examples_per_shard=2,
+                 measurements_info=minfo,
+                 attack_points_info=apinfo)
+    key = np.random.randint(0, 255, 16)
+    key2 = np.random.randint(0, 255, 16)
+    trace1 = np.random.rand(1024)
+    chip_id = 1
+
+    assert ds.examples_per_group == {}
+    assert ds.examples_per_split == {}
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.close_shard()
+    assert ds.examples_per_group == {'train': {0: 2}}
+    assert ds.examples_per_split == {'train': 2}
+    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key2}, {"trace1": trace1})
+    ds.write_example({"key": key2}, {"trace1": trace1})
+    ds.close_shard()
+    assert ds.examples_per_group == {'train': {0: 4}}
+    assert ds.examples_per_split == {'train': 4}
+    ds.check()
+
+
 @patch.object(Path, 'read_text')
 @patch.object(Shard, '__init__')
 @patch.object(Shard, 'read')
@@ -138,11 +185,36 @@ def test_check_metadata():
     }
     Dataset._check_metadata(config=config)
 
+    # Wrong number of examples_per_split
     bad_config = copy.deepcopy(config)
     bad_config['examples_per_split']['test'] = 5
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Num shards in shard_list !=" in str(metadata_error.value)
+
+    # Wrong number of examples_per_group
+    bad_config = copy.deepcopy(config)
+    bad_config['examples_per_group']['test']['0'] = 5
+    with pytest.raises(ValueError) as metadata_error:
+        Dataset._check_metadata(config=bad_config)
+    assert "Wrong sum of examples_per_group in" in str(metadata_error.value)
+
+    # Not constant number of examples in shards
+    bad_config = copy.deepcopy(config)
+    bad_config['shards_list']['test'][0]['examples'] = 63
+    bad_config['shards_list']['test'][2]['examples'] = 65
+    with pytest.raises(ValueError) as metadata_error:
+        Dataset._check_metadata(config=bad_config,
+                                n_examples_in_each_shard_is_constant=True)
+    assert "contain the same number of examples" in str(metadata_error.value)
+
+    # Wrong number of examples_per_group
+    bad_config = copy.deepcopy(config)
+    bad_config['examples_per_group']['test']['0'] = 127
+    bad_config['examples_per_group']['test']['1'] = 65
+    with pytest.raises(ValueError) as metadata_error:
+        Dataset._check_metadata(config=bad_config)
+    assert "Wrong examples_per_group in" in str(metadata_error.value)
 
 
 def test_shallow_check():

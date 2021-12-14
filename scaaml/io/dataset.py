@@ -202,8 +202,11 @@ class Dataset():
 
     def close_shard(self):
         # close the shard
-
         stats = self.curr_shard.close()
+        if stats['examples'] != self.examples_per_shard:
+            cprint(
+                f"This shard contains {stats['examples']}, expected "
+                f"{self.examples_per_shard}", 'red')
 
         # update min/max values
         for k, v in stats['min_values'].items():
@@ -219,7 +222,8 @@ class Dataset():
             self.prev_shard_key = self.shard_key
 
         self.examples_per_split[self.shard_split] += stats['examples']
-        self.examples_per_group[self.shard_split][self.shard_group] += 1
+        self.examples_per_group[self.shard_split][
+            self.shard_group] += stats['examples']
 
         # record in shardlist
         self.shards_list[self.shard_split].append({
@@ -548,11 +552,14 @@ class Dataset():
                     raise ValueError(sinfo['path'], "SHA256 miss-match")
 
     @staticmethod
-    def _check_metadata(config):
+    def _check_metadata(config,
+                        n_examples_in_each_shard_is_constant: bool = False):
         """Check the metadata of this dataset.
 
         Args:
           config: A dictionary representing the metadata.
+          n_examples_in_each_shard_is_constant: Check that each shard contains
+            exactly examples_per_shard examples.
 
         Raises: ValueError if some metadata do not match.
         """
@@ -566,6 +573,37 @@ class Dataset():
             if expected_examples % config['examples_per_shard']:
                 raise ValueError("expected_examples is not divisible by "
                                  "examples_per_shard")
+
+            if expected_examples != sum(s['examples'] for s in slist):
+                raise ValueError(f'Mismatch in expected_examples, shards '
+                                 f'metadata do not agree in {split}.')
+            if n_examples_in_each_shard_is_constant:
+                # All shards have the same number of examples.
+                if any(s['examples'] != config['examples_per_shard']
+                       for s in slist):
+                    raise ValueError(f'Not all shards in {split} contain the '
+                                     f'same number of examples.')
+
+            # Check examples_per_group sums to the right thing.
+            sum_examples_per_group = sum(
+                config['examples_per_group'][split].values())
+            if sum_examples_per_group != expected_examples:
+                raise ValueError(f'Wrong sum of examples_per_group in {split}')
+            # Check examples_per_group in individual groups.
+            # Dataset.check can be called either after creating a dataset (when
+            # all measurements are done) or after loading from a config. The
+            # JSON file-format only allows keys to be strings. When the dataset
+            # is created the group ids are integers, but when dataset is loaded
+            # they are strings. We check the case where all keys are strings.
+            examples_per_group = defaultdict(int)
+            for shard in slist:
+                examples_per_group[str(shard['group'])] += shard['examples']
+            examples_per_group_config = {
+                str(k): v
+                for k, v in config['examples_per_group'][split].items()
+            }
+            if examples_per_group != examples_per_group_config:
+                raise ValueError(f"Wrong examples_per_group in {split}")
 
             actual_examples = 0
             for sinfo in slist:
