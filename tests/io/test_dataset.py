@@ -10,6 +10,29 @@ from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 
 
+def test_from_config(tmp_path):
+    # Create the file structure.
+    d1 = Dataset(root_path=tmp_path,
+                 shortname='shortname',
+                 architecture='architecture',
+                 implementation='implementation',
+                 algorithm='algorithm',
+                 version=1,
+                 description='description',
+                 url='',
+                 firmware_sha256='abc123',
+                 examples_per_shard=64,
+                 measurements_info={},
+                 attack_points_info={})
+    old_files = set(tmp_path.glob('**/*'))
+
+    d2 = Dataset.from_config(d1.path)
+
+    # No new files have been created.
+    new_files = set(tmp_path.glob('**/*'))
+    assert old_files == new_files
+
+
 def test_close_shard(tmp_path):
     minfo = {
         "trace1": {
