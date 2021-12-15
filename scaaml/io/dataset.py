@@ -42,8 +42,17 @@ class Dataset():
         capture_info: dict = {},
         min_values: Dict[str, int] = {},
         max_values: Dict[str, int] = {},
+        from_config: bool = False,
     ) -> None:
-        self.root_path = root_path
+        """Class for saving and loading a database.
+
+        Args:
+          from_config: This Dataset object has been created from a saved
+            config, root_path thus points to what should be self.path. When
+            True set self.path = root_path, self.root_path to be the parent of
+            self.path. In this case it does not necessarily hold that
+            self.path.name == self.slug (the directory could have been renamed).
+        """
         self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation
@@ -61,19 +70,24 @@ class Dataset():
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
 
-        # create directory -- check if its empty
         self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
                                          implementation, version)
-        self.path = Path(self.root_path) / self.slug
-        if self.path.exists():
-            cprint("[Warning] Path exist, some files might be over-written",
-                   'yellow')
+        if from_config:
+            self.path = Path(root_path)
+            self.root_path = str(self.path.parent)
         else:
-            # create path if needed
-            self.path.mkdir(parents=True)
-            Path(self.path / 'train').mkdir()
-            Path(self.path / 'test').mkdir()
-            Path(self.path / 'holdout').mkdir()
+            self.root_path = root_path
+            self.path = Path(self.root_path) / self.slug
+            # create directory -- check if its empty
+            if self.path.exists():
+                cprint("[Warning] Path exist, some files might be over-written",
+                       'yellow')
+            else:
+                # create path if needed
+                self.path.mkdir(parents=True)
+                Path(self.path / 'train').mkdir()
+                Path(self.path / 'test').mkdir()
+                Path(self.path / 'holdout').mkdir()
 
         cprint("Dataset path: %s" % self.path, 'green')
 
@@ -108,8 +122,9 @@ class Dataset():
                 self.min_values[k] = math.inf
                 self.max_values[k] = 0
 
-        # write config
-        self._write_config()
+        # write config if needed
+        if not from_config:
+            self._write_config()
 
     @staticmethod
     def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
@@ -679,6 +694,7 @@ class Dataset():
             examples_per_shard=config['examples_per_shard'],
             min_values=config['min_values'],
             max_values=config['max_values'],
+            from_config=True,
         )
 
     @staticmethod
