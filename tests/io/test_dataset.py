@@ -10,6 +10,30 @@ from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 
 
+def test_info_file_raises(tmp_path):
+    # Make the dataset directory with info.json in it (the 'sn_al_ar_vimp_1' is
+    # the slug).
+    dpath = tmp_path / 'sn_al_ar_vimp_1'
+    dpath.mkdir()
+    Dataset._get_config_path(dpath).write_text('exists')
+
+    with pytest.raises(FileExistsError) as verror:
+        ds = Dataset(root_path=tmp_path,
+                     shortname='sn',
+                     architecture='ar',
+                     implementation='imp',
+                     algorithm='al',
+                     version=1,
+                     description='description',
+                     url='',
+                     firmware_sha256='abc123',
+                     examples_per_shard=1,
+                     measurements_info={},
+                     attack_points_info={})
+    assert ('Dataset info file exists and would be overwritten. '
+            'Use instead:') in str(verror.value)
+
+
 def test_from_loaded_json(tmp_path):
     ds = Dataset(root_path=tmp_path,
                  shortname='shortname',

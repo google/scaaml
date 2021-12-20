@@ -54,6 +54,11 @@ class Dataset():
             True set self.path = root_path, self.root_path to be the parent of
             self.path. In this case it does not necessarily hold that
             self.path.name == self.slug (the directory could have been renamed).
+
+        Raises:
+          ValueError: If firmware_sha256 evaluates to False.
+          FileExistsError: If creating this object would overwrite the
+            corresponding config file.
         """
         self.shortname = shortname
         self.architecture = architecture
@@ -81,9 +86,10 @@ class Dataset():
             self.root_path = root_path
             self.path = Path(self.root_path) / self.slug
             # create directory -- check if its empty
-            if self.path.exists():
-                cprint("[Warning] Path exist, some files might be over-written",
-                       'yellow')
+            if Dataset._get_config_path(self.path).exists():
+                raise FileExistsError(f'Dataset info file exists and would be '
+                                      f'overwritten. Use instead: Dataset.from'
+                                      f'_config(dataset_path="{self.path}")')
             else:
                 # create path if needed
                 self.path.mkdir(parents=True)
