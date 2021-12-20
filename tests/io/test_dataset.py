@@ -8,6 +8,53 @@ from unittest.mock import patch
 from scaaml.io import Dataset
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
+from scaaml.io.errors import DatasetExistsError
+
+
+def test_resume_capture(tmp_path):
+    kwargs = {
+        'root_path': tmp_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'description': 'description',
+        'url': '',
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    ds = Dataset.get_dataset(**kwargs)
+    key = np.random.randint(0, 255, 16)
+    key2 = np.random.randint(0, 255, 16)
+    trace1 = np.zeros(1024, dtype=np.float)
+    trace1[2] = 0.8  # max_val is written before deleting ds
+    trace2 = np.zeros(1024, dtype=np.float)
+    chip_id = 1
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.close_shard()
+    del ds
+    ds = Dataset.get_dataset(**kwargs)
+    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key2}, {"trace1": trace2})
+    ds.close_shard()
+    config_dict = ds._get_config_dictionary()
+
+    assert len(config_dict['shards_list']['train']) == 2
+    assert config_dict['max_values']['trace1'] == 0.8
 
 
 def test_info_file_raises(tmp_path):
@@ -17,7 +64,7 @@ def test_info_file_raises(tmp_path):
     dpath.mkdir()
     Dataset._get_config_path(dpath).write_text('exists')
 
-    with pytest.raises(FileExistsError) as verror:
+    with pytest.raises(DatasetExistsError) as verror:
         ds = Dataset(root_path=tmp_path,
                      shortname='sn',
                      architecture='ar',

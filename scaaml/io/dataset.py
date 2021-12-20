@@ -18,6 +18,7 @@ import tensorflow as tf
 from scaaml.utils import bytelist_to_hex
 import scaaml.io.utils as siutils
 from .shard import Shard
+from .errors import DatasetExistsError
 
 
 class Dataset():
@@ -57,7 +58,7 @@ class Dataset():
 
         Raises:
           ValueError: If firmware_sha256 evaluates to False.
-          FileExistsError: If creating this object would overwrite the
+          DatasetExistsError: If creating this object would overwrite the
             corresponding config file.
         """
         self.shortname = shortname
@@ -87,9 +88,7 @@ class Dataset():
             self.path = Path(self.root_path) / self.slug
             # create directory -- check if its empty
             if Dataset._get_config_path(self.path).exists():
-                raise FileExistsError(f'Dataset info file exists and would be '
-                                      f'overwritten. Use instead: Dataset.from'
-                                      f'_config(dataset_path="{self.path}")')
+                raise DatasetExistsError(dataset_path=self.path)
             else:
                 # create path if needed
                 self.path.mkdir(parents=True)
@@ -133,6 +132,20 @@ class Dataset():
         # write config if needed
         if not from_config:
             self._write_config()
+
+    @staticmethod
+    def get_dataset(*args, **kwargs):
+        """Convenience method for getting a Dataset either by creating a new
+        dataset using the Dataset constructor or by calling Dataset.from_config.
+
+        Args: Same as scaaml.io.Dataset.__init__
+
+        Returns: A scaaml.io.Dataset object.
+        """
+        try:
+            return Dataset(*args, **kwargs)
+        except DatasetExistsError as err:
+            return Dataset.from_config(dataset_path=err.dataset_path)
 
     @staticmethod
     def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
