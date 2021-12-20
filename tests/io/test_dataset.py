@@ -10,6 +10,37 @@ from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 
 
+def test_from_loaded_json(tmp_path):
+    ds = Dataset(root_path=tmp_path,
+                 shortname='shortname',
+                 architecture='architecture',
+                 implementation='implementation',
+                 algorithm='algorithm',
+                 version=1,
+                 description='description',
+                 url='',
+                 firmware_sha256='abc123',
+                 examples_per_shard=1,
+                 measurements_info={ "trace1": { "type": "power", "len": 1024, } },
+                 attack_points_info={ "key": { "len": 16, "max_val": 256 }, })
+    key = np.random.randint(0, 255, 16)
+    key2 = np.random.randint(0, 255, 16)
+    trace1 = np.random.rand(1024)
+    chip_id = 1
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.close_shard()
+    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key2}, {"trace1": trace1})
+    ds.close_shard()
+    config_dict = ds._get_config_dictionary()
+    json_dict = json.loads(json.dumps(config_dict))
+
+    loaded_dict = Dataset._from_loaded_json(json_dict)
+
+    assert loaded_dict == config_dict
+
+
 def test_from_config(tmp_path):
     # Create the file structure.
     d1 = Dataset(root_path=tmp_path,
@@ -89,6 +120,8 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
     num_example = 5
     mock_shard_init.return_value = None
     config = {
+        'keys_per_group': {},
+        'examples_per_group': {},
         'shards_list': {
             'test': [{
                 'path': 'test/0_abcd_1.tfrec'
@@ -376,13 +409,13 @@ def test_cleanup_shards(tmp_path):
         'examples_per_shard': 64,
         'examples_per_group': {
             'test': {
-                '0': 2 * 64,
-                '1': 1 * 64,
-                '2': 1 * 64,
-                '3': 2 * 64,
+                0: 2 * 64,
+                1: 1 * 64,
+                2: 1 * 64,
+                3: 2 * 64,
             },
             'train': {
-                '0': 5 * 64,
+                0: 5 * 64,
             }
         },
         'examples_per_split': {
@@ -395,13 +428,13 @@ def test_cleanup_shards(tmp_path):
         },
         'keys_per_group': {
             'test': {
-                '0': 1,
-                '1': 1,
-                '2': 1,
-                '3': 1,
+                0: 1,
+                1: 1,
+                2: 1,
+                3: 1,
             },
             'train': {
-                '0': 4,
+                0: 4,
             }
         },
         'shards_list': {
@@ -432,28 +465,28 @@ def test_cleanup_shards(tmp_path):
     for i in sorted([0, 3], reverse=True):  # Remove in descending order.
         del new_config['shards_list']['train'][i]
     new_config['examples_per_group']['train'] = {
-        '0': 3 * 64,
+        0: 3 * 64,
     }
     new_config['examples_per_split']['train'] = 3 * 64
     new_config['keys_per_split']['train'] = 3
     new_config['keys_per_group']['train'] = {
-        '0': 3,
+        0: 3,
     }
     for i in sorted([1, 2], reverse=True):  # Remove in descending order.
         del new_config['shards_list']['test'][i]
     new_config['examples_per_group']['test'] = {
-        '0': 1 * 64,
-        '1': 0 * 64,
-        '2': 1 * 64,
-        '3': 2 * 64,
+        0: 1 * 64,
+        1: 0 * 64,
+        2: 1 * 64,
+        3: 2 * 64,
     }
     new_config['examples_per_split']['test'] = 4 * 64
     new_config['keys_per_split']['test'] = 3
     new_config['keys_per_group']['test'] = {
-        '0': 1,
-        '1': 0,
-        '2': 1,
-        '3': 1,
+        0: 1,
+        1: 0,
+        2: 1,
+        3: 1,
     }
     for i in []:  # Fill this split in old_config first
         del new_config['shards_list']['holdout'][i]

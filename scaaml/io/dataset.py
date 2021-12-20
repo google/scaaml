@@ -1,4 +1,5 @@
 "Build and load tensorFlow dataset Record wrapper"
+import copy
 import math
 import json
 import os
@@ -6,6 +7,7 @@ from collections import defaultdict
 from time import time
 from typing import Dict, List, Union, Literal
 from pathlib import Path
+import pprint
 
 from tabulate import tabulate
 from termcolor import cprint
@@ -427,8 +429,8 @@ class Dataset():
                'architecture', 'implementation',
                'algorithm', 'version', 'compression']
 
-        fpath = Dataset._get_config_path(dataset_path)
-        config = json.loads(open(fpath).read())
+        conf_path = Dataset._get_config_path(dataset_path)
+        config = Dataset._load_config(conf_path)
         cprint("[Dataset Summary]", 'cyan')
         cprint("Info", 'yellow')
         print(tabulate([[k, config.get(k, '')] for k in lst]))
@@ -473,7 +475,7 @@ class Dataset():
         Returns: tf TakeDataset object.
         """
         conf_path = Dataset._get_config_path(dataset_path)
-        config = json.loads(conf_path.read_text())
+        config = Dataset._load_config(conf_path)
         shard_path = Path(
             dataset_path) / config['shards_list'][split][shard_id]['path']
         if verbose:
@@ -675,8 +677,20 @@ class Dataset():
                         f'{train_shards[i]}')
 
     def _get_config_dictionary(self):
-        """Return dictionary of information about this dataset."""
-        return {
+        """Return dictionary of information about this dataset.
+
+        Raises: ValueError if saving this dictionary using json would cause
+          data loss. This can be caused by having different keys with the same
+          string representation:
+
+          d = {0: 1, '0': 2}  # JSON key collision
+          l = json.loads(json.dumps(d))
+          assert l != d
+
+          Note that it is ok to have keys of other type than string, since the
+          check is performed using Dataset._from_loaded_json.
+        """
+        representation = {
             "shortname": self.shortname,
             "architecture": self.architecture,
             "implementation": self.implementation,
@@ -698,6 +712,58 @@ class Dataset():
             "min_values": self.min_values,
             "max_values": self.max_values,
         }
+        loaded = Dataset._from_loaded_json(
+            json.loads(json.dumps(representation)))
+        if loaded != representation:
+            pprint_file = self.path / f'info.{time()}.pprint'
+            pprint_file.write_text(pprint.pformat(representation))
+            raise ValueError(f'JSON representation causes data loss, saving '
+                             f'into {pprint_file}')
+        return representation
+
+    @staticmethod
+    def _load_config(conf_path: Path) -> Dict:
+        """Get config dictionary from a file. Use this function instead of an
+        json.loads, as this function returns correct types for group ids.
+
+        Args:
+          conf_path: Path object representing the dataset information (e.g.,
+            the return value of Dataset._get_config_path).
+
+        Returns: Dictionary representation of the Dataset.
+        """
+        return Dataset._from_loaded_json(json.loads(conf_path.read_text()))
+
+    @staticmethod
+    def _from_loaded_json(loaded_dict: Dict) -> Dict:
+        """Fix types in the datastructure loaded from JSON. Necessary as JSON
+        allows only string keys, but for instance group keys are integers in
+        Dataset.
+
+        Args:
+          loaded_dict: The datastructure returned by json.load on the info.json
+            file.
+
+        Returns: The same information with fixed types.
+        """
+        fixed_dict = copy.deepcopy(loaded_dict)
+        # Fix type of keys_per_group
+        fixed_dict['keys_per_group'] = {
+            split: {
+                int(group): n_examples
+                for group, n_examples in keys_info.items()
+            }
+            for split, keys_info in loaded_dict['keys_per_group'].items()
+        }
+        # Fix type of examples_per_group
+        fixed_dict['examples_per_group'] = {
+            split: {
+                int(group): n_examples
+                for group, n_examples in ex_info.items()
+            }
+            for split, ex_info in loaded_dict['examples_per_group'].items()
+        }
+        return fixed_dict
 
     def _write_config(self):
         """Save configuration as json."""
@@ -707,9 +773,9 @@ class Dataset():
     @staticmethod
     def from_config(dataset_path: str):
         dpath = Path(dataset_path)
-        fpath = Dataset._get_config_path(dataset_path)
-        cprint("reloading %s" % fpath, 'magenta')
-        config = json.loads(open(fpath).read())
+        conf_path = Dataset._get_config_path(dataset_path)
+        cprint(f'reloading {conf_path}', 'magenta')
+        config = Dataset._load_config(conf_path)
         return Dataset(
             root_path=str(dpath),
             shortname=config['shortname'],
@@ -753,7 +819,7 @@ class Dataset():
 
         Returns: Updated configuration to be written using json.dump.
         """
-        config = json.loads(Dataset._get_config_path(dataset_path).read_text())
+        config = Dataset._load_config(Dataset._get_config_path(dataset_path))
         stats = []  # Statistic how many were kept and removed in each split.
         new_shards_list = defaultdict(list)
         for split, slist in config['shards_list'].items():
@@ -789,11 +855,10 @@ class Dataset():
             key_names_per_split = set()
             for shard in slist:
                 shard_info = Dataset._shard_info_from_name(shard['path'])
-                # String representation of the shard group ('0', '1', '2', ...).
-                ssg = str(shard_info['shard_group'])
-                examples_per_group[split][ssg] += config['examples_per_shard']
+                sg = shard_info['shard_group']
+                examples_per_group[split][sg] += config['examples_per_shard']
                 key_names_per_split.add(shard_info['shard_key'])
-                names_keys_per_group[ssg].add(shard_info['shard_key'])
+                names_keys_per_group[sg].add(shard_info['shard_key'])
             # We suppose that each shard contains at most one key.
             config['keys_per_group'][split] = {
                 k: len(names_keys_per_group[k])
