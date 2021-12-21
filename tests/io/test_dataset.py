@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import copy
 import json
 from pathlib import Path
@@ -9,6 +10,195 @@ from scaaml.io import Dataset
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
+
+
+def test_shard_metadata_negative_chip_id(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': -13,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'Wrong chip_id, got' in str(verror.value)
+
+
+def test_shard_metadata_float_chip_id(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': 13.,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'Wrong chip_id, got' in str(verror.value)
+
+
+def test_shard_metadata_str_chip_id(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': '13',
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'Wrong chip_id, got' in str(verror.value)
+
+
+def test_shard_metadata_wrong_size(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size + 1,
+        'chip_id': 13,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'Wrong size, got' in str(verror.value)
+
+
+def test_shard_metadata_wrong_path_k(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key='key', shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': 13,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'key does not match filename' in str(verror.value)
+
+
+def test_shard_metadata_wrong_path(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group + 1, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': 13,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'group does not match filename' in str(verror.value)
+
+
+def test_shard_metadata_extra_key(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'extra_key': 'should not be here',
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': 13,
+    }
+
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+    assert 'Shard info keys are' in str(verror.value)
+
+
+def test_shard_metadata_missing_keys(tmp_path):
+    with pytest.raises(ValueError) as verror:
+        Dataset._check_shard_metadata(shard_info={}, dataset_path=tmp_path)
+    assert 'Shard info keys are' in str(verror.value)
+
+
+def test_shard_metadata_ok(tmp_path):
+    group = 1
+    key = 'BDC9C50A1B51732C56838405443BC76F'
+    part = 2
+    shard_file = tmp_path / Dataset._shard_name(
+        shard_group=group, shard_key=key, shard_part=part)
+    shard_file.write_text('content')
+    si = {
+        'examples': 64,
+        'sha256': 'abc123',
+        'path': str(shard_file),
+        'group': group,
+        'key': key,
+        'part': part,
+        "size": os.stat(shard_file).st_size,
+        'chip_id': 13,
+    }
+
+    Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
 
 
 def test_resume_capture(tmp_path):
