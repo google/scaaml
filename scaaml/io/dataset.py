@@ -531,6 +531,11 @@ class Dataset():
         Dataset._check_sha256sums(shards_list=self.shards_list,
                                   dpath=Path(self.path),
                                   pbar=pbar)
+        # Check shard metadata
+        for slist in self.shards_list.values():
+            for shard_info in slist:
+                Dataset._check_shard_metadata(shard_info=shard_info,
+                                              dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
         if 'test' in self.examples_per_split and 'train' in self.examples_per_split:
             self._check_disjoint_keys(pbar=pbar, deep_check=deep_check)
@@ -586,6 +591,55 @@ class Dataset():
                 sha_hash = siutils.sha256sum(shard_path)
                 if sha_hash != sinfo['sha256']:
                     raise ValueError(sinfo['path'], "SHA256 miss-match")
+
+    @staticmethod
+    def _check_shard_metadata(shard_info: Dict, dataset_path: Path) -> None:
+        """Checks shard metadata.
+
+        Args:
+          shard_info: Dictionary of the shard metadata.
+          dataset_path: Dataset path, so that we can check size of the shard
+            file.
+
+        Raises: ValueError if the metadata is inconsistent.
+        """
+        # Check that only expected keys are present:
+        si_keys = {
+            'examples',  # Checked by Dataset._check_metadata
+            'sha256',  # Checked by Dataset._check_sha256sums
+            'path',  # Checked by Dataset._check_sha256sums
+            'group',  # Checked against path
+            'key',  # Checked against path
+            'part',  # Checked against path
+            'size',  # Checked here
+            'chip_id',  # Checked that it is a non-negative integer
+        }
+        if set(shard_info.keys()) != si_keys:
+            raise ValueError(f'Shard info keys are: {shard_info.keys()} '
+                             f'expected: {si_keys}, in shard: {shard_info}')
+        # Check that the info corresponds to the filename:
+        file_info = Dataset._shard_info_from_name(shard_info['path'])
+        for key in ['group', 'part']:
+            if file_info['shard_' + key] != shard_info[key]:
+                raise ValueError(f'{key} does not match filename, expected: '
+                                 f'{file_info["shard_" + key]}, got: '
+                                 f'{shard_info[key]}, in shard: {shard_info}')
+        # Check key (in filename it is lower case, in info it is upper case)
+        if file_info['shard_key'].lower() != shard_info['key'].lower():
+            raise ValueError(f'key does not match filename, expected: '
+                             f'{file_info["shard_key"]}, got: '
+                             f'{shard_info["key"]} (not case sensitive), in '
+                             f'shard: {shard_info}')
+        # Check size of the file
+        size = os.stat(dataset_path / shard_info['path']).st_size
+        if size != shard_info['size']:
+            raise ValueError(f'Wrong size, got: {size}, expected: '
+                             f'{shard_info["size"]}, in shard: {shard_info}')
+        # Check chip_id is non-negative integer
+        chip_id = shard_info['chip_id']
+        if not isinstance(chip_id, int) or chip_id < 0:
+            raise ValueError(f'Wrong chip_id, got: {chip_id}, of type: '
+                             f'{type(chip_id)}, in shard: {shard_info}')
 
     @staticmethod
     def _check_metadata(config,
@@ -644,6 +698,10 @@ class Dataset():
             actual_examples = 0
             for sinfo in slist:
                 actual_examples += sinfo['examples']
+                if sinfo['examples'] != config['examples_per_shard']:
+                    raise ValueError(f'Wrong number of examples, expected: '
+                                     f'{config["examples_per_shard"]}, got: '
+                                     f'{sinfo["examples"]}, in shard: {sinfo}')
 
             if actual_examples != expected_examples:
                 raise ValueError("sum example don't match top_examples")
