@@ -1,4 +1,5 @@
-"Build and load tensorFlow dataset Record wrapper"
+"""Build and load tensorFlow dataset Record wrapper"""
+
 import copy
 import math
 import json
@@ -15,7 +16,9 @@ from tqdm.auto import tqdm
 import numpy as np
 import tensorflow as tf
 
+import scaaml
 from scaaml.utils import bytelist_to_hex
+from scaaml.utils import comparable_version
 import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
@@ -141,6 +144,9 @@ class Dataset():
         Args: Same as scaaml.io.Dataset.__init__
 
         Returns: A scaaml.io.Dataset object.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used (via Dataset.from_config).
         """
         try:
             return Dataset(*args, **kwargs)
@@ -750,6 +756,8 @@ class Dataset():
             "attack_points_info": self.attack_points_info,
             "min_values": self.min_values,
             "max_values": self.max_values,
+            # See scaaml.__version__ docstring for more information.
+            "scaaml_version": scaaml.__version__,
         }
         loaded = Dataset._from_loaded_json(
             json.loads(json.dumps(representation)))
@@ -811,10 +819,27 @@ class Dataset():
 
     @staticmethod
     def from_config(dataset_path: str):
+        """Load a dataset from a config file.
+
+        Args:
+          dataset_path: The path to the dataset.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used. See scaaml.__version__ docstring.
+        """
         dpath = Path(dataset_path)
         conf_path = Dataset._get_config_path(dataset_path)
         cprint(f'reloading {conf_path}', 'magenta')
         config = Dataset._load_config(conf_path)
+        # Check that the library version (version of this software) is not
+        # lower than what was used to capture the dataset.
+        if 'scaaml_version' in config.keys():
+            lib_version = comparable_version(scaaml.__version__)
+            dataset_version = comparable_version(config['scaaml_version'])
+            if dataset_version > lib_version:
+                raise ValueError(f'SCAAML module is outdated, scaaml_version: '
+                                 f'{scaaml.__version__}, but dataset was '
+                                 f'created using: {config["scaaml_version"]}')
         return Dataset(
             root_path=str(dpath),
             shortname=config['shortname'],

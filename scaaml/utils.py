@@ -13,6 +13,8 @@
 # limitations under the License.
 
 "Utils common to various SCAAML components"
+from typing import List
+
 from tqdm.auto import tqdm
 import tensorflow as tf
 import numpy as np
@@ -22,6 +24,22 @@ from multiprocessing import Pool
 import time
 from random import randint
 from termcolor import cprint, colored
+
+import scaaml
+
+
+def comparable_version(version: str = scaaml.__version__) -> List[int]:
+    """Returns comparable version.
+
+    Args:
+      version: A version string consisting of dot separated integers.
+
+    Returns: A list of integers that can be compared (lexicographically).
+
+    Example use:
+    version_list = comparable_version('1.0.3')
+    """
+    return [int(n) for n in version.split('.')]
 
 
 def pretty_hex(val):

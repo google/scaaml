@@ -12,6 +12,93 @@ from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
 
 
+def test_scaaml_version_load_bad(tmp_path):
+    kwargs = {
+        'root_path': tmp_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'description': 'description',
+        'url': '',
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    # Create the dataset
+    ds = Dataset.get_dataset(**kwargs)
+    # Increment the version number
+    config_file = Dataset._get_config_path(ds.path)
+    config = json.loads(config_file.read_text())
+    config['scaaml_version'] = config['scaaml_version'] + '.1'
+    config_file.write_text(json.dumps(config))
+    with pytest.raises(ValueError) as verror:
+        # Load it again
+        ds = Dataset.get_dataset(**kwargs)
+    assert 'SCAAML module is outdated' in str(verror.value)
+
+
+def test_scaaml_version_load_ok(tmp_path):
+    kwargs = {
+        'root_path': tmp_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'description': 'description',
+        'url': '',
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    # Create the dataset
+    ds = Dataset.get_dataset(**kwargs)
+    # Load it again
+    ds = Dataset.get_dataset(**kwargs)
+
+
+def test_scaaml_version_present(tmp_path):
+    ds = Dataset(root_path=tmp_path,
+                 shortname='sn',
+                 architecture='ar',
+                 implementation='imp',
+                 algorithm='al',
+                 version=1,
+                 description='description',
+                 url='',
+                 firmware_sha256='abc123',
+                 examples_per_shard=1,
+                 measurements_info={},
+                 attack_points_info={})
+    config = ds._get_config_dictionary()
+
+    assert 'scaaml_version' in config.keys()
+
+
 def test_shard_metadata_negative_chip_id(tmp_path):
     group = 1
     key = 'BDC9C50A1B51732C56838405443BC76F'
