@@ -12,6 +12,43 @@ from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
 
 
+def test_firmware_url_mandatory(tmp_path):
+    licence = 'some licence'
+    firmware_url = ''
+    paper_url = 'paper URL'
+    url = 'U R L'
+    kwargs = {
+        'root_path': tmp_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'paper_url': paper_url,
+        'firmware_url': firmware_url,
+        'licence': licence,
+        'description': 'description',
+        'url': url,
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    with pytest.raises(ValueError) as verror:
+        ds = Dataset.get_dataset(**kwargs)
+    assert 'Firmware URL is required' in str(verror.value)
+
+
 def test_get_config_dictionary_urls(tmp_path):
     licence = 'some licence'
     firmware_url = 'firmware url'
@@ -70,6 +107,7 @@ def test_scaaml_version_load_bad(tmp_path):
         'version': 1,
         'description': 'description',
         'url': '',
+        'firmware_url': 'some url',
         'firmware_sha256': 'abc123',
         'examples_per_shard': 1,
         'measurements_info': {
@@ -108,6 +146,7 @@ def test_scaaml_version_load_ok(tmp_path):
         'version': 1,
         'description': 'description',
         'url': '',
+        'firmware_url': 'some url',
         'firmware_sha256': 'abc123',
         'examples_per_shard': 1,
         'measurements_info': {
@@ -138,6 +177,7 @@ def test_scaaml_version_present(tmp_path):
                  version=1,
                  description='description',
                  url='',
+                 firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=1,
                  measurements_info={},
@@ -346,6 +386,7 @@ def test_resume_capture(tmp_path):
         'version': 1,
         'description': 'description',
         'url': '',
+        'firmware_url': 'some url',
         'firmware_sha256': 'abc123',
         'examples_per_shard': 1,
         'measurements_info': {
@@ -398,6 +439,7 @@ def test_info_file_raises(tmp_path):
                      version=1,
                      description='description',
                      url='',
+                     firmware_url='some url',
                      firmware_sha256='abc123',
                      examples_per_shard=1,
                      measurements_info={},
@@ -415,6 +457,7 @@ def test_from_loaded_json(tmp_path):
                  version=1,
                  description='description',
                  url='',
+                 firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=1,
                  measurements_info={ "trace1": { "type": "power", "len": 1024, } },
@@ -447,6 +490,7 @@ def test_from_config(tmp_path):
                  version=1,
                  description='description',
                  url='',
+                 firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=64,
                  measurements_info={},
@@ -689,6 +733,7 @@ def test_basic_workflow(tmp_path):
                  version=version,
                  description=description,
                  url=url,
+                 firmware_url='some url',
                  firmware_sha256=fw_sha256,
                  examples_per_shard=example_per_shard,
                  measurements_info=minfo,

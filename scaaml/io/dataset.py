@@ -67,7 +67,7 @@ class Dataset():
             self.path.name == self.slug (the directory could have been renamed).
 
         Raises:
-          ValueError: If firmware_sha256 evaluates to False.
+          ValueError: If firmware_sha256 or firmware_url evaluates to False.
           DatasetExistsError: If creating this object would overwrite the
             corresponding config file.
         """
@@ -90,6 +90,8 @@ class Dataset():
 
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
+        if not self.firmware_url:
+            raise ValueError("Firmware URL is required")
 
         self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
                                          implementation, version)
