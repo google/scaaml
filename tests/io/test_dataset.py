@@ -12,8 +12,11 @@ from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
 
 
-def test_get_config_dictionary_licence(tmp_path):
+def test_get_config_dictionary_urls(tmp_path):
     licence = 'some licence'
+    firmware_url = 'firmware url'
+    paper_url = 'paper URL'
+    url = 'U R L'
     kwargs = {
         'root_path': tmp_path,
         'shortname': 'shortname',
@@ -21,9 +24,11 @@ def test_get_config_dictionary_licence(tmp_path):
         'implementation': 'implementation',
         'algorithm': 'algorithm',
         'version': 1,
+        'paper_url': paper_url,
+        'firmware_url': firmware_url,
         'licence': licence,
         'description': 'description',
-        'url': '',
+        'url': url,
         'firmware_sha256': 'abc123',
         'examples_per_shard': 1,
         'measurements_info': {
@@ -43,10 +48,16 @@ def test_get_config_dictionary_licence(tmp_path):
     ds = Dataset.get_dataset(**kwargs)
     conf = ds._get_config_dictionary()
     assert conf['licence'] == licence
+    assert conf['url'] == url
+    assert conf['paper_url'] == paper_url
+    assert conf['firmware_url'] == firmware_url
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
     conf = ds._get_config_dictionary()
     assert conf['licence'] == licence
+    assert conf['url'] == url
+    assert conf['paper_url'] == paper_url
+    assert conf['firmware_url'] == firmware_url
 
 
 def test_scaaml_version_load_bad(tmp_path):
@@ -720,6 +731,8 @@ def test_cleanup_shards(tmp_path):
 
     old_config = {  # Some fields omitted.
         'licence': 'some_licence',
+        'paper_url': 'some_url',
+        'firmware_url': 'fm_url',
         'examples_per_shard': 64,
         'examples_per_group': {
             'test': {

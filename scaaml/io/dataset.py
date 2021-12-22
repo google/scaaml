@@ -35,10 +35,12 @@ class Dataset():
         version: int,
         firmware_sha256: str,
         description: str,
-        url: str,
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
+        url: str,
+        firmware_url: str = '',
+        paper_url: str = '',
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
         shards_list: defaultdict = None,
@@ -54,6 +56,9 @@ class Dataset():
         """Class for saving and loading a database.
 
         Args:
+          url: Where to download this dataset.
+          firmware_url: Where to dowload the firmware used while capture.
+          paper_url: Where to find the published paper.
           licence: URL or the whole licence the dataset is published under.
           from_config: This Dataset object has been created from a saved
             config, root_path thus points to what should be self.path. When
@@ -75,6 +80,8 @@ class Dataset():
         self.firmware_sha256 = firmware_sha256
         self.description = description
         self.url = url
+        self.firmware_url = firmware_url
+        self.paper_url = paper_url
         self.licence = licence
 
         self.capture_info = capture_info
@@ -746,6 +753,8 @@ class Dataset():
             "version": self.version,
             "firmware_sha256": self.firmware_sha256,
             "url": self.url,
+            "firmware_url": self.firmware_url,
+            "paper_url": self.paper_url,
             "licence": self.licence,
             "description": self.description,
             "compression": self.compression,
@@ -818,6 +827,9 @@ class Dataset():
         if 'licence' not in fixed_dict:
             # Do not relicence
             fixed_dict['licence'] = ''
+        for k in ['firmware_url', 'paper_url']:
+            if k not in fixed_dict:
+                fixed_dict[k] = ''
         return fixed_dict
 
     def _write_config(self):
@@ -856,6 +868,8 @@ class Dataset():
             algorithm=config['algorithm'],
             version=config['version'],
             url=config['url'],
+            firmware_url=config['firmware_url'],
+            paper_url=config['paper_url'],
             licence=config['licence'],
             description=config['description'],
             firmware_sha256=config['firmware_sha256'],
