@@ -12,6 +12,43 @@ from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
 
 
+def test_get_config_dictionary_licence(tmp_path):
+    licence = 'some licence'
+    kwargs = {
+        'root_path': tmp_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'licence': licence,
+        'description': 'description',
+        'url': '',
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    # Create the dataset
+    ds = Dataset.get_dataset(**kwargs)
+    conf = ds._get_config_dictionary()
+    assert conf['licence'] == licence
+    # Reload the dataset
+    ds = Dataset.from_config(ds.path)
+    conf = ds._get_config_dictionary()
+    assert conf['licence'] == licence
+
+
 def test_scaaml_version_load_bad(tmp_path):
     kwargs = {
         'root_path': tmp_path,
@@ -682,6 +719,7 @@ def test_cleanup_shards(tmp_path):
         }  # yapf: disable
 
     old_config = {  # Some fields omitted.
+        'licence': 'some_licence',
         'examples_per_shard': 64,
         'examples_per_group': {
             'test': {

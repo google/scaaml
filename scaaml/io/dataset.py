@@ -39,6 +39,7 @@ class Dataset():
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
+        licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
         shards_list: defaultdict = None,
         keys_per_group: defaultdict = None,
@@ -53,6 +54,7 @@ class Dataset():
         """Class for saving and loading a database.
 
         Args:
+          licence: URL or the whole licence the dataset is published under.
           from_config: This Dataset object has been created from a saved
             config, root_path thus points to what should be self.path. When
             True set self.path = root_path, self.root_path to be the parent of
@@ -73,6 +75,7 @@ class Dataset():
         self.firmware_sha256 = firmware_sha256
         self.description = description
         self.url = url
+        self.licence = licence
 
         self.capture_info = capture_info
         self.measurements_info = measurements_info
@@ -743,6 +746,7 @@ class Dataset():
             "version": self.version,
             "firmware_sha256": self.firmware_sha256,
             "url": self.url,
+            "licence": self.licence,
             "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
@@ -810,6 +814,10 @@ class Dataset():
             }
             for split, ex_info in loaded_dict['examples_per_group'].items()
         }
+        # Fix missing keys
+        if 'licence' not in fixed_dict:
+            # Do not relicence
+            fixed_dict['licence'] = ''
         return fixed_dict
 
     def _write_config(self):
@@ -848,6 +856,7 @@ class Dataset():
             algorithm=config['algorithm'],
             version=config['version'],
             url=config['url'],
+            licence=config['licence'],
             description=config['description'],
             firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
