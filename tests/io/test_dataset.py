@@ -1,4 +1,3 @@
-import numpy as np
 import os
 import copy
 import json
@@ -6,10 +5,130 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch
 
+import numpy as np
+
+import scaaml
 from scaaml.io import Dataset
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
+
+
+def dataset_constructor_kwargs(root_path, **kwargs):
+    """Return key-value arguments for dataset constructor. In order to add or
+    change arguments pass arguments to this function. The parameter root_path
+    must be always specified.
+
+    Args:
+      root_path: The root_path for the Dataset.
+      kwargs: Arguments to update the defaults.
+
+    Example use:
+      # Set 'version' to 2, add new parameter 'new_par' to 'new_value' and
+      # remove 'firmware_url':
+      result = dataset_constructor_kwargs(root_path=root_path,
+                                          version=2,
+                                          new_par='new_value')
+      del result['firmware_url']
+    """
+    result = {
+        'root_path': root_path,
+        'shortname': 'shortname',
+        'architecture': 'architecture',
+        'implementation': 'implementation',
+        'algorithm': 'algorithm',
+        'version': 1,
+        'paper_url': 'http://paper.url',
+        'firmware_url': 'http://firmware.url',
+        'licence': 'CC BY 4.0',
+        'description': 'description',
+        'url': 'http://download.url',
+        'firmware_sha256': 'abc123',
+        'examples_per_shard': 1,
+        'measurements_info': {
+            "trace1": {
+                "type": "power",
+                "len": 1024,
+            }
+        },
+        'attack_points_info': {
+            "key": {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    }
+    result.update(kwargs)
+    return result
+
+
+def test_version_old_software(tmp_path):
+    """Newer version of scaaml was used to capture the dataset."""
+    # Create the dataset
+    scaaml.__version__ = '2.0.0'
+    ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
+    scaaml.__version__ = '1.2.3'
+    # Reload the dataset raises
+    with pytest.raises(ValueError) as verror:
+        ds = Dataset.from_config(ds.path)
+    assert 'SCAAML module is outdated' in str(verror.value)
+
+
+def test_version_newer_software(tmp_path):
+    """Older version of scaaml was used to capture the dataset."""
+    # Create the dataset
+    scaaml.__version__ = '1.2.3'
+    ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
+    # Increment library version
+    scaaml.__version__ = '1.3.3'
+    # Reload the dataset
+    ds = Dataset.from_config(ds.path)
+
+
+def test_version_same(tmp_path):
+    """Same version of scaaml was used to capture the dataset."""
+    # Create the dataset
+    ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
+    # Reload the dataset
+    ds = Dataset.from_config(ds.path)
+
+
+def test_firmware_url_mandatory(tmp_path):
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url = '')
+    with pytest.raises(ValueError) as verror:
+        ds = Dataset.get_dataset(**kwargs)
+    assert 'Firmware URL is required' in str(verror.value)
+
+
+def test_get_config_dictionary_urls(tmp_path):
+    licence = 'some licence'
+    firmware_url = 'firmware url'
+    paper_url = 'paper URL'
+    url = 'U R L'
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path,
+                                        licence=licence,
+                                        firmware_url=firmware_url,
+                                        paper_url=paper_url,
+                                        url=url)
+    # Create the dataset
+    ds = Dataset.get_dataset(**kwargs)
+    conf = ds._get_config_dictionary()
+    assert conf['licence'] == licence
+    assert conf['url'] == url
+    assert conf['paper_url'] == paper_url
+    assert conf['firmware_url'] == firmware_url
+    # Reload the dataset
+    ds = Dataset.from_config(ds.path)
+    conf = ds._get_config_dictionary()
+    assert conf['licence'] == licence
+    assert conf['url'] == url
+    assert conf['paper_url'] == paper_url
+    assert conf['firmware_url'] == firmware_url
+
+def test_scaaml_version_present(tmp_path):
+    ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
+    config = ds._get_config_dictionary()
+    assert 'scaaml_version' in config.keys()
 
 
 def test_shard_metadata_negative_chip_id(tmp_path):
@@ -202,30 +321,7 @@ def test_shard_metadata_ok(tmp_path):
 
 
 def test_resume_capture(tmp_path):
-    kwargs = {
-        'root_path': tmp_path,
-        'shortname': 'shortname',
-        'architecture': 'architecture',
-        'implementation': 'implementation',
-        'algorithm': 'algorithm',
-        'version': 1,
-        'description': 'description',
-        'url': '',
-        'firmware_sha256': 'abc123',
-        'examples_per_shard': 1,
-        'measurements_info': {
-            "trace1": {
-                "type": "power",
-                "len": 1024,
-            }
-        },
-        'attack_points_info': {
-            "key": {
-                "len": 16,
-                "max_val": 256
-            },
-        }
-    }
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path)
     ds = Dataset.get_dataset(**kwargs)
     key = np.random.randint(0, 255, 16)
     key2 = np.random.randint(0, 255, 16)
@@ -263,6 +359,7 @@ def test_info_file_raises(tmp_path):
                      version=1,
                      description='description',
                      url='',
+                     firmware_url='some url',
                      firmware_sha256='abc123',
                      examples_per_shard=1,
                      measurements_info={},
@@ -280,6 +377,7 @@ def test_from_loaded_json(tmp_path):
                  version=1,
                  description='description',
                  url='',
+                 firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=1,
                  measurements_info={ "trace1": { "type": "power", "len": 1024, } },
@@ -312,6 +410,7 @@ def test_from_config(tmp_path):
                  version=1,
                  description='description',
                  url='',
+                 firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=64,
                  measurements_info={},
@@ -346,6 +445,7 @@ def test_close_shard(tmp_path):
                  version=1,
                  description='description',
                  url='url',
+                 firmware_url='url',
                  firmware_sha256='abc1234',
                  examples_per_shard=2,
                  measurements_info=minfo,
@@ -370,6 +470,30 @@ def test_close_shard(tmp_path):
     assert ds.examples_per_group == {'train': {0: 4}}
     assert ds.examples_per_split == {'train': 4}
     ds.check()
+
+
+def test_from_config(tmp_path):
+    # Create the file structure.
+    d1 = Dataset(root_path=tmp_path,
+                 shortname='shortname',
+                 architecture='architecture',
+                 implementation='implementation',
+                 algorithm='algorithm',
+                 version=1,
+                 description='description',
+                 url='',
+                 firmware_url='url',
+                 firmware_sha256='abc123',
+                 examples_per_shard=64,
+                 measurements_info={},
+                 attack_points_info={})
+    old_files = set(tmp_path.glob('**/*'))
+
+    d2 = Dataset.from_config(d1.path)
+
+    # No new files have been created.
+    new_files = set(tmp_path.glob('**/*'))
+    assert old_files == new_files
 
 
 @patch.object(Path, 'read_text')
@@ -626,6 +750,7 @@ def test_basic_workflow(tmp_path):
                  version=version,
                  description=description,
                  url=url,
+                 firmware_url='some url',
                  firmware_sha256=fw_sha256,
                  examples_per_shard=example_per_shard,
                  measurements_info=minfo,
@@ -667,6 +792,9 @@ def test_cleanup_shards(tmp_path):
         }  # yapf: disable
 
     old_config = {  # Some fields omitted.
+        'licence': 'some_licence',
+        'paper_url': 'some_url',
+        'firmware_url': 'fm_url',
         'examples_per_shard': 64,
         'examples_per_group': {
             'test': {
