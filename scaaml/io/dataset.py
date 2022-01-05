@@ -1,4 +1,6 @@
-"Build and load tensorFlow dataset Record wrapper"
+"""Build and load tensorFlow dataset Record wrapper"""
+
+import copy
 import math
 import json
 import os
@@ -6,6 +8,7 @@ from collections import defaultdict
 from time import time
 from typing import Dict, List, Union, Literal
 from pathlib import Path
+import pprint
 
 from tabulate import tabulate
 from termcolor import cprint
@@ -13,9 +16,12 @@ from tqdm.auto import tqdm
 import numpy as np
 import tensorflow as tf
 
+import scaaml
 from scaaml.utils import bytelist_to_hex
+from scaaml.utils import comparable_version
 import scaaml.io.utils as siutils
 from .shard import Shard
+from .errors import DatasetExistsError
 
 
 class Dataset():
@@ -29,10 +35,13 @@ class Dataset():
         version: int,
         firmware_sha256: str,
         description: str,
-        url: str,
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
+        url: str,
+        firmware_url: str = '',
+        paper_url: str = '',
+        licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
         shards_list: defaultdict = None,
         keys_per_group: defaultdict = None,
@@ -42,8 +51,26 @@ class Dataset():
         capture_info: dict = {},
         min_values: Dict[str, int] = {},
         max_values: Dict[str, int] = {},
+        from_config: bool = False,
     ) -> None:
-        self.root_path = root_path
+        """Class for saving and loading a database.
+
+        Args:
+          url: Where to download this dataset.
+          firmware_url: Where to dowload the firmware used while capture.
+          paper_url: Where to find the published paper.
+          licence: URL or the whole licence the dataset is published under.
+          from_config: This Dataset object has been created from a saved
+            config, root_path thus points to what should be self.path. When
+            True set self.path = root_path, self.root_path to be the parent of
+            self.path. In this case it does not necessarily hold that
+            self.path.name == self.slug (the directory could have been renamed).
+
+        Raises:
+          ValueError: If firmware_sha256 or firmware_url evaluates to False.
+          DatasetExistsError: If creating this object would overwrite the
+            corresponding config file.
+        """
         self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation
@@ -53,6 +80,9 @@ class Dataset():
         self.firmware_sha256 = firmware_sha256
         self.description = description
         self.url = url
+        self.firmware_url = firmware_url
+        self.paper_url = paper_url
+        self.licence = licence
 
         self.capture_info = capture_info
         self.measurements_info = measurements_info
@@ -60,20 +90,26 @@ class Dataset():
 
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
+        if not self.firmware_url:
+            raise ValueError("Firmware URL is required")
 
-        # create directory -- check if its empty
         self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
                                          implementation, version)
-        self.path = Path(self.root_path) / self.slug
-        if self.path.exists():
-            cprint("[Warning] Path exist, some files might be over-written",
-                   'yellow')
+        if from_config:
+            self.path = Path(root_path)
+            self.root_path = str(self.path.parent)
         else:
-            # create path if needed
-            self.path.mkdir(parents=True)
-            Path(self.path / 'train').mkdir()
-            Path(self.path / 'test').mkdir()
-            Path(self.path / 'holdout').mkdir()
+            self.root_path = root_path
+            self.path = Path(self.root_path) / self.slug
+            # create directory -- check if its empty
+            if Dataset._get_config_path(self.path).exists():
+                raise DatasetExistsError(dataset_path=self.path)
+            else:
+                # create path if needed
+                self.path.mkdir(parents=True)
+                Path(self.path / 'train').mkdir()
+                Path(self.path / 'test').mkdir()
+                Path(self.path / 'holdout').mkdir()
 
         cprint("Dataset path: %s" % self.path, 'green')
 
@@ -108,8 +144,26 @@ class Dataset():
                 self.min_values[k] = math.inf
                 self.max_values[k] = 0
 
-        # write config
-        self._write_config()
+        # write config if needed
+        if not from_config:
+            self._write_config()
+
+    @staticmethod
+    def get_dataset(*args, **kwargs):
+        """Convenience method for getting a Dataset either by creating a new
+        dataset using the Dataset constructor or by calling Dataset.from_config.
+
+        Args: Same as scaaml.io.Dataset.__init__
+
+        Returns: A scaaml.io.Dataset object.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used (via Dataset.from_config).
+        """
+        try:
+            return Dataset(*args, **kwargs)
+        except DatasetExistsError as err:
+            return Dataset.from_config(dataset_path=err.dataset_path)
 
     @staticmethod
     def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
@@ -408,8 +462,8 @@ class Dataset():
                'architecture', 'implementation',
                'algorithm', 'version', 'compression']
 
-        fpath = Dataset._get_config_path(dataset_path)
-        config = json.loads(open(fpath).read())
+        conf_path = Dataset._get_config_path(dataset_path)
+        config = Dataset._load_config(conf_path)
         cprint("[Dataset Summary]", 'cyan')
         cprint("Info", 'yellow')
         print(tabulate([[k, config.get(k, '')] for k in lst]))
@@ -454,7 +508,7 @@ class Dataset():
         Returns: tf TakeDataset object.
         """
         conf_path = Dataset._get_config_path(dataset_path)
-        config = json.loads(conf_path.read_text())
+        config = Dataset._load_config(conf_path)
         shard_path = Path(
             dataset_path) / config['shards_list'][split][shard_id]['path']
         if verbose:
@@ -491,6 +545,11 @@ class Dataset():
         Dataset._check_sha256sums(shards_list=self.shards_list,
                                   dpath=Path(self.path),
                                   pbar=pbar)
+        # Check shard metadata
+        for slist in self.shards_list.values():
+            for shard_info in slist:
+                Dataset._check_shard_metadata(shard_info=shard_info,
+                                              dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
         if 'test' in self.examples_per_split and 'train' in self.examples_per_split:
             self._check_disjoint_keys(pbar=pbar, deep_check=deep_check)
@@ -548,6 +607,55 @@ class Dataset():
                     raise ValueError(sinfo['path'], "SHA256 miss-match")
 
     @staticmethod
+    def _check_shard_metadata(shard_info: Dict, dataset_path: Path) -> None:
+        """Checks shard metadata.
+
+        Args:
+          shard_info: Dictionary of the shard metadata.
+          dataset_path: Dataset path, so that we can check size of the shard
+            file.
+
+        Raises: ValueError if the metadata is inconsistent.
+        """
+        # Check that only expected keys are present:
+        si_keys = {
+            'examples',  # Checked by Dataset._check_metadata
+            'sha256',  # Checked by Dataset._check_sha256sums
+            'path',  # Checked by Dataset._check_sha256sums
+            'group',  # Checked against path
+            'key',  # Checked against path
+            'part',  # Checked against path
+            'size',  # Checked here
+            'chip_id',  # Checked that it is a non-negative integer
+        }
+        if set(shard_info.keys()) != si_keys:
+            raise ValueError(f'Shard info keys are: {shard_info.keys()} '
+                             f'expected: {si_keys}, in shard: {shard_info}')
+        # Check that the info corresponds to the filename:
+        file_info = Dataset._shard_info_from_name(shard_info['path'])
+        for key in ['group', 'part']:
+            if file_info['shard_' + key] != shard_info[key]:
+                raise ValueError(f'{key} does not match filename, expected: '
+                                 f'{file_info["shard_" + key]}, got: '
+                                 f'{shard_info[key]}, in shard: {shard_info}')
+        # Check key (in filename it is lower case, in info it is upper case)
+        if file_info['shard_key'].lower() != shard_info['key'].lower():
+            raise ValueError(f'key does not match filename, expected: '
+                             f'{file_info["shard_key"]}, got: '
+                             f'{shard_info["key"]} (not case sensitive), in '
+                             f'shard: {shard_info}')
+        # Check size of the file
+        size = os.stat(dataset_path / shard_info['path']).st_size
+        if size != shard_info['size']:
+            raise ValueError(f'Wrong size, got: {size}, expected: '
+                             f'{shard_info["size"]}, in shard: {shard_info}')
+        # Check chip_id is non-negative integer
+        chip_id = shard_info['chip_id']
+        if not isinstance(chip_id, int) or chip_id < 0:
+            raise ValueError(f'Wrong chip_id, got: {chip_id}, of type: '
+                             f'{type(chip_id)}, in shard: {shard_info}')
+
+    @staticmethod
     def _check_metadata(config):
         """Check the metadata of this dataset.
 
@@ -570,6 +678,10 @@ class Dataset():
             actual_examples = 0
             for sinfo in slist:
                 actual_examples += sinfo['examples']
+                if sinfo['examples'] != config['examples_per_shard']:
+                    raise ValueError(f'Wrong number of examples, expected: '
+                                     f'{config["examples_per_shard"]}, got: '
+                                     f'{sinfo["examples"]}, in shard: {sinfo}')
 
             if actual_examples != expected_examples:
                 raise ValueError("sum example don't match top_examples")
@@ -622,8 +734,20 @@ class Dataset():
                         f'{train_shards[i]}')
 
     def _get_config_dictionary(self):
-        """Return dictionary of information about this dataset."""
-        return {
+        """Return dictionary of information about this dataset.
+
+        Raises: ValueError if saving this dictionary using json would cause
+          data loss. This can be caused by having different keys with the same
+          string representation:
+
+          d = {0: 1, '0': 2}  # JSON key collision
+          l = json.loads(json.dumps(d))
+          assert l != d
+
+          Note that it is ok to have keys of other type than string, since the
+          check is performed using Dataset._from_loaded_json.
+        """
+        representation = {
             "shortname": self.shortname,
             "architecture": self.architecture,
             "implementation": self.implementation,
@@ -631,6 +755,9 @@ class Dataset():
             "version": self.version,
             "firmware_sha256": self.firmware_sha256,
             "url": self.url,
+            "firmware_url": self.firmware_url,
+            "paper_url": self.paper_url,
+            "licence": self.licence,
             "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
@@ -644,7 +771,68 @@ class Dataset():
             "attack_points_info": self.attack_points_info,
             "min_values": self.min_values,
             "max_values": self.max_values,
+            # See scaaml.__version__ docstring for more information.
+            "scaaml_version": scaaml.__version__,
         }
+        loaded = Dataset._from_loaded_json(
+            json.loads(json.dumps(representation)))
+        if loaded != representation:
+            pprint_file = self.path / f'info.{time()}.pprint'
+            pprint_file.write_text(pprint.pformat(representation))
+            raise ValueError(f'JSON representation causes data loss, saving '
+                             f'into {pprint_file}')
+        return representation
+
+    @staticmethod
+    def _load_config(conf_path: Path) -> Dict:
+        """Get config dictionary from a file. Use this function instead of an
+        json.loads, as this function returns correct types for group ids.
+
+        Args:
+          conf_path: Path object representing the dataset information (e.g.,
+            the return value of Dataset._get_config_path).
+
+        Returns: Dictionary representation of the Dataset.
+        """
+        return Dataset._from_loaded_json(json.loads(conf_path.read_text()))
+
+    @staticmethod
+    def _from_loaded_json(loaded_dict: Dict) -> Dict:
+        """Fix types in the datastructure loaded from JSON. Necessary as JSON
+        allows only string keys, but for instance group keys are integers in
+        Dataset.
+
+        Args:
+          loaded_dict: The datastructure returned by json.load on the info.json
+            file.
+
+        Returns: The same information with fixed types.
+        """
+        fixed_dict = copy.deepcopy(loaded_dict)
+        # Fix type of keys_per_group
+        fixed_dict['keys_per_group'] = {
+            split: {
+                int(group): n_examples
+                for group, n_examples in keys_info.items()
+            }
+            for split, keys_info in loaded_dict['keys_per_group'].items()
+        }
+        # Fix type of examples_per_group
+        fixed_dict['examples_per_group'] = {
+            split: {
+                int(group): n_examples
+                for group, n_examples in ex_info.items()
+            }
+            for split, ex_info in loaded_dict['examples_per_group'].items()
+        }
+        # Fix missing keys
+        if 'licence' not in fixed_dict:
+            # Do not relicence
+            fixed_dict['licence'] = ''
+        for k in ['firmware_url', 'paper_url']:
+            if k not in fixed_dict:
+                fixed_dict[k] = ''
+        return fixed_dict
 
     def _write_config(self):
         """Save configuration as json."""
@@ -653,10 +841,27 @@ class Dataset():
 
     @staticmethod
     def from_config(dataset_path: str):
+        """Load a dataset from a config file.
+
+        Args:
+          dataset_path: The path to the dataset.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used. See scaaml.__version__ docstring.
+        """
         dpath = Path(dataset_path)
-        fpath = Dataset._get_config_path(dataset_path)
-        cprint("reloading %s" % fpath, 'magenta')
-        config = json.loads(open(fpath).read())
+        conf_path = Dataset._get_config_path(dataset_path)
+        cprint(f'reloading {conf_path}', 'magenta')
+        config = Dataset._load_config(conf_path)
+        # Check that the library version (version of this software) is not
+        # lower than what was used to capture the dataset.
+        if 'scaaml_version' in config.keys():
+            lib_version = comparable_version(scaaml.__version__)
+            dataset_version = comparable_version(config['scaaml_version'])
+            if dataset_version > lib_version:
+                raise ValueError(f'SCAAML module is outdated, scaaml_version: '
+                                 f'{scaaml.__version__}, but dataset was '
+                                 f'created using: {config["scaaml_version"]}')
         return Dataset(
             root_path=str(dpath),
             shortname=config['shortname'],
@@ -665,6 +870,9 @@ class Dataset():
             algorithm=config['algorithm'],
             version=config['version'],
             url=config['url'],
+            firmware_url=config['firmware_url'],
+            paper_url=config['paper_url'],
+            licence=config['licence'],
             description=config['description'],
             firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
@@ -679,6 +887,7 @@ class Dataset():
             examples_per_shard=config['examples_per_shard'],
             min_values=config['min_values'],
             max_values=config['max_values'],
+            from_config=True,
         )
 
     @staticmethod
@@ -699,7 +908,7 @@ class Dataset():
 
         Returns: Updated configuration to be written using json.dump.
         """
-        config = json.loads(Dataset._get_config_path(dataset_path).read_text())
+        config = Dataset._load_config(Dataset._get_config_path(dataset_path))
         stats = []  # Statistic how many were kept and removed in each split.
         new_shards_list = defaultdict(list)
         for split, slist in config['shards_list'].items():
@@ -735,11 +944,10 @@ class Dataset():
             key_names_per_split = set()
             for shard in slist:
                 shard_info = Dataset._shard_info_from_name(shard['path'])
-                # String representation of the shard group ('0', '1', '2', ...).
-                ssg = str(shard_info['shard_group'])
-                examples_per_group[split][ssg] += config['examples_per_shard']
+                sg = shard_info['shard_group']
+                examples_per_group[split][sg] += config['examples_per_shard']
                 key_names_per_split.add(shard_info['shard_key'])
-                names_keys_per_group[ssg].add(shard_info['shard_key'])
+                names_keys_per_group[sg].add(shard_info['shard_key'])
             # We suppose that each shard contains at most one key.
             config['keys_per_group'][split] = {
                 k: len(names_keys_per_group[k])
