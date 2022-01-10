@@ -179,6 +179,71 @@ def test_scaaml_version_present(tmp_path):
     assert 'scaaml_version' in config.keys()
 
 
+def same_examples(ds1, ds2):
+    # Check that there are the same number of examples
+    config1 = ds1._get_config_dictionary()
+    config2 = ds1._get_config_dictionary()
+    assert config1['examples_per_split'] == config2['examples_per_split']
+
+    def example_iterator(dataset, split):
+        """Return iterator of examples contained in a dataset."""
+        config = dataset._get_config_dictionary()
+        from itertools import chain
+        # Concatenate all examples that are returned by Dataset.inspect.
+        return chain.from_iterable(
+            Dataset.inspect(dataset_path=dataset.path,
+                            split=split,
+                            shard_id=i,
+                            num_example=dataset.examples_per_shard,
+                            verbose=False).as_numpy_iterator()
+            for i in range(len(config['shards_list'][split]))
+        )
+
+    for split in config1['shards_list'].keys():
+        ei1 = example_iterator(dataset=ds1, split=split)
+        ei2 = example_iterator(dataset=ds2, split=split)
+        # Assert that all examples (represented as numpy) are the same.
+        for e1, e2 in zip(ei1, ei2):
+            # Each example is a dictionary containing a 'key' and 'trace1'
+            assert e1.keys() == e2.keys()
+            for k, v in e1.items():
+                assert np.isclose(v, e2[k]).all()
+
+
+def test_reshape_into_new_dataset_filled(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+
+    old_examples_per_shard = 16
+    old_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=old_examples_per_shard,
+    ))
+    # Fill in the old dataset.
+    key = np.random.randint(256, size=16)
+    old_ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+    for _ in range(old_examples_per_shard):
+        old_ds.write_example({"key": np.random.randint(256, size=16)},
+                             {"trace1": np.random.rand(1024)})
+    old_ds.close_shard()
+
+    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
+    old_ds.check()
+    new_ds.check()
+    same_examples(old_ds, new_ds)
+
+
+def test_reshape_into_new_dataset_empty(tmp_path):
+    old_ds = Dataset.get_dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=16,
+    ))
+    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
+    old_ds.check()
+    new_ds.check()
+    same_examples(old_ds, new_ds)
+
+
 def test_shard_metadata_negative_chip_id(tmp_path):
     group = 1
     key = 'BDC9C50A1B51732C56838405443BC76F'

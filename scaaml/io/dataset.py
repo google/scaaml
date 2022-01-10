@@ -1042,3 +1042,133 @@ class Dataset():
                                              print_info=True)
         with open(fpath, 'w+') as o:
             json.dump(new_config, o)
+
+    def move_shards_and_create_new_dataset(self):
+        """Move shards from one split to another.
+        """
+        # Check the resulting dataset (expecially for key repetition).
+        raise NotImplementedError('TODO(karelkral): Implement this.')
+
+    def reshape_into_new_dataset(self,
+                                 examples_per_shard: int,
+                                 name_prefix: str = 'reshaped_',
+                                 url: str = ''):
+        """Reshape each shard to have only examples_per_shard.
+
+        Args:
+          examples_per_shard: Number of examples in each shard in the new
+            dataset. Needs to divide the old examples_per_shard.
+          name_prefix: shortname is prefixed with this (the resulting dataset
+            should not exist).
+          url: Download URL of the new dataset.
+
+        Raises:
+          ValueError: If examples_per_shard does not divide old value of
+            examples_per_shard.
+          DatasetExistsError: If the new dataset already exists (change the
+            name_prefix).
+
+        Returns: The new dataset object.
+
+        Bugs:
+          Part id might be too high (max is 10).
+
+          When splitting a single shard, the key info gets distributed to the
+          resulting sub-shards. When a shard contains multiple keys, this means
+          that the key in the info might not even be present in the shard.
+        """
+        # Check divisibility.
+        if self.examples_per_shard % examples_per_shard:
+            raise ValueError(f'Cannot split shards with '
+                             f'{self.examples_per_shard} examples (=traces) '
+                             f'into shards of {examples_per_shard} examples.')
+        # Create new dataset, raise if it already exists.
+        new_dataset = Dataset(
+            root_path=self.root_path,
+            shortname=name_prefix + self.shortname,  # New short name.
+            architecture=self.architecture,
+            implementation=self.implementation,
+            algorithm=self.algorithm,
+            version=self.version,
+            firmware_sha256=self.firmware_sha256,
+            description=self.description,
+            examples_per_shard=examples_per_shard,  # New value.
+            measurements_info=self.measurements_info,
+            attack_points_info=self.attack_points_info,
+            url=url,  # Download url should not be the same.
+            firmware_url=self.firmware_url,
+            paper_url=self.paper_url,
+            licence=self.licence,
+            compression=self.compression,
+            capture_info=self.capture_info,
+            from_config=False)
+        # The old config dictionary.
+        config = self._get_config_dictionary()
+        # Reshape each shard, keeping the group id, incrementing the part id.
+        for split in config['keys_per_split']:
+            # i is the index of the shard.
+            for i in tqdm(range(len(config['shards_list'][split])),
+                          desc=f'Reshaping {split}.'):
+                part_id = 0
+                # j is the idex of the example.
+                for j, example in enumerate(
+                        Dataset.inspect(dataset_path=self.path,
+                                        split=split,
+                                        shard_id=i,
+                                        num_example=self.examples_per_shard,
+                                        verbose=False).as_numpy_iterator()):
+                    if j % examples_per_shard == 0:
+                        # Open a new shard
+                        shard = config['shards_list'][split][i]
+                        k = shard['key'].lower()
+                        cur_key = np.array([
+                            int(k[2 * i:2 * i + 2], 16)
+                            for i in range(len(k) // 2)
+                        ])
+                        # Compute the part_id based on the part of the original
+                        # shard.
+                        shard_divisions = self.examples_per_shard // examples_per_shard
+                        real_part_id = (shard_divisions *
+                                        shard['part']) + part_id
+                        new_dataset.new_shard(
+                            key=cur_key,
+                            part=real_part_id,
+                            group=shard['group'],
+                            split=split,
+                            chip_id=shard['chip_id'],
+                        )
+                        part_id += 1
+                    # Write the example.
+                    attack_points = {
+                        ap_name: example[ap_name]
+                        for ap_name in self.attack_points_info
+                    }
+                    # Check that the lengths and max values are as expected.
+                    for ap_name, ap_val in attack_points.items():
+                        ap_info = self.attack_points_info
+                        assert len(ap_val) == ap_info[ap_name]['len']
+                        assert max(ap_val) < ap_info[ap_name]['max_val']
+                    measurement = {
+                        m_name: example[m_name]
+                        for m_name in self.measurements_info
+                    }
+                    new_dataset.write_example(attack_points=attack_points,
+                                              measurement=measurement)
+                # Close the last shard.
+                new_dataset.close_shard()
+        # Check min_values and max_values are the same.
+        assert new_dataset.min_values.keys() == self.min_values.keys()
+        assert new_dataset.max_values.keys() == self.max_values.keys()
+        for key, value in new_dataset.min_values.items():
+            if not np.isclose(value, self.min_values[key]):
+                raise ValueError(f'min_values are different, got '
+                                 f'{new_dataset.min_values}, expected '
+                                 f'{self.min_values}')
+        for key, value in new_dataset.max_values.items():
+            if not np.isclose(value, self.max_values[key]):
+                raise ValueError(f'max_values are different, got '
+                                 f'{new_dataset.max_values}, expected '
+                                 f'{self.max_values}')
+        # Check the new dataset.
+        new_dataset.check()
+        return new_dataset
