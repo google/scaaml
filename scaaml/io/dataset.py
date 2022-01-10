@@ -72,6 +72,13 @@ class Dataset():
           DatasetExistsError: If creating this object would overwrite the
             corresponding config file.
         """
+        # Do not allow mutable default parameters.
+        if capture_info is None:
+            capture_info = {}
+        if min_values is None:
+            min_values = {}
+        if max_values is None:
+            max_values = {}
         self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation

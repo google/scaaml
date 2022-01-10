@@ -172,6 +172,7 @@ def test_get_config_dictionary_urls(tmp_path):
     assert conf['paper_url'] == paper_url
     assert conf['firmware_url'] == firmware_url
 
+
 def test_scaaml_version_present(tmp_path):
     ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     config = ds._get_config_dictionary()
@@ -365,6 +366,29 @@ def test_shard_metadata_ok(tmp_path):
     }
 
     Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+
+
+def test_min_max_values_ok(tmp_path):
+    """Test that min_values and max_values are not affected by mutable default
+    parameter.
+    """
+    def min_max_t(min_value: float, max_value: float, root_path: Path) -> None:
+        assert min_value <= max_value
+        ds = Dataset(**dataset_constructor_kwargs(root_path=root_path))
+        mid_point = min_value + (max_value - min_value) / 2
+        trace = np.full(1024, mid_point, dtype=np.float)
+        trace[0] = min_value
+        trace[1] = max_value
+        key = np.zeros(16, dtype=np.uint8)
+        ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+        ds.write_example({"key": key}, {"trace1": trace})
+        ds.close_shard()
+        config_dict = ds._get_config_dictionary()
+        assert config_dict['min_values']['trace1'] == min_value
+        assert config_dict['max_values']['trace1'] == max_value
+
+    min_max_t(0.1, 0.7, root_path = tmp_path / 'b')
+    min_max_t(0.2, 0.5, root_path = tmp_path / 'a')
 
 
 def test_resume_capture(tmp_path):
