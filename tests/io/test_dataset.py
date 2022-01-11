@@ -179,6 +179,47 @@ def test_scaaml_version_present(tmp_path):
     assert 'scaaml_version' in config.keys()
 
 
+def test_move_shards(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    ds = Dataset.get_dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+    ))
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
+    ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
+    # Two shards with a different key
+    key2 = np.random.randint(256, size=16)
+    ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
+    ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
+    ds.close_shard()
+
+    # This is ok.
+    ds.move_shards(from_split='train', to_split='test', shards={2, 3})
+    assert len(ds.shards_list['train']) == 2
+    assert len(ds.shards_list['test']) == 2
+    # Move all shards back.
+    ds.move_shards(from_split='test', to_split='train', shards=2)
+    assert len(ds.shards_list['train']) == 4
+    assert len(ds.shards_list['test']) == 0
+    # Move nothing.
+    ds.move_shards(from_split='test', to_split='train', shards=0)
+    assert len(ds.shards_list['train']) == 4
+    assert len(ds.shards_list['test']) == 0
+    # Move just one, so that check fails on having the same key in test and
+    # train.
+    with pytest.raises(ValueError) as verror:
+        ds.move_shards(from_split='train', to_split='test', shards=1)
+    assert 'Duplicate key' in str(verror.value)
+
+
 def same_examples(ds1, ds2):
     # Check that there are the same number of examples
     config1 = ds1._get_config_dictionary()

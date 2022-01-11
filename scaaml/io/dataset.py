@@ -6,7 +6,7 @@ import json
 import os
 from collections import defaultdict
 from time import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Set
 from pathlib import Path
 import pprint
 
@@ -1043,17 +1043,109 @@ class Dataset():
         with open(fpath, 'w+') as o:
             json.dump(new_config, o)
 
-    def move_shards_and_create_new_dataset(self):
-        """Move shards from one split to another.
+    def _move_shard(self, from_split: str, to_split: str,
+                    shard_idx: int) -> None:
+        """Move a single shard. If this method raises the dataset might be left
+        in a state which is not valid.
+
+        The user must update keys_per_split and keys_per_group values (this
+        should be done in move_shards). This is needed as single key may be used
+        in different shards.
+
+        Args:
+          from_split: The split that loses a shard.
+          to_split: The split that gains a shard.
+          shard_idx: The index to the shards. Valid values are in
+            range(len(shards_list[from_split])).
+
+        Raises:
+          IndexError: If shard_idx is out of bounds.
         """
-        # Check the resulting dataset (expecially for key repetition).
-        raise NotImplementedError('TODO(karelkral): Implement this.')
+        if not shard_idx in range(len(self.shards_list[from_split])):
+            raise IndexError(f'0 <= shard_idx < len(shards_list[from_split]) '
+                             f'violated: 0 <= {shard_idx} < '
+                             f'{len(self.shards_list[from_split])}')
+        # The shard to move.
+        shard = self.shards_list[from_split][shard_idx]
+        # Move the file.
+        shard_file = self.path / shard['path']
+        new_name = Dataset._shard_name(shard_group=shard["group"],
+                                       shard_key=shard["key"],
+                                       shard_part=shard["part"])
+        shard['path'] = f'{to_split}/{new_name}'
+        moved_file = self.path / shard['path']
+        shard_file.rename(moved_file)
+        # Move the shard object.
+        if to_split not in self.shards_list.keys():
+            self.shards_list[to_split] = [shard]
+        else:
+            self.shards_list[to_split].insert(0, shard)
+        del self.shards_list[from_split][shard_idx]
+        # Fix metadata.
+        self.examples_per_split[from_split] -= shard['examples']
+        self.examples_per_split[to_split] += shard['examples']
+        self.examples_per_group[from_split][
+            shard['group']] -= shard['examples']
+        # Zero value should not be present.
+        if self.examples_per_group[from_split][shard['group']] == 0:
+            del self.examples_per_group[from_split][shard['group']]
+        self.examples_per_group[to_split][shard['group']] += shard['examples']
+
+    def move_shards(self, from_split: str, to_split: str,
+                    shards: Union[int, Set[int]]) -> None:
+        """Move shards from one split to another. This method modifies this
+        dataset (moves files). Make a backup before calling this method.
+
+        Args:
+          from_split: The split that loses shards.
+          to_split: The split that gains shards.
+          shards: If this parameter is an integer, then the first shards from
+            shards_list are moved. If shards is a set of integers then the
+            shards of the corresponding indices are moved.
+
+        Raises:
+          ValueError: If the check method fails.
+
+        Example use:
+          # Make a backup of the original dataset.
+          # Either call:
+          dataset.move_shards(from_split='train', to_split='test', shards=3)
+          # Or call:
+          dataset.move_shards(from_split='train', to_split='test', shards={0, 1, 2})
+        """
+        if isinstance(shards, int):
+            shards = set(range(shards))
+        keys_moved = defaultdict(set)
+        # Move the shards one by one in reversed order (to keep all indexes
+        # valid).
+        for shard_idx in sorted(shards, reverse=True):
+            shard = self.shards_list[from_split][shard_idx]
+            # Remember moving this key.
+            keys_moved[shard['group']].add(shard['key'])
+            self._move_shard(from_split=from_split,
+                             to_split=to_split,
+                             shard_idx=shard_idx)
+        # Update keys_per_split and keys_per_group.
+        all_keys = set()
+        for group_keys in keys_moved.values():
+            all_keys.update(group_keys)
+        self.keys_per_split[from_split] -= len(all_keys)
+        self.keys_per_split[to_split] += len(all_keys)
+        for group in self.keys_per_group[from_split]:
+            self.keys_per_group[from_split][group] -= len(keys_moved[group])
+            self.keys_per_group[to_split][group] += len(keys_moved[group])
+        # Write config to save the state of this dataset. (Also the config is
+        # used in self.check()).
+        self._write_config()
+        # Check the resulting dataset (especially for key repetition).
+        self.check()
 
     def reshape_into_new_dataset(self,
                                  examples_per_shard: int,
                                  name_prefix: str = 'reshaped_',
                                  url: str = ''):
-        """Reshape each shard to have only examples_per_shard.
+        """Reshape each shard to have only examples_per_shard. This method
+        should not change the original dataset (self).
 
         Args:
           examples_per_shard: Number of examples in each shard in the new
@@ -1172,3 +1264,7 @@ class Dataset():
         # Check the new dataset.
         new_dataset.check()
         return new_dataset
+
+    def merge_with(self, dataset) -> None:
+        """Merge dataset into this dataset."""
+        raise NotImplementedError('TODO(karelkral): implement')
