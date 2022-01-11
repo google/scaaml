@@ -5,6 +5,7 @@ import math
 import json
 import os
 from collections import defaultdict
+import shutil
 from time import time
 from typing import Dict, List, Optional, Union, Set
 from pathlib import Path
@@ -1265,6 +1266,102 @@ class Dataset():
         new_dataset.check()
         return new_dataset
 
-    def merge_with(self, dataset) -> None:
-        """Merge dataset into this dataset."""
-        raise NotImplementedError('TODO(karelkral): implement')
+    def merge_with(self, other_dataset) -> None:
+        """Merge other_dataset into this dataset. This method changes this
+        dataset (self). Make a backup before calling this method.
+
+        This method assumes that other_dataset contains no key that is also
+        present in this dataset.
+
+        Args:
+          other_dataset: Another dataset object to copy shards from. Does not
+            get changed. Should be of the same type (same firmware_sha256,
+            compression, examples_per_shard, measurements_info, licence, ....).
+
+        The following properties are not updated (and not checked to be equal
+        to those of other_dataset):
+          shortname
+          version
+          description
+          url
+          Current shard tracking: shard_key, prev_shard_key, shard_path,
+            shard_split, shard_part, shard_relative_path, curr_shard
+
+        The following are updated by the merge:
+          shards_list
+          keys_per_group
+          keys_per_split
+          examples_per_group
+          examples_per_split
+          examples_per_shard
+          min_values
+          max_values
+
+        Raises:
+          ValueError: If Dataset.check fails.
+          FileExistsError: If a shard should be copied over an existing file.
+            Assume that after this error self is not in a consistent state.
+        """
+        # The following properties must be the same in order for merge to make
+        # sense:
+        assert self.firmware_sha256 == other_dataset.firmware_sha256
+        #assert self.firmware_url == other_dataset.firmware_url,
+        #assert self.paper_url == other_dataset.paper_url,
+        #assert self.licence == other_dataset.licence
+        assert self.architecture == other_dataset.architecture
+        assert self.implementation == other_dataset.implementation
+        assert self.algorithm == other_dataset.algorithm
+        assert self.compression == other_dataset.compression
+        assert self.capture_info == other_dataset.capture_info
+        assert self.measurements_info == other_dataset.measurements_info
+        assert self.attack_points_info == other_dataset.attack_points_info
+        assert self.min_values.keys() == other_dataset.min_values.keys()
+        assert self.max_values.keys() == other_dataset.max_values.keys()
+        assert self.examples_per_shard == other_dataset.examples_per_shard
+
+        # Update metainformation.
+        # Update extreme values:
+        self.min_values = {
+            k: min(v, other_dataset.min_values[k])
+            for k, v in self.min_values.items()
+        }
+        self.max_values = {
+            k: max(v, other_dataset.max_values[k])
+            for k, v in self.max_values.items()
+        }
+
+        # Update shards.
+        for split in other_dataset.shards_list:
+            seen_keys = set()
+            seen_keys_per_group = dict()
+            for shard in other_dataset.shards_list[split]:
+                self.shards_list[split].append(shard)
+                seen_keys.add(shard['key'])
+                if shard['group'] not in seen_keys_per_group.keys():
+                    seen_keys_per_group[shard['group']] = {shard['key']}
+                else:
+                    seen_keys_per_group[shard['group']].add(shard['key'])
+
+                # Copy the file.
+                other_file = other_dataset.path / shard['path']
+                copied_file = self.path / shard['path']
+                if copied_file.exists():
+                    raise FileExistsError(f'Shard file {copied_file} already '
+                                          f'exists.')
+                # Python3.7 shutil.copy takes string arguments.
+                shutil.copy(str(other_file), str(copied_file))
+
+                # Update metadata.
+                self.examples_per_group[split][
+                    shard['group']] += shard['examples']
+                self.examples_per_split[split] += shard['examples']
+
+            self.keys_per_split[split] += len(seen_keys)
+            for group, key_set in seen_keys_per_group.items():
+                self.keys_per_group[split][group] += len(key_set)
+
+        # Write config to save the state of this dataset. (Also the config is
+        # used in self.check()).
+        self._write_config()
+        # Check the resulting dataset.
+        self.check()

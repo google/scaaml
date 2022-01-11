@@ -179,6 +179,69 @@ def test_scaaml_version_present(tmp_path):
     assert 'scaaml_version' in config.keys()
 
 
+def test_merge_with(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    resulting = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='resulting',
+    ))
+    other_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='other_ds',
+    ))
+    trace_len = 1024
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    other_ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    other_ds.write_example({"key": key1}, {"trace1": trace})
+    trace[0] = 0.9
+    other_ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    other_ds.write_example({"key": key1}, {"trace1": trace})
+    # Two shards with a different key
+    key2 = np.random.randint(256, size=16)
+    other_ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    other_ds.write_example({"key": key2}, {"trace1": trace})
+    other_ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    other_ds.write_example({"key": key2}, {"trace1": trace})
+    other_ds.close_shard()
+
+    resulting.merge_with(other_ds)
+    assert resulting.min_values == other_ds.min_values
+    assert resulting.max_values == other_ds.max_values
+
+    yet_another_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='another',
+    ))
+    key3 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    trace[1] = -0.5
+    yet_another_ds.new_shard(key=key3, part=0, split='test', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key3}, {"trace1": trace})
+    yet_another_ds.new_shard(key=key3, part=1, split='test', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key3}, {"trace1": trace})
+    yet_another_ds.close_shard()
+    key4 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    yet_another_ds.new_shard(key=key4, part=1, split='train', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key4}, {"trace1": trace})
+    yet_another_ds.close_shard()
+
+    resulting.merge_with(yet_another_ds)
+    assert resulting.min_values == {'trace1': -0.5}
+    assert resulting.max_values == {'trace1': 0.9}
+    assert resulting.examples_per_split == {'train': 5, 'test': 2}
+    # The right number of files.
+    assert len(list((resulting.path / 'train').glob('*'))) == 5
+    assert len(list((resulting.path / 'test').glob('*'))) == 2
+
+
 def test_move_shards(tmp_path):
     # Fix numpy randomness not to cause flaky tests.
     np.random.seed(42)
