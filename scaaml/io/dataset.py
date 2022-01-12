@@ -5,7 +5,7 @@ import json
 import os
 from collections import defaultdict
 from time import time
-from typing import Dict, List, Union, Literal
+from typing import Dict, List, Union
 from pathlib import Path
 import pprint
 
@@ -477,7 +477,7 @@ class Dataset():
 
     @staticmethod
     def inspect(dataset_path,
-                split: Literal['train', 'test', 'holdout'],
+                split: str,  # typing.Literal['train', 'test', 'holdout'],
                 shard_id: int,
                 num_example: int,
                 verbose: bool = True):
