@@ -545,7 +545,10 @@ class Dataset():
             print(data)
         return data
 
-    def check(self, deep_check: bool = True, show_progressbar: bool = True):
+    def check(self,
+              deep_check: bool = True,
+              show_progressbar: bool = True,
+              key_ap: str = 'key'):
         """Check the dataset integrity. Check integrity of metadata in config
         and also that no key from the train is in the test.
 
@@ -554,9 +557,13 @@ class Dataset():
             disjoint inspect train shards (set to True if a single train shard
             may contain multiple different keys).
           show_progressbar: Use tqdm to show a progressbar for different checks.
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
 
         Raises: ValueError if the dataset is inconsistent.
         """
+        if key_ap not in self.attack_points_info:
+            raise ValueError(f'{key_ap} is not an attack point.')
         if show_progressbar:
             pbar = tqdm
         else:
@@ -575,14 +582,18 @@ class Dataset():
                                               dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
         if 'test' in self.examples_per_split and 'train' in self.examples_per_split:
-            self._check_disjoint_keys(pbar=pbar, deep_check=deep_check)
+            self._check_disjoint_keys(pbar=pbar,
+                                      key_ap=key_ap,
+                                      deep_check=deep_check)
 
-    def _check_disjoint_keys(self, pbar, deep_check: bool = True):
+    def _check_disjoint_keys(self, pbar, key_ap: str, deep_check: bool = True):
         """Check that no key in the train split is present in the test split.
 
         Args:
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
           deep_check: When checking that keys in test and train splits are
             disjoint inspect train shards (set to True if a single train shard
             may contain multiple different keys).
@@ -597,13 +608,14 @@ class Dataset():
                     shard_id=i,
                     num_example=self.examples_per_shard,
                     verbose=False).as_numpy_iterator():
-                seen_keys.add(example['key'].astype(np.uint8).tobytes())
+                seen_keys.add(example[key_ap].astype(np.uint8).tobytes())
         if deep_check:
             Dataset._deep_check(seen_keys=seen_keys,
                                 dpath=self.path,
                                 train_shards=self.shards_list['train'],
                                 pbar=pbar,
-                                examples_per_shard=self.examples_per_shard)
+                                examples_per_shard=self.examples_per_shard,
+                                key_ap=key_ap)
         else:
             Dataset._shallow_check(seen_keys=seen_keys,
                                    train_shards=self.shards_list['train'],
@@ -764,7 +776,7 @@ class Dataset():
 
     @staticmethod
     def _deep_check(seen_keys, dpath, train_shards, pbar,
-                    examples_per_shard: int):
+                    examples_per_shard: int, key_ap: str):
         """Check all keys from all shards (parse all shards in the train split).
 
         Args:
@@ -774,6 +786,8 @@ class Dataset():
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
           examples_per_shard: Number of examples in each shard.
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
         """
         for i in pbar(range(len(train_shards)),
                       desc='Checking test key uniqueness'):
@@ -784,7 +798,7 @@ class Dataset():
                         shard_id=i,
                         num_example=examples_per_shard,
                         verbose=False).as_numpy_iterator()):
-                cur_key = example['key'].astype(np.uint8).tobytes()
+                cur_key = example[key_ap].astype(np.uint8).tobytes()
                 if cur_key in seen_keys:
                     raise ValueError(
                         f'Duplicate key: {cur_key} in test split, in '

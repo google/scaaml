@@ -179,6 +179,44 @@ def test_scaaml_version_present(tmp_path):
     assert 'scaaml_version' in config.keys()
 
 
+def test_check_key_ap(tmp_path):
+    key_ap = 'k'
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    dataset = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        attack_points_info={
+            key_ap: {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    ))
+    trace_len = 1024
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    dataset.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+    key2 = np.random.randint(256, size=16)
+    dataset.new_shard(key=key2, part=0, split='test', group=0, chip_id=1)
+    dataset.write_example({key_ap: key2}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+
+    dataset.check(key_ap=key_ap)
+
+    # Make a duplicate key
+    dataset.new_shard(key=key1, part=0, split='test', group=0, chip_id=1)
+    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+
+    with pytest.raises(ValueError) as verror:
+        dataset.check(key_ap=key_ap)
+    assert 'Duplicate key' in str(verror.value)
+
+
 def test_merge_with(tmp_path):
     # Fix numpy randomness not to cause flaky tests.
     np.random.seed(42)
@@ -922,7 +960,8 @@ def test_deep_check(mock_inspect):
                         dpath='/home/notanuser/notdir',
                         train_shards=train_shards,
                         examples_per_shard=64,
-                        pbar=pbar)
+                        pbar=pbar,
+                        key_ap='key')
 
     seen_keys.add(np.array([3, 1, 4, 1], dtype=np.uint8).tobytes())
     with pytest.raises(ValueError) as intersection_error:
@@ -930,7 +969,8 @@ def test_deep_check(mock_inspect):
                             dpath='/home/notanuser/notdir',
                             train_shards=train_shards,
                             examples_per_shard=64,
-                            pbar=pbar)
+                            pbar=pbar,
+                            key_ap='key')
     assert 'Duplicate key' in str(intersection_error.value)
 
 
