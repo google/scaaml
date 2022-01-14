@@ -337,17 +337,6 @@ def test_reshape_into_new_dataset_filled(tmp_path):
     same_examples(old_ds, new_ds)
 
 
-def test_reshape_into_new_dataset_empty(tmp_path):
-    old_ds = Dataset.get_dataset(**dataset_constructor_kwargs(
-        root_path=tmp_path,
-        examples_per_shard=16,
-    ))
-    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
-    old_ds.check()
-    new_ds.check()
-    same_examples(old_ds, new_ds)
-
-
 def test_shard_metadata_negative_chip_id(tmp_path):
     group = 1
     key = 'BDC9C50A1B51732C56838405443BC76F'

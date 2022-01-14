@@ -1143,16 +1143,31 @@ class Dataset():
 
     def reshape_into_new_dataset(self,
                                  examples_per_shard: int,
-                                 name_prefix: str = 'reshaped_',
+                                 name_prefix: str = 'reshaped',
+                                 from_idx: int = 0,
+                                 to_idx: int = 0,
                                  url: str = ''):
         """Reshape each shard to have only examples_per_shard. This method
         should not change the original dataset (self).
 
+        Reshaping can take a lot of time and scaaml.io.Dataset is not
+        thread-safe yet. One may write a Python script invoking
+        reshape_into_new_dataset, call the script multiple times (with
+        appropriate values of from_idx and to_idx), and then use
+        Dataset.merge_with to merge the resulting reshaped datasets.
+
         Args:
           examples_per_shard: Number of examples in each shard in the new
             dataset. Needs to divide the old examples_per_shard.
-          name_prefix: shortname is prefixed with this (the resulting dataset
-            should not exist).
+          name_prefix: shortname is prefixed with the string
+            f'{name_prefix}_{from_idx}_{to_idx}_' (the resulting dataset should
+            not exist).
+          from_idx: The index of the first shard that is reshaped (shards with
+            indices in range(from_idx, to_idx) are reshaped). This holds for
+            each split (it is safe to have to_idx larger than the length of
+            shadrs_list for some/all split).
+          to_idx: The index of the first shard that is not reshaped. Zero value
+            stands for max(len(self.shards_list[s]) for s in self.shards_list)).
           url: Download URL of the new dataset.
 
         Raises:
@@ -1170,6 +1185,10 @@ class Dataset():
           resulting sub-shards. When a shard contains multiple keys, this means
           that the key in the info might not even be present in the shard.
         """
+        # Set proper value for to_idx.
+        if to_idx == 0:
+            to_idx = max(len(self.shards_list[s]) for s in self.shards_list)
+        assert 0 <= from_idx <= to_idx
         # Check divisibility.
         if self.examples_per_shard % examples_per_shard:
             raise ValueError(f'Cannot split shards with '
@@ -1178,7 +1197,7 @@ class Dataset():
         # Create new dataset, raise if it already exists.
         new_dataset = Dataset(
             root_path=self.root_path,
-            shortname=name_prefix + self.shortname,  # New short name.
+            shortname=f'{name_prefix}_{from_idx}_{to_idx}_{self.shortname}',
             architecture=self.architecture,
             implementation=self.implementation,
             algorithm=self.algorithm,
@@ -1200,8 +1219,9 @@ class Dataset():
         # Reshape each shard, keeping the group id, incrementing the part id.
         for split in config['keys_per_split']:
             # i is the index of the shard.
-            for i in tqdm(range(len(config['shards_list'][split])),
-                          desc=f'Reshaping {split}.'):
+            for i in tqdm(range(from_idx, to_idx), desc=f'Reshaping {split}.'):
+                if i >= len(config['shards_list'][split]):
+                    break  # This split does not have so many shards.
                 part_id = 0
                 # j is the idex of the example.
                 for j, example in enumerate(
@@ -1249,19 +1269,6 @@ class Dataset():
                                               measurement=measurement)
                 # Close the last shard.
                 new_dataset.close_shard()
-        # Check min_values and max_values are the same.
-        assert new_dataset.min_values.keys() == self.min_values.keys()
-        assert new_dataset.max_values.keys() == self.max_values.keys()
-        for key, value in new_dataset.min_values.items():
-            if not np.isclose(value, self.min_values[key]):
-                raise ValueError(f'min_values are different, got '
-                                 f'{new_dataset.min_values}, expected '
-                                 f'{self.min_values}')
-        for key, value in new_dataset.max_values.items():
-            if not np.isclose(value, self.max_values[key]):
-                raise ValueError(f'max_values are different, got '
-                                 f'{new_dataset.max_values}, expected '
-                                 f'{self.max_values}')
         # Check the new dataset.
         new_dataset.check()
         return new_dataset
@@ -1334,7 +1341,8 @@ class Dataset():
         for split in other_dataset.shards_list:
             seen_keys = set()
             seen_keys_per_group = dict()
-            for shard in other_dataset.shards_list[split]:
+            for shard in tqdm(other_dataset.shards_list[split],
+                              desc=f'Merging {split}'):
                 self.shards_list[split].append(shard)
                 seen_keys.add(shard['key'])
                 if shard['group'] not in seen_keys_per_group.keys():
