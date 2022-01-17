@@ -5,7 +5,7 @@ import chipwhisperer as cw
 class SScope:
     """Scope context manager."""
     def __init__(self, gain: int, samples: int, offset: int, clock: int,
-                 sample_rate: str):
+                 sample_rate: str, **_):
         """Create scope context.
 
         Args:
@@ -14,6 +14,23 @@ class SScope:
           offset: Number of samples to wait before starting recording data.
           clock: CLKGEN output frequency (in Hz).
           sample_rate: Clock source for cw.ClockSettings.adc_src.
+          _: SScope is expected to be initialized using the capture_info
+            dictionary which may contain extra keys (additional information
+            about the capture; the capture_info dictionary is saved in the
+            info file of the dataset). Thus we can ignore the rest of keyword
+            arguments.
+
+        Expected use:
+          capture_info = {
+              'gain': gain,
+              'samples': samples,
+              'offset': offset,
+              'clock': clock,
+              'sample_rate': sample_rate,
+              'other_information': 'Can also be present.',
+          }
+          with SScope(**capture_info) as scope:
+              # Use the scope object.
         """
         self._scope = None
         self._gain = gain
