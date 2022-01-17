@@ -41,7 +41,8 @@ setup(
     "future-fstrings",
     "pygments",
     "chipwhisperer",
-    "scipy"
+    "scipy",
+    "semver",
   ],
   package_data={"": ["*.pickle"]},
   classifiers=[

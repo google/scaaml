@@ -1,4 +1,5 @@
-"Build and load tensorFlow dataset Record wrapper"
+"""Build and load tensorFlow dataset Record wrapper"""
+
 import copy
 import math
 import json
@@ -13,9 +14,12 @@ from tabulate import tabulate
 from termcolor import cprint
 from tqdm.auto import tqdm
 import numpy as np
+import semver
 import tensorflow as tf
 
+import scaaml
 from scaaml.utils import bytelist_to_hex
+from scaaml.io.spell_check import find_misspellings
 import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
@@ -32,10 +36,13 @@ class Dataset():
         version: int,
         firmware_sha256: str,
         description: str,
-        url: str,
         examples_per_shard: int,
         measurements_info: Dict,
         attack_points_info: Dict,
+        url: str,
+        firmware_url: str = '',
+        paper_url: str = '',
+        licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
         shards_list: defaultdict = None,
         keys_per_group: defaultdict = None,
@@ -50,6 +57,10 @@ class Dataset():
         """Class for saving and loading a database.
 
         Args:
+          url: Where to download this dataset.
+          firmware_url: Where to dowload the firmware used while capture.
+          paper_url: Where to find the published paper.
+          licence: URL or the whole licence the dataset is published under.
           from_config: This Dataset object has been created from a saved
             config, root_path thus points to what should be self.path. When
             True set self.path = root_path, self.root_path to be the parent of
@@ -57,7 +68,7 @@ class Dataset():
             self.path.name == self.slug (the directory could have been renamed).
 
         Raises:
-          ValueError: If firmware_sha256 evaluates to False.
+          ValueError: If firmware_sha256 or firmware_url evaluates to False.
           DatasetExistsError: If creating this object would overwrite the
             corresponding config file.
         """
@@ -70,6 +81,9 @@ class Dataset():
         self.firmware_sha256 = firmware_sha256
         self.description = description
         self.url = url
+        self.firmware_url = firmware_url
+        self.paper_url = paper_url
+        self.licence = licence
 
         self.capture_info = capture_info
         self.measurements_info = measurements_info
@@ -77,6 +91,8 @@ class Dataset():
 
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
+        if not self.firmware_url:
+            raise ValueError("Firmware URL is required")
 
         self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
                                          implementation, version)
@@ -141,6 +157,9 @@ class Dataset():
         Args: Same as scaaml.io.Dataset.__init__
 
         Returns: A scaaml.io.Dataset object.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used (via Dataset.from_config).
         """
         try:
             return Dataset(*args, **kwargs)
@@ -775,6 +794,9 @@ class Dataset():
             "version": self.version,
             "firmware_sha256": self.firmware_sha256,
             "url": self.url,
+            "firmware_url": self.firmware_url,
+            "paper_url": self.paper_url,
+            "licence": self.licence,
             "description": self.description,
             "compression": self.compression,
             "shards_list": self.shards_list,
@@ -788,6 +810,8 @@ class Dataset():
             "attack_points_info": self.attack_points_info,
             "min_values": self.min_values,
             "max_values": self.max_values,
+            # See scaaml.__version__ docstring for more information.
+            "scaaml_version": scaaml.__version__,
         }
         loaded = Dataset._from_loaded_json(
             json.loads(json.dumps(representation)))
@@ -824,6 +848,7 @@ class Dataset():
         Returns: The same information with fixed types.
         """
         fixed_dict = copy.deepcopy(loaded_dict)
+        find_misspellings(fixed_dict.keys())  # Check for misspellings of keys.
         # Fix type of keys_per_group
         fixed_dict['keys_per_group'] = {
             split: {
@@ -840,6 +865,13 @@ class Dataset():
             }
             for split, ex_info in loaded_dict['examples_per_group'].items()
         }
+        # Fix missing keys
+        if 'licence' not in fixed_dict:
+            # Do not relicence
+            fixed_dict['licence'] = ''
+        for k in ['firmware_url', 'paper_url']:
+            if k not in fixed_dict:
+                fixed_dict[k] = ''
         return fixed_dict
 
     def _write_config(self):
@@ -849,10 +881,25 @@ class Dataset():
 
     @staticmethod
     def from_config(dataset_path: str):
+        """Load a dataset from a config file.
+
+        Args:
+          dataset_path: The path to the dataset.
+
+        Raises: ValueError if the dataset version is higher than the scaaml
+          module used. See scaaml.__version__ docstring.
+        """
         dpath = Path(dataset_path)
         conf_path = Dataset._get_config_path(dataset_path)
         cprint(f'reloading {conf_path}', 'magenta')
         config = Dataset._load_config(conf_path)
+        # Check that the library version (version of this software) is not
+        # lower than what was used to capture the dataset.
+        if 'scaaml_version' in config.keys():
+            if semver.compare(config['scaaml_version'], scaaml.__version__) > 0:
+                raise ValueError(f'SCAAML module is outdated, scaaml_version: '
+                                 f'{scaaml.__version__}, but dataset was '
+                                 f'created using: {config["scaaml_version"]}')
         return Dataset(
             root_path=str(dpath),
             shortname=config['shortname'],
@@ -861,6 +908,9 @@ class Dataset():
             algorithm=config['algorithm'],
             version=config['version'],
             url=config['url'],
+            firmware_url=config['firmware_url'],
+            paper_url=config['paper_url'],
+            licence=config['licence'],
             description=config['description'],
             firmware_sha256=config['firmware_sha256'],
             measurements_info=config['measurements_info'],
