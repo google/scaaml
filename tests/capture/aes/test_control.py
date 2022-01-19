@@ -14,12 +14,12 @@
 
 from unittest.mock import MagicMock
 
-from scaaml.capture.aes.control import SControl
+from scaaml.capture.aes.control import CWControl
 
 
 def test_control():
     chip_id = 314159
-    with SControl(chip_id=chip_id, scope_io=MagicMock()) as control:
+    with CWControl(chip_id=chip_id, scope_io=MagicMock()) as control:
         assert control.chip_id == chip_id
         assert control._scope_io.tio1 == "serial_rx"
         assert control._scope_io.tio2 == "serial_tx"

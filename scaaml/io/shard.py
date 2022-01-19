@@ -119,7 +119,8 @@ class Shard():
 
             # check that the measurement len match what is specified in info
             if len(measurement) != expected_len:
-                raise ValueError(mname, "don't have the right len")
+                raise ValueError(f'{mname} has wrong length, expected '
+                                 f'{expected_len}, got {len(measurement)}.')
 
             # min and max
             self.min_values[mname] = min(self.min_values[mname],

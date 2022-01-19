@@ -13,15 +13,15 @@
 # limitations under the License.
 
 """AES specific SCryptoAlgorithm."""
-from typing import Dict
-from typing import Literal
+from typing import Iterable, Literal
 import numpy as np
 
+from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.aes.acqktp import AcqKeyTextPatternScaaml as ktp_scaaml
 from scaaml.io import resume_kti
 
 
-class SCryptoAlgorithm:
+class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     """attack points and maybe some basic information about it (e.g. key length, etc.)"""
     def __init__(self,
                  firmware_sha256: str,
@@ -56,23 +56,17 @@ class SCryptoAlgorithm:
           full_progress_filename: The file to save progress into. This should
             be in the same directory as the whole dataset.
         """
-        # TODO(karelkral): Automatically check scaaml.io.utils.sha256sum(firmware_file).
-        # When changing the following assert update also
-        # SCryptoAlgorithm._dataset
-        assert purpose in ['train', 'test', 'holdout']
-        self._firmware_sha256 = firmware_sha256
-        self._crypto_implementation = crypto_implementation
-        self._implementation = implementation
-        self._algorithm = algorithm
-        self._keys = keys
-        self._plaintexts = plaintexts
-        self._repetitions = repetitions
-        self._examples_per_shard = examples_per_shard
-        self._purpose = purpose
-        self._kt_filename = full_kt_filename
-        self._progress_filename = full_progress_filename
-        self._full_kt_filename = full_kt_filename
-        self._full_progress_filename = full_progress_filename
+        super().__init__(firmware_sha256=firmware_sha256,
+                         crypto_implementation=crypto_implementation,
+                         purpose=purpose,
+                         implementation=implementation,
+                         algorithm=algorithm,
+                         keys=keys,
+                         plaintexts=plaintexts,
+                         repetitions=repetitions,
+                         examples_per_shard=examples_per_shard,
+                         full_kt_filename=full_kt_filename,
+                         full_progress_filename=full_progress_filename)
 
         # Generate ans save key-text pairs.
         ktp = self._get_new_ktp()
@@ -99,24 +93,6 @@ class SCryptoAlgorithm:
         # Set in get_stabilization_kti.
         self._stabilization_ktp = None
 
-    def attack_points_info(self):
-        """Returns the attack points info."""
-        return self._crypto_implementation.ATTACK_POINTS_INFO
-
-    def attack_points(self, **kwargs: bytearray) -> Dict[str, bytearray]:
-        """Returns the attack points for specific parameters (such as the
-        key-text pair).
-
-        Typical usage example:
-          aps = crypto_algorithm.attack_points(key=key, plaintext=plaintext)
-        """
-        c_i = self._crypto_implementation
-        aps = {}
-        for attack_point_name in c_i.ATTACK_POINTS_INFO:
-            aps[attack_point_name] = c_i.get_attack_point(
-                attack_point_name, **kwargs)
-        return aps
-
     def _get_new_ktp(self):
         ktp = ktp_scaaml()
         ktp.dataset = self._dataset
@@ -126,7 +102,7 @@ class SCryptoAlgorithm:
         ktp.init(0)
         return ktp
 
-    def get_stabilization_kti(self):
+    def get_stabilization_kti(self) -> Iterable:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """
@@ -150,70 +126,3 @@ class SCryptoAlgorithm:
 
         self._stabilization_ktp = StabilizationIterator(self._get_new_ktp())
         return self._stabilization_ktp
-
-    @property
-    def kti(self):
-        """Key-plaintext iterator."""
-        return self._kti
-
-    @property
-    def examples_per_shard(self):
-        """How many traces are captured in a shard."""
-        return self._examples_per_shard
-
-    @property
-    def keys(self):
-        """Number of different keys generated."""
-        return self._keys
-
-    @property
-    def plaintexts(self):
-        """Number of different plaintexts used with a single key."""
-        return self._plaintexts
-
-    @property
-    def repetitions(self):
-        """Number of times each (key,text) pair is repeated."""
-        return self._repetitions
-
-    @property
-    def key_len(self):
-        """Length of the key in bytes."""
-        return self._crypto_implementation.KEY_LENGTH
-
-    @property
-    def plaintext_len(self):
-        """Length of the plaintext in bytes."""
-        return self._crypto_implementation.PLAINTEXT_LENGTH
-
-    @property
-    def firmware_sha256(self):
-        """SHA256 hash of the firmware."""
-        return self._firmware_sha256
-
-    @property
-    def implementation(self):
-        """The implementation used."""
-        return self._implementation
-
-    @property
-    def algorithm(self):
-        """The algorithm used."""
-        return self._algorithm
-
-    @property
-    def purpose(self):
-        """The parameter split in scaaml.io.Database.new_shard, in
-        ['train', 'test', 'holdout']"""
-        return self._purpose
-
-    @property
-    def _dataset(self) -> Literal['Training', 'Validation']:
-        """Return the dataset type used in ktp_scaaml."""
-        # purpose is used in scaaml.io.Dataset
-        purpose_to_dataset = {
-            'train': 'Training',
-            'test': 'Training',
-            'holdout': 'Validation',
-        }
-        return purpose_to_dataset[self._purpose]
