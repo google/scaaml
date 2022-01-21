@@ -4,7 +4,7 @@ import json
 import os
 from collections import defaultdict
 from time import time
-from typing import Dict, List, Union, Literal
+from typing import Dict, List, Union
 from pathlib import Path
 
 from tabulate import tabulate
@@ -252,7 +252,6 @@ class Dataset():
                      parts: Union[List[int], int] = None,
                      trace_start: int = 0,
                      trace_len: int = None,
-                     step_size: int = 1,
                      batch_size: int = 32,
                      prefetch: int = tf.data.AUTOTUNE,
                      file_parallelism: int = os.cpu_count(),
@@ -268,10 +267,6 @@ class Dataset():
         if parts:
             raise NotImplementedError("Implement part filtering")
 
-        # check that the traces can be reshaped as requested
-        reshaped_trace_len = trace_len // step_size
-        if trace_len % step_size:
-            raise ValueError("trace_max_len must be a multiple of len(traces)")
 
         # boxing
         if isinstance(traces, str):
@@ -310,7 +305,7 @@ class Dataset():
             inputs[name]['max'] = tf.constant(dataset.max_values[name])
             delta = tf.constant(inputs[name]['max'] - inputs[name]['min'])
             inputs[name]['delta'] = delta
-            inputs[name]['shape'] = (reshaped_trace_len, step_size)
+
 
         # output construction
         outputs = {}  # model outputs
@@ -339,14 +334,14 @@ class Dataset():
                     trace = trace[:trace_len]
 
                 # rescale
-                trace = 2 * ((trace - data['min']) / (data['delta'])) - 1
+                # trace = 2 * ((trace - data['min']) / (data['delta'])) - 1
 
                 # reshape
-                trace = tf.reshape(trace, (reshaped_trace_len, step_size))
+                # trace = tf.reshape(trace, (reshaped_trace_len, step_size))
 
                 # assign
                 x[name] = trace
-
+                inputs[name]['shape'] = trace.shape  # (trace_len - trace_start)
             # one_hot the outptut for each ap/byte
             y = {}
             for name, data in outputs.items():
@@ -390,8 +385,9 @@ class Dataset():
         # process them
         ds = ds.map(process_record, num_parallel_calls=parallelism)
 
-        # # randomize
-        ds = ds.shuffle(shuffle)
+        # # randomize only if > 0 -- no shuffle in test/validation
+        if shuffle:
+            ds = ds.shuffle(shuffle)
 
         # # batching with repeat
         ds = ds.repeat()
@@ -437,7 +433,7 @@ class Dataset():
 
     @staticmethod
     def inspect(dataset_path,
-                split: Literal['train', 'test', 'holdout'],
+                split,
                 shard_id: int,
                 num_example: int,
                 verbose: bool = True):
