@@ -6,7 +6,7 @@ import json
 import os
 from collections import defaultdict
 from time import time
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from pathlib import Path
 import pprint
 
@@ -49,9 +49,9 @@ class Dataset():
         keys_per_split: defaultdict = None,
         examples_per_group: defaultdict = None,
         examples_per_split: defaultdict = None,
-        capture_info: dict = {},
-        min_values: Dict[str, int] = {},
-        max_values: Dict[str, int] = {},
+        capture_info: Optional[dict] = None,
+        min_values: Optional[Dict[str, int]] = None,
+        max_values: Optional[Dict[str, int]] = None,
         from_config: bool = False,
     ) -> None:
         """Class for saving and loading a database.
@@ -85,7 +85,7 @@ class Dataset():
         self.paper_url = paper_url
         self.licence = licence
 
-        self.capture_info = capture_info
+        self.capture_info = capture_info or {}
         self.measurements_info = measurements_info
         self.attack_points_info = attack_points_info
 
@@ -136,12 +136,12 @@ class Dataset():
         self.examples_per_split = examples_per_split or defaultdict(int)
         self.examples_per_shard = examples_per_shard
 
-        # traces extrem values
-        self.min_values = min_values
-        self.max_values = max_values
+        # traces extreme values
+        self.min_values = min_values or {}
+        self.max_values = max_values or {}
         for k in measurements_info.keys():
             # init only if not existing
-            if k not in min_values:
+            if k not in self.min_values:
                 self.min_values[k] = math.inf
                 self.max_values[k] = 0
 
