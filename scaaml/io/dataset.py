@@ -6,7 +6,7 @@ import json
 import os
 from collections import defaultdict
 from time import time
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from pathlib import Path
 import pprint
 
@@ -44,14 +44,14 @@ class Dataset():
         paper_url: str = '',
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
-        shards_list: defaultdict = None,
-        keys_per_group: defaultdict = None,
-        keys_per_split: defaultdict = None,
-        examples_per_group: defaultdict = None,
-        examples_per_split: defaultdict = None,
-        capture_info: dict = {},
-        min_values: Dict[str, int] = {},
-        max_values: Dict[str, int] = {},
+        shards_list: Optional[Dict[str, List]] = None,
+        keys_per_group: Optional[Dict[str, Dict[int, int]]] = None,
+        keys_per_split: Optional[Dict[str, int]] = None,
+        examples_per_group: Optional[Dict[str, Dict[int, int]]] = None,
+        examples_per_split: Optional[Dict[str, int]] = None,
+        capture_info: Optional[dict] = None,
+        min_values: Optional[Dict[str, float]] = None,
+        max_values: Optional[Dict[str, float]] = None,
         from_config: bool = False,
     ) -> None:
         """Class for saving and loading a database.
@@ -85,7 +85,7 @@ class Dataset():
         self.paper_url = paper_url
         self.licence = licence
 
-        self.capture_info = capture_info
+        self.capture_info = capture_info or {}
         self.measurements_info = measurements_info
         self.attack_points_info = attack_points_info
 
@@ -124,26 +124,40 @@ class Dataset():
         self.curr_shard = None  # current_ shard object
 
         # [counters] - must be passed as param to allow reload.
-        self.shards_list = shards_list or defaultdict(list)
+        # shards_list[split] is a list of shard info dictionaries (where split
+        # in ['test', 'train', 'holdout']
+        self.shards_list = siutils.ddict(value=shards_list,
+                                         levels=1,
+                                         type_var=list)
 
         # keys counting
-        self.keys_per_group = keys_per_group or defaultdict(lambda: defaultdict(int))  # noqa
-        self.keys_per_split = keys_per_split or defaultdict(int)
+        # keys_per_group[split][group_id] contains the number (int) of keys
+        # belonging to the group (group_id is int)
+        self.keys_per_group = siutils.ddict(value=keys_per_group,
+                                            levels=2,
+                                            type_var=int)
+        self.keys_per_split = siutils.ddict(value=keys_per_split,
+                                            levels=1,
+                                            type_var=int)
 
         # examples counting
         # keys_per_group[split][gid] = cnt
-        self.examples_per_group = examples_per_group or defaultdict(lambda: defaultdict(int))  # noqa
-        self.examples_per_split = examples_per_split or defaultdict(int)
+        self.examples_per_group = siutils.ddict(value=examples_per_group,
+                                                levels=2,
+                                                type_var=int)
+        self.examples_per_split = siutils.ddict(value=examples_per_split,
+                                                levels=1,
+                                                type_var=int)
         self.examples_per_shard = examples_per_shard
 
-        # traces extrem values
-        self.min_values = min_values
-        self.max_values = max_values
+        # traces extreme values
+        self.min_values = min_values or {}
+        self.max_values = max_values or {}
         for k in measurements_info.keys():
             # init only if not existing
-            if k not in min_values:
+            if k not in self.min_values:
                 self.min_values[k] = math.inf
-                self.max_values[k] = 0
+                self.max_values[k] = 0.
 
         # write config if needed
         if not from_config:

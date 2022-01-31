@@ -1,6 +1,7 @@
 import os
 import copy
 import json
+import math
 from pathlib import Path
 import pytest
 from unittest.mock import patch
@@ -60,6 +61,52 @@ def dataset_constructor_kwargs(root_path, **kwargs):
     }
     result.update(kwargs)
     return result
+
+
+def test_defaultdict(tmp_path):
+    np.random.seed(42)
+    # Create the dataset, write some examples, reload and write some more. If
+    # reload does not create a defaultdict, we get a KeyError (for 'test'
+    # split).
+    chip_id = 13
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path)
+    ds = Dataset.get_dataset(**kwargs)
+    key = np.random.randint(0, 255, 16)
+    trace1 = np.random.random(1024)
+    trace2 = np.random.random(1024)
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.close_shard()
+    del ds
+    key2 = np.random.randint(0, 255, 16)
+    ds = Dataset.get_dataset(**kwargs)
+    ds.new_shard(key=key2, part=1, split='test', group=1, chip_id=chip_id)
+    ds.write_example({"key": key2}, {"trace1": trace2})
+    ds.close_shard()
+
+
+def test_mutable_defaults(tmp_path):
+    """If min_values defaults to {} this test fails (default value will get
+    changed -- see mutable default arguments)."""
+    np.random.seed(24)
+    path_a = tmp_path / 'a'
+    path_a.mkdir(parents=True, exist_ok=True)
+    ds1 = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=path_a))
+    key = np.random.randint(0, 255, 16)
+    trace1 = np.zeros(1024, dtype=np.float)
+    trace1[2] = 0.8  # max_val is written before deleting ds
+    trace1[1] = -0.3  # max_val is written before deleting ds
+    chip_id = 1
+    ds1.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds1.write_example({"key": key}, {"trace1": trace1})
+    ds1.close_shard()
+
+    # Different dataset
+    path_b = tmp_path / 'b'
+    path_b.mkdir(parents=True, exist_ok=True)
+    ds2 = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=path_b))
+    assert ds2.min_values == {'trace1': math.inf}
+    assert ds2.max_values == {'trace1': 0.}
 
 
 def test_version_old_software(tmp_path):
