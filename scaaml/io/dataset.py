@@ -44,11 +44,11 @@ class Dataset():
         paper_url: str = '',
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         compression: str = "GZIP",
-        shards_list: defaultdict = None,
-        keys_per_group: defaultdict = None,
-        keys_per_split: defaultdict = None,
-        examples_per_group: defaultdict = None,
-        examples_per_split: defaultdict = None,
+        shards_list: Optional[Dict[str, List]] = None,
+        keys_per_group: Optional[Dict[str, Dict[int, int]]] = None,
+        keys_per_split: Optional[Dict[str, int]] = None,
+        examples_per_group: Optional[Dict[str, Dict[int, int]]] = None,
+        examples_per_split: Optional[Dict[str, int]] = None,
         capture_info: Optional[dict] = None,
         min_values: Optional[Dict[str, int]] = None,
         max_values: Optional[Dict[str, int]] = None,
@@ -124,16 +124,30 @@ class Dataset():
         self.curr_shard = None  # current_ shard object
 
         # [counters] - must be passed as param to allow reload.
-        self.shards_list = shards_list or defaultdict(list)
+        # shards_list[split] is a list of shard info dictionaries (where split
+        # in ['test', 'train', 'holdout']
+        self.shards_list = siutils.ddict(value=shards_list,
+                                         levels=1,
+                                         type_var=list)
 
         # keys counting
-        self.keys_per_group = keys_per_group or defaultdict(lambda: defaultdict(int))  # noqa
-        self.keys_per_split = keys_per_split or defaultdict(int)
+        # keys_per_group[split][group_id] contains the number (int) of keys
+        # belonging to the group (group_id is int)
+        self.keys_per_group = siutils.ddict(value=keys_per_group,
+                                            levels=2,
+                                            type_var=int)
+        self.keys_per_split = siutils.ddict(value=keys_per_split,
+                                            levels=1,
+                                            type_var=int)
 
         # examples counting
         # keys_per_group[split][gid] = cnt
-        self.examples_per_group = examples_per_group or defaultdict(lambda: defaultdict(int))  # noqa
-        self.examples_per_split = examples_per_split or defaultdict(int)
+        self.examples_per_group = siutils.ddict(value=examples_per_group,
+                                                levels=2,
+                                                type_var=int)
+        self.examples_per_split = siutils.ddict(value=examples_per_split,
+                                                levels=1,
+                                                type_var=int)
         self.examples_per_shard = examples_per_shard
 
         # traces extreme values

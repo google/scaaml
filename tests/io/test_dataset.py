@@ -63,6 +63,28 @@ def dataset_constructor_kwargs(root_path, **kwargs):
     return result
 
 
+def test_defaultdict(tmp_path):
+    np.random.seed(42)
+    # Create the dataset, write some examples, reload and write some more. If
+    # reload does not create a defaultdict, we get a KeyError (for 'test'
+    # split).
+    chip_id = 13
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path)
+    ds = Dataset.get_dataset(**kwargs)
+    key = np.random.randint(0, 255, 16)
+    trace1 = np.random.random(1024)
+    trace2 = np.random.random(1024)
+    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.write_example({"key": key}, {"trace1": trace1})
+    ds.close_shard()
+    del ds
+    key2 = np.random.randint(0, 255, 16)
+    ds = Dataset.get_dataset(**kwargs)
+    ds.new_shard(key=key2, part=1, split='test', group=1, chip_id=chip_id)
+    ds.write_example({"key": key2}, {"trace1": trace2})
+    ds.close_shard()
+
+
 def test_mutable_defaults(tmp_path):
     """If min_values defaults to {} this test fails (default value will get
     changed -- see mutable default arguments)."""
