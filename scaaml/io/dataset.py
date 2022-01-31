@@ -50,8 +50,8 @@ class Dataset():
         examples_per_group: Optional[Dict[str, Dict[int, int]]] = None,
         examples_per_split: Optional[Dict[str, int]] = None,
         capture_info: Optional[dict] = None,
-        min_values: Optional[Dict[str, int]] = None,
-        max_values: Optional[Dict[str, int]] = None,
+        min_values: Optional[Dict[str, float]] = None,
+        max_values: Optional[Dict[str, float]] = None,
         from_config: bool = False,
     ) -> None:
         """Class for saving and loading a database.
@@ -157,7 +157,7 @@ class Dataset():
             # init only if not existing
             if k not in self.min_values:
                 self.min_values[k] = math.inf
-                self.max_values[k] = 0
+                self.max_values[k] = 0.
 
         # write config if needed
         if not from_config:
