@@ -5,8 +5,9 @@ import math
 import json
 import os
 from collections import defaultdict
+import shutil
 from time import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Set
 from pathlib import Path
 import pprint
 
@@ -72,6 +73,13 @@ class Dataset():
           DatasetExistsError: If creating this object would overwrite the
             corresponding config file.
         """
+        # Do not allow mutable default parameters.
+        if capture_info is None:
+            capture_info = {}
+        if min_values is None:
+            min_values = {}
+        if max_values is None:
+            max_values = {}
         self.shortname = shortname
         self.architecture = architecture
         self.implementation = implementation
@@ -537,7 +545,10 @@ class Dataset():
             print(data)
         return data
 
-    def check(self, deep_check: bool = True, show_progressbar: bool = True):
+    def check(self,
+              deep_check: bool = True,
+              show_progressbar: bool = True,
+              key_ap: str = 'key'):
         """Check the dataset integrity. Check integrity of metadata in config
         and also that no key from the train is in the test.
 
@@ -546,9 +557,13 @@ class Dataset():
             disjoint inspect train shards (set to True if a single train shard
             may contain multiple different keys).
           show_progressbar: Use tqdm to show a progressbar for different checks.
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
 
         Raises: ValueError if the dataset is inconsistent.
         """
+        if key_ap not in self.attack_points_info:
+            raise ValueError(f'{key_ap} is not an attack point.')
         if show_progressbar:
             pbar = tqdm
         else:
@@ -567,14 +582,18 @@ class Dataset():
                                               dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
         if 'test' in self.examples_per_split and 'train' in self.examples_per_split:
-            self._check_disjoint_keys(pbar=pbar, deep_check=deep_check)
+            self._check_disjoint_keys(pbar=pbar,
+                                      key_ap=key_ap,
+                                      deep_check=deep_check)
 
-    def _check_disjoint_keys(self, pbar, deep_check: bool = True):
+    def _check_disjoint_keys(self, pbar, key_ap: str, deep_check: bool = True):
         """Check that no key in the train split is present in the test split.
 
         Args:
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
           deep_check: When checking that keys in test and train splits are
             disjoint inspect train shards (set to True if a single train shard
             may contain multiple different keys).
@@ -589,13 +608,14 @@ class Dataset():
                     shard_id=i,
                     num_example=self.examples_per_shard,
                     verbose=False).as_numpy_iterator():
-                seen_keys.add(example['key'].astype(np.uint8).tobytes())
+                seen_keys.add(example[key_ap].astype(np.uint8).tobytes())
         if deep_check:
             Dataset._deep_check(seen_keys=seen_keys,
                                 dpath=self.path,
                                 train_shards=self.shards_list['train'],
                                 pbar=pbar,
-                                examples_per_shard=self.examples_per_shard)
+                                examples_per_shard=self.examples_per_shard,
+                                key_ap=key_ap)
         else:
             Dataset._shallow_check(seen_keys=seen_keys,
                                    train_shards=self.shards_list['train'],
@@ -756,7 +776,7 @@ class Dataset():
 
     @staticmethod
     def _deep_check(seen_keys, dpath, train_shards, pbar,
-                    examples_per_shard: int):
+                    examples_per_shard: int, key_ap: str):
         """Check all keys from all shards (parse all shards in the train split).
 
         Args:
@@ -766,6 +786,8 @@ class Dataset():
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
           examples_per_shard: Number of examples in each shard.
+          key_ap: The attack point that is checked for when checking
+            disjointness of splits.
         """
         for i in pbar(range(len(train_shards)),
                       desc='Checking test key uniqueness'):
@@ -776,7 +798,7 @@ class Dataset():
                         shard_id=i,
                         num_example=examples_per_shard,
                         verbose=False).as_numpy_iterator()):
-                cur_key = example['key'].astype(np.uint8).tobytes()
+                cur_key = example[key_ap].astype(np.uint8).tobytes()
                 if cur_key in seen_keys:
                     raise ValueError(
                         f'Duplicate key: {cur_key} in test split, in '
@@ -1035,3 +1057,333 @@ class Dataset():
                                              print_info=True)
         with open(fpath, 'w+') as o:
             json.dump(new_config, o)
+
+    def _move_shard(self, from_split: str, to_split: str,
+                    shard_idx: int) -> None:
+        """Move a single shard. If this method raises the dataset might be left
+        in a state which is not valid.
+
+        The user must update keys_per_split and keys_per_group values (this
+        should be done in move_shards). This is needed as single key may be used
+        in different shards.
+
+        Args:
+          from_split: The split that loses a shard.
+          to_split: The split that gains a shard.
+          shard_idx: The index to the shards. Valid values are in
+            range(len(shards_list[from_split])).
+
+        Raises:
+          IndexError: If shard_idx is out of bounds.
+        """
+        if not shard_idx in range(len(self.shards_list[from_split])):
+            raise IndexError(f'0 <= shard_idx < len(shards_list[from_split]) '
+                             f'violated: 0 <= {shard_idx} < '
+                             f'{len(self.shards_list[from_split])}')
+        # The shard to move.
+        shard = self.shards_list[from_split][shard_idx]
+        # Move the file.
+        shard_file = self.path / shard['path']
+        new_name = Dataset._shard_name(shard_group=shard["group"],
+                                       shard_key=shard["key"],
+                                       shard_part=shard["part"])
+        shard['path'] = f'{to_split}/{new_name}'
+        moved_file = self.path / shard['path']
+        shard_file.rename(moved_file)
+        # Move the shard object.
+        if to_split not in self.shards_list.keys():
+            self.shards_list[to_split] = [shard]
+        else:
+            self.shards_list[to_split].insert(0, shard)
+        del self.shards_list[from_split][shard_idx]
+        # Fix metadata.
+        self.examples_per_split[from_split] -= shard['examples']
+        self.examples_per_split[to_split] += shard['examples']
+        self.examples_per_group[from_split][
+            shard['group']] -= shard['examples']
+        # Zero value should not be present.
+        if self.examples_per_group[from_split][shard['group']] == 0:
+            del self.examples_per_group[from_split][shard['group']]
+        self.examples_per_group[to_split][shard['group']] += shard['examples']
+
+    def move_shards(self, from_split: str, to_split: str,
+                    shards: Union[int, Set[int]]) -> None:
+        """Move shards from one split to another. This method modifies this
+        dataset (moves files). Make a backup before calling this method.
+
+        Args:
+          from_split: The split that loses shards.
+          to_split: The split that gains shards.
+          shards: If this parameter is an integer, then the first shards from
+            shards_list are moved. If shards is a set of integers then the
+            shards of the corresponding indices are moved.
+
+        Raises:
+          ValueError: If the check method fails.
+
+        Example use:
+          # Make a backup of the original dataset.
+          # Either call:
+          dataset.move_shards(from_split='train', to_split='test', shards=3)
+          # Or call:
+          dataset.move_shards(from_split='train', to_split='test', shards={0, 1, 2})
+        """
+        if isinstance(shards, int):
+            shards = set(range(shards))
+        keys_moved = defaultdict(set)
+        # Move the shards one by one in reversed order (to keep all indexes
+        # valid).
+        for shard_idx in sorted(shards, reverse=True):
+            shard = self.shards_list[from_split][shard_idx]
+            # Remember moving this key.
+            keys_moved[shard['group']].add(shard['key'])
+            self._move_shard(from_split=from_split,
+                             to_split=to_split,
+                             shard_idx=shard_idx)
+        # Update keys_per_split and keys_per_group.
+        all_keys = set()
+        for group_keys in keys_moved.values():
+            all_keys.update(group_keys)
+        self.keys_per_split[from_split] -= len(all_keys)
+        self.keys_per_split[to_split] += len(all_keys)
+        for group in self.keys_per_group[from_split]:
+            self.keys_per_group[from_split][group] -= len(keys_moved[group])
+            self.keys_per_group[to_split][group] += len(keys_moved[group])
+        # Write config to save the state of this dataset. (Also the config is
+        # used in self.check()).
+        self._write_config()
+        # Check the resulting dataset (especially for key repetition).
+        self.check()
+
+    def reshape_into_new_dataset(self,
+                                 examples_per_shard: int,
+                                 name_prefix: str = 'reshaped',
+                                 from_idx: int = 0,
+                                 to_idx: int = 0,
+                                 url: str = ''):
+        """Reshape each shard to have only examples_per_shard. This method
+        should not change the original dataset (self).
+
+        Reshaping can take a lot of time and scaaml.io.Dataset is not
+        thread-safe yet. One may write a Python script invoking
+        reshape_into_new_dataset, call the script multiple times (with
+        appropriate values of from_idx and to_idx), and then use
+        Dataset.merge_with to merge the resulting reshaped datasets.
+
+        Args:
+          examples_per_shard: Number of examples in each shard in the new
+            dataset. Needs to divide the old examples_per_shard.
+          name_prefix: shortname is prefixed with the string
+            f'{name_prefix}_{from_idx}_{to_idx}_' (the resulting dataset should
+            not exist).
+          from_idx: The index of the first shard that is reshaped (shards with
+            indices in range(from_idx, to_idx) are reshaped). This holds for
+            each split (it is safe to have to_idx larger than the length of
+            shadrs_list for some/all split).
+          to_idx: The index of the first shard that is not reshaped. Zero value
+            stands for max(len(self.shards_list[s]) for s in self.shards_list)).
+          url: Download URL of the new dataset.
+
+        Raises:
+          ValueError: If examples_per_shard does not divide old value of
+            examples_per_shard.
+          DatasetExistsError: If the new dataset already exists (change the
+            name_prefix).
+
+        Returns: The new dataset object.
+
+        Bugs:
+          Part id might be too high (max is 10).
+
+          When splitting a single shard, the key info gets distributed to the
+          resulting sub-shards. When a shard contains multiple keys, this means
+          that the key in the info might not even be present in the shard.
+        """
+        # Set proper value for to_idx.
+        if to_idx == 0:
+            to_idx = max(len(self.shards_list[s]) for s in self.shards_list)
+        assert 0 <= from_idx <= to_idx
+        # Check divisibility.
+        if self.examples_per_shard % examples_per_shard:
+            raise ValueError(f'Cannot split shards with '
+                             f'{self.examples_per_shard} examples (=traces) '
+                             f'into shards of {examples_per_shard} examples.')
+        # Create new dataset, raise if it already exists.
+        new_dataset = Dataset(
+            root_path=self.root_path,
+            shortname=f'{name_prefix}_{from_idx}_{to_idx}_{self.shortname}',
+            architecture=self.architecture,
+            implementation=self.implementation,
+            algorithm=self.algorithm,
+            version=self.version,
+            firmware_sha256=self.firmware_sha256,
+            description=self.description,
+            examples_per_shard=examples_per_shard,  # New value.
+            measurements_info=self.measurements_info,
+            attack_points_info=self.attack_points_info,
+            url=url,  # Download url should not be the same.
+            firmware_url=self.firmware_url,
+            paper_url=self.paper_url,
+            licence=self.licence,
+            compression=self.compression,
+            capture_info=self.capture_info,
+            from_config=False)
+        # The old config dictionary.
+        config = self._get_config_dictionary()
+        # Reshape each shard, keeping the group id, incrementing the part id.
+        for split in config['keys_per_split']:
+            # i is the index of the shard.
+            for i in tqdm(range(from_idx, to_idx), desc=f'Reshaping {split}.'):
+                if i >= len(config['shards_list'][split]):
+                    break  # This split does not have so many shards.
+                part_id = 0
+                # j is the idex of the example.
+                for j, example in enumerate(
+                        Dataset.inspect(dataset_path=self.path,
+                                        split=split,
+                                        shard_id=i,
+                                        num_example=self.examples_per_shard,
+                                        verbose=False).as_numpy_iterator()):
+                    if j % examples_per_shard == 0:
+                        # Open a new shard
+                        shard = config['shards_list'][split][i]
+                        k = shard['key'].lower()
+                        cur_key = np.array([
+                            int(k[2 * i:2 * i + 2], 16)
+                            for i in range(len(k) // 2)
+                        ])
+                        # Compute the part_id based on the part of the original
+                        # shard.
+                        shard_divisions = self.examples_per_shard // examples_per_shard
+                        real_part_id = (shard_divisions *
+                                        shard['part']) + part_id
+                        new_dataset.new_shard(
+                            key=cur_key,
+                            part=real_part_id,
+                            group=shard['group'],
+                            split=split,
+                            chip_id=shard['chip_id'],
+                        )
+                        part_id += 1
+                    # Write the example.
+                    attack_points = {
+                        ap_name: example[ap_name]
+                        for ap_name in self.attack_points_info
+                    }
+                    # Check that the lengths and max values are as expected.
+                    for ap_name, ap_val in attack_points.items():
+                        ap_info = self.attack_points_info
+                        assert len(ap_val) == ap_info[ap_name]['len']
+                        assert max(ap_val) < ap_info[ap_name]['max_val']
+                    measurement = {
+                        m_name: example[m_name]
+                        for m_name in self.measurements_info
+                    }
+                    new_dataset.write_example(attack_points=attack_points,
+                                              measurement=measurement)
+                # Close the last shard.
+                new_dataset.close_shard()
+        # Check the new dataset.
+        new_dataset.check()
+        return new_dataset
+
+    def merge_with(self, other_dataset) -> None:
+        """Merge other_dataset into this dataset. This method changes this
+        dataset (self). Make a backup before calling this method.
+
+        This method assumes that other_dataset contains no key that is also
+        present in this dataset.
+
+        Args:
+          other_dataset: Another dataset object to copy shards from. Does not
+            get changed. Should be of the same type (same firmware_sha256,
+            compression, examples_per_shard, measurements_info, licence, ....).
+
+        The following properties are not updated (and not checked to be equal
+        to those of other_dataset):
+          shortname
+          version
+          description
+          url
+          Current shard tracking: shard_key, prev_shard_key, shard_path,
+            shard_split, shard_part, shard_relative_path, curr_shard
+
+        The following are updated by the merge:
+          shards_list
+          keys_per_group
+          keys_per_split
+          examples_per_group
+          examples_per_split
+          examples_per_shard
+          min_values
+          max_values
+
+        Raises:
+          ValueError: If Dataset.check fails.
+          FileExistsError: If a shard should be copied over an existing file.
+            Assume that after this error self is not in a consistent state.
+        """
+        # The following properties must be the same in order for merge to make
+        # sense:
+        assert self.firmware_sha256 == other_dataset.firmware_sha256
+        #assert self.firmware_url == other_dataset.firmware_url,
+        #assert self.paper_url == other_dataset.paper_url,
+        #assert self.licence == other_dataset.licence
+        assert self.architecture == other_dataset.architecture
+        assert self.implementation == other_dataset.implementation
+        assert self.algorithm == other_dataset.algorithm
+        assert self.compression == other_dataset.compression
+        assert self.capture_info == other_dataset.capture_info
+        assert self.measurements_info == other_dataset.measurements_info
+        assert self.attack_points_info == other_dataset.attack_points_info
+        assert self.min_values.keys() == other_dataset.min_values.keys()
+        assert self.max_values.keys() == other_dataset.max_values.keys()
+        assert self.examples_per_shard == other_dataset.examples_per_shard
+
+        # Update metainformation.
+        # Update extreme values:
+        self.min_values = {
+            k: min(v, other_dataset.min_values[k])
+            for k, v in self.min_values.items()
+        }
+        self.max_values = {
+            k: max(v, other_dataset.max_values[k])
+            for k, v in self.max_values.items()
+        }
+
+        # Update shards.
+        for split in other_dataset.shards_list:
+            seen_keys = set()
+            seen_keys_per_group = dict()
+            for shard in tqdm(other_dataset.shards_list[split],
+                              desc=f'Merging {split}'):
+                self.shards_list[split].append(shard)
+                seen_keys.add(shard['key'])
+                if shard['group'] not in seen_keys_per_group.keys():
+                    seen_keys_per_group[shard['group']] = {shard['key']}
+                else:
+                    seen_keys_per_group[shard['group']].add(shard['key'])
+
+                # Copy the file.
+                other_file = other_dataset.path / shard['path']
+                copied_file = self.path / shard['path']
+                if copied_file.exists():
+                    raise FileExistsError(f'Shard file {copied_file} already '
+                                          f'exists.')
+                # Python3.7 shutil.copy takes string arguments.
+                shutil.copy(str(other_file), str(copied_file))
+
+                # Update metadata.
+                self.examples_per_group[split][
+                    shard['group']] += shard['examples']
+                self.examples_per_split[split] += shard['examples']
+
+            self.keys_per_split[split] += len(seen_keys)
+            for group, key_set in seen_keys_per_group.items():
+                self.keys_per_group[split][group] += len(key_set)
+
+        # Write config to save the state of this dataset. (Also the config is
+        # used in self.check()).
+        self._write_config()
+        # Check the resulting dataset.
+        self.check()

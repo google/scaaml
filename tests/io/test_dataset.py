@@ -172,10 +172,207 @@ def test_get_config_dictionary_urls(tmp_path):
     assert conf['paper_url'] == paper_url
     assert conf['firmware_url'] == firmware_url
 
+
 def test_scaaml_version_present(tmp_path):
     ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     config = ds._get_config_dictionary()
     assert 'scaaml_version' in config.keys()
+
+
+def test_check_key_ap(tmp_path):
+    key_ap = 'k'
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    dataset = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        attack_points_info={
+            key_ap: {
+                "len": 16,
+                "max_val": 256
+            },
+        }
+    ))
+    trace_len = 1024
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    dataset.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+    key2 = np.random.randint(256, size=16)
+    dataset.new_shard(key=key2, part=0, split='test', group=0, chip_id=1)
+    dataset.write_example({key_ap: key2}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+
+    dataset.check(key_ap=key_ap)
+
+    # Make a duplicate key
+    dataset.new_shard(key=key1, part=0, split='test', group=0, chip_id=1)
+    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.close_shard()
+
+    with pytest.raises(ValueError) as verror:
+        dataset.check(key_ap=key_ap)
+    assert 'Duplicate key' in str(verror.value)
+
+
+def test_merge_with(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    resulting = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='resulting',
+    ))
+    other_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='other_ds',
+    ))
+    trace_len = 1024
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    other_ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    other_ds.write_example({"key": key1}, {"trace1": trace})
+    trace[0] = 0.9
+    other_ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    other_ds.write_example({"key": key1}, {"trace1": trace})
+    # Two shards with a different key
+    key2 = np.random.randint(256, size=16)
+    other_ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    other_ds.write_example({"key": key2}, {"trace1": trace})
+    other_ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    other_ds.write_example({"key": key2}, {"trace1": trace})
+    other_ds.close_shard()
+
+    resulting.merge_with(other_ds)
+    assert resulting.min_values == other_ds.min_values
+    assert resulting.max_values == other_ds.max_values
+
+    yet_another_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+        shortname='another',
+    ))
+    key3 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    trace[1] = -0.5
+    yet_another_ds.new_shard(key=key3, part=0, split='test', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key3}, {"trace1": trace})
+    yet_another_ds.new_shard(key=key3, part=1, split='test', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key3}, {"trace1": trace})
+    yet_another_ds.close_shard()
+    key4 = np.random.randint(256, size=16)
+    trace = np.zeros(trace_len)
+    yet_another_ds.new_shard(key=key4, part=1, split='train', group=1, chip_id=1)
+    yet_another_ds.write_example({"key": key4}, {"trace1": trace})
+    yet_another_ds.close_shard()
+
+    resulting.merge_with(yet_another_ds)
+    assert resulting.min_values == {'trace1': -0.5}
+    assert resulting.max_values == {'trace1': 0.9}
+    assert resulting.examples_per_split == {'train': 5, 'test': 2}
+    # The right number of files.
+    assert len(list((resulting.path / 'train').glob('*'))) == 5
+    assert len(list((resulting.path / 'test').glob('*'))) == 2
+
+
+def test_move_shards(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+    ds = Dataset.get_dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=1,
+    ))
+    # Fill the dataset.
+    # Two shards with the same key
+    key1 = np.random.randint(256, size=16)
+    ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
+    ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
+    # Two shards with a different key
+    key2 = np.random.randint(256, size=16)
+    ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
+    ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
+    ds.close_shard()
+
+    # This is ok.
+    ds.move_shards(from_split='train', to_split='test', shards={2, 3})
+    assert len(ds.shards_list['train']) == 2
+    assert len(ds.shards_list['test']) == 2
+    # Move all shards back.
+    ds.move_shards(from_split='test', to_split='train', shards=2)
+    assert len(ds.shards_list['train']) == 4
+    assert len(ds.shards_list['test']) == 0
+    # Move nothing.
+    ds.move_shards(from_split='test', to_split='train', shards=0)
+    assert len(ds.shards_list['train']) == 4
+    assert len(ds.shards_list['test']) == 0
+    # Move just one, so that check fails on having the same key in test and
+    # train.
+    with pytest.raises(ValueError) as verror:
+        ds.move_shards(from_split='train', to_split='test', shards=1)
+    assert 'Duplicate key' in str(verror.value)
+
+
+def same_examples(ds1, ds2):
+    # Check that there are the same number of examples
+    config1 = ds1._get_config_dictionary()
+    config2 = ds1._get_config_dictionary()
+    assert config1['examples_per_split'] == config2['examples_per_split']
+
+    def example_iterator(dataset, split):
+        """Return iterator of examples contained in a dataset."""
+        config = dataset._get_config_dictionary()
+        from itertools import chain
+        # Concatenate all examples that are returned by Dataset.inspect.
+        return chain.from_iterable(
+            Dataset.inspect(dataset_path=dataset.path,
+                            split=split,
+                            shard_id=i,
+                            num_example=dataset.examples_per_shard,
+                            verbose=False).as_numpy_iterator()
+            for i in range(len(config['shards_list'][split]))
+        )
+
+    for split in config1['shards_list'].keys():
+        ei1 = example_iterator(dataset=ds1, split=split)
+        ei2 = example_iterator(dataset=ds2, split=split)
+        # Assert that all examples (represented as numpy) are the same.
+        for e1, e2 in zip(ei1, ei2):
+            # Each example is a dictionary containing a 'key' and 'trace1'
+            assert e1.keys() == e2.keys()
+            for k, v in e1.items():
+                assert np.isclose(v, e2[k]).all()
+
+
+def test_reshape_into_new_dataset_filled(tmp_path):
+    # Fix numpy randomness not to cause flaky tests.
+    np.random.seed(42)
+
+    old_examples_per_shard = 16
+    old_ds = Dataset(**dataset_constructor_kwargs(
+        root_path=tmp_path,
+        examples_per_shard=old_examples_per_shard,
+    ))
+    # Fill in the old dataset.
+    key = np.random.randint(256, size=16)
+    old_ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+    for _ in range(old_examples_per_shard):
+        old_ds.write_example({"key": np.random.randint(256, size=16)},
+                             {"trace1": np.random.rand(1024)})
+    old_ds.close_shard()
+
+    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
+    old_ds.check()
+    new_ds.check()
+    same_examples(old_ds, new_ds)
 
 
 def test_shard_metadata_negative_chip_id(tmp_path):
@@ -365,6 +562,29 @@ def test_shard_metadata_ok(tmp_path):
     }
 
     Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
+
+
+def test_min_max_values_ok(tmp_path):
+    """Test that min_values and max_values are not affected by mutable default
+    parameter.
+    """
+    def min_max_t(min_value: float, max_value: float, root_path: Path) -> None:
+        assert min_value <= max_value
+        ds = Dataset(**dataset_constructor_kwargs(root_path=root_path))
+        mid_point = min_value + (max_value - min_value) / 2
+        trace = np.full(1024, mid_point, dtype=np.float)
+        trace[0] = min_value
+        trace[1] = max_value
+        key = np.zeros(16, dtype=np.uint8)
+        ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+        ds.write_example({"key": key}, {"trace1": trace})
+        ds.close_shard()
+        config_dict = ds._get_config_dictionary()
+        assert config_dict['min_values']['trace1'] == min_value
+        assert config_dict['max_values']['trace1'] == max_value
+
+    min_max_t(0.1, 0.7, root_path = tmp_path / 'b')
+    min_max_t(0.2, 0.5, root_path = tmp_path / 'a')
 
 
 def test_resume_capture(tmp_path):
@@ -740,7 +960,8 @@ def test_deep_check(mock_inspect):
                         dpath='/home/notanuser/notdir',
                         train_shards=train_shards,
                         examples_per_shard=64,
-                        pbar=pbar)
+                        pbar=pbar,
+                        key_ap='key')
 
     seen_keys.add(np.array([3, 1, 4, 1], dtype=np.uint8).tobytes())
     with pytest.raises(ValueError) as intersection_error:
@@ -748,7 +969,8 @@ def test_deep_check(mock_inspect):
                             dpath='/home/notanuser/notdir',
                             train_shards=train_shards,
                             examples_per_shard=64,
-                            pbar=pbar)
+                            pbar=pbar,
+                            key_ap='key')
     assert 'Duplicate key' in str(intersection_error.value)
 
 
