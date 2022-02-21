@@ -27,6 +27,13 @@ from .errors import DatasetExistsError
 
 
 class Dataset():
+    """Dataset class."""
+    # Valid split values.
+    TRAIN_SPLIT = 'train'
+    TEST_SPLIT = 'test'
+    HOLDOUT_SPLIT = 'holdout'
+    SPLITS = [TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT]
+
     def __init__(
         self,
         root_path: str,
