@@ -1,4 +1,7 @@
-"""Counts how many times each value of each attack point appears."""
+"""Runs checks and reports failures. A failed test does not mean an error in
+the dataset, interpretation is problem specific."""
+
+from pprint import pprint
 
 
 class APChecker:
@@ -18,7 +21,11 @@ class APChecker:
     def __init__(self, counts, attack_point_name: str) -> None:
         self._counts = counts.copy()
         self._attack_point_name = attack_point_name
+        self._something_failed = False
         self.run_all()
+        # If any of those checks failed, print the counts.
+        if self._something_failed:
+            pprint(self._counts)
 
     def run_all(self):
         """Run all statistical checks. When adding a new test remember to call
@@ -26,9 +33,29 @@ class APChecker:
         take a look at
         tests/stats/test_ap_checker.py::test_run_all_calls_check_all_nonzero.
 
-        Raises: If any check raises.
+        Raises: Does not re-raise ValueError, re-raises all other types of
+        errors. If any method here raises ValueError, prints the error and
+        after all errors prints the counts.
         """
-        self.check_all_nonzero()
+        self._run_check(self.check_all_nonzero)
+
+    def _run_check(self, check) -> None:
+        """Run the given check, if it raises ValueError change take a note
+        and print the error message.
+
+        Args:
+          check: The member method to call.
+
+        Example usage: See APChecker.run_all.
+
+        Raises: Does not re-raise ValueError, re-raises all other types of
+        errors.
+        """
+        try:
+            check()
+        except ValueError as value_error:
+            self._something_failed = True
+            print(value_error)
 
     @property
     def attack_point_name(self) -> str:

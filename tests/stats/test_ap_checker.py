@@ -7,15 +7,15 @@ import numpy as np
 from scaaml.stats import APChecker
 
 
-@patch.object(APChecker, 'check_all_nonzero')
-def test_run_all_calls_check_all_nonzero(mock_check_all_nonzero):
+@patch.object(APChecker, '_run_check')
+def test_run_all_calls_check_all_nonzero(mock_run_check):
     attack_point_name = 'k'
     counts = np.array([])
 
     ap_checker = APChecker(counts=counts,
                            attack_point_name=attack_point_name)
 
-    mock_check_all_nonzero.assert_called_once_with()
+    mock_run_check.assert_called_with(APChecker.check_all_nonzero)
 
 
 @patch.object(APChecker, 'run_all')
@@ -56,9 +56,9 @@ def test_check_all_nonzero():
 
     ap_checker = APChecker(counts=counts,
                            attack_point_name=attack_point_name)
+    assert not ap_checker._something_failed
 
     counts[1][1] = 0
-    with pytest.raises(ValueError) as verror:
-        ap_checker = APChecker(counts=counts,
-                               attack_point_name=attack_point_name)
-    assert attack_point_name in str(verror.value)
+    ap_checker = APChecker(counts=counts,
+                           attack_point_name=attack_point_name)
+    assert ap_checker._something_failed
