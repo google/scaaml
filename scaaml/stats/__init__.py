@@ -21,3 +21,4 @@ APCounter counts how many times does each value of an attack point occur.
 from .ap_checker import APChecker
 from .ap_counter import APCounter
 from .example_iterator import ExampleIterator
+from .trace_stddev_of_avg import STDDEVofAVGofTraces
