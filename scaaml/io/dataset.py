@@ -341,9 +341,9 @@ class Dataset():
                      trace_start: int = 0,
                      trace_len: int = None,
                      batch_size: int = 32,
-                     prefetch: int = tf.data.AUTOTUNE,
+                     prefetch: int = 4,
                      file_parallelism: int = os.cpu_count(),
-                     parallelism: int = tf.data.AUTOTUNE,
+                     parallelism: int = os.cpu_count(),
                      shuffle: int = 1000
                      ) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
