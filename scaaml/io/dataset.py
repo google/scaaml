@@ -32,7 +32,7 @@ class Dataset():
     TRAIN_SPLIT = 'train'
     TEST_SPLIT = 'test'
     HOLDOUT_SPLIT = 'holdout'
-    SPLITS = [TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT]
+    SPLITS = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
 
     def __init__(
         self,
