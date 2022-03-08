@@ -74,12 +74,11 @@ class PrintStats:
                         for shard in dataset.shards_list[split])
         prod = list(product(all_splits, all_groups, all_parts))
         for split, group, part in tqdm(prod):
-            print(f'split: {split} group: {group} part: {part}')
             example_iterator = ExampleIterator(dataset_path=dataset_path,
                                                split=split,
                                                group=group,
                                                part=part)
-            for example in tqdm(example_iterator):
+            for example in tqdm(example_iterator, leave=False):
                 print_stats.add_example(example=example,
                                         split=split,
                                         group=group,

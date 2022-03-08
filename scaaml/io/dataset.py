@@ -61,6 +61,7 @@ class Dataset():
         min_values: Optional[Dict[str, float]] = None,
         max_values: Optional[Dict[str, float]] = None,
         from_config: bool = False,
+        verbose: bool = True,
     ) -> None:
         """Class for saving and loading a database.
 
@@ -74,6 +75,7 @@ class Dataset():
             True set self.path = root_path, self.root_path to be the parent of
             self.path. In this case it does not necessarily hold that
             self.path.name == self.slug (the directory could have been renamed).
+          verbose: If True, print the dataset path.
 
         Raises:
           ValueError: If firmware_sha256 or firmware_url evaluates to False.
@@ -127,7 +129,8 @@ class Dataset():
                 Path(self.path / 'test').mkdir()
                 Path(self.path / 'holdout').mkdir()
 
-        cprint("Dataset path: %s" % self.path, 'green')
+        if verbose:
+            cprint("Dataset path: %s" % self.path, 'green')
 
         # current shard tracking
         self.shard_key = None
@@ -919,18 +922,20 @@ class Dataset():
             json.dump(self._get_config_dictionary(), f)
 
     @staticmethod
-    def from_config(dataset_path: str):
+    def from_config(dataset_path: str, verbose: bool = True):
         """Load a dataset from a config file.
 
         Args:
           dataset_path: The path to the dataset.
+          verbose: Print config path and dataset path.
 
         Raises: ValueError if the dataset version is higher than the scaaml
           module used. See scaaml.__version__ docstring.
         """
         dpath = Path(dataset_path)
         conf_path = Dataset._get_config_path(dataset_path)
-        cprint(f'reloading {conf_path}', 'magenta')
+        if verbose:
+            cprint(f'reloading {conf_path}', 'magenta')
         config = Dataset._load_config(conf_path)
         # Check that the library version (version of this software) is not
         # lower than what was used to capture the dataset.
@@ -965,6 +970,7 @@ class Dataset():
             min_values=config['min_values'],
             max_values=config['max_values'],
             from_config=True,
+            verbose=verbose,
         )
 
     @staticmethod

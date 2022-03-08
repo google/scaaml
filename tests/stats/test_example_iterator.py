@@ -28,7 +28,8 @@ def test_init_default(mock_from_config):
         (0, all_shards[3], 'holdout'),
         (1, all_shards[4], 'holdout'),
     ]
-    mock_from_config.assert_called_once_with(dataset_path=ds_path)
+    mock_from_config.assert_called_once_with(dataset_path=ds_path,
+                                             verbose=False)
 
 
 @patch.object(Dataset, 'from_config')

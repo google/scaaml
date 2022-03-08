@@ -37,7 +37,7 @@ class ExampleIterator:
         else:
             splits = [split]
         self._shards_list = []
-        dataset = Dataset.from_config(dataset_path=dataset_path)
+        dataset = Dataset.from_config(dataset_path=dataset_path, verbose=False)
         for current_split in splits:
             for shard_id, shard in enumerate(
                     dataset.shards_list[current_split]):
