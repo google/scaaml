@@ -12,7 +12,9 @@ from scaaml.io import Dataset
 from .ap_counter import APCounter
 from .ap_checker import APChecker
 from .example_iterator import ExampleIterator
-from .trace_stddev_of_avg import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofMAXofTraces
+from .trace_stddev_of_stat import STDDEVofMINofTraces
 
 
 class PrintStats:
@@ -50,6 +52,8 @@ class PrintStats:
             split: {
                 trace_name: [
                     STDDEVofAVGofTraces(),
+                    STDDEVofMAXofTraces(),
+                    STDDEVofMINofTraces(),
                 ]
                 for trace_name in measurements_info
             }

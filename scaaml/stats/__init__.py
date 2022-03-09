@@ -22,4 +22,7 @@ from .ap_checker import APChecker
 from .ap_counter import APCounter
 from .example_iterator import ExampleIterator
 from .print_stats import PrintStats
-from .trace_stddev_of_avg import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofMAXofTraces
+from .trace_stddev_of_stat import STDDEVofMINofTraces
+from .trace_stddev_of_stat import STDDEVofSTATofTraces
