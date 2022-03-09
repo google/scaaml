@@ -2,6 +2,7 @@
 over the dataset. Implemented as a class to allow use during capture as well as
 standalone."""
 
+from __future__ import annotations
 from itertools import product
 from typing import Dict
 
@@ -61,7 +62,7 @@ class PrintStats:
         }
 
     @staticmethod
-    def from_config(dataset_path: str) -> None:
+    def from_config(dataset_path: str) -> PrintStats:
         """Read a dataset and print all attack point check warnings and trace
         statistics.
 
