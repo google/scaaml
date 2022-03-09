@@ -2,6 +2,7 @@
 over the dataset. Implemented as a class to allow use during capture as well as
 standalone."""
 
+from __future__ import annotations
 from itertools import product
 from typing import Dict
 
@@ -12,7 +13,9 @@ from scaaml.io import Dataset
 from .ap_counter import APCounter
 from .ap_checker import APChecker
 from .example_iterator import ExampleIterator
-from .trace_stddev_of_avg import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofAVGofTraces
+from .trace_stddev_of_stat import STDDEVofMAXofTraces
+from .trace_stddev_of_stat import STDDEVofMINofTraces
 
 
 class PrintStats:
@@ -50,6 +53,8 @@ class PrintStats:
             split: {
                 trace_name: [
                     STDDEVofAVGofTraces(),
+                    STDDEVofMAXofTraces(),
+                    STDDEVofMINofTraces(),
                 ]
                 for trace_name in measurements_info
             }
@@ -57,7 +62,7 @@ class PrintStats:
         }
 
     @staticmethod
-    def from_config(dataset_path: str) -> None:
+    def from_config(dataset_path: str) -> PrintStats:
         """Read a dataset and print all attack point check warnings and trace
         statistics.
 
