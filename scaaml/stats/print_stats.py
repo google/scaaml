@@ -3,6 +3,7 @@ over the dataset. Implemented as a class to allow use during capture as well as
 standalone."""
 
 from __future__ import annotations
+from collections import defaultdict
 from itertools import product
 from typing import Dict
 
@@ -49,17 +50,28 @@ class PrintStats:
             }
             for split in Dataset.SPLITS
         }
+
+        self._all_trace_stats = lambda: [
+            # Add trace statistics here.
+            STDDEVofAVGofTraces(),
+            STDDEVofMAXofTraces(),
+            STDDEVofMINofTraces(),
+        ]
         self._split_trace_stats = {
             split: {
-                trace_name: [
-                    STDDEVofAVGofTraces(),
-                    STDDEVofMAXofTraces(),
-                    STDDEVofMINofTraces(),
-                ]
+                trace_name: self._all_trace_stats()
                 for trace_name in measurements_info
             }
             for split in Dataset.SPLITS
         }
+        self._split_trace_group_stats = {
+            split: {
+                trace_name: defaultdict(self._all_trace_stats)
+                for trace_name in measurements_info
+            }
+            for split in Dataset.SPLITS
+        }
+        self._all_groups = set()
 
     @staticmethod
     def from_config(dataset_path: str) -> PrintStats:
@@ -102,41 +114,42 @@ class PrintStats:
           group: The group this example belongs to.
           part: The part this example belongs to.
         """
-        # Group and part are unused now, but are there when we need more
-        # granularity.
-        _ = group
+        # Part is unused now, but is there when we need more granularity.
         _ = part
+        self._all_groups.add(group)
         for ap_name in self._attack_point_info:
             for ap_counter in self._split_ap_counters[split][ap_name]:
                 ap_counter.update(attack_point=example[ap_name])
         for trace_name in self._measurements_info:
             for trace_stat in self._split_trace_stats[split][trace_name]:
                 trace_stat.update(trace=example[trace_name])
+            for trace_stat in self._split_trace_group_stats[split][trace_name][
+                    group]:
+                trace_stat.update(trace=example[trace_name])
 
-    def print(self) -> None:
-        """Print warnings from attack point checkers and statistics about
-        traces."""
+    def _print_attack_point_warnings(self):
+        """Print warnings for attack points."""
         print('Attack point check warnings:')
         for split in Dataset.SPLITS:
             print('')
             print(split)
             for ap_name in self._attack_point_info:
                 for ap_count in self._split_ap_counters[split][ap_name]:
+                    # Add attack point checks here.
                     _ = APChecker(counts=ap_count.get_counts(),
                                   attack_point_name=ap_name)
 
-        print('')
-        print('-------------------------------------------')
-        print('')
-
+    def _print_trace_statistics(self):
+        """Print table of statistics. Rows are statistics, columns are splits.
+        """
         print('Trace statistics:')
+        class_name = lambda x: x.__class__.__name__
         for trace_name in self._measurements_info:
             print('')
             table = [[f'{trace_name} stats', *Dataset.SPLITS]]
             # Fill the statistic names.
-            for trace_stat in self._split_trace_stats[
-                    Dataset.SPLITS[0]][trace_name]:
-                trace_stat_name = trace_stat.__class__.__name__
+            for trace_stat in self._all_trace_stats():
+                trace_stat_name = class_name(trace_stat)
                 table.append([trace_stat_name, *[0 for _ in Dataset.SPLITS]])
             # Fill the values.
             for i, split in enumerate(Dataset.SPLITS):
@@ -145,6 +158,45 @@ class PrintStats:
                 for j, trace_stat in enumerate(
                         self._split_trace_stats[split][trace_name]):
                     # Check that we are filling the right row.
-                    assert trace_stat.__class__.__name__ == table[j + 1][0]
+                    assert class_name(trace_stat) == table[j + 1][0]
                     table[j + 1][i + 1] = trace_stat.result()
         print(tabulate(table, headers='firstrow'))
+
+    def _print_trace_statistics_per_group(self):
+        """Print a table of results for each statistics. Rows are groups,
+        columns are splits."""
+        print('Trace statistics per group:')
+        class_name = lambda x: x.__class__.__name__
+        for trace_name in self._measurements_info:
+            for i, trace_stat in enumerate(self._all_trace_stats()):
+                print('')
+                print(f'{trace_name} {class_name(trace_stat)}:')
+                table = [['group', *Dataset.SPLITS]]
+                for group in self._all_groups:
+                    table.append([str(group), *['NA' for _ in Dataset.SPLITS]])
+                    for j, split in enumerate(Dataset.SPLITS):
+                        if group in self._split_trace_group_stats[split][
+                                trace_name]:
+                            curr_trace_stat = self._split_trace_group_stats[
+                                split][trace_name][group][i]
+                            # Check that we are filling the right table.
+                            assert class_name(curr_trace_stat) == class_name(
+                                trace_stat)
+                            table[-1][j + 1] = curr_trace_stat.result()
+                print(tabulate(table, headers='firstrow'))
+
+    @staticmethod
+    def _print_separator():
+        """Print separator between two blocks of warnings / statistics."""
+        print('')
+        print('-------------------------------------------')
+        print('')
+
+    def print(self) -> None:
+        """Print warnings from attack point checkers and statistics about
+        traces."""
+        self._print_attack_point_warnings()
+        PrintStats._print_separator()
+        self._print_trace_statistics()
+        PrintStats._print_separator()
+        self._print_trace_statistics_per_group()
