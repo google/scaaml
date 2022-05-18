@@ -33,6 +33,7 @@ setup(
     "termcolor",
     "tqdm",
     "pandas",
+    "pytest",
     "numpy",
     "tabulate",
     "matplotlib",
