@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 from unittest.mock import MagicMock, patch
+
 import chipwhisperer as cw
 
 from scaaml.capture.aes.capture_runner import CaptureRunner
+from scaaml.capture.aes.crypto_input import CryptoInput
 
 
 @patch.object(cw, 'capture_trace')
@@ -30,23 +33,26 @@ def test_capture_trace(mock_capture_trace):
                                    communication=m_communication,
                                    control=m_control,
                                    dataset=m_dataset)
-    key = bytearray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
-    plaintext = bytearray(
-        [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
-    capture_runner.capture_trace(key=key, plaintext=plaintext)
+    key = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                   dtype=np.uint8)
+    plaintext = np.array([255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 15, 1, 2, 3, 1, 5],
+                         dtype=np.uint8)
+    mock_capture_trace.return_value.textin = bytearray(plaintext)
+    crypto_input = CryptoInput((key, plaintext))
+    capture_runner.capture_trace(crypto_input=crypto_input)
     mock_capture_trace.assert_called_once_with(scope=m_scope.scope,
                                                target=m_communication.target,
-                                               plaintext=plaintext,
-                                               key=key)
+                                               plaintext=bytearray(plaintext),
+                                               key=bytearray(key))
 
 
 @patch.object(CaptureRunner, 'capture_trace')
 def test_get_attack_points_and_measurement(mock_capture_trace):
-    key = bytearray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
-    plaintext = bytearray(
-        [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    plaintext = [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    crypto_input = CryptoInput((key, plaintext))
     trace = MagicMock()
-    trace.textin = plaintext
+    trace.textin = bytearray(plaintext)
     mock_capture_trace.side_effect = [None, False, trace]
     m_crypto_alg = MagicMock()
     m_scope = MagicMock()
@@ -59,17 +65,18 @@ def test_get_attack_points_and_measurement(mock_capture_trace):
                                    control=m_control,
                                    dataset=m_dataset)
     ap, measurement = capture_runner.get_attack_points_and_measurement(
-        key=key, plaintext=plaintext, crypto_alg=m_crypto_alg)
+        crypto_alg=m_crypto_alg, crypto_input=crypto_input)
     assert mock_capture_trace.call_count == 3
-    m_crypto_alg.attack_points.assert_called_once_with(plaintext=plaintext,
-                                                       key=key)
+    m_crypto_alg.attack_points.assert_called_once_with(
+        plaintext=bytearray(plaintext), key=bytearray(key))
     assert measurement == {
-        "trace": trace.wave,
+        "trace1": trace.wave,
     }
 
 
-@patch.object(CaptureRunner, 'capture_trace')
+@patch.object(CaptureRunner, 'get_attack_points_and_measurement')
 def test_stabilize_capture(mock_capture_trace):
+    mock_capture_trace.return_value = (MagicMock(), MagicMock())
     m_crypto_alg = MagicMock()
     k = MagicMock()
     t = MagicMock()

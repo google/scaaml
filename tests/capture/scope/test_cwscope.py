@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
 
-from scaaml.capture.aes.scope import SScope
+from scaaml.capture.scope import CWScope
 
 
 @patch.object(cw, 'scope')
@@ -38,7 +38,7 @@ def test_with(mock_scope):
         'other_information': 'Can also be present.',
     }
 
-    with SScope(**capture_info) as scope:
+    with CWScope(**capture_info) as scope:
         assert scope.scope == mock_cwscope
         assert mock_cwscope.dis.call_count == 0
         assert mock_cwscope.gain.db == gain
@@ -65,7 +65,7 @@ def test_with(mock_scope):
     sample_rate = 'clkgen_x4'
     mock_cwscope.adc.oa.hwInfo.maxSamples.return_value = -1
 
-    with SScope(gain=gain,
+    with CWScope(gain=gain,
                 samples=samples,
                 offset=offset,
                 clock=clock,

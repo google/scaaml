@@ -15,10 +15,14 @@
 """The target in cw."""
 import chipwhisperer as cw
 
+from scaaml.capture.communication import AbstractSCommunication
 
-class SCommunication:
+
+class CWCommunication(AbstractSCommunication):
     """target in cw"""
     def __init__(self, scope):
+        """Initialize the communication object."""
+        super().__init__()
         self._scope = scope
         self._target = None
         self._protver = '1.1'
@@ -26,6 +30,9 @@ class SCommunication:
     def __enter__(self):
         """Initialize target."""
         assert self._target is None  # Do not allow nested with.
+        # The scope is there because of communication with the target (it
+        # communicated using single USB endpoint). Since CW 5.5 firmware
+        # release it uses a separate USB UART.
         self._target = cw.target(self._scope, cw.targets.SimpleSerial)
         self._target.protver = self._protver
         self._scope = None

@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,28 +14,34 @@
 
 """Control of the chip."""
 
+from abc import ABC, abstractmethod
 from time import sleep
 
-from scaaml.capture.control import AbstractSControl
 
-
-class CWControl(AbstractSControl):
+class AbstractSControl(ABC):
     """turning on/off the chip, resetting the chip, etc."""
-    def __init__(self, chip_id: int, scope_io) -> None:
+    def __init__(self, chip_id: int):
         """Initialize the control object.
 
         Args:
           chip_id: Identifies the physical chip/board used. It is unique for a
             single piece of hardware. To identify datasets captured using a
             defective hardware.
-          scope_io: The chipwhisperer scope.io
         """
-        super().__init__(chip_id=chip_id)
-        self._scope_io = scope_io
-        self._tio1 = "serial_rx"
-        self._tio2 = "serial_tx"
-        self._hs2 = "clkgen"
+        self._chip_id = chip_id
 
+    def __enter__(self):
+        """Turn on, initialize, and reset the chip."""
+        self.turn_on()
+        self.initialize()
+        self.reset()
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        """Turn off the chip. Exceptions fall through."""
+        self.turn_off()
+
+    @abstractmethod
     def reset(self,
               sleep_before: float = 1.0,
               sleep_between: float = 0.5,
@@ -47,22 +53,37 @@ class CWControl(AbstractSControl):
           sleep_between: Time to sleep after turning nrst low (in seconds).
           sleep_after: Time to sleep after turning nrst high_z (in seconds).
         """
-        sleep(sleep_before)
-        self._scope_io.nrst = 'low'
-        sleep(sleep_between)
-        self._scope_io.nrst = 'high_z'
-        sleep(sleep_after)
 
+    @abstractmethod
     def initialize(self):
         """Initialize the target."""
-        self._scope_io.tio1 = self._tio1
-        self._scope_io.tio2 = self._tio2
-        self._scope_io.hs2 = self._hs2
 
+    @abstractmethod
     def turn_on(self):
         """Turn on the chip."""
-        self._scope_io.target_pwr = True
 
+    @abstractmethod
     def turn_off(self):
         """Turn off the chip."""
-        self._scope_io.target_pwr = False
+
+    def power_cycle(self,
+                    sleep_before: float = 0.0,
+                    sleep_between: float = 0.5,
+                    sleep_after: float = 0.5) -> None:
+        """Turn off, sleep, turn on, sleep.
+
+        Args:
+          sleep_before: Time to sleep before turning off (in seconds).
+          sleep_between: Time to sleep after turning off (in seconds).
+          sleep_after: Time to sleep after turning on again (in seconds).
+        """
+        sleep(sleep_before)
+        self.turn_off()
+        sleep(sleep_between)
+        self.turn_on()
+        sleep(sleep_after)
+
+    @property
+    def chip_id(self) -> int:
+        """Chip id is not expected to change."""
+        return self._chip_id
