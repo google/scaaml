@@ -63,7 +63,8 @@ def capture_aes_dataset(
       capture_info: Used as parameters of the scope. Should contain:
         samples (int): Number of data points in a single capture = length of the
           trace.
-        offset (int): After how many samples to start recording.
+        offset (int): How many samples are discarded between the trigger event
+          and the start of the trace.
         sample_rate: Sample rate of the scope. When scope_class is PicoScope
           this is float. When scope_class is CWScope this is string and is the
           clock source for cw.ClockSettings.adc_src (see cw documentation).
