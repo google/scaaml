@@ -32,7 +32,7 @@ class AbstractCaptureRunner(ABC):
                  control: AbstractSControl, scope: AbstractSScope,
                  dataset: Dataset) -> None:
         """Holds all information needed to capture a dataset (using the method
-        capture).
+        `capture`).
 
         Args:
           crypto_algorithms: Provide attack points and information about the
