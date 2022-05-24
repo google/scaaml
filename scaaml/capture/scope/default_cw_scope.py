@@ -35,9 +35,8 @@ class DefaultCWScope(AbstractSScope):
         assert self._scope is None  # Do not allow nested with.
 
         # Open cw scope with default settings.
-        cwscope = cw.scope()
-        cwscope.default_setup()
-        self._scope = cwscope
+        self._scope = cw.scope()
+        self._scope.default_setup()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb) -> None:
