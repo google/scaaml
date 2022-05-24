@@ -44,7 +44,8 @@ class AbstractSCryptoAlgorithm(ABC):
           algorithm: Algorithm name.
           keys: Number of different keys that are used.
           plaintexts: Number of different plaintexts used with each key.
-          repetitions: Number of captures with a concrete (key, plaintext) pair.
+          repetitions: Number of captures for each concrete (key, plaintext)
+            pair.
           examples_per_shard: Size of a single part (for ML training purposes).
           kt_filename: Filename to save key, text pairs (using resume_kti).
           progress_filename: Filename to save progress (using resume_kti).
