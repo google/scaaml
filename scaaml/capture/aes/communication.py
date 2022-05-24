@@ -30,8 +30,9 @@ class CWCommunication(AbstractSCommunication):
     def __enter__(self):
         """Initialize target."""
         assert self._target is None  # Do not allow nested with.
-        # the scope is there because of communication with the target (it communicated using single usb) the new cw uses a separate uart (import serial, the package is pyserial)
-        # 
+        # The scope is there because of communication with the target (it
+        # communicated using single USB endpoint). Since CW 5.5 firmware
+        # release it uses a separate USB UART.
         self._target = cw.target(self._scope, cw.targets.SimpleSerial)
         self._target.protver = self._protver
         self._scope = None
