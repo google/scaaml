@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Context manager for the scope."""
 
 import chipwhisperer as cw
@@ -65,20 +64,20 @@ class CWScope(AbstractSScope):
         Returns: self
         """
         assert self._scope is None  # Do not allow nested with.
-        cwscope = cw.scope()
-        cwscope.gain.db = self._gain
-        max_samples = cwscope.adc.oa.hwInfo.maxSamples()
-        if self._samples > max_samples and cwscope.adc.oa.hwInfo.is_cw1200():
-            cwscope.adc.stream_mode = True
-        cwscope.adc.samples = self._samples
-        cwscope.adc.offset = self._offset
-        cwscope.adc.basic_mode = self._basic_mode
-        cwscope.clock.clkgen_freq = self._clock
-        cwscope.trigger.triggers = self._triggers
-        cwscope.clock.adc_src = self._sample_rate
-        cwscope.clock.freq_ctr_src = self._freq_ctr_src
-        cwscope.adc.presamples = self._presamples
-        self._scope = cwscope
+        self._scope = cw.scope()
+        self._scope.gain.db = self._gain
+        max_samples = self._scope.adc.oa.hwInfo.maxSamples()
+        if (self._samples > max_samples
+                and self._scope.adc.oa.hwInfo.is_cw1200()):
+            self._scope.adc.stream_mode = True
+        self._scope.adc.samples = self._samples
+        self._scope.adc.offset = self._offset
+        self._scope.adc.basic_mode = self._basic_mode
+        self._scope.clock.clkgen_freq = self._clock
+        self._scope.trigger.triggers = self._triggers
+        self._scope.clock.adc_src = self._sample_rate
+        self._scope.clock.freq_ctr_src = self._freq_ctr_src
+        self._scope.adc.presamples = self._presamples
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb) -> None:
