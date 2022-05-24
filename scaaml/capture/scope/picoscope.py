@@ -33,14 +33,20 @@ class PicoScope(AbstractSScope):
         """Create scope context.
 
         Args:
-          samples:
-          trigger_level:
-          trigger_range:
-          offset:
+          samples (int): How many points to sample (length of the capture).
+          trigger_level (float): When to trigger (in V).
+          trigger_range (float): Range of the trigger (in V), see
+            trace_probe_range.
+          offset (int): How many samples are discarded between the trigger
+            event and the start of the trace.
           sample_rate (float): How many samples per second to take in Hz. The
             setting will be the closest PicoScope sampling rate that is at
             least sample_rate.
-          trace_probe_range: [0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0] in V
+          trace_probe_range (float): Should be in [0.02, 0.05, 0.1, 0.2, 0.5,
+            1.0, 2.0, 5.0, 10.0, 20.0, 50.0] (in V).
+          _: PicoScope is expected to be initialized using capture_info
+            dictionary, this parameter allows to have additional information
+            there and initialize as PicoScope(**capture_info).
         """
         super().__init__(samples=samples, offset=offset)
         self._sample_rate = sample_rate
