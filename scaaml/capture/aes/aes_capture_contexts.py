@@ -52,8 +52,7 @@ def capture_aes_dataset(
     """Capture or continue capturing the dataset.
 
     Args:
-      scope_class: The class of scope that does measurements. Either PicoScope
-        or CWScope.
+      scope_class (AbstractSScope): The class of scope that does measurements.
       firmware_sha256: Hash of the used firmware IntelHEX file (HEX files are
         reproducible, ELF binaries are not).
       architecture: Architecture of the used chip.
