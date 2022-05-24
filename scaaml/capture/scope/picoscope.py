@@ -60,33 +60,32 @@ class PicoScope(AbstractSScope):
         assert self._scope is None
 
         # Connect to the oscilloscope.
-        picoscope = PicoScope6424E()
-        picoscope.con()
+        self._scope = PicoScope6424E()
+        self._scope.con()
 
         # Trace channel settings.
-        picoscope.trace.range = self._trace_probe_range
-        picoscope.trace.channel = "A"
-        picoscope.trace.coupling = "AC"
-        picoscope.trace.range = self._trace_probe_range
+        self._scope.trace.range = self._trace_probe_range
+        self._scope.trace.channel = "A"
+        self._scope.trace.coupling = "AC"
+        self._scope.trace.range = self._trace_probe_range
 
         # For BNC-SMA pigtail:
-        picoscope.trace.probe_attenuation = "1:1"
+        self._scope.trace.probe_attenuation = "1:1"
         # For oscilloscope passive probe:
-        #picoscope.trace.probe_attenuation = "1:10"
+        #self._scope.trace.probe_attenuation = "1:10"
 
         # Trigger settings.
-        picoscope.trigger.channel = "B"
-        picoscope.trigger.trigger_level = self._trigger_level
-        picoscope.trigger.coupling = "DC"
-        picoscope.trigger.probe_attenuation = "1:1"
-        picoscope.trigger.range = self._trigger_range
+        self._scope.trigger.channel = "B"
+        self._scope.trigger.trigger_level = self._trigger_level
+        self._scope.trigger.coupling = "DC"
+        self._scope.trigger.probe_attenuation = "1:1"
+        self._scope.trigger.range = self._trigger_range
 
         # Number of samples settings.
-        picoscope.sample_rate = self._sample_rate
-        picoscope.sample_length = self._samples
-        picoscope.sample_offset = self._offset
+        self._scope.sample_rate = self._sample_rate
+        self._scope.sample_length = self._samples
+        self._scope.sample_offset = self._offset
 
-        self._scope = picoscope
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb) -> None:
