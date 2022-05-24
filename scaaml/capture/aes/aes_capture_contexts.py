@@ -239,7 +239,7 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int, crypto_alg
                 )
         return  # Everything is finished.
 
-    # Capture using the build-in scope of ChipWhisperer.
+    # Capture using the built-in scope of ChipWhisperer.
     if scope_class == CWScope:
         with CWScope(**capture_info) as scope:
             assert scope.scope is not None
