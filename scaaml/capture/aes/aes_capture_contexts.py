@@ -253,7 +253,7 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int, crypto_alg
         return  # Everything is finished.
 
     # Warn on unknown scope_class.
-    raise ValueError(f'Usupported scope_class: {scope_class}')
+    raise ValueError(f'Unsupported scope_class: {scope_class}')
 
 def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms, scope, dataset) -> None:
     """Create control and communication context managers and run the capture.
