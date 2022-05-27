@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Check common misspellings of scaaml dataset info files. The misspellings
 are kept separately in order not to pollute auto-complete.
 """

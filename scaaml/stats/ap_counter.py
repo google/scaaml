@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Counts how many times each value of each attack point appears."""
 
 from typing import Dict, List, Union
@@ -31,6 +30,7 @@ class APCounter:
     counter.update([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     counts = counter.get_counts()  # counts[i][i] == 1 for i in range(16)
     """
+
     def __init__(self, attack_point_info: Dict[str, int]) -> None:
         """Create a new counter.
 

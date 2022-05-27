@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """The class that represents input of the AES cryptographic algorithm."""
 
 from typing import Dict
@@ -21,6 +20,7 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 
 class CryptoInput(AbstractCryptoInput):
     """Single instance of cryptographic input for AES."""
+
     def __init__(self, kt_element) -> None:
         """Initialize the crypto input.
 

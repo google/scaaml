@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Context manager for the scope."""
 
 import chipwhisperer as cw
@@ -22,13 +21,9 @@ from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
 class PicoScope(AbstractSScope):
     """Scope context manager."""
-    def __init__(self,
-                 samples: int,
-                 trigger_level: float,
-                 trigger_range: float,
-                 sample_rate: float,
-                 offset: int,
-                 trace_probe_range: float,
+
+    def __init__(self, samples: int, trigger_level: float, trigger_range: float,
+                 sample_rate: float, offset: int, trace_probe_range: float,
                  **_):
         """Create scope context.
 

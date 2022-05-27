@@ -111,8 +111,9 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
                   metrics=[MeanRank()])
     ```
     """
+
     def __init__(self,
-                 name: str ='mean_rank',
+                 name: str = 'mean_rank',
                  dtype=None,
                  decimals: Optional[int] = None):
         super().__init__(rank, name, dtype=dtype)
@@ -162,6 +163,7 @@ class MaxRank(keras.metrics.Metric):
                   metrics=[MaxRank()])
     ```
     """
+
     def __init__(self, name: str = "max_rank", **kwargs):
         super().__init__(name=name, **kwargs)
         self.max_rank = self.add_weight(name="max_rank", initializer="zeros")

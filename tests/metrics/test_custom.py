@@ -54,7 +54,7 @@ def test_rank_random_ties():
 
     r = rank(y_true, y_pred)
 
-    assert r.shape == (BS, )
+    assert r.shape == (BS,)
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 
 
@@ -74,7 +74,7 @@ def test_rank_random():
 
     r = rank(y_true, y_pred)
 
-    assert r.shape == (BS, )
+    assert r.shape == (BS,)
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 
 
@@ -82,7 +82,7 @@ def test_rank_correct_pred():
     N = 6
     y_true = np.eye(N)
     r = rank(y_true, y_true)
-    assert r.shape == (N, )
+    assert r.shape == (N,)
     assert (r.numpy() == rank_slow(y_true, y_true)).all()
 
 
@@ -92,7 +92,7 @@ def test_rank_doc():
 
     r = rank(y_true, y_pred)
 
-    assert r.shape == (3, )
+    assert r.shape == (3,)
     assert (r.numpy() == np.array([1., 0., 1.], dtype=np.float32)).all()
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Runs checks and reports failures. A failed test does not mean an error in
 the dataset, interpretation is problem specific."""
 
@@ -32,6 +31,7 @@ class APChecker:
     km_checker = APChecker(counts=km_counter.get_counts(),
                            attack_point_name='km')
     """
+
     def __init__(self, counts, attack_point_name: str) -> None:
         self._counts = counts.copy()
         self._attack_point_name = attack_point_name

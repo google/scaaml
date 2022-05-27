@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Implement an error to indicate that a scaaml.io.Dataset already exists.
 
 Creating scaaml.io.Dataset should not overwrite existing files. When it could
@@ -24,6 +23,7 @@ from pathlib import Path
 
 class DatasetExistsError(FileExistsError):
     """Error for signalling that the dataset already exists."""
+
     def __init__(self, dataset_path: Path) -> None:
         """Represents that the dataset already exists.
 

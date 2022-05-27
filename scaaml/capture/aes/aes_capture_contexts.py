@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Capture script for easier manipulation."""
 from pathlib import Path
 from typing import Dict, List, Literal
@@ -213,7 +212,9 @@ def capture_aes_dataset(
         dataset=dataset,
     )
 
-def _capture(scope_class, capture_info: Dict[str, any], chip_id: int, crypto_algorithms: List, dataset) -> None:
+
+def _capture(scope_class, capture_info: Dict[str, any], chip_id: int,
+             crypto_algorithms: List, dataset) -> None:
     """Create scope contexts managers and capture the dataset.
 
     Args:
@@ -255,7 +256,9 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int, crypto_alg
     # Warn on unknown scope_class.
     raise ValueError(f'Unsupported scope_class: {scope_class}')
 
-def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms, scope, dataset) -> None:
+
+def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
+                                       scope, dataset) -> None:
     """Create control and communication context managers and run the capture.
 
     Args:
@@ -269,10 +272,9 @@ def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
     """
     with CWControl(chip_id=chip_id, scope_io=cwscope.scope.io) as control:
         with CWCommunication(cwscope.scope) as target:
-            capture_runner = CaptureRunner(
-                crypto_algorithms=crypto_algorithms,
-                scope=scope,
-                communication=target,
-                control=control,
-                dataset=dataset)
+            capture_runner = CaptureRunner(crypto_algorithms=crypto_algorithms,
+                                           scope=scope,
+                                           communication=target,
+                                           control=control,
+                                           dataset=dataset)
             capture_runner.capture()

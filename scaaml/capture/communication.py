@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Communication protocols between the capturing host and the chip."""
 
 from abc import ABC, abstractmethod
@@ -19,6 +18,7 @@ from abc import ABC, abstractmethod
 
 class AbstractSCommunication(ABC):
     """Base class for communication. Communication is a context manager."""
+
     def __init__(self):
         """Initialization of the communication object."""
 

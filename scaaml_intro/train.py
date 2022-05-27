@@ -83,7 +83,8 @@ def train_model(config):
                     TensorBoard(log_dir='logs/' + stub, update_freq='batch')
                 ]
 
-                model.fit(x_train, y_train,
+                model.fit(x_train,
+                          y_train,
                           validation_data=(x_test, y_test),
                           verbose=1,
                           epochs=config['epochs'],

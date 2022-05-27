@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Utils for scaaml.io"""
 
 from collections import defaultdict
@@ -48,6 +47,7 @@ def ddict(value: Optional[Dict], levels: int, type_var):
               'C': defaultdict(<class 'int'>, {})})
       >>> f = ddict(value=None, levels=1, type_var=list)
     """
+
     def empty_dd(levels: int, type_var):
         """Returns the right level of defaultdicts."""
         if levels == 1:

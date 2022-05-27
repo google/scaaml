@@ -80,7 +80,7 @@ def test_stabilize_capture(mock_capture_trace):
     m_crypto_alg = MagicMock()
     k = MagicMock()
     t = MagicMock()
-    m_crypto_alg.get_stabilization_kti.return_value = iter(((k, t), ))
+    m_crypto_alg.get_stabilization_kti.return_value = iter(((k, t),))
     m_scope = MagicMock()
     m_communication = MagicMock()
     m_control = MagicMock()
@@ -124,8 +124,9 @@ def test_capture_dataset(mock_gapam):
     m_crypto_alg.examples_per_shard = examples_per_shard
     m_crypto_alg.plaintexts = plaintexts
     m_crypto_alg.repetitions = repetitions
-    m_crypto_alg.kti = [(x % 256, x % 256)
-                        for x in range(keys * plaintexts * repetitions)]
+    m_crypto_alg.kti = [
+        (x % 256, x % 256) for x in range(keys * plaintexts * repetitions)
+    ]
     m_scope = MagicMock()
     m_communication = MagicMock()
     m_control = MagicMock()

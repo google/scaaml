@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Test AESSBOX."""
 
 import tensorflow as tf
@@ -123,9 +122,9 @@ def test_attack_points():
     # yapf: enable
 
     assert AESSBOX.get_attack_point('key', key=key, plaintext=text) == key
-    assert AESSBOX.get_attack_point(
-        'sub_bytes_in', key=key, plaintext=text) == AESSBOX.sub_bytes_in(key=key,
-                                                                    plaintext=text)
+    assert AESSBOX.get_attack_point('sub_bytes_in', key=key,
+                                    plaintext=text) == AESSBOX.sub_bytes_in(
+                                        key=key, plaintext=text)
     assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
                                     plaintext=text) == AESSBOX.sub_bytes_out(
                                         key=key, plaintext=text)

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Generating uniformly distributed keys."""
 
 import random
@@ -143,6 +142,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     initPair = camel_case_deprecated(init_pair)
 
     def _generate_inputs(self):
+
         def test_matrix(matrix, length, num_batch=1):
             values, counts = np.unique(matrix, return_counts=True)
             if len(values) != 256:
@@ -151,9 +151,8 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
         def generate_matrix(length):
             "generate a length x 256 matrix that spread values with no repetition"
-            matrix = np.zeros(
-                (length, 256),
-                dtype=np.uint8)  # make the first matrix fail test
+            matrix = np.zeros((length, 256),
+                              dtype=np.uint8)  # make the first matrix fail test
             bytes_ = np.arange(256, dtype=np.uint8)
 
             while not test_matrix(matrix, length):

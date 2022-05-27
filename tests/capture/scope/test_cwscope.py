@@ -66,10 +66,10 @@ def test_with(mock_scope):
     mock_cwscope.adc.oa.hwInfo.maxSamples.return_value = -1
 
     with CWScope(gain=gain,
-                samples=samples,
-                offset=offset,
-                clock=clock,
-                sample_rate=sample_rate) as scope:
+                 samples=samples,
+                 offset=offset,
+                 clock=clock,
+                 sample_rate=sample_rate) as scope:
         assert scope.scope == mock_cwscope
         assert mock_cwscope.dis.call_count == 0
         assert mock_cwscope.gain.db == gain

@@ -19,6 +19,7 @@ import numpy as np
 
 from scaaml.stats import APCounter
 
+
 def test_init():
     attack_point_info = {
         'len': 16,
@@ -49,7 +50,7 @@ def test_get_counts():
 
     counts_b = ap_counter.get_counts(byte=1)
     assert (counts_b == 0).all()
-    assert counts_b.shape == (ap_counter._max_val, )
+    assert counts_b.shape == (ap_counter._max_val,)
     assert counts_b.dtype == np.int64
 
 

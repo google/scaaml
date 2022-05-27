@@ -20,6 +20,7 @@ from scaaml.capture.scope import AbstractSScope
 
 class CWScope(AbstractSScope):
     """Scope context manager."""
+
     def __init__(self, gain: int, samples: int, offset: int, clock: int,
                  sample_rate: str, **_):
         """Create scope context.
@@ -67,8 +68,8 @@ class CWScope(AbstractSScope):
         self._scope = cw.scope()
         self._scope.gain.db = self._gain
         max_samples = self._scope.adc.oa.hwInfo.maxSamples()
-        if (self._samples > max_samples
-                and self._scope.adc.oa.hwInfo.is_cw1200()):
+        if (self._samples > max_samples and
+                self._scope.adc.oa.hwInfo.is_cw1200()):
             self._scope.adc.stream_mode = True
         self._scope.adc.samples = self._samples
         self._scope.adc.offset = self._offset

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """The target in cw."""
 import chipwhisperer as cw
 
@@ -20,6 +19,7 @@ from scaaml.capture.communication import AbstractSCommunication
 
 class CWCommunication(AbstractSCommunication):
     """target in cw"""
+
     def __init__(self, scope):
         """Initialize the communication object."""
         super().__init__()
