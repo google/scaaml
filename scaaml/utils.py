@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Utils common to various SCAAML components"""
 
-"Utils common to various SCAAML components"
 from tqdm.auto import tqdm
 import tensorflow as tf
 import numpy as np
