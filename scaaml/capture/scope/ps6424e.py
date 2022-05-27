@@ -216,11 +216,16 @@ class TriggerSettings(CaptureSettings):
     _name = "Trigger Setting"
 
     THRESHOLD_DIRECTION = {
-        "Above": picoEnum.PICO_THRESHOLD_DIRECTION["PICO_ABOVE"],
-        "Below": picoEnum.PICO_THRESHOLD_DIRECTION["PICO_BELOW"],
-        "Rising": picoEnum.PICO_THRESHOLD_DIRECTION["PICO_RISING"],
-        "Falling": picoEnum.PICO_THRESHOLD_DIRECTION["PICO_FALLING"],
-        "RiseOrFall": picoEnum.PICO_THRESHOLD_DIRECTION["PICO_RISING_OR_FALLING"],
+        "Above":
+            picoEnum.PICO_THRESHOLD_DIRECTION["PICO_ABOVE"],
+        "Below":
+            picoEnum.PICO_THRESHOLD_DIRECTION["PICO_BELOW"],
+        "Rising":
+            picoEnum.PICO_THRESHOLD_DIRECTION["PICO_RISING"],
+        "Falling":
+            picoEnum.PICO_THRESHOLD_DIRECTION["PICO_FALLING"],
+        "RiseOrFall":
+            picoEnum.PICO_THRESHOLD_DIRECTION["PICO_RISING_OR_FALLING"],
     }
 
     def __init__(self):
@@ -355,30 +360,32 @@ class Pico6424E(ChipWhispererCommonInterface):
         # timebase should be <= 4
         smallest_timebase = Decimal("0.2e-9")  # 200ps
         for i in range(4, -1, -1):
-            if s_per_sample >= (2 ** i) * smallest_timebase:
+            if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
 
     def con(self, sn=None):
         try:
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit
-            assert_ok(ps.ps6000aOpenUnit(
-                ctypes.byref(self.ps_handle),  # handle
-                None,  # serial, open the first scope found
-                self._RESOLUTION,  # resolution
-            ))
+            assert_ok(
+                ps.ps6000aOpenUnit(
+                    ctypes.byref(self.ps_handle),  # handle
+                    None,  # serial, open the first scope found
+                    self._RESOLUTION,  # resolution
+                ))
             # ps6000aOpenUnit could return an indication of a needed firmware
             # update, but picosdk.constants.PICO_STATUS raises KeyError on
             # PICO_FIRMWARE_UPDATE_REQUIRED_TO_USE_DEVICE_WITH_THIS_DRIVER.
 
             # Get analog to digital converter limits.
             minADC = ctypes.c_int16()
-            assert_ok(ps.ps6000aGetAdcLimits(
-                self.ps_handle,  # handle
-                self._RESOLUTION,  # resolution
-                ctypes.byref(minADC),  # minADC
-                ctypes.byref(self._maxADC),  # maxADC
-            ))
+            assert_ok(
+                ps.ps6000aGetAdcLimits(
+                    self.ps_handle,  # handle
+                    self._RESOLUTION,  # resolution
+                    ctypes.byref(minADC),  # minADC
+                    ctypes.byref(self._maxADC),  # maxADC
+                ))
 
             # Set channels and trigger.
             self._set_channels()
@@ -414,21 +421,24 @@ class Pico6424E(ChipWhispererCommonInterface):
         """Prepare the scope for capturing."""
         # Check if this scope is connected.
         if self.connectStatus is False:
-            raise Exception(f'Scope {self._name} is not connected. Connect it first.')
+            raise Exception(
+                f'Scope {self._name} is not connected. Connect it first.')
 
         # Run the capture block
         timeIndisposedMs = ctypes.c_double(0)
-        assert_ok(ps.ps6000aRunBlock(
-            self.ps_handle,  # handle
-            self.DOWNSAMPLING_RATIO * self._sample_offset,  # Pre-trigger samples
-            self.DOWNSAMPLING_RATIO * self._sample_length,  # Post-trigger samples
-            self._timebase,  # timebase
-            ctypes.byref(timeIndisposedMs),
-            0,  # segmentIndex
-            None,  # lpReady callback
-            None,  # pParameter
-        ))
-
+        assert_ok(
+            ps.ps6000aRunBlock(
+                self.ps_handle,  # handle
+                self.DOWNSAMPLING_RATIO *
+                self._sample_offset,  # Pre-trigger samples
+                self.DOWNSAMPLING_RATIO *
+                self._sample_length,  # Post-trigger samples
+                self._timebase,  # timebase
+                ctypes.byref(timeIndisposedMs),
+                0,  # segmentIndex
+                None,  # lpReady callback
+                None,  # pParameter
+            ))
 
     def capture(self, poll_done: bool = False) -> bool:
         """Capture one trace and return True if timeout has happened
@@ -509,20 +519,21 @@ class Pico6424E(ChipWhispererCommonInterface):
 
         # Turn off all analog channels
         for c in range(self._NUM_CHANNELS):
-            assert_ok(
-                ps.ps6000aSetChannelOff(
-                    self.ps_handle,
-                    c,  # channel
-                ))
+            assert_ok(ps.ps6000aSetChannelOff(
+                self.ps_handle,
+                c,  # channel
+            ))
         # Set MSO pods off
-        assert_ok(ps.ps6000aSetDigitalPortOff(
-            self.ps_handle,  # handle
-            picoEnum.PICO_CHANNEL["PICO_PORT0"],  # port
-        ))
-        assert_ok(ps.ps6000aSetDigitalPortOff(
-            self.ps_handle,  # handle
-            picoEnum.PICO_CHANNEL["PICO_PORT1"],  # port
-        ))
+        assert_ok(
+            ps.ps6000aSetDigitalPortOff(
+                self.ps_handle,  # handle
+                picoEnum.PICO_CHANNEL["PICO_PORT0"],  # port
+            ))
+        assert_ok(
+            ps.ps6000aSetDigitalPortOff(
+                self.ps_handle,  # handle
+                picoEnum.PICO_CHANNEL["PICO_PORT1"],  # port
+            ))
 
         # Trace channel configuration
         assert_ok(
@@ -549,30 +560,35 @@ class Pico6424E(ChipWhispererCommonInterface):
         # TODO(kralka): implement MSO pod trigger
 
         # Set simple trigger
-        assert_ok(ps.ps6000aSetSimpleTrigger(
-            self.ps_handle,  # handle
-            1,  # enable=1 (for disable set to 0)
-            self.trigger.ps_api_channel,  # channel
-            self.trigger.ps_api_trigger_level,  # threshold in mV
-            self.trigger.ps_api_trigger_direction,  # direction
-            0,  # delay = 0 s
-            100_000_000,  # autoTriggerMicroSeconds = 100s
-        ))
+        assert_ok(
+            ps.ps6000aSetSimpleTrigger(
+                self.ps_handle,  # handle
+                1,  # enable=1 (for disable set to 0)
+                self.trigger.ps_api_channel,  # channel
+                self.trigger.ps_api_trigger_level,  # threshold in mV
+                self.trigger.ps_api_trigger_direction,  # direction
+                0,  # delay = 0 s
+                100_000_000,  # autoTriggerMicroSeconds = 100s
+            ))
 
         # Set data buffers
-        self._total_samples = self.DOWNSAMPLING_RATIO * (self._sample_length + self._sample_offset)
+        self._total_samples = self.DOWNSAMPLING_RATIO * (self._sample_length +
+                                                         self._sample_offset)
         self._trace_buffer = (ctypes.c_int16 * self._total_samples)()
         self._trigger_buffer = (ctypes.c_int16 * self._total_samples)()
         # If we use hardware downsampling, use averaging.
         if self.DOWNSAMPLING_RATIO > 1:
-            self._downsampling_mode = picoEnum.PICO_RATIO_MODE['PICO_RATIO_MODE_AVERAGE']
+            self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
+                'PICO_RATIO_MODE_AVERAGE']
             # 'PICO_RATIO_MODE_DECIMATE' could also be an option.
         else:
-            self._downsampling_mode = picoEnum.PICO_RATIO_MODE['PICO_RATIO_MODE_RAW']
+            self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
+                'PICO_RATIO_MODE_RAW']
         data_type = picoEnum.PICO_DATA_TYPE['PICO_INT16_T']
         waveform = 0
         # Set trace buffer
-        action = picoEnum.PICO_ACTION["PICO_CLEAR_ALL"] | picoEnum.PICO_ACTION["PICO_ADD"]
+        action = picoEnum.PICO_ACTION["PICO_CLEAR_ALL"] | picoEnum.PICO_ACTION[
+            "PICO_ADD"]
         assert_ok(
             ps.ps6000aSetDataBuffer(
                 self.ps_handle,  # handle

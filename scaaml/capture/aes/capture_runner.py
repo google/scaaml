@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """CaptureRunner runs the capture."""
 from typing import Dict, Tuple
 import chipwhisperer as cw
@@ -23,6 +22,7 @@ from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
 
 class CaptureRunner(AbstractCaptureRunner):
     """Class for capturing the dataset."""
+
     def get_crypto_input(self, kt_element) -> CryptoInput:
         """Process single element from ResumeKTI and return information for
         the crypto algorithm.

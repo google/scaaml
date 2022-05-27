@@ -36,7 +36,7 @@ def test_stddev_of_stat():
         mm_arg = MagicMock()
         stddev_of_stat.update(mm_arg)
         stat_fn.assert_called_with(mm_arg)
-        assert stddev_of_stat._stats == side_effects[:i+1]
+        assert stddev_of_stat._stats == side_effects[:i + 1]
 
 
 def test_std_of_avg():

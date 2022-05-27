@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
@@ -27,6 +26,7 @@ from scaaml.capture.scope import AbstractSScope
 
 class AbstractCaptureRunner(ABC):
     """Abstract class for capturing the dataset."""
+
     def __init__(self, crypto_algorithms: List[AbstractSCryptoAlgorithm],
                  communication: AbstractSCommunication,
                  control: AbstractSControl, scope: AbstractSScope,

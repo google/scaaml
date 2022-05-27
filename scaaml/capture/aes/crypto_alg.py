@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """AES specific SCryptoAlgorithm."""
 from typing import Iterable, Literal
 import numpy as np
@@ -23,6 +22,7 @@ from scaaml.io import resume_kti
 
 class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     """attack points and maybe some basic information about it (e.g. key length, etc.)"""
+
     def __init__(self,
                  firmware_sha256: str,
                  crypto_implementation,
@@ -112,6 +112,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
         class StabilizationIterator:
             """Iterates through key-plaintext pairs used for stabilizing the
             capture."""
+
             def __init__(self, ktp):
                 self._ktp = ktp
 

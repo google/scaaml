@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Control of the chip."""
 
 from abc import ABC, abstractmethod
@@ -20,6 +19,7 @@ from time import sleep
 
 class AbstractSControl(ABC):
     """turning on/off the chip, resetting the chip, etc."""
+
     def __init__(self, chip_id: int):
         """Initialize the control object.
 

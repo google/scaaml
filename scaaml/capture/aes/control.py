@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Control of the chip."""
 
 from time import sleep
@@ -21,6 +20,7 @@ from scaaml.capture.control import AbstractSControl
 
 class CWControl(AbstractSControl):
     """turning on/off the chip, resetting the chip, etc."""
+
     def __init__(self, chip_id: int, scope_io) -> None:
         """Initialize the control object.
 

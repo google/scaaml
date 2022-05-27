@@ -19,7 +19,10 @@ from scaaml.io.utils import ddict
 
 def test_ddict_list_adding():
     original = {
-        'a': {1: [], 2: [3,1,4]},
+        'a': {
+            1: [],
+            2: [3, 1, 4]
+        },
         'b': {},
     }
     d = ddict(value=original, levels=2, type_var=list)
@@ -50,7 +53,10 @@ def test_ddict_empty_list():
 
 def test_ddict_changing_original():
     original = {
-        'A': {'a': 1, 'b': 2},
+        'A': {
+            'a': 1,
+            'b': 2
+        },
         'C': None,
     }
     d = ddict(value=original, levels=2, type_var=int)
@@ -70,7 +76,10 @@ def test_ddict_changing_original():
 
 def test_ddic_2t_none_and_values():
     original = {
-        'A': {'a': 1, 'b': 2},
+        'A': {
+            'a': 1,
+            'b': 2
+        },
         'C': None,
     }
     d = ddict(value=original, levels=2, type_var=int)

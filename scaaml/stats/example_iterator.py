@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Iterates over examples in a dataset."""
 
 from typing import Union
@@ -28,6 +27,7 @@ class ExampleIterator:
       for example in ExampleIterator(dataset_path='ds_folder', split='test'):
           print(example['key'])
     """
+
     def __init__(self,
                  dataset_path: str,
                  split: Union[None, str] = None,

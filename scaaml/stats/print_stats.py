@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Print results of statistical checks and observations. Iterates only once
 over the dataset. Implemented as a class to allow use during capture as well as
 standalone."""
@@ -51,6 +50,7 @@ class PrintStats:
                                 part=part)
     print_stats.print()
     """
+
     def __init__(self, measurements_info: Dict,
                  attack_points_info: Dict) -> None:
         self._measurements_info = measurements_info
@@ -59,10 +59,8 @@ class PrintStats:
             split: {
                 ap_name: [
                     APCounter(attack_point_info=ap_info),
-                ]
-                for ap_name, ap_info in attack_points_info.items()
-            }
-            for split in Dataset.SPLITS
+                ] for ap_name, ap_info in attack_points_info.items()
+            } for split in Dataset.SPLITS
         }
 
         self._all_trace_stats = lambda: [
@@ -75,15 +73,13 @@ class PrintStats:
             split: {
                 trace_name: self._all_trace_stats()
                 for trace_name in measurements_info
-            }
-            for split in Dataset.SPLITS
+            } for split in Dataset.SPLITS
         }
         self._split_trace_group_stats = {
             split: {
                 trace_name: defaultdict(self._all_trace_stats)
                 for trace_name in measurements_info
-            }
-            for split in Dataset.SPLITS
+            } for split in Dataset.SPLITS
         }
         self._all_groups = set()
 
@@ -99,9 +95,11 @@ class PrintStats:
         print_stats = PrintStats(measurements_info=dataset.measurements_info,
                                  attack_points_info=dataset.attack_points_info)
         all_splits = set(dataset.shards_list.keys())
-        all_groups = set(shard['group'] for split in Dataset.SPLITS
+        all_groups = set(shard['group']
+                         for split in Dataset.SPLITS
                          for shard in dataset.shards_list[split])
-        all_parts = set(shard['part'] for split in Dataset.SPLITS
+        all_parts = set(shard['part']
+                        for split in Dataset.SPLITS
                         for shard in dataset.shards_list[split])
         prod = list(product(all_splits, all_groups, all_parts))
         for split, group, part in tqdm(prod):

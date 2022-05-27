@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Resumeable iterator for key-text pairs with autosaves.
 
 Autosaves after shard length iterations.
@@ -98,6 +97,7 @@ class ResumeKTI:
     Does not support multiple iterations. If this is needed, write zero to
     progress_filename and create a new ResumeKTI object.
     """
+
     def __init__(self,
                  kt_filename: str = 'key_text_pairs.txt',
                  progress_filename: str = 'progress_pairs.txt',
@@ -145,7 +145,7 @@ class ResumeKTI:
             # Ensure the saved index is the largest multiple of self._shard_length
             # which is at most self._index.
             i = self._index - (self._index % self._shard_length
-                               )  # End of last shard.
+                              )  # End of last shard.
             progress_file.write(str(i))
 
     def __iter__(self):
