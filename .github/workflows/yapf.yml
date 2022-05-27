@@ -1,0 +1,25 @@
+name: yapf
+on:
+  push:
+    paths:
+      - '**/*.py'
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  yapf:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install 'yapf>=0.30.0'
+      - name: Test code formatting with yapf
+        run: |
+          echo ::add-matcher::./.github/python_matcher.json
+          yapf --style=google --recursive --diff .
