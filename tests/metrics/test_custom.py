@@ -106,18 +106,16 @@ def test_meanrank_doc():
 def test_meanrank_decimals_no_rounding():
     # No rounding
     r = MeanRank(decimals=None)
-    r.update_state(
-        [[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
-        [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
+    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
     assert r.result().numpy() == 0.25
 
 
 def test_meanrank_1_decimals():
     # One decimal
     r = MeanRank(decimals=1)
-    r.update_state(
-        [[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
-        [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
+    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
     assert np.isclose(r.result().numpy(), 0.2)
 
 
