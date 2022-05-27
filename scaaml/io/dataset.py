@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Build and load tensorFlow dataset Record wrapper"""
 
 import copy
@@ -361,8 +360,7 @@ class Dataset():
                      prefetch: int = 4,
                      file_parallelism: int = os.cpu_count(),
                      parallelism: int = os.cpu_count(),
-                     shuffle: int = 1000
-                     ) -> Union[tf.data.Dataset, Dict, Dict]:
+                     shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
         FIXME: restrict shards to specific part if they exists.
@@ -371,7 +369,6 @@ class Dataset():
 
         if parts:
             raise NotImplementedError("Implement part filtering")
-
 
         # boxing
         if isinstance(traces, str):
@@ -410,7 +407,6 @@ class Dataset():
             inputs[name]['max'] = tf.constant(dataset.max_values[name])
             delta = tf.constant(inputs[name]['max'] - inputs[name]['min'])
             inputs[name]['delta'] = delta
-
 
         # output construction
         outputs = {}  # model outputs
@@ -480,7 +476,8 @@ class Dataset():
         # deterministic=False is not an error, it is what allows us to
         # create random batch
         ds = ds.interleave(
-            lambda x: tf.data.TFRecordDataset(x, compression_type=dataset.compression),  # noqa
+            lambda x: tf.data.TFRecordDataset(
+                x, compression_type=dataset.compression),  # noqa
             cycle_length=file_parallelism,
             block_length=1,
             num_parallel_calls=file_parallelism,
@@ -504,10 +501,10 @@ class Dataset():
     @staticmethod
     def summary(dataset_path):
         """Print a summary of the dataset"""
-        lst = ['shortname',
-               'description', 'url',
-               'architecture', 'implementation',
-               'algorithm', 'version', 'compression']
+        lst = [
+            'shortname', 'description', 'url', 'architecture', 'implementation',
+            'algorithm', 'version', 'compression'
+        ]
 
         conf_path = Dataset._get_config_path(dataset_path)
         config = Dataset._load_config(conf_path)
@@ -537,11 +534,12 @@ class Dataset():
         print(tabulate(d, ['split', 'num_shards', 'num_keys', 'num_examples']))
 
     @staticmethod
-    def inspect(dataset_path,
-                split: str,  # typing.Literal['train', 'test', 'holdout'],
-                shard_id: int,
-                num_example: int,
-                verbose: bool = True):
+    def inspect(
+            dataset_path,
+            split: str,  # typing.Literal['train', 'test', 'holdout'],
+            shard_id: int,
+            num_example: int,
+            verbose: bool = True):
         """Display the content of a given shard.
 
         Args:
@@ -626,12 +624,11 @@ class Dataset():
         """
         seen_keys = set()
         for i in range(len(self.shards_list['test'])):
-            for example in Dataset.inspect(
-                    dataset_path=self.path,
-                    split='test',
-                    shard_id=i,
-                    num_example=self.examples_per_shard,
-                    verbose=False).as_numpy_iterator():
+            for example in Dataset.inspect(dataset_path=self.path,
+                                           split='test',
+                                           shard_id=i,
+                                           num_example=self.examples_per_shard,
+                                           verbose=False).as_numpy_iterator():
                 seen_keys.add(example[key_ap].astype(np.uint8).tobytes())
         if deep_check:
             Dataset._deep_check(seen_keys=seen_keys,
@@ -816,12 +813,11 @@ class Dataset():
         for i in pbar(range(len(train_shards)),
                       desc='Checking test key uniqueness'):
             for j, example in enumerate(
-                    Dataset.inspect(
-                        dataset_path=dpath,
-                        split='train',
-                        shard_id=i,
-                        num_example=examples_per_shard,
-                        verbose=False).as_numpy_iterator()):
+                    Dataset.inspect(dataset_path=dpath,
+                                    split='train',
+                                    shard_id=i,
+                                    num_example=examples_per_shard,
+                                    verbose=False).as_numpy_iterator()):
                 cur_key = example[key_ap].astype(np.uint8).tobytes()
                 if cur_key in seen_keys:
                     raise ValueError(
@@ -907,18 +903,14 @@ class Dataset():
         find_misspellings(fixed_dict.keys())  # Check for misspellings of keys.
         # Fix type of keys_per_group
         fixed_dict['keys_per_group'] = {
-            split: {
-                int(group): n_examples
-                for group, n_examples in keys_info.items()
-            }
+            split:
+            {int(group): n_examples for group, n_examples in keys_info.items()}
             for split, keys_info in loaded_dict['keys_per_group'].items()
         }
         # Fix type of examples_per_group
         fixed_dict['examples_per_group'] = {
-            split: {
-                int(group): n_examples
-                for group, n_examples in ex_info.items()
-            }
+            split:
+            {int(group): n_examples for group, n_examples in ex_info.items()}
             for split, ex_info in loaded_dict['examples_per_group'].items()
         }
         # Fix missing keys
@@ -1031,12 +1023,10 @@ class Dataset():
                 config['shards_list'][split])
             # Zero examples per a group is a valid option.
             examples_per_group[split] = {
-                k: 0
-                for k in config['examples_per_group'][split]
+                k: 0 for k in config['examples_per_group'][split]
             }
             names_keys_per_group = {
-                k: set()
-                for k in config['keys_per_group'][split]
+                k: set() for k in config['keys_per_group'][split]
             }
             key_names_per_split = set()
             for shard in slist:
@@ -1126,8 +1116,7 @@ class Dataset():
         # Fix metadata.
         self.examples_per_split[from_split] -= shard['examples']
         self.examples_per_split[to_split] += shard['examples']
-        self.examples_per_group[from_split][
-            shard['group']] -= shard['examples']
+        self.examples_per_group[from_split][shard['group']] -= shard['examples']
         # Zero value should not be present.
         if self.examples_per_group[from_split][shard['group']] == 0:
             del self.examples_per_group[from_split][shard['group']]

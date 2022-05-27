@@ -155,7 +155,7 @@ def test_version_same(tmp_path):
 
 
 def test_firmware_url_mandatory(tmp_path):
-    kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url = '')
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url='')
     with pytest.raises(ValueError) as verror:
         ds = Dataset.get_dataset(**kwargs)
     assert 'Firmware URL is required' in str(verror.value)
@@ -197,33 +197,34 @@ def test_check_key_ap(tmp_path):
     key_ap = 'k'
     # Fix numpy randomness not to cause flaky tests.
     np.random.seed(42)
-    dataset = Dataset(**dataset_constructor_kwargs(
-        root_path=tmp_path,
-        examples_per_shard=1,
-        attack_points_info={
-            key_ap: {
-                "len": 16,
-                "max_val": 256
-            },
-        }
-    ))
+    dataset = Dataset(**dataset_constructor_kwargs(root_path=tmp_path,
+                                                   examples_per_shard=1,
+                                                   attack_points_info={
+                                                       key_ap: {
+                                                           "len": 16,
+                                                           "max_val": 256
+                                                       },
+                                                   }))
     trace_len = 1024
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
     dataset.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
-    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.write_example({key_ap: key1},
+                          {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
     key2 = np.random.randint(256, size=16)
     dataset.new_shard(key=key2, part=0, split='test', group=0, chip_id=1)
-    dataset.write_example({key_ap: key2}, {"trace1": np.random.random(trace_len)})
+    dataset.write_example({key_ap: key2},
+                          {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
 
     dataset.check(key_ap=key_ap)
 
     # Make a duplicate key
     dataset.new_shard(key=key1, part=0, split='test', group=0, chip_id=1)
-    dataset.write_example({key_ap: key1}, {"trace1": np.random.random(trace_len)})
+    dataset.write_example({key_ap: key1},
+                          {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
 
     with pytest.raises(ValueError) as verror:
@@ -281,7 +282,11 @@ def test_merge_with(tmp_path):
     yet_another_ds.close_shard()
     key4 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
-    yet_another_ds.new_shard(key=key4, part=1, split='train', group=1, chip_id=1)
+    yet_another_ds.new_shard(key=key4,
+                             part=1,
+                             split='train',
+                             group=1,
+                             chip_id=1)
     yet_another_ds.write_example({"key": key4}, {"trace1": trace})
     yet_another_ds.close_shard()
 
@@ -352,8 +357,7 @@ def same_examples(ds1, ds2):
                             shard_id=i,
                             num_example=dataset.examples_per_shard,
                             verbose=False).as_numpy_iterator()
-            for i in range(len(config['shards_list'][split]))
-        )
+            for i in range(len(config['shards_list'][split])))
 
     for split in config1['shards_list'].keys():
         ei1 = example_iterator(dataset=ds1, split=split)
@@ -582,6 +586,7 @@ def test_min_max_values_ok(tmp_path):
     """Test that min_values and max_values are not affected by mutable default
     parameter.
     """
+
     def min_max_t(min_value: float, max_value: float, root_path: Path) -> None:
         assert min_value <= max_value
         ds = Dataset(**dataset_constructor_kwargs(root_path=root_path))
@@ -597,8 +602,8 @@ def test_min_max_values_ok(tmp_path):
         assert config_dict['min_values']['trace1'] == min_value
         assert config_dict['max_values']['trace1'] == max_value
 
-    min_max_t(0.1, 0.7, root_path = tmp_path / 'b')
-    min_max_t(0.2, 0.5, root_path = tmp_path / 'a')
+    min_max_t(0.1, 0.7, root_path=tmp_path / 'b')
+    min_max_t(0.2, 0.5, root_path=tmp_path / 'a')
 
 
 def test_resume_capture(tmp_path):
@@ -661,8 +666,16 @@ def test_from_loaded_json(tmp_path):
                  firmware_url='some url',
                  firmware_sha256='abc123',
                  examples_per_shard=1,
-                 measurements_info={ "trace1": { "type": "power", "len": 1024, } },
-                 attack_points_info={ "key": { "len": 16, "max_val": 256 }, })
+                 measurements_info={"trace1": {
+                     "type": "power",
+                     "len": 1024,
+                 }},
+                 attack_points_info={
+                     "key": {
+                         "len": 16,
+                         "max_val": 256
+                     },
+                 })
     key = np.random.randint(0, 255, 16)
     key2 = np.random.randint(0, 255, 16)
     trace1 = np.random.rand(1024)
@@ -831,11 +844,11 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
 def test_check_sha256sums(mock_sha256sum):
     shadict = {
         "test/0_01f6e272b933ec2b80ab53af245f7fa6_0.tfrec":
-        "b1e3dc7c217b154ded5631d95d6265c6b1ad348ac4968acb1a74b9fb49c09c42",
+            "b1e3dc7c217b154ded5631d95d6265c6b1ad348ac4968acb1a74b9fb49c09c42",
         "test/1_f2e8de7fdbc602f96261ba5f8d182d73_0.tfrec":
-        "7a9b214d76f68b4e1a9abf833314ae5909e96b6c4c9f81c7a020a63913dfc51c",
+            "7a9b214d76f68b4e1a9abf833314ae5909e96b6c4c9f81c7a020a63913dfc51c",
         "test/0_69a283f6b1eea6327afdb30f76e6fe30_0.tfrec":
-        "f61009a4c6f5a77aa2c6da6d1882a50c3bd6345010966144d16e634ceeaeb730",
+            "f61009a4c6f5a77aa2c6da6d1882a50c3bd6345010966144d16e634ceeaeb730",
     }
     dpath = Path('/home/noanuser/notadir')
     mock_sha256sum.side_effect = lambda x: shadict[f'{x.parent.name}/{x.name}']
@@ -1060,6 +1073,7 @@ def test_basic_workflow(tmp_path):
 
 
 def test_cleanup_shards(tmp_path):
+
     def shard_info(group: int, key: str, part: int):
         return {
             'path': Dataset._shard_name(shard_group=group,

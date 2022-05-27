@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Unittests of scaaml/io/spell_check.py"""
 
 import pytest
@@ -58,14 +57,16 @@ def test_spell_check_word():
                      unsupported='license',
                      case_sensitive=True)
     # ok (case sensitive test)
-    spell_check_word(word='license',
-                     supported='licence',
-                     unsupported='LICENSE',  # Not equal
-                     case_sensitive=True)
+    spell_check_word(
+        word='license',
+        supported='licence',
+        unsupported='LICENSE',  # Not equal
+        case_sensitive=True)
     with pytest.raises(ValueError) as verror:
         # raise
-        spell_check_word(word='license',
-                         supported='licence',
-                         unsupported='LICENSE',  # Not equal
-                         case_sensitive=False)
+        spell_check_word(
+            word='license',
+            supported='licence',
+            unsupported='LICENSE',  # Not equal
+            case_sensitive=False)
     assert 'Unsupported spelling' in str(verror.value)

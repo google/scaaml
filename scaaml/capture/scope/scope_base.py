@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Context manager for the scope."""
 
 from abc import ABC, abstractmethod
@@ -19,6 +18,7 @@ from abc import ABC, abstractmethod
 
 class AbstractSScope(ABC):
     """Scope context manager."""
+
     def __init__(self, samples: int, offset: int):
         """Create scope context.
 

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Capture script for easier manipulation."""
 from scaaml.aes_forward import AESSBOX
 from scaaml.capture.scope import CWScope

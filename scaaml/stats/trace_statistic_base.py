@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Compute a statistic of many traces."""
 
 from abc import ABC, abstractmethod
@@ -28,6 +27,7 @@ class AbstractTraceStatistic(ABC):
           trace_stats.update(e['trace1'])
       print(trace_stats.result())
     """
+
     def __init__(self) -> None:
         """Create a new statistic computation."""
 

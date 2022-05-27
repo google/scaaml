@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Test Pico6424E."""
 
 from decimal import Decimal
@@ -22,7 +21,7 @@ from scaaml.capture.scope.ps6424e import Pico6424E
 
 def test_get_timebase_too_large():
     """Test sample rate to timebase conversion for too large sampling rate."""
-    # Test too large 
+    # Test too large
     with pytest.raises(ValueError) as verror:
         timebase = Pico6424E._get_timebase(1 + 5e9)
     assert 'This scope support at most 5GHz sample_rate.' == str(verror.value)

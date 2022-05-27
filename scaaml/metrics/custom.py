@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Custom metrics: MeanRank, MaxRank.
 
 Related metrics:
@@ -107,6 +106,7 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
                   metrics=[MeanRank()])
     ```
     """
+
     def __init__(self, name='mean_rank', dtype=None):
         super().__init__(rank, name, dtype=dtype)
 
@@ -138,6 +138,7 @@ class MaxRank(keras.metrics.Metric):
                   metrics=[MaxRank()])
     ```
     """
+
     def __init__(self, name: str = "max_rank", **kwargs):
         super().__init__(name=name, **kwargs)
         self.max_rank = self.add_weight(name="max_rank", initializer="zeros")

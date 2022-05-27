@@ -20,6 +20,7 @@ from .tfdata import int64_feature, float_feature
 
 class Shard():
     """A shard contains N measurement pertaining to the same key"""
+
     def __init__(self, path: str, attack_points_info: Dict,
                  measurements_info: Dict, compression: True) -> None:
         self.path = path
@@ -107,7 +108,8 @@ class Shard():
 
             # check that we get the len specified in the info
             if len(ap_value) != expected_len:
-                raise ValueError(ap_name, len(ap_value), "don't have the right len", expected_len)
+                raise ValueError(ap_name, len(ap_value),
+                                 "don't have the right len", expected_len)
 
             # convert
             feature[ap_name] = int64_feature(ap_value)

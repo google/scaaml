@@ -33,18 +33,17 @@ def test_init(mock_resumekti, mock_create_resume_kti):
     full_kt_filename = 'ktfilename.txt'
     full_progress_filename = 'progressfilename.txt'
 
-    crypto_alg = SCryptoAlgorithm(
-        crypto_implementation=AESSBOX,
-        purpose=description,
-        implementation=implementation,
-        algorithm=algorithm,
-        keys=keys,
-        plaintexts=plaintexts,
-        repetitions=repetitions,
-        examples_per_shard=examples_per_shard,
-        firmware_sha256=firmware_sha256,
-        full_kt_filename=full_kt_filename,
-        full_progress_filename=full_progress_filename)
+    crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
+                                  purpose=description,
+                                  implementation=implementation,
+                                  algorithm=algorithm,
+                                  keys=keys,
+                                  plaintexts=plaintexts,
+                                  repetitions=repetitions,
+                                  examples_per_shard=examples_per_shard,
+                                  firmware_sha256=firmware_sha256,
+                                  full_kt_filename=full_kt_filename,
+                                  full_progress_filename=full_progress_filename)
 
     mock_create_resume_kti.assert_called_once()
     kwargs = mock_create_resume_kti.call_args.kwargs
@@ -80,18 +79,17 @@ def test_attack_points(mock_resumekti, mock_create_resume_kti):
     firmware_sha256 = 'TODO'
     full_kt_filename = 'ktfilename.txt'
     full_progress_filename = 'progressfilename.txt'
-    crypto_alg = SCryptoAlgorithm(
-        crypto_implementation=AESSBOX,
-        purpose=description,
-        implementation=implementation,
-        algorithm=algorithm,
-        keys=keys,
-        plaintexts=plaintexts,
-        repetitions=repetitions,
-        examples_per_shard=examples_per_shard,
-        firmware_sha256=firmware_sha256,
-        full_kt_filename=full_kt_filename,
-        full_progress_filename=full_progress_filename)
+    crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
+                                  purpose=description,
+                                  implementation=implementation,
+                                  algorithm=algorithm,
+                                  keys=keys,
+                                  plaintexts=plaintexts,
+                                  repetitions=repetitions,
+                                  examples_per_shard=examples_per_shard,
+                                  firmware_sha256=firmware_sha256,
+                                  full_kt_filename=full_kt_filename,
+                                  full_progress_filename=full_progress_filename)
     key = bytearray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     plaintext = bytearray(
         [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
@@ -116,18 +114,17 @@ def test_attack_points_info(mock_resumekti, mock_create_resume_kti):
     firmware_sha256 = 'TODO'
     full_kt_filename = 'ktfilename.txt'
     full_progress_filename = 'progressfilename.txt'
-    crypto_alg = SCryptoAlgorithm(
-        crypto_implementation=AESSBOX,
-        purpose=description,
-        implementation=implementation,
-        algorithm=algorithm,
-        keys=keys,
-        plaintexts=plaintexts,
-        repetitions=repetitions,
-        examples_per_shard=examples_per_shard,
-        firmware_sha256=firmware_sha256,
-        full_kt_filename=full_kt_filename,
-        full_progress_filename=full_progress_filename)
+    crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
+                                  purpose=description,
+                                  implementation=implementation,
+                                  algorithm=algorithm,
+                                  keys=keys,
+                                  plaintexts=plaintexts,
+                                  repetitions=repetitions,
+                                  examples_per_shard=examples_per_shard,
+                                  firmware_sha256=firmware_sha256,
+                                  full_kt_filename=full_kt_filename,
+                                  full_progress_filename=full_progress_filename)
     max_val = 256
     api = {
         'sub_bytes_in': {

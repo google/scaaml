@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Context manager chipwhisperer scope that has default setting and is used to
 control."""
 
@@ -22,6 +21,7 @@ from scaaml.capture.scope import AbstractSScope
 
 class DefaultCWScope(AbstractSScope):
     """Scope context manager."""
+
     def __init__(self):
         """Create scope context."""
         super().__init__(samples=0, offset=0)

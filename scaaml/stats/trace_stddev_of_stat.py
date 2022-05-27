@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Compute stddev of (avg, max, min) of traces."""
 
 from typing import Callable, List
@@ -26,6 +25,7 @@ class STDDEVofSTATofTraces(AbstractTraceStatistic):
 
     Example use: See STDDEVofAVGofTraces.
     """
+
     def __init__(self, stat_fn: Callable[[np.ndarray], float]) -> None:
         """Initialize empty statistic.
 
@@ -66,6 +66,7 @@ class STDDEVofAVGofTraces(STDDEVofSTATofTraces):
           stddev_avgs.update(e['trace1'])
       print(stddev_avgs.result())
     """
+
     def __init__(self) -> None:
         stat_fn = lambda x: x.mean()
         super().__init__(stat_fn=stat_fn)
@@ -73,6 +74,7 @@ class STDDEVofAVGofTraces(STDDEVofSTATofTraces):
 
 class STDDEVofMAXofTraces(STDDEVofSTATofTraces):
     """Computes standard deviation of maxima of traces."""
+
     def __init__(self) -> None:
         stat_fn = lambda x: x.max()
         super().__init__(stat_fn=stat_fn)
@@ -80,6 +82,7 @@ class STDDEVofMAXofTraces(STDDEVofSTATofTraces):
 
 class STDDEVofMINofTraces(STDDEVofSTATofTraces):
     """Computes standard deviation of minima of traces."""
+
     def __init__(self) -> None:
         stat_fn = lambda x: x.min()
         super().__init__(stat_fn=stat_fn)
