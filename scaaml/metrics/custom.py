@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Custom metrics: MeanRank, MaxRank.
 
 Related metrics:
@@ -19,6 +18,9 @@ Related metrics:
   tf.keras.metrics.TopKCategoricalAccuracy: How often the correct class
     is in the top K predictions (how often is rank less than K).
 """
+from typing import Optional
+
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
@@ -45,8 +47,8 @@ def rank(y_true, y_pred):
     array([1., 0., 1.], dtype=float32)
 
     Args:
-      y_true: One-hot ground truth values.
-      y_pred: The prediction values.
+      y_true (batch of one-hot): One-hot ground truth values.
+      y_pred (batch of one-hot): The prediction values.
 
     Returns:
       Rank values.
@@ -89,8 +91,10 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
     counted starting with zero for the correct prediction.
 
     Args:
-      name: (Optional) string name of the metric instance.
-      dtype: (Optional) data type of the metric result.
+      name (Optional): String name of the metric instance.
+      dtype (Optional): Data type of the metric result.
+      decimals (Optional[int]): How many decimals to show. If None no
+        rounding. Behaves as in np.round. Defaults to None.
 
     Standalone usage:
 
@@ -107,8 +111,28 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
                   metrics=[MeanRank()])
     ```
     """
-    def __init__(self, name='mean_rank', dtype=None):
+    def __init__(self,
+                 name: str ='mean_rank',
+                 dtype=None,
+                 decimals: Optional[int] = None):
         super().__init__(rank, name, dtype=dtype)
+        self._decimals = decimals
+
+    def result(self):
+        """Return the result, possibly rounded to the right number of digits.
+        See the decimals parameter of the constructor.
+        """
+        # Get the result.
+        res = super().result()
+
+        # Check if rounding is necessary.
+        if self._decimals is None:
+            return res
+
+        # Get numpy scalar and round.
+        rounded = np.round(res.numpy(), self._decimals)
+        # Cast back to tensor.
+        return tf.convert_to_tensor(rounded, dtype=res.dtype)
 
 
 @tf.keras.utils.register_keras_serializable(package="SCAAML")
@@ -120,8 +144,8 @@ class MaxRank(keras.metrics.Metric):
     counted starting with zero for the correct prediction.
 
     Args:
-      name: (Optional) string name of the metric instance.
-      dtype: (Optional) data type of the metric result.
+      name: (Optional) String name of the metric instance.
+      dtype: (Optional) Data type of the metric result.
 
     Standalone usage:
 
@@ -146,9 +170,10 @@ class MaxRank(keras.metrics.Metric):
         """Update the state.
 
         Args:
-          y_true: One-hot ground truth values.
-          y_pred: The prediction values.
-          sample_weight: Does not make sense, as we count maximum.
+          y_true (batch of one-hot): One-hot ground truth values.
+          y_pred (batch of one-hot): The prediction values.
+          sample_weight (Optional weights): Does not make sense, as we count
+            maximum.
         """
         rank_update = rank(y_true=y_true, y_pred=y_pred)
         rank_update = tf.math.reduce_max(rank_update)
@@ -156,7 +181,7 @@ class MaxRank(keras.metrics.Metric):
 
     def result(self):
         """Return the result."""
-        return self.max_rank
+        return tf.cast(self.max_rank, dtype=tf.int32)
 
     def reset_state(self):
         """Reset the state for new measurement."""
