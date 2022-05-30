@@ -16,13 +16,13 @@ jobs:
         with:
           python-version: 3.9
           cache: 'pip'
-      - name: Install dependencies
+      - name: Install workflow dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install pytest
       - name: Installing package
         run:
-          python setup.py install
+          pip install -r requirements.txt
       - name: Running unit tests
         run: |
           pytest
