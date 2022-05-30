@@ -22,7 +22,7 @@ jobs:
           pip install mypy
       - name: Installing package
         run:
-          python install -r requirements.txt
+          pip install -r requirements.txt
       - name: Running mypy
         run: |
           mypy --install-types --non-interactive --ignore-missing-imports scaaml
