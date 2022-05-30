@@ -1,0 +1,28 @@
+name: mypy
+on:
+  push:
+    paths:
+      - '**/*.py'
+      - 'mypy.ini'
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  mypy:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+          cache: 'pip'
+      - name: Install workflow dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install mypy
+      - name: Installing package
+        run:
+          pip install -r requirements.txt
+      - name: Running mypy
+        run: |
+          mypy --install-types --non-interactive --ignore-missing-imports scaaml
