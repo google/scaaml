@@ -25,11 +25,11 @@ def rank_slow_1d(y_true, y_pred) -> float:
     for i, value in enumerate(y_true):
         if value == 1:
             correct_class = i
-    result = 0.0
+    result = 0
     for pred in y_pred:
         if pred >= y_pred[correct_class]:
             result += 1
-    return result - 1
+    return float(result - 1)
 
 
 def rank_slow(y_true, y_pred):
