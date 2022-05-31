@@ -1,0 +1,4 @@
+# To avoid duplicating the dependencies, we simply refer setup.py here
+# by putting a dot and pip will do its magic.
+# The "-e" option means editable
+-e .
