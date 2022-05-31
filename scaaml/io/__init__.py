@@ -14,3 +14,4 @@
 """Dataset creation and usage."""
 
 from .dataset import Dataset  # noqa
+from .dataset_filler import DatasetFiller  # noqa

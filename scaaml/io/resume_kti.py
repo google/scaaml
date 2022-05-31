@@ -171,7 +171,20 @@ class ResumeKTI:
         return self._keys[self._index - 1], self._texts[self._index - 1]
 
     def __len__(self):
-        return len(self._keys) - self._initial_index
+        """How many pairs are there in total (including the initial_index
+        skipped pairs)."""
+        return len(self._keys)
+
+    @property
+    def initial_index(self) -> int:
+        """Returns where the current capture has started. The result is
+        divisible by shard_length (number of examples in a shard) unless the
+        progress file has been corrupted.
+
+        Returns: The number of examples captured before starting this
+        iteration.
+        """
+        return self._initial_index
 
 
 def create_resume_kti(keys: np.ndarray,

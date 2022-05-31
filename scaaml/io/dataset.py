@@ -33,6 +33,7 @@ import tensorflow as tf
 
 import scaaml
 from scaaml.utils import bytelist_to_hex
+from scaaml.io.dataset_filler import DatasetFiller
 from scaaml.io.spell_check import find_misspellings
 import scaaml.io.utils as siutils
 from .shard import Shard
@@ -46,6 +47,8 @@ class Dataset():
     TEST_SPLIT = "test"
     HOLDOUT_SPLIT = "holdout"
     SPLITS = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
+    # Largest possible part number.
+    MAX_PART_NUMBER = 10
 
     def __init__(
         self,
@@ -276,8 +279,9 @@ class Dataset():
         if split not in ["train", "test", "holdout"]:
             raise ValueError("Invalid split, must be: {train, test, holdout}")
 
-        if part < 0 or part > 10:
-            raise ValueError("Invalid part value -- muse be in [0, 10]")
+        if part < 0 or part > self.MAX_PART_NUMBER:
+            msg = "Invalid part value -- muse be in [0, self.MAX_PART_NUMBER]"
+            raise ValueError(msg)
 
         self.shard_split = split
         self.shard_part = part
@@ -1218,7 +1222,7 @@ class Dataset():
         Returns: The new dataset object.
 
         Bugs:
-          Part id might be too high (max is 10).
+          Part id might be too high (max is self.MAX_PART_NUMBER).
 
           When splitting a single shard, the key info gets distributed to the
           resulting sub-shards. When a shard contains multiple keys, this means
@@ -1253,62 +1257,73 @@ class Dataset():
             compression=self.compression,
             capture_info=self.capture_info,
             from_config=False)
+
         # The old config dictionary.
         config = self._get_config_dictionary()
+
         # Reshape each shard, keeping the group id, incrementing the part id.
         for split in config["keys_per_split"]:
-            # i is the index of the shard.
-            for i in tqdm(range(from_idx, to_idx), desc=f"Reshaping {split}."):
-                if i >= len(config["shards_list"][split]):
-                    break  # This split does not have so many shards.
-                part_id = 0
-                # j is the idex of the example.
-                for j, example in enumerate(
-                        Dataset.inspect(dataset_path=self.path,
-                                        split=split,
-                                        shard_id=i,
-                                        num_example=self.examples_per_shard,
-                                        verbose=False).as_numpy_iterator()):
-                    if j % examples_per_shard == 0:
-                        # Open a new shard
-                        shard = config["shards_list"][split][i]
+            # Deduce how many examples there are with the same key and use that
+            # as plaintexts_per_key while setting repetitions to 1. This allows
+            # to correctly and automatically determine the part id.
+            max_part_id: int = max(
+                int(shard["part"])  # Old datasets had string part id.
+                for shard in config["shards_list"][split])
+            examples_with_same_key: int = self.examples_per_shard * (
+                1 + max_part_id)
+            # How many examples to skip.
+            examples_to_skip: int = from_idx * self.examples_per_shard
+
+            # Context manager properly opens and closes shards.
+            with DatasetFiller(
+                    dataset=new_dataset,
+                    plaintexts_per_key=examples_with_same_key,
+                    repetitions=1,
+                    skip_examples=examples_to_skip,
+            ) as dataset_filler:
+                # Add all shards.
+                for shard_idx in tqdm(range(from_idx, to_idx),
+                                      desc=f"Reshaping {split}."):
+                    if shard_idx >= len(config["shards_list"][split]):
+                        break  # This split does not have so many shards.
+                    for example in Dataset.inspect(
+                            dataset_path=self.path,
+                            split=split,
+                            shard_id=shard_idx,
+                            num_example=self.examples_per_shard,
+                            verbose=False,
+                    ).as_numpy_iterator():
+                        # Get current key.
+                        shard = config["shards_list"][split][shard_idx]
                         k = shard["key"].lower()
                         cur_key = [
                             int(k[2 * i:2 * i + 2], 16)
                             for i in range(len(k) // 2)
                         ]
-                        # Compute the part_id based on the part of the original
-                        # shard.
-                        shard_divisions = (self.examples_per_shard //
-                                           examples_per_shard)
-                        real_part_id = (shard_divisions *
-                                        shard["part"]) + part_id
-                        new_dataset.new_shard(
-                            key=cur_key,
-                            part=real_part_id,
-                            group=shard["group"],
-                            split=split,
+
+                        # Get attack points and measurement.
+                        attack_points = {
+                            ap_name: example[ap_name]
+                            for ap_name in self.attack_points_info
+                        }
+                        measurement = {
+                            m_name: example[m_name]
+                            for m_name in self.measurements_info
+                        }
+                        # Check that the lengths and max values are as expected.
+                        for ap_name, ap_val in attack_points.items():
+                            ap_info = self.attack_points_info
+                            assert len(ap_val) == ap_info[ap_name]["len"]
+                            assert max(ap_val) < ap_info[ap_name]["max_val"]
+
+                        # Write the example (open new shards automatically).
+                        dataset_filler.write_example(
+                            attack_points=attack_points,
+                            measurement=measurement,
+                            current_key=cur_key,
+                            split_name=split,
                             chip_id=shard["chip_id"],
                         )
-                        part_id += 1
-                    # Write the example.
-                    attack_points = {
-                        ap_name: example[ap_name]
-                        for ap_name in self.attack_points_info
-                    }
-                    # Check that the lengths and max values are as expected.
-                    for ap_name, ap_val in attack_points.items():
-                        ap_info = self.attack_points_info
-                        assert len(ap_val) == ap_info[ap_name]["len"]
-                        assert max(ap_val) < ap_info[ap_name]["max_val"]
-                    measurement = {
-                        m_name: example[m_name]
-                        for m_name in self.measurements_info
-                    }
-                    new_dataset.write_example(attack_points=attack_points,
-                                              measurement=measurement)
-                # Close the last shard.
-                new_dataset.close_shard()
         # Check the new dataset.
         new_dataset.check()
         return new_dataset

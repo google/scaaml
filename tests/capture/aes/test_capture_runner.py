@@ -121,16 +121,20 @@ def test_capture_dataset(mock_gapam):
     examples_per_shard = 64
     plaintexts = 256
     repetitions = 1
+
     m_crypto_alg.examples_per_shard = examples_per_shard
     m_crypto_alg.plaintexts = plaintexts
     m_crypto_alg.repetitions = repetitions
-    m_crypto_alg.kti = [
-        (x % 256, x % 256) for x in range(keys * plaintexts * repetitions)
-    ]
+    m_crypto_alg.kti.__iter__ = lambda _: iter(
+        [(x % 256, x % 256) for x in range(keys * plaintexts * repetitions)])
+    m_crypto_alg.kti.__len__ = lambda _: keys * plaintexts * repetitions
+    m_crypto_alg.kti.initial_index = 0
+
     m_scope = MagicMock()
     m_communication = MagicMock()
     m_control = MagicMock()
     m_dataset = MagicMock()
+    m_dataset.examples_per_shard = examples_per_shard
     m_attack_points = MagicMock()
     m_measurement = MagicMock()
     mock_gapam.return_value = (m_attack_points, m_measurement)

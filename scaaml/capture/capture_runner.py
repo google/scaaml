@@ -17,6 +17,7 @@ from typing import Dict, List, Tuple
 from tqdm.auto import tqdm
 
 from scaaml.io import Dataset
+from scaaml.io import DatasetFiller
 from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.communication import AbstractSCommunication
@@ -118,38 +119,28 @@ class AbstractCaptureRunner(ABC):
         Args:
           crypto_alg: The object used to get attack points.
         """
-        # A part is the id of the shard of a single key, part is in [0, 10].
-        part_number = 0
-        group_number = 0  # a group is 1 full rotation of the bytes (0 - 255)
-        if len(crypto_alg.kti) == 0:
-            # Prevent calling self._dataset.close_shard when there was no shard
-            # created.
-            return
-        for trace_number, ktt in enumerate(tqdm(crypto_alg.kti)):
-            crypto_input = self.get_crypto_input(ktt)
-            attack_points, measurement = self.get_attack_points_and_measurement(
-                crypto_alg=crypto_alg, crypto_input=crypto_input)
-            # Partition the captures into shards.
-            # Captures 0, 1 ,..., examples_per_shard-1 form a single shard.
-            if trace_number % crypto_alg.examples_per_shard == 0:
-                if trace_number % (crypto_alg.plaintexts *
-                                   crypto_alg.repetitions) == 0:
-                    # One key has been processed, reset the part_number.
-                    part_number = 0
-                # Initialize a new shard.
-                self._dataset.new_shard(
-                    key=crypto_input.key_for_new_shard(),
-                    part=part_number,
-                    group=group_number,
-                    split=crypto_alg.purpose,
+        # Context manager properly opens and closes shards.
+        with DatasetFiller(
+                dataset=self._dataset,
+                plaintexts_per_key=crypto_alg.plaintexts,
+                repetitions=crypto_alg.repetitions,
+                skip_examples=crypto_alg.kti.initial_index,
+        ) as dataset_filler:
+            # Add examples, new shards are opened automatically.
+            for ktt in tqdm(crypto_alg.kti,
+                            initial=crypto_alg.kti.initial_index):
+                crypto_input = self.get_crypto_input(ktt)
+                (
+                    attack_points,
+                    measurement,
+                ) = self.get_attack_points_and_measurement(
+                    crypto_alg=crypto_alg,
+                    crypto_input=crypto_input,
+                )
+                dataset_filler.write_example(
+                    attack_points=attack_points,
+                    measurement=measurement,
+                    current_key=crypto_input.key_for_new_shard(),
+                    split_name=crypto_alg.purpose,
                     chip_id=self._control.chip_id,
                 )
-                part_number += 1
-                remaining_traces_in_prev_group = trace_number % (
-                    256 * crypto_alg.plaintexts * crypto_alg.repetitions)
-                if (trace_number > 0 and remaining_traces_in_prev_group == 0):
-                    group_number += 1
-            self._dataset.write_example(attack_points=attack_points,
-                                        measurement=measurement)
-        # Make sure we close the last shard
-        self._dataset.close_shard()
