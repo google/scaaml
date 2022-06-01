@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Intro model."""
 
-from scaaml.utils import display_config
 from tensorflow.keras import layers
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
+
+from scaaml.utils import display_config
 from scaaml.utils import get_num_gpu
 
 
@@ -104,13 +106,14 @@ def stack(x, filters, blocks, kernel_size=3, strides=2, activation="relu"):
               kernel_size=kernel_size,
               activation=activation,
               conv_shortcut=True)
-    for i in range(2, blocks):
+    for _ in range(2, blocks):
         x = block(x, filters, kernel_size=kernel_size, activation=activation)
     x = block(x, filters, strides=strides, activation=activation)
     return x
 
 
-def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):
+def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=C0103
+    del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
     filters = mdl_cfg["initial_filters"]

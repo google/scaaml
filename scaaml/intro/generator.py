@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Dataset creation and loading."""
 
 import tensorflow as tf
 import numpy as np
@@ -29,6 +30,9 @@ def create_dataset(filepattern,
                    max_trace_length=20000,
                    is_training=True,
                    shuffle_size=65535):
+    del shuffle_size  # unused
+    del is_training  # unused
+    del batch_size  # unused
 
     shards = list_shards(filepattern, num_shards)
     attack_byte = int(attack_byte)
@@ -46,6 +50,7 @@ def create_dataset(filepattern,
                                           attack_point, max_trace_length,
                                           num_traces_per_shard)
 
+            del idx  # unused
             # if not idx:
             #     x = x_shard
             #     y = y_shard
@@ -60,12 +65,12 @@ def create_dataset(filepattern,
         y = tf.concat(y, axis=0)
 
     cprint("[Generator]", "yellow")
-    cprint("|-attack point:%s" % attack_point, "blue")
-    cprint("|-attack byte:%s" % attack_byte, "green")
-    cprint("|-num shards:%s" % num_shards, "blue")
-    cprint("|-traces per shards:%s" % num_traces_per_shard, "green")
-    cprint("|-y:%s" % str(y.shape), "blue")
-    cprint("|-x:%s" % str(x.shape), "green")
+    cprint(f"|-attack point:{attack_point}", "blue")
+    cprint(f"|-attack byte:{attack_byte}", "green")
+    cprint(f"|-num shards:{num_shards}", "blue")
+    cprint(f"|-traces per shards:{num_traces_per_shard}", "green")
+    cprint(f"|-y:{str(y.shape)}", "blue")
+    cprint(f"|-x:{str(x.shape)}", "green")
 
     # make it a tf dataset
     # cprint("building tf dataset", "magenta")
@@ -73,7 +78,9 @@ def create_dataset(filepattern,
     # dataset.cache()
     # if is_training:
     #     dataset = dataset.shuffle(shuffle_size, reshuffle_each_iteration=True)
-    # dataset = dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+    # dataset = dataset.batch(batch_size).prefetch(
+    #     tf.data.experimental.AUTOTUNE
+    # )
     return (x, y)
 
 
@@ -99,6 +106,7 @@ def load_attack_shard(fname,
     Returns:
         list: keys, pts, attack_points_val, power_traces
     """
+    del full_key  # unused
     shard = np.load(fname)
     attack_byte = int(attack_byte)
 

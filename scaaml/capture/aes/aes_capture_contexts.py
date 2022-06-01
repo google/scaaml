@@ -223,7 +223,8 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int,
       chip_id: Identifies the physical chip/board used. It is unique for a
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext generators.
+      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
+        generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     # Capture using PicoScope.
@@ -266,7 +267,8 @@ def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
       cwscope (CWScope): The scope to control.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext generators.
+      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
+        generators.
       scope: The scope that does the measurements.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """

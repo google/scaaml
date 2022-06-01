@@ -11,27 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Model training."""
 
 import argparse
 import json
+import sys
 from termcolor import cprint
+
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
-from scaaml.utils import tf_cap_memory
 import tensorflow.keras.backend as K
-from scaaml.utils import get_model_stub
+
 from scaaml.intro.generator import create_dataset
 from scaaml.intro.model import get_model
+from scaaml.utils import get_model_stub
 from scaaml.utils import get_num_gpu
+from scaaml.utils import tf_cap_memory
 
 
 def train_model(config):
     tf_cap_memory()
-    TRAIN_GLOB = "datasets/%s/train/*" % config["algorithm"]
-    TEST_GLOB = "datasets/%s/test/*" % config["algorithm"]
-    TEST_SHARDS = 256
-    NUM_TRACES_PER_TEST_SHARDS = 16
-    BATCH_SIZE = config["batch_size"] * get_num_gpu()
+    TRAIN_GLOB = f"datasets/{config['algorithm']}/train/*"  # pylint: disable=C0103
+    TEST_GLOB = f"datasets/{config['algorithm']}/test/*"  # pylint: disable=C0103
+    TEST_SHARDS = 256  # pylint: disable=C0103
+    NUM_TRACES_PER_TEST_SHARDS = 16  # pylint: disable=C0103
+    BATCH_SIZE = config["batch_size"] * get_num_gpu()  # pylint: disable=C0103
 
     for attack_byte in config["attack_bytes"]:
         for attack_point in config["attack_points"]:
@@ -63,11 +67,11 @@ def train_model(config):
             K.clear_session()
 
             # display config
-            cprint("[%s]" % config["algorithm"], "magenta")
+            cprint(f"[{config['algorithm']}]", "magenta")
             cprint(">Attack params", "green")
-            cprint("|-attack_point:%s" % attack_point, "cyan")
-            cprint("|-attack_byte:%s" % attack_byte, "yellow")
-            cprint("|-input_shape:%s" % str(input_shape), "cyan")
+            cprint(f"|-attack_point:{attack_point}", "cyan")
+            cprint(f"|-attack_byte:{attack_byte}", "yellow")
+            cprint(f"|-input_shape:{str(input_shape)}", "cyan")
 
             # multi gpu
             strategy = tf.distribute.MirroredStrategy()
@@ -78,7 +82,7 @@ def train_model(config):
                 stub = get_model_stub(attack_point, attack_byte, config)
                 cb = [
                     ModelCheckpoint(monitor="val_loss",
-                                    filepath="models/%s" % stub,
+                                    filepath=f"models/{stub}",
                                     save_best_only=True),
                     TensorBoard(log_dir="logs/" + stub, update_freq="batch")
                 ]
@@ -97,6 +101,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not args.config:
         parser.print_help()
-        quit()
+        sys.exit()
     config = json.loads(open(args.config).read())
     train_model(config)

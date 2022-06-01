@@ -21,7 +21,7 @@ from glob import glob
 from multiprocessing import Pool
 import time
 from random import randint
-from termcolor import cprint, colored
+from termcolor import cprint
 
 
 def pretty_hex(val):
@@ -44,7 +44,7 @@ def bytelist_to_hex(lst, spacer=" "):
 def hex_display(lst, prefix="", color="green"):
     "display a list of int as colored hex"
     h = []
-    if len(prefix):
+    if len(prefix) > 0:
         prefix += "\t"
     for e in lst:
         h.append(pretty_hex(e))
@@ -52,13 +52,13 @@ def hex_display(lst, prefix="", color="green"):
 
 
 def get_model_stub(attack_point, attack_byte, config):
-    return "%s-%s-%s-v%s-ap_%s-byte_%s-len_%s" % (
-        config["device"], config["algorithm"], config["model"],
-        config["version"], attack_point, attack_byte, config["max_trace_len"])
+    return f"{config['device']}-{config['algorithm']}-{config['model']}-" \
+           f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-" \
+           f"len_{config['max_trace_len']}"
 
 
 def get_target_stub(config):
-    return "%s-%s" % (config["device"], config["algorithm"])
+    return f"{config['device']}-{config['algorithm']}"
 
 
 def get_num_gpu():
@@ -129,14 +129,14 @@ def display_config(config_name, config):
         config_name (str): name of the config
         config (dict): config to display
     """
-    cprint("[%s]" % config_name, "magenta")
+    cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
         if cnt % 2:
             color = "cyan"
         else:
             color = "yellow"
-        cprint("%s:%s" % (k, v), color)
+        cprint(f"{k}:{v}", color)
         cnt += 1
 
 

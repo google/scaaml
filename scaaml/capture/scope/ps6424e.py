@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import ctypes
 from decimal import Decimal, ROUND_HALF_DOWN
-import time
 import traceback
 from typing import OrderedDict
 
@@ -14,7 +13,7 @@ from chipwhisperer.common.utils import util
 import numpy as np
 from picosdk.ps6000a import ps6000a as ps
 from picosdk.PicoDeviceEnums import picoEnum
-from picosdk.functions import adc2mV, assert_pico_ok, mV2adc
+from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
 
@@ -24,10 +23,11 @@ def assert_ok(status):
     try:
         assert_pico_ok(status)
     except PicoSDKCtypesError as e:
-        raise IOError(e)
+        raise IOError from e
 
 
 class CaptureSettings(object):
+    """Channel settings."""
     _name = "Capture Setting"
 
     CHANNEL_COUPLINGS = {
@@ -110,21 +110,21 @@ class CaptureSettings(object):
             self._couplings[name] = val
             self._rev_couplings[val] = name
         # channels
-        self._chList = {}
-        self._rev_chList = {}
-        for t in self.CHANNELS:
-            if self.CHANNELS[t] < self.CHANNELS["MaxChannels"]:
-                self._chList[t] = self.CHANNELS[t]
-                self._rev_chList[self.CHANNELS[t]] = t
+        self._ch_list = {}
+        self._rev_ch_list = {}
+        for channel_name, channel_id in self.CHANNELS.items():
+            if channel_id < self.CHANNELS["MaxChannels"]:
+                self._ch_list[channel_name] = channel_id
+                self._rev_ch_list[channel_id] = channel_name
         # ranges
-        self._chRange = {}
-        self._chRangeList = []
-        self._chRangeApiValue = {}
+        self._ch_range = {}
+        self._ch_range_list = []
+        self._ch_range_api_value = {}
         for key in self.CHANNEL_RANGE:
-            self._chRange[key["rangeV"]] = key["rangeStr"]
-            self._chRangeList.append(key["rangeV"])
-            self._chRangeApiValue[key["rangeV"]] = key["apivalue"]
-        self._chRangeList.sort()
+            self._ch_range[key["rangeV"]] = key["rangeStr"]
+            self._ch_range_list.append(key["rangeV"])
+            self._ch_range_api_value[key["rangeV"]] = key["apivalue"]
+        self._ch_range_list.sort()
 
         self._channel = 0
         self._probe_attenuation = 1
@@ -146,13 +146,13 @@ class CaptureSettings(object):
 
     @property
     def channel(self):
-        return self._rev_chList[self._channel]
+        return self._rev_ch_list[self._channel]
 
     @channel.setter
     def channel(self, val):
-        if val not in self._chList:
+        if val not in self._ch_list:
             raise ValueError("Unknown channel")
-        self._channel = self._chList[val]
+        self._channel = self._ch_list[val]
 
     @property
     def probe_attenuation(self):
@@ -177,12 +177,12 @@ class CaptureSettings(object):
     @property
     def ps_api_range(self):
         """Range value for PicoScope API."""
-        return self._chRangeApiValue[self._range]
+        return self._ch_range_api_value[self._range]
 
     @property
     def range(self):
         """Human readable range voltage string."""
-        return self._chRange[self._range]
+        return self._ch_range[self._range]
 
     @range.setter
     def range(self, val):
@@ -190,12 +190,12 @@ class CaptureSettings(object):
             raise ValueError("Unsupported value (should be float)")
 
         # Find the smallest supported range that is higher than val
-        for r in self._chRangeList:
+        for r in self._ch_range_list:
             if val <= r:
                 self._range = r
                 return
         raise ValueError(f"Unsupported value (too large), got {val}, maximum "
-                         f"is {self._chRangeList[-1]}")
+                         f"is {self._ch_range_list[-1]}")
 
     def _dict_repr(self):
         ret = OrderedDict()
@@ -213,6 +213,7 @@ class CaptureSettings(object):
 
 
 class TriggerSettings(CaptureSettings):
+    """Trigger channel settings."""
     _name = "Trigger Setting"
 
     THRESHOLD_DIRECTION = {
@@ -230,16 +231,16 @@ class TriggerSettings(CaptureSettings):
 
     def __init__(self):
         CaptureSettings.__init__(self)
-        self._trigDir = {}
-        self._rev_trigDir = {}
+        self._trig_dir = {}
+        self._rev_trig_dir = {}
         for name, val in self.THRESHOLD_DIRECTION.items():
-            self._trigDir[name] = val
-            self._rev_trigDir[val] = name
+            self._trig_dir[name] = val
+            self._rev_trig_dir[val] = name
 
         self._channel = 1
         self._range = 5.0
         self._coupling = self._couplings["DC"]
-        self._trigger_direction = self._trigDir["Rising"]
+        self._trigger_direction = self._trig_dir["Rising"]
         self._trigger_level = 2  # V
 
     @property
@@ -271,13 +272,13 @@ class TriggerSettings(CaptureSettings):
 
     @property
     def trigger_direction(self):
-        return self._rev_trigDir[self._trigger_direction]
+        return self._rev_trig_dir[self._trigger_direction]
 
     @trigger_direction.setter
     def trigger_direction(self, val):
-        if val not in self._trigDir:
+        if val not in self._trig_dir:
             raise ValueError("Unupported value")
-        self._trigger_direction = self._trigDir[val]
+        self._trigger_direction = self._trig_dir[val]
 
     def _dict_repr(self):
         ret = OrderedDict()
@@ -291,6 +292,7 @@ class TriggerSettings(CaptureSettings):
 
 
 class Pico6424E(ChipWhispererCommonInterface):
+    """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS = 4  # Number of analog channels
     #  Resolutions 8bit and 10bit work, but 12bit does not seem to be working
@@ -300,6 +302,8 @@ class Pico6424E(ChipWhispererCommonInterface):
     DOWNSAMPLING_RATIO = 1
 
     def __init__(self, *args, **kwargs):
+        del args  # unused
+        del kwargs  # unused
         super().__init__()
         self.ps_handle = ctypes.c_int16()
 
@@ -317,8 +321,9 @@ class Pico6424E(ChipWhispererCommonInterface):
         # _buffers[1] is the trigger buffer.
         self._buffers = [[], []]
 
-        self.connectStatus = False  # Connected status for cw
-        self._maxADC = ctypes.c_int16()  # To get mV values
+        # Part of cw API
+        self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103
+        self._max_adc = ctypes.c_int16()  # To get mV values
 
     @staticmethod
     def _get_timebase(sample_rate: float):
@@ -364,6 +369,7 @@ class Pico6424E(ChipWhispererCommonInterface):
                 return ctypes.c_uint32(i)
 
     def con(self, sn=None):
+        del sn  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit
@@ -378,20 +384,21 @@ class Pico6424E(ChipWhispererCommonInterface):
             # PICO_FIRMWARE_UPDATE_REQUIRED_TO_USE_DEVICE_WITH_THIS_DRIVER.
 
             # Get analog to digital converter limits.
-            minADC = ctypes.c_int16()
             assert_ok(
                 ps.ps6000aGetAdcLimits(
                     self.ps_handle,  # handle
                     self._RESOLUTION,  # resolution
-                    ctypes.byref(minADC),  # minADC
-                    ctypes.byref(self._maxADC),  # maxADC
+                    ctypes.byref(ctypes.c_int16()),  # minADC
+                    ctypes.byref(self._max_adc),  # maxADC
                 ))
 
             # Set channels and trigger.
             self._set_channels()
             self.connectStatus = True
             return True
-        except Exception as exc:
+        except Exception:  # pylint: disable=W0703
+            # Whatever happened call disconnect.
+
             # Print stack traceback.
             traceback.print_exc()
 
@@ -425,7 +432,6 @@ class Pico6424E(ChipWhispererCommonInterface):
                 f"Scope {self._name} is not connected. Connect it first.")
 
         # Run the capture block
-        timeIndisposedMs = ctypes.c_double(0)
         assert_ok(
             ps.ps6000aRunBlock(
                 self.ps_handle,  # handle
@@ -434,7 +440,7 @@ class Pico6424E(ChipWhispererCommonInterface):
                 self.DOWNSAMPLING_RATIO *
                 self._sample_length,  # Post-trigger samples
                 self._timebase,  # timebase
-                ctypes.byref(timeIndisposedMs),
+                ctypes.byref(ctypes.c_double(0)),  # timeIndisposedMs
                 0,  # segmentIndex
                 None,  # lpReady callback
                 None,  # pParameter
@@ -451,6 +457,8 @@ class Pico6424E(ChipWhispererCommonInterface):
 
         Returns: True if timeout happened, False otherwise.
         """
+        del poll_done  # unused
+
         # Wait until the result is ready
         ready = ctypes.c_int16(0)
         check = ctypes.c_int16(0)
@@ -476,11 +484,11 @@ class Pico6424E(ChipWhispererCommonInterface):
         self._buffers[0] = adc2mV(
             self._trace_buffer,
             self.trace.ps_api_range,  # range
-            self._maxADC)[:max_samples.value]
+            self._max_adc)[:max_samples.value]
         self._buffers[1] = adc2mV(
             self._trigger_buffer,
             self.trigger.ps_api_range,  # range
-            self._maxADC)[:max_samples.value]
+            self._max_adc)[:max_samples.value]
 
         # print("Overflow: {}".format(overflow.value))
         # print("Samples: {}".format(len(self._trace_buffer)))
@@ -499,11 +507,12 @@ class Pico6424E(ChipWhispererCommonInterface):
         """
         if as_int:
             msg = "Returning trace as integers is not implemented."
-            raise NotImplemented(msg)
+            raise NotImplementedError(msg)
 
         return np.array(self._buffers[0][:], dtype=np.float32)
 
-    getLastTrace = util.camel_case_deprecated(get_last_trace)
+    # Legacy naming.
+    getLastTrace = util.camel_case_deprecated(get_last_trace)  # pylint: disable=C0103
 
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
@@ -540,7 +549,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             ps.ps6000aSetChannelOn(
                 self.ps_handle,  # handle
                 self.trace.ps_api_channel,  # channel
-                self.trace._coupling,  # coupling
+                self.trace._coupling,  # coupling  # pylint: disable=W0212
                 self.trace.ps_api_range,  # range
                 0,  # analogue offset
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
@@ -551,7 +560,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             ps.ps6000aSetChannelOn(
                 self.ps_handle,  # handle
                 self.trigger.ps_api_channel,  # channel
-                self.trigger._coupling,  # coupling
+                self.trigger._coupling,  # coupling  # pylint: disable=W0212
                 self.trigger.ps_api_range,  # range
                 0,  # analogue offset
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
@@ -644,8 +653,8 @@ class Pico6424E(ChipWhispererCommonInterface):
 
     def _dict_repr(self):
         ret = OrderedDict()
-        ret["trace"] = self.trace._dict_repr()
-        ret["trigger"] = self.trigger._dict_repr()
+        ret["trace"] = self.trace._dict_repr()  # pylint: disable=W0212
+        ret["trigger"] = self.trigger._dict_repr()  # pylint: disable=W0212
         ret["sample_rate"] = self.sample_rate
         ret["sample_length"] = self.sample_length
         ret["sample_offset"] = self.sample_offset

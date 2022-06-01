@@ -177,6 +177,7 @@ class MaxRank(keras.metrics.Metric):
           sample_weight (Optional weights): Does not make sense, as we count
             maximum.
         """
+        del sample_weight  # unused
         rank_update = rank(y_true=y_true, y_pred=y_pred)
         rank_update = tf.math.reduce_max(rank_update)
         self.max_rank.assign(tf.math.maximum(self.max_rank, rank_update))

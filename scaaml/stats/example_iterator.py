@@ -80,7 +80,10 @@ class ExampleIterator:
             return next(self._shard_iterator)
         except StopIteration:
             if self._shard_idx >= len(self._shards_list):
-                raise StopIteration
+                # The StopIteration we just caught was only from one shard. It
+                # does not make sense to re-raise it, since we raise only after
+                # we are done will all shards.
+                raise StopIteration  # pylint: disable=W0707
             shard_id = self._shards_list[self._shard_idx][0]
             shard = self._shards_list[self._shard_idx][1]
             split = self._shards_list[self._shard_idx][2]

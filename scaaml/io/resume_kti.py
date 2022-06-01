@@ -63,12 +63,13 @@ def _create_resume_kti(keys: np.ndarray,
     function.
 
     Args:
-        keys: Numpy array of keys to capture traces with. Non-zero length, length
-          is a multiple of shard_length. Different array for keys and texts are to
-          allow different data types. A key-text pair is always (key[i], text[i]).
+        keys: Numpy array of keys to capture traces with. Non-zero length,
+          length is a multiple of shard_length. Different array for keys and
+          texts are to allow different data types. A key-text pair is always
+          (key[i], text[i]).
         texts: Numpy array of texts. Same length as keys.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves progress
-          after finishing a shard.
+        shard_length: How many pairs are in a shard. ResumeKTI autosaves
+          progress after finishing a shard.
         kt_filename: File where to save shard_length, keys, texts. If the file
           exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.
@@ -106,9 +107,9 @@ class ResumeKTI:
 
         Args:
             kt_filename: File to load shard_length, keys, texts.
-            progress_filename: The file with the number of traces captured so far.
-              Gets updated by iterating shard length times or manually calling
-              _save_progress.
+            progress_filename: The file with the number of traces captured so
+              far.  Gets updated by iterating shard length times or manually
+              calling _save_progress.
             allow_pickle: Parameter for numpy.load.
         """
         # Load shard length, keys, and texts.
@@ -135,15 +136,15 @@ class ResumeKTI:
     def _save_progress(self) -> None:
         """Save the current iteration index.
 
-        Save the number of traces in all finished shards (how many finished traces
-        have been captured inside finished shards).  Updates content of the file
-        self._progress_filename.
+        Save the number of traces in all finished shards (how many finished
+        traces have been captured inside finished shards).  Updates content of
+        the file self._progress_filename.
 
         Not atomic. Calling this 1000 times takes ~1s.
         """
         with open(self._progress_filename, 'w') as progress_file:
-            # Ensure the saved index is the largest multiple of self._shard_length
-            # which is at most self._index.
+            # Ensure the saved index is the largest multiple of
+            # self._shard_length which is at most self._index.
             i = self._index - (self._index % self._shard_length
                               )  # End of last shard.
             progress_file.write(str(i))
@@ -154,8 +155,8 @@ class ResumeKTI:
     def __next__(self):
         """Next with auto-save.
 
-        Auto-save when a new shard is starting (after each shard length + 1 calls
-        without a _save_progress call), thus updates content of
+        Auto-save when a new shard is starting (after each shard length + 1
+        calls without a _save_progress call), thus updates content of
         self._progress_filename file.
 
         Returns:
@@ -182,12 +183,13 @@ def create_resume_kti(keys: np.ndarray,
     use.
 
     Args:
-        keys: Numpy array of keys to capture traces with. Non-zero length, length
-          is a multiple of shard_length. Different array for keys and texts are to
-          allow different data types. A key-text pair is always (key[i], text[i]).
+        keys: Numpy array of keys to capture traces with. Non-zero length,
+          length is a multiple of shard_length. Different array for keys and
+          texts are to allow different data types. A key-text pair is always
+          (key[i], text[i]).
         texts: Numpy array of texts. Same length as keys.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves progress
-          after finishing a shard.
+        shard_length: How many pairs are in a shard. ResumeKTI autosaves
+          progress after finishing a shard.
         kt_filename: File where to save shard_length, keys, texts. If the file
           exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.

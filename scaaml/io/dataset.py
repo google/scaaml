@@ -124,8 +124,8 @@ class Dataset():
         if not self.firmware_url:
             raise ValueError("Firmware URL is required")
 
-        self.slug = "%s_%s_%s_v%s_%s" % (shortname, algorithm, architecture,
-                                         implementation, version)
+        self.slug = f"{shortname}_{algorithm}_{architecture}_" \
+                    f"v{implementation}_{version}"
         if from_config:
             self.path = Path(root_path)
             self.root_path = str(self.path.parent)
@@ -143,7 +143,7 @@ class Dataset():
                 Path(self.path / "holdout").mkdir()
 
         if verbose:
-            cprint("Dataset path: %s" % self.path, "green")
+            cprint(f"Dataset path: {self.path}", "green")
 
         # current shard tracking
         self.shard_key = None
@@ -223,7 +223,7 @@ class Dataset():
 
         Returns: Lowercase filename of the shard (including .tfrec filetype).
         """
-        sname = "%s_%s_%s.tfrec" % (shard_group, shard_key, shard_part)
+        sname = f"{shard_group}_{shard_key}_{shard_part}.tfrec"
         return sname.lower()
 
     @staticmethod
@@ -288,7 +288,7 @@ class Dataset():
         # shard name
         fname = Dataset._shard_name(self.shard_group, self.shard_key,
                                     self.shard_part)
-        self.shard_relative_path = "%s/%s" % (split, fname)
+        self.shard_relative_path = f"{split}/{fname}"
         self.shard_path = str(self.path / self.shard_relative_path)
 
         # new shard
@@ -412,7 +412,7 @@ class Dataset():
         outputs = {}  # model outputs
         for name in attack_points:
             for b in bytes:
-                n = "%s_%s" % (name, b)
+                n = f"{name}_{b}"
                 ap = dataset.attack_points_info[name]
                 outputs[n] = ap
                 outputs[n]["ap"] = name
@@ -603,7 +603,9 @@ class Dataset():
                 Dataset._check_shard_metadata(shard_info=shard_info,
                                               dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
-        if "test" in self.examples_per_split and "train" in self.examples_per_split:
+        has_test: bool = Dataset.TEST_SPLIT in self.examples_per_split
+        has_train: bool = Dataset.TRAIN_SPLIT in self.examples_per_split
+        if has_test and has_train:
             self._check_disjoint_keys(pbar=pbar,
                                       key_ap=key_ap,
                                       deep_check=deep_check)
@@ -812,12 +814,11 @@ class Dataset():
         """
         for i in pbar(range(len(train_shards)),
                       desc="Checking test key uniqueness"):
-            for j, example in enumerate(
-                    Dataset.inspect(dataset_path=dpath,
-                                    split="train",
-                                    shard_id=i,
-                                    num_example=examples_per_shard,
-                                    verbose=False).as_numpy_iterator()):
+            for example in Dataset.inspect(dataset_path=dpath,
+                                           split="train",
+                                           shard_id=i,
+                                           num_example=examples_per_shard,
+                                           verbose=False).as_numpy_iterator():
                 cur_key = example[key_ap].astype(np.uint8).tobytes()
                 if cur_key in seen_keys:
                     raise ValueError(
@@ -1066,7 +1067,7 @@ class Dataset():
         save_path = Path(f"{str(fpath)}.sav.{time()}.json")
         assert not save_path.exists()  # Do not overwrite.
         save_path.write_text(fpath.read_text())
-        cprint("Saving old config to %s" % save_path, "cyan")
+        cprint(f"Saving old config to {save_path}", "cyan")
 
         # Rewrite with the new config.
         cprint("Writing cleaned config", "green")
@@ -1142,7 +1143,9 @@ class Dataset():
           # Either call:
           dataset.move_shards(from_split="train", to_split="test", shards=3)
           # Or call:
-          dataset.move_shards(from_split="train", to_split="test", shards={0, 1, 2})
+          dataset.move_shards(from_split="train",
+                              to_split="test",
+                              shards={0, 1, 2})
         """
         if isinstance(shards, int):
             shards = set(range(shards))
@@ -1270,7 +1273,8 @@ class Dataset():
                         ])
                         # Compute the part_id based on the part of the original
                         # shard.
-                        shard_divisions = self.examples_per_shard // examples_per_shard
+                        shard_divisions = (self.examples_per_shard //
+                                           examples_per_shard)
                         real_part_id = (shard_divisions *
                                         shard["part"]) + part_id
                         new_dataset.new_shard(
@@ -1369,13 +1373,13 @@ class Dataset():
 
         # Update shards.
         for split in other_dataset.shards_list:
-            seen_keys = set()
-            seen_keys_per_group = dict()
+            seen_keys: Set = set()
+            seen_keys_per_group: Dict = {}
             for shard in tqdm(other_dataset.shards_list[split],
                               desc=f"Merging {split}"):
                 self.shards_list[split].append(shard)
                 seen_keys.add(shard["key"])
-                if shard["group"] not in seen_keys_per_group.keys():
+                if shard["group"] not in seen_keys_per_group:
                     seen_keys_per_group[shard["group"]] = {shard["key"]}
                 else:
                     seen_keys_per_group[shard["group"]].add(shard["key"])

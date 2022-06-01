@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Model."""
 
 from tabulate import tabulate
 from tensorflow.keras.models import load_model
@@ -38,7 +39,7 @@ def get_models_by_attack_point(config):
         status[attack_point] = "complete"
         for attack_byte in range(16):
             stub = get_model_stub(attack_point, attack_byte, config)
-            model_path = "models/%s" % stub
+            model_path = f"models/{stub}"
             if not Path(model_path):
                 status[attack_byte] = "incomplete"
                 models[attack_point].append(None)
@@ -103,7 +104,7 @@ def get_models_list(config, verbose=0):
     for attack_point in config["attack_points"]:
         for attack_byte in config["attack_bytes"]:
             stub = get_model_stub(attack_point, attack_byte, config)
-            model_path = "models/%s" % stub
+            model_path = f"models/{stub}"
             if not Path(model_path):
                 continue
             else:

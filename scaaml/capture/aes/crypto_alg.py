@@ -21,7 +21,8 @@ from scaaml.io import resume_kti
 
 
 class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
-    """attack points and maybe some basic information about it (e.g. key length, etc.)"""
+    """Attack points and maybe some basic information about it (e.g. key
+    length, etc.)."""
 
     def __init__(self,
                  firmware_sha256: str,

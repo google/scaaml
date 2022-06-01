@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Dataset shard manipulation."""
 
 import math
 import tensorflow as tf
@@ -63,9 +64,9 @@ class Shard():
 
     def read(self, num=10) -> Dict:
         """Open and read N examples from the shard"""
-        _shard = tf.data.TFRecordDataset(self.path,
-                                         compression_type=self.compression)
-        data = _shard.map(self._from_tfrecord)
+        shard = tf.data.TFRecordDataset(self.path,
+                                        compression_type=self.compression)
+        data = shard.map(self._from_tfrecord)
         return data.take(num)
 
     def close(self) -> Dict:

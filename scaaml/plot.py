@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Plotting functions."""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,7 +60,7 @@ def plot_trace(trace,
         plt.title(title)
 
     if x_labels:
-        plt.xticks([i for i in range(len(trace))], x_labels)
+        plt.xticks(list(range(len(trace))), x_labels)
 
     plt.show()
 
@@ -96,11 +97,15 @@ def plot_traces(traces, labels=None, title=None, xlabel=None, ylabel=None):
         plt.title(title)
     if labels:
         plt.legend()
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
     plt.show()
 
 
 def plot_target_distribution(class_ids, title="Y distributions"):
-    plt.title("%s %d examples" % (title, len(class_ids)))
+    plt.title(f"{title} {len(class_ids)} examples")
     plt.hist(class_ids, bins=256)
     plt.xlabel("target value")
     plt.ylabel("example counts")
@@ -123,8 +128,7 @@ def plot_confusion_matrix(class_ids,
     """
 
     cm = np.array(tf.math.confusion_matrix(class_ids, predicted_class_ids))
-    accuracy = np.trace(cm) / np.sum(cm).astype("float")
-    misclass = 1 - accuracy
+    # accuracy = np.trace(cm) / np.sum(cm).astype("float")
 
     if cmap is None:
         cmap = plt.get_cmap("Blues")
