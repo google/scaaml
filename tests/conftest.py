@@ -16,7 +16,7 @@ import pytest
 from pathlib import Path
 
 TEST_ROOT_DIR = Path(__file__).parent
-TEST_DATA_ROOT = TEST_ROOT_DIR / 'data'
+TEST_DATA_ROOT = TEST_ROOT_DIR / "data"
 
 
 @pytest.fixture(scope="session")

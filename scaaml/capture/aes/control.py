@@ -48,9 +48,9 @@ class CWControl(AbstractSControl):
           sleep_after: Time to sleep after turning nrst high_z (in seconds).
         """
         sleep(sleep_before)
-        self._scope_io.nrst = 'low'
+        self._scope_io.nrst = "low"
         sleep(sleep_between)
-        self._scope_io.nrst = 'high_z'
+        self._scope_io.nrst = "high_z"
         sleep(sleep_after)
 
     def initialize(self):

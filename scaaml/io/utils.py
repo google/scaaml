@@ -32,19 +32,19 @@ def ddict(value: Optional[Dict], levels: int, type_var):
       type_var: The type of the default value.
 
     Example use:
-      >>> d = {'a': 1, 'b': 2}
+      >>> d = {"a": 1, "b": 2}
       >>> # e is defaultdict(int) updated by d
       >>> e = ddict(value=d, levels=1, type_var=int)
       >>> e
-      defaultdict(<class 'int'>, {'a': 1, 'b': 2})
-      >>> D = {'A': {'a': 1, 'b': 2}, 'C': {}}
+      defaultdict(<class 'int'>, {"a": 1, "b": 2})
+      >>> D = {"A": {"a": 1, "b": 2}, "C": {}}
       >>> # E is defaultdict(lambda: defaultdict(int)) updated by D
       >>> E = ddict(value=D, levels=2, type_var=int)
       >>> E
       defaultdict(<function ddict.<locals>.<lambda> at 0x7fed09f4c790>,
-              {'A': defaultdict(<class 'int'>,
-                  {'a': 1, 'b': 2}),
-              'C': defaultdict(<class 'int'>, {})})
+              {"A": defaultdict(<class 'int'>,
+                  {"a": 1, "b": 2}),
+              "C": defaultdict(<class 'int'>, {})})
       >>> f = ddict(value=None, levels=1, type_var=list)
     """
 
@@ -69,7 +69,7 @@ def sha256sum(filename):
     h = hashlib.sha256()
     b = bytearray(128 * 1024)
     mv = memoryview(b)
-    with open(filename, 'rb', buffering=0) as f:
+    with open(filename, "rb", buffering=0) as f:
         for n in iter(lambda: f.readinto(mv), 0):
             h.update(mv[:n])
     return h.hexdigest()

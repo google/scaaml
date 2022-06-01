@@ -21,12 +21,12 @@ from scaaml.capture.scope import PicoScope
 def capture_ascad_default_parameters(
         firmware_sha256: str,
         crypto_implementation=AESSBOX,
-        algorithm: str = 'simpleserial-aes',
+        algorithm: str = "simpleserial-aes",
         version: int = 1,
-        root_path: str = '/mnt/storage/chipwhisperer',
-        url: str = '',
-        firmware_url: str = '',
-        paper_url: str = '',
+        root_path: str = "/mnt/storage/chipwhisperer",
+        url: str = "",
+        firmware_url: str = "",
+        paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
         measurements_info=None,
@@ -37,10 +37,10 @@ def capture_ascad_default_parameters(
         holdout_keys: int = 0 * 1024,
         holdout_plaintexts: int = 1) -> None:
     """SCAAML STM32F415 ASCAD specific defaults for capture_ascad_dataset."""
-    architecture: str = 'CW308_STM32F415'
-    implementation: str = 'ASCAD'
-    shortname: str = 'stm32f415_hwaes'
-    description: str = 'SCAAML HWAES'
+    architecture: str = "CW308_STM32F415"
+    implementation: str = "ASCAD"
+    shortname: str = "stm32f415_hwaes"
+    description: str = "SCAAML HWAES"
 
     # Parameters for the scope
     samples: int = 160_000
@@ -50,12 +50,12 @@ def capture_ascad_default_parameters(
     trigger_range: float = 5.0  # V
     trigger_level: float = 1.9  # V
     capture_info = {
-        'samples': samples,
-        'trigger_level': trigger_level,
-        'trigger_range': trigger_range,
-        'sample_rate': sample_rate,
-        'offset': offset,
-        'trace_probe_range': trace_probe_range,
+        "samples": samples,
+        "trigger_level": trigger_level,
+        "trigger_range": trigger_range,
+        "sample_rate": sample_rate,
+        "offset": offset,
+        "trace_probe_range": trace_probe_range,
     }
 
     capture_aes_dataset(

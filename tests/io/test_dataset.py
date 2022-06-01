@@ -39,34 +39,34 @@ def dataset_constructor_kwargs(root_path, **kwargs):
       kwargs: Arguments to update the defaults.
 
     Example use:
-      # Set 'version' to 2, add new parameter 'new_par' to 'new_value' and
-      # remove 'firmware_url':
+      # Set "version" to 2, add new parameter "new_par" to "new_value" and
+      # remove "firmware_url":
       result = dataset_constructor_kwargs(root_path=root_path,
                                           version=2,
-                                          new_par='new_value')
-      del result['firmware_url']
+                                          new_par="new_value")
+      del result["firmware_url"]
     """
     result = {
-        'root_path': root_path,
-        'shortname': 'shortname',
-        'architecture': 'architecture',
-        'implementation': 'implementation',
-        'algorithm': 'algorithm',
-        'version': 1,
-        'paper_url': 'http://paper.url',
-        'firmware_url': 'http://firmware.url',
-        'licence': 'CC BY 4.0',
-        'description': 'description',
-        'url': 'http://download.url',
-        'firmware_sha256': 'abc123',
-        'examples_per_shard': 1,
-        'measurements_info': {
+        "root_path": root_path,
+        "shortname": "shortname",
+        "architecture": "architecture",
+        "implementation": "implementation",
+        "algorithm": "algorithm",
+        "version": 1,
+        "paper_url": "http://paper.url",
+        "firmware_url": "http://firmware.url",
+        "licence": "CC BY 4.0",
+        "description": "description",
+        "url": "http://download.url",
+        "firmware_sha256": "abc123",
+        "examples_per_shard": 1,
+        "measurements_info": {
             "trace1": {
                 "type": "power",
                 "len": 1024,
             }
         },
-        'attack_points_info': {
+        "attack_points_info": {
             "key": {
                 "len": 16,
                 "max_val": 256
@@ -80,7 +80,7 @@ def dataset_constructor_kwargs(root_path, **kwargs):
 def test_defaultdict(tmp_path):
     np.random.seed(42)
     # Create the dataset, write some examples, reload and write some more. If
-    # reload does not create a defaultdict, we get a KeyError (for 'test'
+    # reload does not create a defaultdict, we get a KeyError (for "test"
     # split).
     chip_id = 13
     kwargs = dataset_constructor_kwargs(root_path=tmp_path)
@@ -88,13 +88,13 @@ def test_defaultdict(tmp_path):
     key = np.random.randint(0, 255, 16)
     trace1 = np.random.random(1024)
     trace2 = np.random.random(1024)
-    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
     del ds
     key2 = np.random.randint(0, 255, 16)
     ds = Dataset.get_dataset(**kwargs)
-    ds.new_shard(key=key2, part=1, split='test', group=1, chip_id=chip_id)
+    ds.new_shard(key=key2, part=1, split="test", group=1, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
 
@@ -103,7 +103,7 @@ def test_mutable_defaults(tmp_path):
     """If min_values defaults to {} this test fails (default value will get
     changed -- see mutable default arguments)."""
     np.random.seed(24)
-    path_a = tmp_path / 'a'
+    path_a = tmp_path / "a"
     path_a.mkdir(parents=True, exist_ok=True)
     ds1 = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=path_a))
     key = np.random.randint(0, 255, 16)
@@ -111,37 +111,37 @@ def test_mutable_defaults(tmp_path):
     trace1[2] = 0.8  # max_val is written before deleting ds
     trace1[1] = -0.3  # max_val is written before deleting ds
     chip_id = 1
-    ds1.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds1.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds1.write_example({"key": key}, {"trace1": trace1})
     ds1.close_shard()
 
     # Different dataset
-    path_b = tmp_path / 'b'
+    path_b = tmp_path / "b"
     path_b.mkdir(parents=True, exist_ok=True)
     ds2 = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=path_b))
-    assert ds2.min_values == {'trace1': math.inf}
-    assert ds2.max_values == {'trace1': 0.}
+    assert ds2.min_values == {"trace1": math.inf}
+    assert ds2.max_values == {"trace1": 0.}
 
 
 def test_version_old_software(tmp_path):
     """Newer version of scaaml was used to capture the dataset."""
     # Create the dataset
-    scaaml.__version__ = '2.0.0'
+    scaaml.__version__ = "2.0.0"
     ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
-    scaaml.__version__ = '1.2.3'
+    scaaml.__version__ = "1.2.3"
     # Reload the dataset raises
     with pytest.raises(ValueError) as verror:
         ds = Dataset.from_config(ds.path)
-    assert 'SCAAML module is outdated' in str(verror.value)
+    assert "SCAAML module is outdated" in str(verror.value)
 
 
 def test_version_newer_software(tmp_path):
     """Older version of scaaml was used to capture the dataset."""
     # Create the dataset
-    scaaml.__version__ = '1.2.3'
+    scaaml.__version__ = "1.2.3"
     ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     # Increment library version
-    scaaml.__version__ = '1.3.3'
+    scaaml.__version__ = "1.3.3"
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
 
@@ -155,17 +155,17 @@ def test_version_same(tmp_path):
 
 
 def test_firmware_url_mandatory(tmp_path):
-    kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url='')
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url="")
     with pytest.raises(ValueError) as verror:
         ds = Dataset.get_dataset(**kwargs)
-    assert 'Firmware URL is required' in str(verror.value)
+    assert "Firmware URL is required" in str(verror.value)
 
 
 def test_get_config_dictionary_urls(tmp_path):
-    licence = 'some licence'
-    firmware_url = 'firmware url'
-    paper_url = 'paper URL'
-    url = 'U R L'
+    licence = "some licence"
+    firmware_url = "firmware url"
+    paper_url = "paper URL"
+    url = "U R L"
     kwargs = dataset_constructor_kwargs(root_path=tmp_path,
                                         licence=licence,
                                         firmware_url=firmware_url,
@@ -174,27 +174,27 @@ def test_get_config_dictionary_urls(tmp_path):
     # Create the dataset
     ds = Dataset.get_dataset(**kwargs)
     conf = ds._get_config_dictionary()
-    assert conf['licence'] == licence
-    assert conf['url'] == url
-    assert conf['paper_url'] == paper_url
-    assert conf['firmware_url'] == firmware_url
+    assert conf["licence"] == licence
+    assert conf["url"] == url
+    assert conf["paper_url"] == paper_url
+    assert conf["firmware_url"] == firmware_url
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
     conf = ds._get_config_dictionary()
-    assert conf['licence'] == licence
-    assert conf['url'] == url
-    assert conf['paper_url'] == paper_url
-    assert conf['firmware_url'] == firmware_url
+    assert conf["licence"] == licence
+    assert conf["url"] == url
+    assert conf["paper_url"] == paper_url
+    assert conf["firmware_url"] == firmware_url
 
 
 def test_scaaml_version_present(tmp_path):
     ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     config = ds._get_config_dictionary()
-    assert 'scaaml_version' in config.keys()
+    assert "scaaml_version" in config.keys()
 
 
 def test_check_key_ap(tmp_path):
-    key_ap = 'k'
+    key_ap = "k"
     # Fix numpy randomness not to cause flaky tests.
     np.random.seed(42)
     dataset = Dataset(**dataset_constructor_kwargs(root_path=tmp_path,
@@ -209,12 +209,12 @@ def test_check_key_ap(tmp_path):
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
-    dataset.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    dataset.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
     dataset.write_example({key_ap: key1},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
     key2 = np.random.randint(256, size=16)
-    dataset.new_shard(key=key2, part=0, split='test', group=0, chip_id=1)
+    dataset.new_shard(key=key2, part=0, split="test", group=0, chip_id=1)
     dataset.write_example({key_ap: key2},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
@@ -222,14 +222,14 @@ def test_check_key_ap(tmp_path):
     dataset.check(key_ap=key_ap)
 
     # Make a duplicate key
-    dataset.new_shard(key=key1, part=0, split='test', group=0, chip_id=1)
+    dataset.new_shard(key=key1, part=0, split="test", group=0, chip_id=1)
     dataset.write_example({key_ap: key1},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
 
     with pytest.raises(ValueError) as verror:
         dataset.check(key_ap=key_ap)
-    assert 'Duplicate key' in str(verror.value)
+    assert "Duplicate key" in str(verror.value)
 
 
 def test_merge_with(tmp_path):
@@ -238,28 +238,28 @@ def test_merge_with(tmp_path):
     resulting = Dataset(**dataset_constructor_kwargs(
         root_path=tmp_path,
         examples_per_shard=1,
-        shortname='resulting',
+        shortname="resulting",
     ))
     other_ds = Dataset(**dataset_constructor_kwargs(
         root_path=tmp_path,
         examples_per_shard=1,
-        shortname='other_ds',
+        shortname="other_ds",
     ))
     trace_len = 1024
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
-    other_ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    other_ds.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
     other_ds.write_example({"key": key1}, {"trace1": trace})
     trace[0] = 0.9
-    other_ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    other_ds.new_shard(key=key1, part=1, split="train", group=0, chip_id=1)
     other_ds.write_example({"key": key1}, {"trace1": trace})
     # Two shards with a different key
     key2 = np.random.randint(256, size=16)
-    other_ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    other_ds.new_shard(key=key2, part=0, split="train", group=1, chip_id=1)
     other_ds.write_example({"key": key2}, {"trace1": trace})
-    other_ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    other_ds.new_shard(key=key2, part=1, split="train", group=1, chip_id=1)
     other_ds.write_example({"key": key2}, {"trace1": trace})
     other_ds.close_shard()
 
@@ -270,33 +270,33 @@ def test_merge_with(tmp_path):
     yet_another_ds = Dataset(**dataset_constructor_kwargs(
         root_path=tmp_path,
         examples_per_shard=1,
-        shortname='another',
+        shortname="another",
     ))
     key3 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
     trace[1] = -0.5
-    yet_another_ds.new_shard(key=key3, part=0, split='test', group=1, chip_id=1)
+    yet_another_ds.new_shard(key=key3, part=0, split="test", group=1, chip_id=1)
     yet_another_ds.write_example({"key": key3}, {"trace1": trace})
-    yet_another_ds.new_shard(key=key3, part=1, split='test', group=1, chip_id=1)
+    yet_another_ds.new_shard(key=key3, part=1, split="test", group=1, chip_id=1)
     yet_another_ds.write_example({"key": key3}, {"trace1": trace})
     yet_another_ds.close_shard()
     key4 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
     yet_another_ds.new_shard(key=key4,
                              part=1,
-                             split='train',
+                             split="train",
                              group=1,
                              chip_id=1)
     yet_another_ds.write_example({"key": key4}, {"trace1": trace})
     yet_another_ds.close_shard()
 
     resulting.merge_with(yet_another_ds)
-    assert resulting.min_values == {'trace1': -0.5}
-    assert resulting.max_values == {'trace1': 0.9}
-    assert resulting.examples_per_split == {'train': 5, 'test': 2}
+    assert resulting.min_values == {"trace1": -0.5}
+    assert resulting.max_values == {"trace1": 0.9}
+    assert resulting.examples_per_split == {"train": 5, "test": 2}
     # The right number of files.
-    assert len(list((resulting.path / 'train').glob('*'))) == 5
-    assert len(list((resulting.path / 'test').glob('*'))) == 2
+    assert len(list((resulting.path / "train").glob("*"))) == 5
+    assert len(list((resulting.path / "test").glob("*"))) == 2
 
 
 def test_move_shards(tmp_path):
@@ -309,42 +309,42 @@ def test_move_shards(tmp_path):
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
-    ds.new_shard(key=key1, part=0, split='train', group=0, chip_id=1)
+    ds.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
     ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
-    ds.new_shard(key=key1, part=1, split='train', group=0, chip_id=1)
+    ds.new_shard(key=key1, part=1, split="train", group=0, chip_id=1)
     ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
     # Two shards with a different key
     key2 = np.random.randint(256, size=16)
-    ds.new_shard(key=key2, part=0, split='train', group=1, chip_id=1)
+    ds.new_shard(key=key2, part=0, split="train", group=1, chip_id=1)
     ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
-    ds.new_shard(key=key2, part=1, split='train', group=1, chip_id=1)
+    ds.new_shard(key=key2, part=1, split="train", group=1, chip_id=1)
     ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
     ds.close_shard()
 
     # This is ok.
-    ds.move_shards(from_split='train', to_split='test', shards={2, 3})
-    assert len(ds.shards_list['train']) == 2
-    assert len(ds.shards_list['test']) == 2
+    ds.move_shards(from_split="train", to_split="test", shards={2, 3})
+    assert len(ds.shards_list["train"]) == 2
+    assert len(ds.shards_list["test"]) == 2
     # Move all shards back.
-    ds.move_shards(from_split='test', to_split='train', shards=2)
-    assert len(ds.shards_list['train']) == 4
-    assert len(ds.shards_list['test']) == 0
+    ds.move_shards(from_split="test", to_split="train", shards=2)
+    assert len(ds.shards_list["train"]) == 4
+    assert len(ds.shards_list["test"]) == 0
     # Move nothing.
-    ds.move_shards(from_split='test', to_split='train', shards=0)
-    assert len(ds.shards_list['train']) == 4
-    assert len(ds.shards_list['test']) == 0
+    ds.move_shards(from_split="test", to_split="train", shards=0)
+    assert len(ds.shards_list["train"]) == 4
+    assert len(ds.shards_list["test"]) == 0
     # Move just one, so that check fails on having the same key in test and
     # train.
     with pytest.raises(ValueError) as verror:
-        ds.move_shards(from_split='train', to_split='test', shards=1)
-    assert 'Duplicate key' in str(verror.value)
+        ds.move_shards(from_split="train", to_split="test", shards=1)
+    assert "Duplicate key" in str(verror.value)
 
 
 def same_examples(ds1, ds2):
     # Check that there are the same number of examples
     config1 = ds1._get_config_dictionary()
     config2 = ds1._get_config_dictionary()
-    assert config1['examples_per_split'] == config2['examples_per_split']
+    assert config1["examples_per_split"] == config2["examples_per_split"]
 
     def example_iterator(dataset, split):
         """Return iterator of examples contained in a dataset."""
@@ -357,14 +357,14 @@ def same_examples(ds1, ds2):
                             shard_id=i,
                             num_example=dataset.examples_per_shard,
                             verbose=False).as_numpy_iterator()
-            for i in range(len(config['shards_list'][split])))
+            for i in range(len(config["shards_list"][split])))
 
-    for split in config1['shards_list'].keys():
+    for split in config1["shards_list"].keys():
         ei1 = example_iterator(dataset=ds1, split=split)
         ei2 = example_iterator(dataset=ds2, split=split)
         # Assert that all examples (represented as numpy) are the same.
         for e1, e2 in zip(ei1, ei2):
-            # Each example is a dictionary containing a 'key' and 'trace1'
+            # Each example is a dictionary containing a "key" and "trace1"
             assert e1.keys() == e2.keys()
             for k, v in e1.items():
                 assert np.isclose(v, e2[k]).all()
@@ -381,7 +381,7 @@ def test_reshape_into_new_dataset_filled(tmp_path):
     ))
     # Fill in the old dataset.
     key = np.random.randint(256, size=16)
-    old_ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+    old_ds.new_shard(key=key, part=0, split="train", group=0, chip_id=1)
     for _ in range(old_examples_per_shard):
         old_ds.write_example({"key": np.random.randint(256, size=16)},
                              {"trace1": np.random.rand(1024)})
@@ -395,188 +395,188 @@ def test_reshape_into_new_dataset_filled(tmp_path):
 
 def test_shard_metadata_negative_chip_id(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': -13,
+        "chip_id": -13,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'Wrong chip_id, got' in str(verror.value)
+    assert "Wrong chip_id, got" in str(verror.value)
 
 
 def test_shard_metadata_float_chip_id(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': 13.,
+        "chip_id": 13.,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'Wrong chip_id, got' in str(verror.value)
+    assert "Wrong chip_id, got" in str(verror.value)
 
 
 def test_shard_metadata_str_chip_id(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': '13',
+        "chip_id": "13",
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'Wrong chip_id, got' in str(verror.value)
+    assert "Wrong chip_id, got" in str(verror.value)
 
 
 def test_shard_metadata_wrong_size(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size + 1,
-        'chip_id': 13,
+        "chip_id": 13,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'Wrong size, got' in str(verror.value)
+    assert "Wrong size, got" in str(verror.value)
 
 
 def test_shard_metadata_wrong_path_k(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
-        shard_group=group, shard_key='key', shard_part=part)
-    shard_file.write_text('content')
+        shard_group=group, shard_key="key", shard_part=part)
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': 13,
+        "chip_id": 13,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'key does not match filename' in str(verror.value)
+    assert "key does not match filename" in str(verror.value)
 
 
 def test_shard_metadata_wrong_path(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group + 1, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': 13,
+        "chip_id": 13,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'group does not match filename' in str(verror.value)
+    assert "group does not match filename" in str(verror.value)
 
 
 def test_shard_metadata_extra_key(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'extra_key': 'should not be here',
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "extra_key": "should not be here",
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': 13,
+        "chip_id": 13,
     }
 
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert 'Shard info keys are' in str(verror.value)
+    assert "Shard info keys are" in str(verror.value)
 
 
 def test_shard_metadata_missing_keys(tmp_path):
     with pytest.raises(ValueError) as verror:
         Dataset._check_shard_metadata(shard_info={}, dataset_path=tmp_path)
-    assert 'Shard info keys are' in str(verror.value)
+    assert "Shard info keys are" in str(verror.value)
 
 
 def test_shard_metadata_ok(tmp_path):
     group = 1
-    key = 'BDC9C50A1B51732C56838405443BC76F'
+    key = "BDC9C50A1B51732C56838405443BC76F"
     part = 2
     shard_file = tmp_path / Dataset._shard_name(
         shard_group=group, shard_key=key, shard_part=part)
-    shard_file.write_text('content')
+    shard_file.write_text("content")
     si = {
-        'examples': 64,
-        'sha256': 'abc123',
-        'path': str(shard_file),
-        'group': group,
-        'key': key,
-        'part': part,
+        "examples": 64,
+        "sha256": "abc123",
+        "path": str(shard_file),
+        "group": group,
+        "key": key,
+        "part": part,
         "size": os.stat(shard_file).st_size,
-        'chip_id': 13,
+        "chip_id": 13,
     }
 
     Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
@@ -595,15 +595,15 @@ def test_min_max_values_ok(tmp_path):
         trace[0] = min_value
         trace[1] = max_value
         key = np.zeros(16, dtype=np.uint8)
-        ds.new_shard(key=key, part=0, split='train', group=0, chip_id=1)
+        ds.new_shard(key=key, part=0, split="train", group=0, chip_id=1)
         ds.write_example({"key": key}, {"trace1": trace})
         ds.close_shard()
         config_dict = ds._get_config_dictionary()
-        assert config_dict['min_values']['trace1'] == min_value
-        assert config_dict['max_values']['trace1'] == max_value
+        assert config_dict["min_values"]["trace1"] == min_value
+        assert config_dict["max_values"]["trace1"] == max_value
 
-    min_max_t(0.1, 0.7, root_path=tmp_path / 'b')
-    min_max_t(0.2, 0.5, root_path=tmp_path / 'a')
+    min_max_t(0.1, 0.7, root_path=tmp_path / "b")
+    min_max_t(0.2, 0.5, root_path=tmp_path / "a")
 
 
 def test_resume_capture(tmp_path):
@@ -615,56 +615,56 @@ def test_resume_capture(tmp_path):
     trace1[2] = 0.8  # max_val is written before deleting ds
     trace2 = np.zeros(1024, dtype=np.float)
     chip_id = 1
-    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
     del ds
     ds = Dataset.get_dataset(**kwargs)
-    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
     config_dict = ds._get_config_dictionary()
 
-    assert len(config_dict['shards_list']['train']) == 2
-    assert config_dict['max_values']['trace1'] == 0.8
+    assert len(config_dict["shards_list"]["train"]) == 2
+    assert config_dict["max_values"]["trace1"] == 0.8
 
 
 def test_info_file_raises(tmp_path):
-    # Make the dataset directory with info.json in it (the 'sn_al_ar_vimp_1' is
+    # Make the dataset directory with info.json in it (the "sn_al_ar_vimp_1" is
     # the slug).
-    dpath = tmp_path / 'sn_al_ar_vimp_1'
+    dpath = tmp_path / "sn_al_ar_vimp_1"
     dpath.mkdir()
-    Dataset._get_config_path(dpath).write_text('exists')
+    Dataset._get_config_path(dpath).write_text("exists")
 
     with pytest.raises(DatasetExistsError) as verror:
         ds = Dataset(root_path=tmp_path,
-                     shortname='sn',
-                     architecture='ar',
-                     implementation='imp',
-                     algorithm='al',
+                     shortname="sn",
+                     architecture="ar",
+                     implementation="imp",
+                     algorithm="al",
                      version=1,
-                     description='description',
-                     url='',
-                     firmware_url='some url',
-                     firmware_sha256='abc123',
+                     description="description",
+                     url="",
+                     firmware_url="some url",
+                     firmware_sha256="abc123",
                      examples_per_shard=1,
                      measurements_info={},
                      attack_points_info={})
-    assert ('Dataset info file exists and would be overwritten. '
-            'Use instead:') in str(verror.value)
+    assert ("Dataset info file exists and would be overwritten. "
+            "Use instead:") in str(verror.value)
 
 
 def test_from_loaded_json(tmp_path):
     ds = Dataset(root_path=tmp_path,
-                 shortname='shortname',
-                 architecture='architecture',
-                 implementation='implementation',
-                 algorithm='algorithm',
+                 shortname="shortname",
+                 architecture="architecture",
+                 implementation="implementation",
+                 algorithm="algorithm",
                  version=1,
-                 description='description',
-                 url='',
-                 firmware_url='some url',
-                 firmware_sha256='abc123',
+                 description="description",
+                 url="",
+                 firmware_url="some url",
+                 firmware_sha256="abc123",
                  examples_per_shard=1,
                  measurements_info={"trace1": {
                      "type": "power",
@@ -680,10 +680,10 @@ def test_from_loaded_json(tmp_path):
     key2 = np.random.randint(0, 255, 16)
     trace1 = np.random.rand(1024)
     chip_id = 1
-    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
-    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
     config_dict = ds._get_config_dictionary()
@@ -697,24 +697,24 @@ def test_from_loaded_json(tmp_path):
 def test_from_config(tmp_path):
     # Create the file structure.
     d1 = Dataset(root_path=tmp_path,
-                 shortname='shortname',
-                 architecture='architecture',
-                 implementation='implementation',
-                 algorithm='algorithm',
+                 shortname="shortname",
+                 architecture="architecture",
+                 implementation="implementation",
+                 algorithm="algorithm",
                  version=1,
-                 description='description',
-                 url='',
-                 firmware_url='some url',
-                 firmware_sha256='abc123',
+                 description="description",
+                 url="",
+                 firmware_url="some url",
+                 firmware_sha256="abc123",
                  examples_per_shard=64,
                  measurements_info={},
                  attack_points_info={})
-    old_files = set(tmp_path.glob('**/*'))
+    old_files = set(tmp_path.glob("**/*"))
 
     d2 = Dataset.from_config(d1.path)
 
     # No new files have been created.
-    new_files = set(tmp_path.glob('**/*'))
+    new_files = set(tmp_path.glob("**/*"))
     assert old_files == new_files
 
 
@@ -732,15 +732,15 @@ def test_close_shard(tmp_path):
         },
     }
     ds = Dataset(root_path=tmp_path,
-                 shortname='short_name',
-                 architecture='arch',
-                 implementation='implementation',
-                 algorithm='algorithm',
+                 shortname="short_name",
+                 architecture="arch",
+                 implementation="implementation",
+                 algorithm="algorithm",
                  version=1,
-                 description='description',
-                 url='url',
-                 firmware_url='url',
-                 firmware_sha256='abc1234',
+                 description="description",
+                 url="url",
+                 firmware_url="url",
+                 firmware_sha256="abc1234",
                  examples_per_shard=2,
                  measurements_info=minfo,
                  attack_points_info=apinfo)
@@ -751,78 +751,78 @@ def test_close_shard(tmp_path):
 
     assert ds.examples_per_group == {}
     assert ds.examples_per_split == {}
-    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
-    assert ds.examples_per_group == {'train': {0: 2}}
-    assert ds.examples_per_split == {'train': 2}
-    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    assert ds.examples_per_group == {"train": {0: 2}}
+    assert ds.examples_per_split == {"train": 2}
+    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
-    assert ds.examples_per_group == {'train': {0: 4}}
-    assert ds.examples_per_split == {'train': 4}
+    assert ds.examples_per_group == {"train": {0: 4}}
+    assert ds.examples_per_split == {"train": 4}
     ds.check()
 
 
 def test_from_config(tmp_path):
     # Create the file structure.
     d1 = Dataset(root_path=tmp_path,
-                 shortname='shortname',
-                 architecture='architecture',
-                 implementation='implementation',
-                 algorithm='algorithm',
+                 shortname="shortname",
+                 architecture="architecture",
+                 implementation="implementation",
+                 algorithm="algorithm",
                  version=1,
-                 description='description',
-                 url='',
-                 firmware_url='url',
-                 firmware_sha256='abc123',
+                 description="description",
+                 url="",
+                 firmware_url="url",
+                 firmware_sha256="abc123",
                  examples_per_shard=64,
                  measurements_info={},
                  attack_points_info={})
-    old_files = set(tmp_path.glob('**/*'))
+    old_files = set(tmp_path.glob("**/*"))
 
     d2 = Dataset.from_config(d1.path)
 
     # No new files have been created.
-    new_files = set(tmp_path.glob('**/*'))
+    new_files = set(tmp_path.glob("**/*"))
     assert old_files == new_files
 
 
-@patch.object(Path, 'read_text')
-@patch.object(Shard, '__init__')
-@patch.object(Shard, 'read')
+@patch.object(Path, "read_text")
+@patch.object(Shard, "__init__")
+@patch.object(Shard, "read")
 def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
-    split = 'test'
+    split = "test"
     shard_id = 0
     num_example = 5
     mock_shard_init.return_value = None
     config = {
-        'keys_per_group': {},
-        'examples_per_group': {},
-        'shards_list': {
-            'test': [{
-                'path': 'test/0_abcd_1.tfrec'
+        "keys_per_group": {},
+        "examples_per_group": {},
+        "shards_list": {
+            "test": [{
+                "path": "test/0_abcd_1.tfrec"
             }, {
-                'path': 'test/2_ef12_3.tfrec'
+                "path": "test/2_ef12_3.tfrec"
             }],
-            'train': [{
-                'path': 'train/2_dcea_0.tfrec'
+            "train": [{
+                "path": "train/2_dcea_0.tfrec"
             }, {
-                'path': 'train/3_beef_1.tfrec'
+                "path": "train/3_beef_1.tfrec"
             }],
         },
-        'attack_points_info': {
-            'ap_info': 'something'
+        "attack_points_info": {
+            "ap_info": "something"
         },
-        'measurements_info': {
-            'm_info': 'else'
+        "measurements_info": {
+            "m_info": "else"
         },
-        'compression': 'GZIP',
+        "compression": "GZIP",
     }
     mock_read_text.return_value = json.dumps(config)
-    dir_dataset_ok = Path('/home/notanuser')
+    dir_dataset_ok = Path("/home/notanuser")
 
     x = Dataset.inspect(dir_dataset_ok,
                         split=split,
@@ -830,17 +830,17 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
                         num_example=num_example)
 
     shard_filename = str(dir_dataset_ok /
-                         config['shards_list'][split][shard_id]['path'])
+                         config["shards_list"][split][shard_id]["path"])
     mock_shard_init.assert_called_once_with(
         shard_filename,
-        attack_points_info=config['attack_points_info'],
-        measurements_info=config['measurements_info'],
-        compression=config['compression'])
+        attack_points_info=config["attack_points_info"],
+        measurements_info=config["measurements_info"],
+        compression=config["compression"])
     mock_shard_read.assert_called_once_with(num=num_example)
     assert x == mock_shard_read.return_value
 
 
-@patch.object(siutils, 'sha256sum')
+@patch.object(siutils, "sha256sum")
 def test_check_sha256sums(mock_sha256sum):
     shadict = {
         "test/0_01f6e272b933ec2b80ab53af245f7fa6_0.tfrec":
@@ -850,18 +850,18 @@ def test_check_sha256sums(mock_sha256sum):
         "test/0_69a283f6b1eea6327afdb30f76e6fe30_0.tfrec":
             "f61009a4c6f5a77aa2c6da6d1882a50c3bd6345010966144d16e634ceeaeb730",
     }
-    dpath = Path('/home/noanuser/notadir')
-    mock_sha256sum.side_effect = lambda x: shadict[f'{x.parent.name}/{x.name}']
+    dpath = Path("/home/noanuser/notadir")
+    mock_sha256sum.side_effect = lambda x: shadict[f"{x.parent.name}/{x.name}"]
     shards_list = {
-        'test': [{
-            'path': f,
-            'sha256': s,
+        "test": [{
+            "path": f,
+            "sha256": s,
         } for f, s in shadict.items()],
     }
     pbar = lambda *args, **kwargs: args[0]
     Dataset._check_sha256sums(shards_list=shards_list, dpath=dpath, pbar=pbar)
 
-    mock_sha256sum.side_effect = lambda _: 'abcd'
+    mock_sha256sum.side_effect = lambda _: "abcd"
     with pytest.raises(ValueError) as sha_error:
         Dataset._check_sha256sums(shards_list=shards_list,
                                   dpath=dpath,
@@ -871,8 +871,8 @@ def test_check_sha256sums(mock_sha256sum):
 
 def test_check_metadata():
     config = {
-        'shards_list': {
-            'test': [{
+        "shards_list": {
+            "test": [{
                 "examples": 64,
                 "group": 0,
                 "key": "01F6E272B933EC2B80AB53AF245F7FA6",
@@ -888,7 +888,7 @@ def test_check_metadata():
                 "key": "69A283F6B1EEA6327AFDB30F76E6FE30",
                 "part": 0,
             }],
-            'train': [
+            "train": [
                 {
                     "examples": 64,
                     "group": 0,
@@ -903,7 +903,7 @@ def test_check_metadata():
                 },
             ]
         },
-        'examples_per_group': {
+        "examples_per_group": {
             "test": {
                 "0": 2 * 64,
                 "1": 1 * 64,
@@ -912,32 +912,32 @@ def test_check_metadata():
                 "0": 2 * 64
             }
         },
-        'examples_per_split': {
+        "examples_per_split": {
             "test": 3 * 64,
             "train": 2 * 64
         },
-        'examples_per_shard': 64,
+        "examples_per_shard": 64,
     }
     Dataset._check_metadata(config=config)
 
     # Wrong number of examples_per_split
     bad_config = copy.deepcopy(config)
-    bad_config['examples_per_split']['test'] = 5
+    bad_config["examples_per_split"]["test"] = 5
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Num shards in shard_list !=" in str(metadata_error.value)
 
     # Wrong number of examples_per_group
     bad_config = copy.deepcopy(config)
-    bad_config['examples_per_group']['test']['0'] = 5
+    bad_config["examples_per_group"]["test"]["0"] = 5
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Wrong sum of examples_per_group in" in str(metadata_error.value)
 
     # Not constant number of examples in shards
     bad_config = copy.deepcopy(config)
-    bad_config['shards_list']['test'][0]['examples'] = 63
-    bad_config['shards_list']['test'][2]['examples'] = 65
+    bad_config["shards_list"]["test"][0]["examples"] = 63
+    bad_config["shards_list"]["test"][2]["examples"] = 65
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config,
                                 n_examples_in_each_shard_is_constant=True)
@@ -945,8 +945,8 @@ def test_check_metadata():
 
     # Wrong number of examples_per_group
     bad_config = copy.deepcopy(config)
-    bad_config['examples_per_group']['test']['0'] = 127
-    bad_config['examples_per_group']['test']['1'] = 65
+    bad_config["examples_per_group"]["test"]["0"] = 127
+    bad_config["examples_per_group"]["test"]["1"] = 65
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Wrong examples_per_group in" in str(metadata_error.value)
@@ -965,17 +965,17 @@ def test_shallow_check():
     seen_keys.add(np.array([255, 232], dtype=np.uint8).tobytes())
     with pytest.raises(ValueError) as intersection_error:
         Dataset._shallow_check(seen_keys, train_shards, pbar)
-    assert 'Duplicate key' in str(intersection_error.value)
+    assert "Duplicate key" in str(intersection_error.value)
 
 
-@patch.object(Dataset, 'inspect')
+@patch.object(Dataset, "inspect")
 def test_deep_check(mock_inspect):
     mock_inspect.return_value.as_numpy_iterator.return_value = (
         {
-            'key': np.array([0, 1, 2, 255])
+            "key": np.array([0, 1, 2, 255])
         },
         {
-            'key': np.array([3, 1, 4, 1])
+            "key": np.array([3, 1, 4, 1])
         },
     )
     seen_keys = set()
@@ -984,28 +984,28 @@ def test_deep_check(mock_inspect):
         {},
     ]
     Dataset._deep_check(seen_keys=seen_keys,
-                        dpath='/home/notanuser/notdir',
+                        dpath="/home/notanuser/notdir",
                         train_shards=train_shards,
                         examples_per_shard=64,
                         pbar=pbar,
-                        key_ap='key')
+                        key_ap="key")
 
     seen_keys.add(np.array([3, 1, 4, 1], dtype=np.uint8).tobytes())
     with pytest.raises(ValueError) as intersection_error:
         Dataset._deep_check(seen_keys=seen_keys,
-                            dpath='/home/notanuser/notdir',
+                            dpath="/home/notanuser/notdir",
                             train_shards=train_shards,
                             examples_per_shard=64,
                             pbar=pbar,
-                            key_ap='key')
-    assert 'Duplicate key' in str(intersection_error.value)
+                            key_ap="key")
+    assert "Duplicate key" in str(intersection_error.value)
 
 
 def test_basic_workflow(tmp_path):
     root_path = tmp_path
-    architecture = 'arch'
-    implementation = 'implem'
-    algorithm = 'algo'
+    architecture = "arch"
+    implementation = "implem"
+    algorithm = "algo"
     version = 1
     minfo = {
         # test missing measurem,net raise value
@@ -1046,20 +1046,20 @@ def test_basic_workflow(tmp_path):
                  version=version,
                  description=description,
                  url=url,
-                 firmware_url='some url',
+                 firmware_url="some url",
                  firmware_sha256=fw_sha256,
                  examples_per_shard=example_per_shard,
                  measurements_info=minfo,
                  attack_points_info=apinfo)
 
     chip_id = 1
-    ds.new_shard(key=key, part=0, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
 
     # 256 keys - with uniform bytes
 
-    ds.new_shard(key=key2, part=1, split='train', group=0, chip_id=chip_id)
+    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
 
@@ -1068,7 +1068,7 @@ def test_basic_workflow(tmp_path):
     slug = ds.slug
     # reload
     ds2 = Dataset.from_config(root_path / slug)
-    ds2.inspect(root_path / slug, 'train', 0, 1)
+    ds2.inspect(root_path / slug, "train", 0, 1)
     ds2.summary(root_path / slug)
 
 
@@ -1076,114 +1076,114 @@ def test_cleanup_shards(tmp_path):
 
     def shard_info(group: int, key: str, part: int):
         return {
-            'path': Dataset._shard_name(shard_group=group,
+            "path": Dataset._shard_name(shard_group=group,
                                         shard_key=key,
                                         shard_part=part),
-            'examples': 64,
-            'size': 811345,
-            'sha256': 'beef',
-            'group': group,
-            'key': key,
-            'part': part,
-            'chip_id': 13,
+            "examples": 64,
+            "size": 811345,
+            "sha256": "beef",
+            "group": group,
+            "key": key,
+            "part": part,
+            "chip_id": 13,
         }  # yapf: disable
 
     old_config = {  # Some fields omitted.
-        'licence': 'some_licence',
-        'paper_url': 'some_url',
-        'firmware_url': 'fm_url',
-        'examples_per_shard': 64,
-        'examples_per_group': {
-            'test': {
+        "licence": "some_licence",
+        "paper_url": "some_url",
+        "firmware_url": "fm_url",
+        "examples_per_shard": 64,
+        "examples_per_group": {
+            "test": {
                 0: 2 * 64,
                 1: 1 * 64,
                 2: 1 * 64,
                 3: 2 * 64,
             },
-            'train': {
+            "train": {
                 0: 5 * 64,
             }
         },
-        'examples_per_split': {
-            'test': 6 * 64,
-            'train': 5 * 64,
+        "examples_per_split": {
+            "test": 6 * 64,
+            "train": 5 * 64,
         },
-        'keys_per_split': {
-            'test': 4,
-            'train': 4,
+        "keys_per_split": {
+            "test": 4,
+            "train": 4,
         },
-        'keys_per_group': {
-            'test': {
+        "keys_per_group": {
+            "test": {
                 0: 1,
                 1: 1,
                 2: 1,
                 3: 1,
             },
-            'train': {
+            "train": {
                 0: 4,
             }
         },
-        'shards_list': {
-            'test': [
-                shard_info(group=0, key='KEYA', part=0),
-                shard_info(group=0, key='KEYA', part=2),  # del
-                shard_info(group=1, key='KEYB', part=2),  # del
-                shard_info(group=2, key='KEYC', part=2),
-                shard_info(group=3, key='KEYD', part=1),
-                shard_info(group=3, key='KEYD', part=2),
+        "shards_list": {
+            "test": [
+                shard_info(group=0, key="KEYA", part=0),
+                shard_info(group=0, key="KEYA", part=2),  # del
+                shard_info(group=1, key="KEYB", part=2),  # del
+                shard_info(group=2, key="KEYC", part=2),
+                shard_info(group=3, key="KEYD", part=1),
+                shard_info(group=3, key="KEYD", part=2),
             ],
-            'train': [
-                shard_info(group=0, key='keyA', part=2),  # del
-                shard_info(group=0, key='keyA', part=1),
-                shard_info(group=0, key='keyB', part=3),
-                shard_info(group=0, key='keyC', part=4),  # del
-                shard_info(group=0, key='keyD', part=5),
+            "train": [
+                shard_info(group=0, key="keyA", part=2),  # del
+                shard_info(group=0, key="keyA", part=1),
+                shard_info(group=0, key="keyB", part=3),
+                shard_info(group=0, key="keyC", part=4),  # del
+                shard_info(group=0, key="keyD", part=5),
             ],
         },
     }
     # Populate the mock database
     Dataset._get_config_path(tmp_path).write_text(json.dumps(old_config))
-    for s in ['train', 'test', 'holdout']:
+    for s in ["train", "test", "holdout"]:
         (tmp_path / s).mkdir()
 
     new_config = copy.deepcopy(old_config)
-    # Delete some files. Remember to update 'examples_per_group' and 'example_per_shard'.
+    # Delete some files. Remember to update "examples_per_group" and "example_per_shard".
     for i in sorted([0, 3], reverse=True):  # Remove in descending order.
-        del new_config['shards_list']['train'][i]
-    new_config['examples_per_group']['train'] = {
+        del new_config["shards_list"]["train"][i]
+    new_config["examples_per_group"]["train"] = {
         0: 3 * 64,
     }
-    new_config['examples_per_split']['train'] = 3 * 64
-    new_config['keys_per_split']['train'] = 3
-    new_config['keys_per_group']['train'] = {
+    new_config["examples_per_split"]["train"] = 3 * 64
+    new_config["keys_per_split"]["train"] = 3
+    new_config["keys_per_group"]["train"] = {
         0: 3,
     }
     for i in sorted([1, 2], reverse=True):  # Remove in descending order.
-        del new_config['shards_list']['test'][i]
-    new_config['examples_per_group']['test'] = {
+        del new_config["shards_list"]["test"][i]
+    new_config["examples_per_group"]["test"] = {
         0: 1 * 64,
         1: 0 * 64,
         2: 1 * 64,
         3: 2 * 64,
     }
-    new_config['examples_per_split']['test'] = 4 * 64
-    new_config['keys_per_split']['test'] = 3
-    new_config['keys_per_group']['test'] = {
+    new_config["examples_per_split"]["test"] = 4 * 64
+    new_config["keys_per_split"]["test"] = 3
+    new_config["keys_per_group"]["test"] = {
         0: 1,
         1: 0,
         2: 1,
         3: 1,
     }
     for i in []:  # Fill this split in old_config first
-        del new_config['shards_list']['holdout'][i]
+        del new_config["shards_list"]["holdout"][i]
     # Create existing files.
-    for s in new_config['shards_list']:
-        for f in new_config['shards_list'][s]:
-            (tmp_path / f['path']).touch()
+    for s in new_config["shards_list"]:
+        for f in new_config["shards_list"][s]:
+            (tmp_path / f["path"]).touch()
     # Other files should be neither deleted nor added to the dataset.
     other_files = [
-        tmp_path / 'iamnothere.txt',
-        tmp_path / 'train' / 'not_a_shard.tfrec',
+        tmp_path / "iamnothere.txt",
+        tmp_path / "train" / "not_a_shard.tfrec",
     ]
     for f in other_files:
         f.touch()
@@ -1193,7 +1193,7 @@ def test_cleanup_shards(tmp_path):
     # New config is ok.
     # Loop for better readability.
     for k in corrected_config:
-        assert corrected_config[k] == new_config[k], f'{k} is different'
+        assert corrected_config[k] == new_config[k], f"{k} is different"
     # Test all (so far tested that corrected_config is a subset of new_config).
     assert corrected_config == new_config
     # Other files still present.
@@ -1203,61 +1203,61 @@ def test_cleanup_shards(tmp_path):
 
 def test_shard_info_from_name():
     assert Dataset._shard_info_from_name(
-        '1_c80b174b5ce880a3557db2152598cafe_2.tfrec') == {
-            'shard_group': 1,
-            'shard_key': 'c80b174b5ce880a3557db2152598cafe',
-            'shard_part': 2,
+        "1_c80b174b5ce880a3557db2152598cafe_2.tfrec") == {
+            "shard_group": 1,
+            "shard_key": "c80b174b5ce880a3557db2152598cafe",
+            "shard_part": 2,
         }
 
 
 def test_shard_info_from_name_directory():
     assert Dataset._shard_info_from_name(
-        'some/directory/1_c80b174b5ce880a3557db2152598cafe_2.tfrec') == {
-            'shard_group': 1,
-            'shard_key': 'c80b174b5ce880a3557db2152598cafe',
-            'shard_part': 2,
+        "some/directory/1_c80b174b5ce880a3557db2152598cafe_2.tfrec") == {
+            "shard_group": 1,
+            "shard_key": "c80b174b5ce880a3557db2152598cafe",
+            "shard_part": 2,
         }
     assert Dataset._shard_info_from_name(
-        'win_dir\\1_c80b174b5ce880a3557db2152598cafe_2.tfrec') == {
-            'shard_group': 1,
-            'shard_key': 'c80b174b5ce880a3557db2152598cafe',
-            'shard_part': 2,
+        "win_dir\\1_c80b174b5ce880a3557db2152598cafe_2.tfrec") == {
+            "shard_group": 1,
+            "shard_key": "c80b174b5ce880a3557db2152598cafe",
+            "shard_part": 2,
         }
 
 
 def test_shard_name():
     assert Dataset._shard_name(
         shard_group=1,
-        shard_key='c80b174b5ce880a3557db2152598cafe',
-        shard_part=2) == '1_c80b174b5ce880a3557db2152598cafe_2.tfrec'
+        shard_key="c80b174b5ce880a3557db2152598cafe",
+        shard_part=2) == "1_c80b174b5ce880a3557db2152598cafe_2.tfrec"
 
 
 def test_shard_info_from_name_identity():
     tests = [
         {
-            'shard_group': 1,
-            'shard_key': 'cafe',
-            'shard_part': 0,
+            "shard_group": 1,
+            "shard_key": "cafe",
+            "shard_part": 0,
         },
         {
-            'shard_group': 0,
-            'shard_key': 'dead',
-            'shard_part': 1,
+            "shard_group": 0,
+            "shard_key": "dead",
+            "shard_part": 1,
         },
         {
-            'shard_group': 2,
-            'shard_key': 'beef',
-            'shard_part': 4,
+            "shard_group": 2,
+            "shard_key": "beef",
+            "shard_part": 4,
         },
         {
-            'shard_group': 3,
-            'shard_key': '0123',
-            'shard_part': 2,
+            "shard_group": 3,
+            "shard_key": "0123",
+            "shard_part": 2,
         },
         {
-            'shard_group': 4,
-            'shard_key': 'c0de',
-            'shard_part': 3,
+            "shard_group": 4,
+            "shard_key": "c0de",
+            "shard_part": 3,
         },
     ]
     for t in tests:

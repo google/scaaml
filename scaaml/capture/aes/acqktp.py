@@ -202,9 +202,9 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             # Nothing to check
             pass
         else:
-            raise ValueError(f'Incorrect dataset type. '
-                             f'Allowed values are {self.DATASET_TYPES}. '
-                             f'Currently set to {self._dataset}')
+            raise ValueError(f"Incorrect dataset type. "
+                             f"Allowed values are {self.DATASET_TYPES}. "
+                             f"Currently set to {self._dataset}")
 
         # Check pair works with target
         self.validateKey()
@@ -215,4 +215,4 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     newPair = camel_case_deprecated(new_pair)
 
     def __str__(self):
-        return f'{self._name} ({self._dataset}, {self._pt_per_key}, {self._repeat}, {self._nbkeys})'
+        return f"{self._name} ({self._dataset}, {self._pt_per_key}, {self._repeat}, {self._nbkeys})"

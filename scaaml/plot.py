@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
-def plot_heatmap(batch, cmap='Reds', title=None):
+def plot_heatmap(batch, cmap="Reds", title=None):
     plt.figure(figsize=(15, 5))
 
     # its a batch
@@ -70,13 +70,13 @@ def plot_comparaison(traces, labels, title):
     for idx, trace in enumerate(traces):
         label = labels[idx]
         if label == "SNR":
-            color = '#8E24AA'
-        elif 'activation' in label.lower():
-            color = '#64DD17'
-        elif 'grad' in label.lower():
-            color = '#26A69A'
-        elif 'scald' in label.lower():
-            color = '#03A9F4'
+            color = "#8E24AA"
+        elif "activation" in label.lower():
+            color = "#64DD17"
+        elif "grad" in label.lower():
+            color = "#26A69A"
+        elif "scald" in label.lower():
+            color = "#03A9F4"
         plt.plot(trace, label=label, color=color)
 
     plt.title(title)
@@ -99,17 +99,17 @@ def plot_traces(traces, labels=None, title=None, xlabel=None, ylabel=None):
     plt.show()
 
 
-def plot_target_distribution(class_ids, title='Y distributions'):
+def plot_target_distribution(class_ids, title="Y distributions"):
     plt.title("%s %d examples" % (title, len(class_ids)))
     plt.hist(class_ids, bins=256)
-    plt.xlabel('target value')
-    plt.ylabel('example counts')
+    plt.xlabel("target value")
+    plt.ylabel("example counts")
     plt.show()
 
 
 def plot_confusion_matrix(class_ids,
                           predicted_class_ids,
-                          title='Confusion matrix',
+                          title="Confusion matrix",
                           cmap=None,
                           normalize=True):
     """ Compute and plot the confusion matrix
@@ -123,21 +123,21 @@ def plot_confusion_matrix(class_ids,
     """
 
     cm = np.array(tf.math.confusion_matrix(class_ids, predicted_class_ids))
-    accuracy = np.trace(cm) / np.sum(cm).astype('float')
+    accuracy = np.trace(cm) / np.sum(cm).astype("float")
     misclass = 1 - accuracy
 
     if cmap is None:
-        cmap = plt.get_cmap('Blues')
+        cmap = plt.get_cmap("Blues")
 
     plt.figure(figsize=(8, 6))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.imshow(cm, interpolation="nearest", cmap=cmap)
     plt.title(title)
     plt.colorbar()
 
     if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
 
     plt.tight_layout()
-    plt.ylabel('True intermediate values')
-    plt.xlabel('Predicted intermediat values')
+    plt.ylabel("True intermediate values")
+    plt.xlabel("Predicted intermediat values")
     plt.show()

@@ -24,4 +24,4 @@ def test_control():
         assert control._scope_io.tio1 == "serial_rx"
         assert control._scope_io.tio2 == "serial_tx"
         assert control._scope_io.hs2 == "clkgen"
-        assert control._scope_io.nrst == 'high_z'
+        assert control._scope_io.nrst == "high_z"

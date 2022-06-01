@@ -34,11 +34,11 @@ def get_models_by_attack_point(config):
 
     models = defaultdict(list)
     status = {}
-    for attack_point in config['attack_points']:
+    for attack_point in config["attack_points"]:
         status[attack_point] = "complete"
         for attack_byte in range(16):
             stub = get_model_stub(attack_point, attack_byte, config)
-            model_path = 'models/%s' % stub
+            model_path = "models/%s" % stub
             if not Path(model_path):
                 status[attack_byte] = "incomplete"
                 models[attack_point].append(None)
@@ -49,7 +49,7 @@ def get_models_by_attack_point(config):
     rows = [[k, v, len(models[k])] for k, v in status.items()]
     print(
         tabulate(rows,
-                 headers=['Attack point', 'status', 'Num available models']))
+                 headers=["Attack point", "status", "Num available models"]))
     return models
 
 
@@ -67,7 +67,7 @@ def load_model_from_idx(models_list, idx, verbose=0):
     Returns:
         tf.keras.Model
     """
-    path = models_list[idx]['path']
+    path = models_list[idx]["path"]
     return load_model_from_disk(path, verbose=verbose)
 
 
@@ -100,21 +100,21 @@ def load_model_from_disk(path, verbose=0):
 def get_models_list(config, verbose=0):
     "Return the list of trained models"
     available_models = []
-    for attack_point in config['attack_points']:
-        for attack_byte in config['attack_bytes']:
+    for attack_point in config["attack_points"]:
+        for attack_byte in config["attack_bytes"]:
             stub = get_model_stub(attack_point, attack_byte, config)
-            model_path = 'models/%s' % stub
+            model_path = "models/%s" % stub
             if not Path(model_path):
                 continue
             else:
                 available_models.append({
-                    'path': model_path,
-                    'attack_point': attack_point,
-                    'attack_byte': attack_byte
+                    "path": model_path,
+                    "attack_point": attack_point,
+                    "attack_byte": attack_byte
                 })
     if verbose:
         rows = []
         for idx, mdl in enumerate(available_models):
-            rows.append([idx, mdl['attack_point'], mdl['attack_byte']])
-        print(tabulate(rows, headers=['model idx', 'attack point', 'byte']))
+            rows.append([idx, mdl["attack_point"], mdl["attack_byte"]])
+        print(tabulate(rows, headers=["model idx", "attack point", "byte"]))
     return available_models

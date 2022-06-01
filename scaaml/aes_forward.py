@@ -53,17 +53,17 @@ class AESSBOX:
 
     # The attack points info used in scaaml.io.Dataset.
     ATTACK_POINTS_INFO = {
-        'sub_bytes_in': {
-            'len': 16,
-            'max_val': _MAX_VAL,
+        "sub_bytes_in": {
+            "len": 16,
+            "max_val": _MAX_VAL,
         },
-        'sub_bytes_out': {
-            'len': 16,
-            'max_val': _MAX_VAL,
+        "sub_bytes_out": {
+            "len": 16,
+            "max_val": _MAX_VAL,
         },
-        'key': {
-            'len': 16,
-            'max_val': _MAX_VAL,
+        "key": {
+            "len": 16,
+            "max_val": _MAX_VAL,
         }
     }
 
@@ -90,7 +90,7 @@ class AESSBOX:
         """Return the correct attack point.
 
         Typical usage example:
-          attack_point_names = ['key', 'sub_bytes_in', 'sub_bytes_out']
+          attack_point_names = ["key", "sub_bytes_in", "sub_bytes_out"]
           attack_points = {
               ap: AESSBOX.get_attack_point(ap, key=key, plaintext=plaintext)
               for ap in attack_point_names

@@ -21,7 +21,7 @@ from scaaml.capture.aes.capture_runner import CaptureRunner
 from scaaml.capture.aes.crypto_input import CryptoInput
 
 
-@patch.object(cw, 'capture_trace')
+@patch.object(cw, "capture_trace")
 def test_capture_trace(mock_capture_trace):
     m_crypto_alg = MagicMock()
     m_scope = MagicMock()
@@ -46,7 +46,7 @@ def test_capture_trace(mock_capture_trace):
                                                key=bytearray(key))
 
 
-@patch.object(CaptureRunner, 'capture_trace')
+@patch.object(CaptureRunner, "capture_trace")
 def test_get_attack_points_and_measurement(mock_capture_trace):
     key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     plaintext = [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -74,7 +74,7 @@ def test_get_attack_points_and_measurement(mock_capture_trace):
     }
 
 
-@patch.object(CaptureRunner, 'get_attack_points_and_measurement')
+@patch.object(CaptureRunner, "get_attack_points_and_measurement")
 def test_stabilize_capture(mock_capture_trace):
     mock_capture_trace.return_value = (MagicMock(), MagicMock())
     m_crypto_alg = MagicMock()
@@ -95,8 +95,8 @@ def test_stabilize_capture(mock_capture_trace):
     assert mock_capture_trace.call_count >= 5
 
 
-@patch.object(CaptureRunner, '_stabilize_capture')
-@patch.object(CaptureRunner, '_capture_dataset')
+@patch.object(CaptureRunner, "_stabilize_capture")
+@patch.object(CaptureRunner, "_capture_dataset")
 def test_capture(m_capture, m_stabilize):
     m_crypto_alg = MagicMock()
     m_scope = MagicMock()
@@ -114,7 +114,7 @@ def test_capture(m_capture, m_stabilize):
     m_dataset.check.assert_called_once_with()
 
 
-@patch.object(CaptureRunner, 'get_attack_points_and_measurement')
+@patch.object(CaptureRunner, "get_attack_points_and_measurement")
 def test_capture_dataset(mock_gapam):
     m_crypto_alg = MagicMock()
     keys = 3072

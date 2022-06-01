@@ -51,7 +51,7 @@ class Shard():
             attack_points: Attack points values.
             measurements: Measurements values.
         """
-        with tf.device('/cpu:0'):
+        with tf.device("/cpu:0"):
             # open writer if needed
             # !do not put in the init to avoid erasing on read
             if not self.has_writer:
@@ -103,7 +103,7 @@ class Shard():
         feature = {}
         # attack points as integers
         for ap_name, info in self.attack_points_info.items():
-            expected_len = info['len']
+            expected_len = info["len"]
             ap_value = attack_points[ap_name]
 
             # check that we get the len specified in the info
@@ -116,13 +116,13 @@ class Shard():
 
         # measurements as float
         for mname, info in self.measurements_info.items():
-            expected_len = info['len']
+            expected_len = info["len"]
             measurement = measurements[mname]
 
             # check that the measurement len match what is specified in info
             if len(measurement) != expected_len:
-                raise ValueError(f'{mname} has wrong length, expected '
-                                 f'{expected_len}, got {len(measurement)}.')
+                raise ValueError(f"{mname} has wrong length, expected "
+                                 f"{expected_len}, got {len(measurement)}.")
 
             # min and max
             self.min_values[mname] = min(self.min_values[mname],
@@ -153,12 +153,12 @@ class Shard():
 
         # attack points
         for k, info in self.attack_points_info.items():
-            flen = info['len']
+            flen = info["len"]
             features[k] = tf.io.FixedLenFeature([flen], tf.int64)
 
         # measurements
         for k, info in self.measurements_info.items():
-            flen = info['len']
+            flen = info["len"]
             features[k] = tf.io.FixedLenFeature([flen], tf.float32)
 
         return features

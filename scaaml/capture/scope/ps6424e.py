@@ -332,7 +332,7 @@ class Pico6424E(ChipWhispererCommonInterface):
         """
         # Handle too large sample_rate
         if sample_rate > 5e9:
-            raise ValueError('This scope support at most 5GHz sample_rate.')
+            raise ValueError("This scope support at most 5GHz sample_rate.")
 
         # From PicoScope API manual:
         # https://www.picotech.com/download/manuals/picoscope-6000-series-a-api-programmers-guide.pdf
@@ -422,7 +422,7 @@ class Pico6424E(ChipWhispererCommonInterface):
         # Check if this scope is connected.
         if self.connectStatus is False:
             raise Exception(
-                f'Scope {self._name} is not connected. Connect it first.')
+                f"Scope {self._name} is not connected. Connect it first.")
 
         # Run the capture block
         timeIndisposedMs = ctypes.c_double(0)
@@ -498,7 +498,7 @@ class Pico6424E(ChipWhispererCommonInterface):
         Returns: np array representing the last captured trace.
         """
         if as_int:
-            msg = 'Returning trace as integers is not implemented.'
+            msg = "Returning trace as integers is not implemented."
             raise NotImplemented(msg)
 
         return np.array(self._buffers[0][:], dtype=np.float32)
@@ -513,7 +513,7 @@ class Pico6424E(ChipWhispererCommonInterface):
         """Setup channels, buffers, and trigger."""
         if self.ps_handle.value <= 0:
             # No opened PicoScope handle
-            msg = f'Scope handle is {self.ps_handle.value}'
+            msg = f"Scope handle is {self.ps_handle.value}"
             assert not self.connectStatus, msg
             return
 
@@ -579,12 +579,12 @@ class Pico6424E(ChipWhispererCommonInterface):
         # If we use hardware downsampling, use averaging.
         if self.DOWNSAMPLING_RATIO > 1:
             self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
-                'PICO_RATIO_MODE_AVERAGE']
-            # 'PICO_RATIO_MODE_DECIMATE' could also be an option.
+                "PICO_RATIO_MODE_AVERAGE"]
+            # "PICO_RATIO_MODE_DECIMATE" could also be an option.
         else:
             self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
-                'PICO_RATIO_MODE_RAW']
-        data_type = picoEnum.PICO_DATA_TYPE['PICO_INT16_T']
+                "PICO_RATIO_MODE_RAW"]
+        data_type = picoEnum.PICO_DATA_TYPE["PICO_INT16_T"]
         waveform = 0
         # Set trace buffer
         action = picoEnum.PICO_ACTION["PICO_CLEAR_ALL"] | picoEnum.PICO_ACTION[
@@ -654,9 +654,9 @@ class Pico6424E(ChipWhispererCommonInterface):
     def __repr__(self) -> str:
         """Return device name, connected status and dict representation as
         multi-line string."""
-        connected = 'Connected' if self.connectStatus else 'Not connected'
+        connected = "Connected" if self.connectStatus else "Not connected"
         dict_repr = util.dict_to_str(self._dict_repr())
-        return f'{self._name} device {connected}\n{dict_repr}'
+        return f"{self._name} device {connected}\n{dict_repr}"
 
     def __str__(self) -> str:
         return self.__repr__()

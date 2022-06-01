@@ -24,7 +24,7 @@ def test_get_timebase_too_large():
     # Test too large
     with pytest.raises(ValueError) as verror:
         timebase = Pico6424E._get_timebase(1 + 5e9)
-    assert 'This scope support at most 5GHz sample_rate.' == str(verror.value)
+    assert "This scope support at most 5GHz sample_rate." == str(verror.value)
 
 
 def test_get_timebase_small_timebase():

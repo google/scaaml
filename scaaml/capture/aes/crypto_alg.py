@@ -26,15 +26,15 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     def __init__(self,
                  firmware_sha256: str,
                  crypto_implementation,
-                 purpose: Literal['train', 'test', 'holdout'],
+                 purpose: Literal["train", "test", "holdout"],
                  implementation: str = "MBEDTLS",
                  algorithm: str = "simpleserial-aes",
                  keys: int = 3072,
                  plaintexts: int = 256,
                  repetitions: int = 1,
                  examples_per_shard: int = 64,
-                 full_kt_filename: str = 'key_text_pairs.txt',
-                 full_progress_filename: str = 'progress_pairs.txt') -> None:
+                 full_kt_filename: str = "key_text_pairs.txt",
+                 full_progress_filename: str = "progress_pairs.txt") -> None:
         """Generates a set of key-text pairs and saves those. Does not overwrite
         existing files.
 
