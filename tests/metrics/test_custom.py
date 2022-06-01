@@ -22,14 +22,14 @@ def rank_slow_1d(y_true, y_pred) -> float:
     """Slow, but correct implementation for single prediction."""
     assert len(y_true) == len(y_pred)
     correct_class = 0
-    for i in range(len(y_true)):
-        if y_true[i] == 1:
+    for i, value in enumerate(y_true):
+        if value == 1:
             correct_class = i
-    rank = 0
-    for i in range(len(y_pred)):
-        if y_pred[i] >= y_pred[correct_class]:
-            rank += 1
-    return float(rank - 1)
+    result = 0
+    for pred in y_pred:
+        if pred >= y_pred[correct_class]:
+            result += 1
+    return float(result - 1)
 
 
 def rank_slow(y_true, y_pred):
@@ -41,48 +41,50 @@ def rank_slow(y_true, y_pred):
 def test_rank_random_ties():
     # Make the test deterministic.
     np.random.seed(42)
-    N = 256
-    BS = 1_000
+    byte_values = 256
+    batch_size = 1_000
 
     def r_y_true():
-        y_true = np.zeros(N)
-        y_true[np.random.randint(N)] = 1.
+        y_true = np.zeros(byte_values)
+        y_true[np.random.randint(byte_values)] = 1.
         return y_true
 
-    y_true = [r_y_true() for _ in range(BS)]
-    y_pred = [np.around(np.random.random(N), 1) for _ in range(BS)]
+    y_true = [r_y_true() for _ in range(batch_size)]
+    y_pred = [
+        np.around(np.random.random(byte_values), 1) for _ in range(batch_size)
+    ]
 
     r = rank(y_true, y_pred)
 
-    assert r.shape == (BS,)
+    assert r.shape == (batch_size,)
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 
 
 def test_rank_random():
     # Make the test deterministic.
     np.random.seed(42)
-    N = 256
-    BS = 1_000
+    byte_values = 256
+    batch_size = 1_000
 
     def r_y_true():
-        y_true = np.zeros(N)
-        y_true[np.random.randint(N)] = 1.
+        y_true = np.zeros(byte_values)
+        y_true[np.random.randint(byte_values)] = 1.
         return y_true
 
-    y_true = [r_y_true() for _ in range(BS)]
-    y_pred = [np.random.random(N) for _ in range(BS)]
+    y_true = [r_y_true() for _ in range(batch_size)]
+    y_pred = [np.random.random(byte_values) for _ in range(batch_size)]
 
     r = rank(y_true, y_pred)
 
-    assert r.shape == (BS,)
+    assert r.shape == (batch_size,)
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 
 
 def test_rank_correct_pred():
-    N = 6
-    y_true = np.eye(N)
+    matrix_side = 6
+    y_true = np.eye(matrix_side)
     r = rank(y_true, y_true)
-    assert r.shape == (N,)
+    assert r.shape == (matrix_side,)
     assert (r.numpy() == rank_slow(y_true, y_true)).all()
 
 
@@ -103,7 +105,24 @@ def test_meanrank_doc():
     assert r.result().numpy() == 0.5
 
 
+def test_meanrank_decimals_no_rounding():
+    # No rounding
+    r = MeanRank(decimals=None)
+    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
+    assert r.result().numpy() == 0.25
+
+
+def test_meanrank_1_decimals():
+    # One decimal
+    r = MeanRank(decimals=1)
+    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
+    assert np.isclose(r.result().numpy(), 0.2)
+
+
 def test_maxrank_doc():
     r = MaxRank()
     r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
-    assert r.result().numpy() == 1.0
+    assert r.result().numpy() == 1
+    assert r.result().numpy().dtype == np.int32
