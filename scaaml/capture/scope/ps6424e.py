@@ -209,6 +209,10 @@ class CaptureSettings(object):
         ret["coupling"] = self.coupling
         return ret
 
+    def dict_repr(self):
+        """Public dictionary representation."""
+        return self._dict_repr()
+
     def __repr__(self):
         return util.dict_to_str(self._dict_repr())
 
@@ -654,8 +658,8 @@ class Pico6424E(ChipWhispererCommonInterface):
 
     def _dict_repr(self):
         ret = OrderedDict()
-        ret["trace"] = self.trace._dict_repr()  # pylint: disable=W0212
-        ret["trigger"] = self.trigger._dict_repr()  # pylint: disable=W0212
+        ret["trace"] = self.trace.dict_repr()
+        ret["trigger"] = self.trigger.dict_repr()
         ret["sample_rate"] = self.sample_rate
         ret["sample_length"] = self.sample_length
         ret["sample_offset"] = self.sample_offset
