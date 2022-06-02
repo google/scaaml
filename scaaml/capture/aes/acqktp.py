@@ -213,5 +213,5 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
         return self._key, self._textin
 
     def __str__(self):
-        return f"{self._name} ({self._dataset}, {self._pt_per_key}, " \
-               f"{self._repeat}, {self._nbkeys})"
+        return (f"{self._name} ({self._dataset}, {self._pt_per_key}, "
+                f"{self._repeat}, {self._nbkeys})")

@@ -52,9 +52,9 @@ def hex_display(lst, prefix="", color="green"):
 
 
 def get_model_stub(attack_point, attack_byte, config):
-    return f"{config['device']}-{config['algorithm']}-{config['model']}-" \
-           f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-" \
-           f"len_{config['max_trace_len']}"
+    return (f"{config['device']}-{config['algorithm']}-{config['model']}-"
+            f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-"
+            f"len_{config['max_trace_len']}")
 
 
 def get_target_stub(config):

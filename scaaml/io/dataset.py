@@ -124,8 +124,8 @@ class Dataset():
         if not self.firmware_url:
             raise ValueError("Firmware URL is required")
 
-        self.slug = f"{shortname}_{algorithm}_{architecture}_" \
-                    f"v{implementation}_{version}"
+        self.slug = (f"{shortname}_{algorithm}_{architecture}_"
+                     f"v{implementation}_{version}")
         if from_config:
             self.path = Path(root_path)
             self.root_path = str(self.path.parent)
