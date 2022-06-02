@@ -19,7 +19,7 @@ import chipwhisperer as cw
 from scaaml.capture.scope import CWScope
 
 
-@patch.object(cw, 'scope')
+@patch.object(cw, "scope")
 def test_with(mock_scope):
     mock_cwscope = MagicMock()
     mock_scope.return_value = mock_cwscope
@@ -27,15 +27,15 @@ def test_with(mock_scope):
     samples = 7000
     offset = 0
     clock = 7372800
-    sample_rate = 'clkgen_x4'
+    sample_rate = "clkgen_x4"
     mock_cwscope.adc.oa.hwInfo.maxSamples.return_value = -1
     capture_info = {
-        'gain': gain,
-        'samples': samples,
-        'offset': offset,
-        'clock': clock,
-        'sample_rate': sample_rate,
-        'other_information': 'Can also be present.',
+        "gain": gain,
+        "samples": samples,
+        "offset": offset,
+        "clock": clock,
+        "sample_rate": sample_rate,
+        "other_information": "Can also be present.",
     }
 
     with CWScope(**capture_info) as scope:
@@ -54,7 +54,7 @@ def test_with(mock_scope):
     assert mock_cwscope.dis.call_count >= 1
 
 
-@patch.object(cw, 'scope')
+@patch.object(cw, "scope")
 def test_with(mock_scope):
     mock_cwscope = MagicMock()
     mock_scope.return_value = mock_cwscope
@@ -62,7 +62,7 @@ def test_with(mock_scope):
     samples = 7000
     offset = 0
     clock = 7372800
-    sample_rate = 'clkgen_x4'
+    sample_rate = "clkgen_x4"
     mock_cwscope.adc.oa.hwInfo.maxSamples.return_value = -1
 
     with CWScope(gain=gain,

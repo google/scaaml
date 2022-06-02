@@ -13,8 +13,6 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-import chipwhisperer as cw
-
 from scaaml.capture.scope import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 

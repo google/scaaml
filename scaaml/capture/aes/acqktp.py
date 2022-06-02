@@ -16,7 +16,6 @@
 import random
 import numpy as np
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
-from chipwhisperer.common.utils.util import camel_case_deprecated
 
 
 class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
@@ -104,7 +103,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     def dataset(self, val):
         """set dataset type"""
         if val not in self.DATASET_TYPES:
-            raise ValueError("dataset must be {:r}".format(self.DATASET_TYPES))
+            raise ValueError(f"dataset must be {self.DATASET_TYPES}")
         self._dataset = val
 
     @property
@@ -124,6 +123,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             raise ValueError("Unsupported dataset type")
 
     def init(self, maxtraces: int):
+        del maxtraces  # unused
         if self._input_shape != (self.key_len, self.text_len):
             # Force recreating the generator if shape has changed. This
             # shouldn't happen while generating a given dataset but may happen
@@ -139,7 +139,6 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                 raise ValueError("Unsupported dataset")
 
     init_pair = init
-    initPair = camel_case_deprecated(init_pair)
 
     def _generate_inputs(self):
 
@@ -150,7 +149,8 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             return (counts == (length * num_batch)).all()
 
         def generate_matrix(length):
-            "generate a length x 256 matrix that spread values with no repetition"
+            """Generate a length x 256 matrix that spread values with no
+            repetition."""
             matrix = np.zeros((length, 256),
                               dtype=np.uint8)  # make the first matrix fail test
             bytes_ = np.arange(256, dtype=np.uint8)
@@ -202,9 +202,9 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             # Nothing to check
             pass
         else:
-            raise ValueError(f'Incorrect dataset type. '
-                             f'Allowed values are {self.DATASET_TYPES}. '
-                             f'Currently set to {self._dataset}')
+            raise ValueError(f"Incorrect dataset type. "
+                             f"Allowed values are {self.DATASET_TYPES}. "
+                             f"Currently set to {self._dataset}")
 
         # Check pair works with target
         self.validateKey()
@@ -212,7 +212,6 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
         return self._key, self._textin
 
-    newPair = camel_case_deprecated(new_pair)
-
     def __str__(self):
-        return f'{self._name} ({self._dataset}, {self._pt_per_key}, {self._repeat}, {self._nbkeys})'
+        return (f"{self._name} ({self._dataset}, {self._pt_per_key}, "
+                f"{self._repeat}, {self._nbkeys})")

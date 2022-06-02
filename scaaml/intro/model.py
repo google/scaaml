@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Intro model."""
 
-from scaaml.utils import display_config
 from tensorflow.keras import layers
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
+
+from scaaml.utils import display_config
 from scaaml.utils import get_num_gpu
 
 
@@ -24,7 +26,7 @@ def block(x,
           kernel_size=3,
           strides=1,
           conv_shortcut=False,
-          activation='relu'):
+          activation="relu"):
     """Residual block with preactivation
     From: https://arxiv.org/pdf/1603.05027.pdf
 
@@ -44,7 +46,7 @@ def block(x,
         use_batchnorm (bool, optional): Use batchnormalization if True.
         Defaults to True.
 
-        activation (str, optional): activation function. Defaults to 'relu'.
+        activation (str, optional): activation function. Defaults to "relu".
 
     Returns:
         Output tensor for the residual block.
@@ -61,7 +63,7 @@ def block(x,
         else:
             shortcut = x
 
-    x = layers.Conv1D(filters, 1, use_bias=False, padding='same')(x)
+    x = layers.Conv1D(filters, 1, use_bias=False, padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.Activation(activation)(x)
 
@@ -69,7 +71,7 @@ def block(x,
                       kernel_size,
                       strides=strides,
                       use_bias=False,
-                      padding='same')(x)
+                      padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.Activation(activation)(x)
 
@@ -78,7 +80,7 @@ def block(x,
     return x
 
 
-def stack(x, filters, blocks, kernel_size=3, strides=2, activation='relu'):
+def stack(x, filters, blocks, kernel_size=3, strides=2, activation="relu"):
     """A set of stacked residual blocks.
     Args:
         filters (int): filters of the bottleneck layer.
@@ -94,7 +96,7 @@ def stack(x, filters, blocks, kernel_size=3, strides=2, activation='relu'):
         conv_shortcut (bool, optional): Use convolution shortcut if True,
         otherwise identity shortcut. Defaults to False.
 
-        activation (str, optional): activation function. Defaults to 'relu'.
+        activation (str, optional): activation function. Defaults to "relu".
 
     Returns:
         tensor:Output tensor for the stacked blocks.
@@ -104,22 +106,23 @@ def stack(x, filters, blocks, kernel_size=3, strides=2, activation='relu'):
               kernel_size=kernel_size,
               activation=activation,
               conv_shortcut=True)
-    for i in range(2, blocks):
+    for _ in range(2, blocks):
         x = block(x, filters, kernel_size=kernel_size, activation=activation)
     x = block(x, filters, strides=strides, activation=activation)
     return x
 
 
-def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):
+def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=C0103
+    del attack_point  # unused
 
-    pool_size = mdl_cfg['initial_pool_size']
-    filters = mdl_cfg['initial_filters']
-    block_kernel_size = mdl_cfg['block_kernel_size']
-    activation = mdl_cfg['activation']
-    dense_dropout = mdl_cfg['dense_dropout']
+    pool_size = mdl_cfg["initial_pool_size"]
+    filters = mdl_cfg["initial_filters"]
+    block_kernel_size = mdl_cfg["block_kernel_size"]
+    activation = mdl_cfg["activation"]
+    dense_dropout = mdl_cfg["dense_dropout"]
     num_blocks = [
-        mdl_cfg['blocks_stack1'], mdl_cfg['blocks_stack2'],
-        mdl_cfg['blocks_stack3'], mdl_cfg['blocks_stack4']
+        mdl_cfg["blocks_stack1"], mdl_cfg["blocks_stack2"],
+        mdl_cfg["blocks_stack3"], mdl_cfg["blocks_stack4"]
     ]
 
     inputs = layers.Input(shape=(input_shape))
@@ -145,18 +148,18 @@ def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):
         x = layers.BatchNormalization()(x)
         x = layers.Activation(activation)(x)
 
-    outputs = layers.Dense(256, activation='softmax')(x)
+    outputs = layers.Dense(256, activation="softmax")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
     model.summary()
 
     if get_num_gpu() > 1:
-        lr = optim_cfg['multi_gpu_lr']
+        lr = optim_cfg["multi_gpu_lr"]
     else:
-        lr = optim_cfg['lr']
+        lr = optim_cfg["lr"]
 
     model.compile(loss=["categorical_crossentropy"],
-                  metrics=['acc'],
+                  metrics=["acc"],
                   optimizer=Adam(lr))
     return model
 
@@ -168,8 +171,8 @@ def get_model(input_shape, attack_point, config):
         config (dict): scald config.
     """
 
-    mdl_cfg = config['model_parameters']
-    optim_cfg = config['optimizer_parameters']
+    mdl_cfg = config["model_parameters"]
+    optim_cfg = config["optimizer_parameters"]
 
     display_config("model", mdl_cfg)
     display_config("optimizer", optim_cfg)

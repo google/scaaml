@@ -21,7 +21,7 @@ from glob import glob
 from multiprocessing import Pool
 import time
 from random import randint
-from termcolor import cprint, colored
+from termcolor import cprint
 
 
 def pretty_hex(val):
@@ -29,11 +29,11 @@ def pretty_hex(val):
     s = hex(int(val))
     s = s[2:]  # remove 0x
     if len(s) == 1:
-        s = '0' + s
+        s = "0" + s
     return s.upper()
 
 
-def bytelist_to_hex(lst, spacer=' '):
+def bytelist_to_hex(lst, spacer=" "):
     h = []
 
     for e in lst:
@@ -41,32 +41,32 @@ def bytelist_to_hex(lst, spacer=' '):
     return spacer.join(h)
 
 
-def hex_display(lst, prefix="", color='green'):
+def hex_display(lst, prefix="", color="green"):
     "display a list of int as colored hex"
     h = []
-    if len(prefix):
-        prefix += '\t'
+    if len(prefix) > 0:
+        prefix += "\t"
     for e in lst:
         h.append(pretty_hex(e))
     cprint(prefix + " ".join(h), color)
 
 
 def get_model_stub(attack_point, attack_byte, config):
-    return '%s-%s-%s-v%s-ap_%s-byte_%s-len_%s' % (
-        config['device'], config['algorithm'], config['model'],
-        config['version'], attack_point, attack_byte, config['max_trace_len'])
+    return (f"{config['device']}-{config['algorithm']}-{config['model']}-"
+            f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-"
+            f"len_{config['max_trace_len']}")
 
 
 def get_target_stub(config):
-    return '%s-%s' % (config['device'], config['algorithm'])
+    return f"{config['device']}-{config['algorithm']}"
 
 
 def get_num_gpu():
-    return len(tf.config.list_physical_devices('GPU'))
+    return len(tf.config.list_physical_devices("GPU"))
 
 
 def tf_cap_memory():
-    gpus = tf.config.experimental.list_physical_devices('GPU')
+    gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
         for gpu in gpus:
@@ -81,15 +81,15 @@ def convert_shard_to_cw(info):
     # avoid trashing the HD by desync multi process
     time.sleep(randint(0, 100) / 1000)
     cw_traces = []
-    shard = np.load(info['fname'])
+    shard = np.load(info["fname"])
     # CW traces
-    cts = np.transpose(shard['cts'])
-    pts = np.transpose(shard['pts'])
-    keys = np.transpose(shard['keys'])
+    cts = np.transpose(shard["cts"])
+    pts = np.transpose(shard["pts"])
+    keys = np.transpose(shard["keys"])
 
-    for idx in range(info['num_traces_by_shard']):
-        wave = np.squeeze(shard['traces'][idx])
-        wave = wave[:info['trace_len']]
+    for idx in range(info["num_traces_by_shard"]):
+        wave = np.squeeze(shard["traces"][idx])
+        wave = wave[:info["trace_len"]]
 
         t = cw.Trace(wave, pts[idx], cts[idx], keys[idx])
         cw_traces.append(t)
@@ -106,14 +106,14 @@ def convert_to_chipwispher_format(filepattern, num_shards, num_traces_by_shard,
     chunks = []
     for fname in filemames:
         chunks.append({
-            'fname': fname,
-            'num_traces_by_shard': num_traces_by_shard,
-            'trace_len': trace_len
+            "fname": fname,
+            "num_traces_by_shard": num_traces_by_shard,
+            "trace_len": trace_len
         })
 
     p = Pool()
     cw_traces = []
-    pb = tqdm(total=num_traces, desc='Converting', unit='traces')
+    pb = tqdm(total=num_traces, desc="Converting", unit="traces")
     for traces in p.imap_unordered(convert_shard_to_cw, chunks):
         cw_traces.extend(traces)
         pb.update(num_traces_by_shard)
@@ -129,14 +129,14 @@ def display_config(config_name, config):
         config_name (str): name of the config
         config (dict): config to display
     """
-    cprint("[%s]" % config_name, "magenta")
+    cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
         if cnt % 2:
-            color = 'cyan'
+            color = "cyan"
         else:
-            color = 'yellow'
-        cprint("%s:%s" % (k, v), color)
+            color = "yellow"
+        cprint(f"{k}:{v}", color)
         cnt += 1
 
 

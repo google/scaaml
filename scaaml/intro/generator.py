@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Dataset creation and loading."""
 
 import tensorflow as tf
 import numpy as np
@@ -22,30 +23,34 @@ from glob import glob
 
 def create_dataset(filepattern,
                    batch_size=32,
-                   attack_point='key',
+                   attack_point="key",
                    attack_byte=0,
                    num_shards=256,
                    num_traces_per_shard=256,
                    max_trace_length=20000,
                    is_training=True,
                    shuffle_size=65535):
+    del shuffle_size  # unused
+    del is_training  # unused
+    del batch_size  # unused
 
     shards = list_shards(filepattern, num_shards)
     attack_byte = int(attack_byte)
 
-    if attack_point not in ['key', 'sub_bytes_in', 'sub_bytes_out']:
+    if attack_point not in ["key", "sub_bytes_in", "sub_bytes_out"]:
         raise ValueError(
-            'invalid attack point. avail: key, sub_bytes_in, sub_bytes_out')
+            "invalid attack point. avail: key, sub_bytes_in, sub_bytes_out")
 
     x = []
     y = []
     pb = tqdm(total=num_shards, desc="loading shards")
-    with tf.device('/cpu:0'):
+    with tf.device("/cpu:0"):
         for idx, shard_fname in enumerate(shards):
             x_shard, y_shard = load_shard(shard_fname, attack_byte,
                                           attack_point, max_trace_length,
                                           num_traces_per_shard)
 
+            del idx  # unused
             # if not idx:
             #     x = x_shard
             #     y = y_shard
@@ -59,21 +64,23 @@ def create_dataset(filepattern,
         x = tf.concat(x, axis=0)
         y = tf.concat(y, axis=0)
 
-    cprint('[Generator]', 'yellow')
-    cprint('|-attack point:%s' % attack_point, 'blue')
-    cprint('|-attack byte:%s' % attack_byte, 'green')
-    cprint('|-num shards:%s' % num_shards, 'blue')
-    cprint('|-traces per shards:%s' % num_traces_per_shard, 'green')
-    cprint('|-y:%s' % str(y.shape), 'blue')
-    cprint('|-x:%s' % str(x.shape), 'green')
+    cprint("[Generator]", "yellow")
+    cprint(f"|-attack point:{attack_point}", "blue")
+    cprint(f"|-attack byte:{attack_byte}", "green")
+    cprint(f"|-num shards:{num_shards}", "blue")
+    cprint(f"|-traces per shards:{num_traces_per_shard}", "green")
+    cprint(f"|-y:{str(y.shape)}", "blue")
+    cprint(f"|-x:{str(x.shape)}", "green")
 
     # make it a tf dataset
-    # cprint("building tf dataset", 'magenta')
+    # cprint("building tf dataset", "magenta")
     # dataset = tf.data.Dataset.from_tensor_slices((x, y))
     # dataset.cache()
     # if is_training:
     #     dataset = dataset.shuffle(shuffle_size, reshuffle_each_iteration=True)
-    # dataset = dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+    # dataset = dataset.batch(batch_size).prefetch(
+    #     tf.data.experimental.AUTOTUNE
+    # )
     return (x, y)
 
 
@@ -99,27 +106,28 @@ def load_attack_shard(fname,
     Returns:
         list: keys, pts, attack_points_val, power_traces
     """
+    del full_key  # unused
     shard = np.load(fname)
     attack_byte = int(attack_byte)
 
     # key
-    k = shard['keys'][attack_byte][:num_traces]
-    pts = shard['pts'][attack_byte][:num_traces]
+    k = shard["keys"][attack_byte][:num_traces]
+    pts = shard["pts"][attack_byte][:num_traces]
     # load y
-    if attack_point == 'key':
-        y = shard['keys'][attack_byte]
-    elif attack_point == 'sub_bytes_in':
-        y = shard['sub_bytes_in'][attack_byte]
-    elif attack_point == 'sub_bytes_out':
-        y = shard['sub_bytes_out'][attack_byte]
+    if attack_point == "key":
+        y = shard["keys"][attack_byte]
+    elif attack_point == "sub_bytes_in":
+        y = shard["sub_bytes_in"][attack_byte]
+    elif attack_point == "sub_bytes_out":
+        y = shard["sub_bytes_out"][attack_byte]
 
     y = y[:num_traces]
     y = to_categorical(y, 256)
-    y = tf.convert_to_tensor(y, dtype='uint8')
+    y = tf.convert_to_tensor(y, dtype="uint8")
 
     # load x
-    x = shard['traces'][:num_traces, :max_trace_length, :]
-    x = tf.convert_to_tensor(x, dtype='float32')
+    x = shard["traces"][:num_traces, :max_trace_length, :]
+    x = tf.convert_to_tensor(x, dtype="float32")
     return k, pts, x, y
 
 
@@ -128,18 +136,18 @@ def load_shard(fname, attack_byte, attack_point, max_trace_length,
     shard = np.load(fname)
 
     # load y
-    if attack_point == 'key':
-        y = shard['keys'][attack_byte]
-    elif attack_point == 'sub_bytes_in':
-        y = shard['sub_bytes_in'][attack_byte]
-    elif attack_point == 'sub_bytes_out':
-        y = shard['sub_bytes_out'][attack_byte]
+    if attack_point == "key":
+        y = shard["keys"][attack_byte]
+    elif attack_point == "sub_bytes_in":
+        y = shard["sub_bytes_in"][attack_byte]
+    elif attack_point == "sub_bytes_out":
+        y = shard["sub_bytes_out"][attack_byte]
 
     y = y[:num_traces_per_shard]
     y = to_categorical(y, 256)
-    y = tf.convert_to_tensor(y, dtype='uint8')
+    y = tf.convert_to_tensor(y, dtype="uint8")
 
     # load x
-    x = shard['traces'][:num_traces_per_shard, :max_trace_length, :]
-    x = tf.convert_to_tensor(x, dtype='float32')
+    x = shard["traces"][:num_traces_per_shard, :max_trace_length, :]
+    x = tf.convert_to_tensor(x, dtype="float32")
     return x, y

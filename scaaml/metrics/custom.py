@@ -76,7 +76,7 @@ def rank(y_true, y_pred):
     # preferred is of shape (None, N)
 
     # A scalar, summing a 1. for each True and 0. for each False.
-    ranks = tf.reduce_sum(tf.cast(preferred, 'float32'), axis=-1)
+    ranks = tf.reduce_sum(tf.cast(preferred, "float32"), axis=-1)
     # ranks is of shape (None,)
     # Do not count the correct class itself (rank is counted from 0).
     return ranks - 1
@@ -106,14 +106,14 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
     Usage with `compile()` API:
 
     ```python
-    model.compile(optimizer='sgd',
-                  loss='mse',
+    model.compile(optimizer="sgd",
+                  loss="mse",
                   metrics=[MeanRank()])
     ```
     """
 
     def __init__(self,
-                 name: str = 'mean_rank',
+                 name: str = "mean_rank",
                  dtype=None,
                  decimals: Optional[int] = None):
         super().__init__(rank, name, dtype=dtype)
@@ -158,8 +158,8 @@ class MaxRank(keras.metrics.Metric):
     Usage with `compile()` API:
 
     ```python
-    model.compile(optimizer='sgd',
-                  loss='mse',
+    model.compile(optimizer="sgd",
+                  loss="mse",
                   metrics=[MaxRank()])
     ```
     """
@@ -177,6 +177,7 @@ class MaxRank(keras.metrics.Metric):
           sample_weight (Optional weights): Does not make sense, as we count
             maximum.
         """
+        del sample_weight  # unused
         rank_update = rank(y_true=y_true, y_pred=y_pred)
         rank_update = tf.math.reduce_max(rank_update)
         self.max_rank.assign(tf.math.maximum(self.max_rank, rank_update))

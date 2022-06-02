@@ -20,12 +20,12 @@ from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 def capture_aes_scald_stm32f4_mbedtls(
         firmware_sha256: str,
         crypto_implementation=AESSBOX,
-        algorithm: str = 'simpleserial-aes',
+        algorithm: str = "simpleserial-aes",
         version: int = 1,
-        root_path: str = '/mnt/storage/chipwhisperer',
-        url: str = '',
-        firmware_url: str = '',
-        paper_url: str = '',
+        root_path: str = "/mnt/storage/chipwhisperer",
+        url: str = "",
+        firmware_url: str = "",
+        paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
         measurements_info=None,
@@ -36,23 +36,23 @@ def capture_aes_scald_stm32f4_mbedtls(
         holdout_keys: int = 0 * 1024,
         holdout_plaintexts: int = 1) -> None:
     """SCALD STM32F4 MBEDTLS specific defaults for capture_aes_dataset."""
-    architecture: str = 'CW308_STM32F4'
-    implementation: str = 'MBEDTLS'
-    shortname: str = 'aes_scald'
-    description: str = 'SCALD AES'
+    architecture: str = "CW308_STM32F4"
+    implementation: str = "MBEDTLS"
+    shortname: str = "aes_scald"
+    description: str = "SCALD AES"
 
     # Parameters for the scope
     gain: int = 45
     samples: int = 7000
     offset: int = 0
     clock: int = 7372800
-    sample_rate: str = 'clkgen_x4'
+    sample_rate: str = "clkgen_x4"
     capture_info = {
-        'gain': gain,
-        'samples': samples,
-        'offset': offset,
-        'clock': clock,
-        'sample_rate': sample_rate,
+        "gain": gain,
+        "samples": samples,
+        "offset": offset,
+        "clock": clock,
+        "sample_rate": sample_rate,
     }
 
     capture_aes_dataset(

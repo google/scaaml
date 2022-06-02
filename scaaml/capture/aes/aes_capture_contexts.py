@@ -34,12 +34,12 @@ def capture_aes_dataset(
         capture_info: Dict,
         chip_id: int,
         crypto_implementation=AESSBOX,
-        algorithm: str = 'simpleserial-aes',
+        algorithm: str = "simpleserial-aes",
         version: int = 1,
-        root_path: str = '/mnt/storage/chipwhisperer',
-        url: str = '',
-        firmware_url: str = '',
-        paper_url: str = '',
+        root_path: str = "/mnt/storage/chipwhisperer",
+        url: str = "",
+        firmware_url: str = "",
+        paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
         measurements_info=None,
@@ -109,15 +109,15 @@ def capture_aes_dataset(
         measurements_info = {
             "trace1": {
                 "type": "power",
-                "len": capture_info['samples'],
+                "len": capture_info["samples"],
             },
         }
 
     # Make sure we do not capture train and holdout in the same go (using the
     # same chip).
     if holdout_keys and train_keys:
-        raise ValueError('Holdout should not be captured with the same chip as'
-                         'test or train')
+        raise ValueError("Holdout should not be captured with the same chip as"
+                         "test or train")
 
     dataset = Dataset.get_dataset(
         root_path=root_path,
@@ -140,20 +140,20 @@ def capture_aes_dataset(
     # Check that if we are capturing train or holdout then the other split has
     # different chip_id.
     if holdout_keys:  # Capturing holdout, check train and test.
-        if dataset.shards_list['train']:
-            if dataset.shards_list['train'][0]['chip_id'] == chip_id:
-                raise ValueError('Capturing holdout using the same chip as '
-                                 'train.')
+        if dataset.shards_list["train"]:
+            if dataset.shards_list["train"][0]["chip_id"] == chip_id:
+                raise ValueError("Capturing holdout using the same chip as "
+                                 "train.")
     if train_keys:  # Capturing train and test, check holdout.
-        if dataset.shards_list['holdout']:
-            if dataset.shards_list['holdout'][0]['chip_id'] == chip_id:
-                raise ValueError('Capturing train using the same chip as '
-                                 'holdout.')
+        if dataset.shards_list["holdout"]:
+            if dataset.shards_list["holdout"][0]["chip_id"] == chip_id:
+                raise ValueError("Capturing train using the same chip as "
+                                 "holdout.")
 
     # Generators of key-plaintext pairs for different splits.
     crypto_algorithms = []
 
-    def add_crypto_alg(split: Literal['test', 'train', 'holdout'], keys: int,
+    def add_crypto_alg(split: Literal["test", "train", "holdout"], keys: int,
                        plaintexts: int, repetitions: int):
         """Does not overwrite, safe to call multiple times.
 
@@ -165,7 +165,7 @@ def capture_aes_dataset(
         """
         if split not in Dataset.SPLITS:
             raise ValueError(
-                f'split must be one of {Dataset.SPLITS}, got {split}')
+                f"split must be one of {Dataset.SPLITS}, got {split}")
         new_crypto_alg = SCryptoAlgorithm(
             crypto_implementation=crypto_implementation,
             purpose=split,
@@ -177,31 +177,31 @@ def capture_aes_dataset(
             examples_per_shard=examples_per_shard,
             firmware_sha256=firmware_sha256,
             full_kt_filename=Path(root_path) / dataset.slug /
-            f'{split}_key_text_pairs.txt',
+            f"{split}_key_text_pairs.txt",
             full_progress_filename=Path(root_path) / dataset.slug /
-            f'{split}_progress_pairs.txt')
+            f"{split}_progress_pairs.txt")
         crypto_algorithms.append(new_crypto_alg)
 
     if test_keys:
-        add_crypto_alg(split='test',
+        add_crypto_alg(split="test",
                        keys=test_keys,
                        plaintexts=test_plaintexts,
                        repetitions=repetitions)
     if train_keys:
-        add_crypto_alg(split='train',
+        add_crypto_alg(split="train",
                        keys=train_keys,
                        plaintexts=train_plaintexts,
                        repetitions=repetitions)
     if holdout_keys:
-        add_crypto_alg(split='holdout',
+        add_crypto_alg(split="holdout",
                        keys=holdout_keys,
                        plaintexts=holdout_plaintexts,
                        repetitions=repetitions)
 
     if not crypto_algorithms:
         raise ValueError(
-            'At least one of [train_keys, holdout_keys] should be non-zero in'
-            'order to capture at least one split.')
+            "At least one of [train_keys, holdout_keys] should be non-zero in"
+            "order to capture at least one split.")
 
     # Create context managers and capture dataset.
     _capture(
@@ -223,7 +223,8 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int,
       chip_id: Identifies the physical chip/board used. It is unique for a
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext generators.
+      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
+        generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     # Capture using PicoScope.
@@ -254,7 +255,7 @@ def _capture(scope_class, capture_info: Dict[str, any], chip_id: int,
         return  # Everything is finished.
 
     # Warn on unknown scope_class.
-    raise ValueError(f'Unsupported scope_class: {scope_class}')
+    raise ValueError(f"Unsupported scope_class: {scope_class}")
 
 
 def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
@@ -266,7 +267,8 @@ def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
       cwscope (CWScope): The scope to control.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext generators.
+      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
+        generators.
       scope: The scope that does the measurements.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Backward AES."""
 
 import numpy as np
 
@@ -40,10 +41,10 @@ def ap_preds_to_key_preds(preds, plaintexts, attack_point):
 
     preds = np.array(preds)
 
-    if attack_point == 'key':
+    if attack_point == "key":
         return preds
 
-    elif attack_point == 'sub_bytes_in':
+    elif attack_point == "sub_bytes_in":
         key_probas = []
         class_ids = np.arange(256)
         for idx, pred in enumerate(preds):
@@ -51,7 +52,7 @@ def ap_preds_to_key_preds(preds, plaintexts, attack_point):
             key_probas.append(np.take(pred, kv))
         return np.array(key_probas)
 
-    elif attack_point == 'sub_bytes_out':
+    elif attack_point == "sub_bytes_out":
         key_probas = []
         for idx, pred in enumerate(preds):
             # ! danger zone. change at your own peril, Here be dragons.
@@ -63,4 +64,4 @@ def ap_preds_to_key_preds(preds, plaintexts, attack_point):
 
         return np.array(key_probas)
     else:
-        raise ValueError('Invalid attack point')
+        raise ValueError("Invalid attack point")
