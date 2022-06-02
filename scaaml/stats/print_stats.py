@@ -32,6 +32,11 @@ from .trace_stddev_of_stat import STDDEVofMAXofTraces
 from .trace_stddev_of_stat import STDDEVofMINofTraces
 
 
+def _class_name(obj: object) -> str:
+    """Return the class name of the given object."""
+    return obj.__class__.__name__
+
+
 class PrintStats:
     """Gather and print warnings from attack point checks and trace
     statistics.
@@ -155,13 +160,12 @@ class PrintStats:
         """Print table of statistics. Rows are statistics, columns are splits.
         """
         print('Trace statistics:')
-        class_name = lambda x: x.__class__.__name__
         for trace_name in self._measurements_info:
             print('')
             table = [[f'{trace_name} stats', *Dataset.SPLITS]]
             # Fill the statistic names.
             for trace_stat in self._all_trace_stats():
-                trace_stat_name = class_name(trace_stat)
+                trace_stat_name = _class_name(trace_stat)
                 table.append([trace_stat_name, *[0 for _ in Dataset.SPLITS]])
             # Fill the values.
             for i, split in enumerate(Dataset.SPLITS):
@@ -170,7 +174,7 @@ class PrintStats:
                 for j, trace_stat in enumerate(
                         self._split_trace_stats[split][trace_name]):
                     # Check that we are filling the right row.
-                    assert class_name(trace_stat) == table[j + 1][0]
+                    assert _class_name(trace_stat) == table[j + 1][0]
                     table[j + 1][i + 1] = trace_stat.result()
         print(tabulate(table, headers='firstrow'))
 
@@ -178,11 +182,10 @@ class PrintStats:
         """Print a table of results for each statistics. Rows are groups,
         columns are splits."""
         print('Trace statistics per group:')
-        class_name = lambda x: x.__class__.__name__
         for trace_name in self._measurements_info:
             for i, trace_stat in enumerate(self._all_trace_stats()):
                 print('')
-                print(f'{trace_name} {class_name(trace_stat)}:')
+                print(f'{trace_name} {_class_name(trace_stat)}:')
                 table = [['group', *Dataset.SPLITS]]
                 for group in self._all_groups:
                     table.append([str(group), *['NA' for _ in Dataset.SPLITS]])
@@ -192,7 +195,7 @@ class PrintStats:
                             curr_trace_stat = self._split_trace_group_stats[
                                 split][trace_name][group][i]
                             # Check that we are filling the right table.
-                            assert class_name(curr_trace_stat) == class_name(
+                            assert _class_name(curr_trace_stat) == _class_name(
                                 trace_stat)
                             table[-1][j + 1] = curr_trace_stat.result()
                 print(tabulate(table, headers='firstrow'))

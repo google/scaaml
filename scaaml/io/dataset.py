@@ -591,7 +591,7 @@ class Dataset():
         else:
             # Redefine tqdm to the identity function returning the first unnamed
             # parameter.
-            pbar = lambda *args, **kwargs: args[0]
+            pbar = lambda *args, **kwargs: args[0]  # pylint: disable=C3001
 
         Dataset._check_metadata(config=self._get_config_dictionary())
         Dataset._check_sha256sums(shards_list=self.shards_list,

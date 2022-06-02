@@ -68,7 +68,10 @@ class STDDEVofAVGofTraces(STDDEVofSTATofTraces):
     """
 
     def __init__(self) -> None:
-        stat_fn = lambda x: x.mean()
+
+        def stat_fn(x):
+            return x.mean()
+
         super().__init__(stat_fn=stat_fn)
 
 
@@ -76,7 +79,10 @@ class STDDEVofMAXofTraces(STDDEVofSTATofTraces):
     """Computes standard deviation of maxima of traces."""
 
     def __init__(self) -> None:
-        stat_fn = lambda x: x.max()
+
+        def stat_fn(x):
+            return x.max()
+
         super().__init__(stat_fn=stat_fn)
 
 
@@ -84,5 +90,8 @@ class STDDEVofMINofTraces(STDDEVofSTATofTraces):
     """Computes standard deviation of minima of traces."""
 
     def __init__(self) -> None:
-        stat_fn = lambda x: x.min()
+
+        def stat_fn(x):
+            return x.min()
+
         super().__init__(stat_fn=stat_fn)
