@@ -5,7 +5,7 @@
 # Its canonical open-source location is:
 #   https://google.github.io/styleguide/pylintrc
 
-[MASTER]
+[MAIN]
 
 # Files or directories to be skipped. They should be base names, not paths.
 ignore=third_party
@@ -139,6 +139,7 @@ disable=abstract-method,
         unicode-builtin,
         unnecessary-pass,
         unpacking-in-except,
+        unrecognized-option,
         useless-else-on-loop,
         useless-object-inheritance,
         useless-suppression,
