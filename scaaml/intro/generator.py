@@ -61,8 +61,10 @@ def create_dataset(filepattern,
             y.append(y_shard)
             pb.update()
         pb.close()
-        x = tf.concat(x, axis=0)
-        y = tf.concat(y, axis=0)
+        # Disable pylint warnings due to
+        # https://github.com/PyCQA/pylint/issues/3613
+        x = tf.concat(x, axis=0)  # pylint: disable=E1120,E1123
+        y = tf.concat(y, axis=0)  # pylint: disable=E1120,E1123
 
     cprint("[Generator]", "yellow")
     cprint(f"|-attack point:{attack_point}", "blue")
