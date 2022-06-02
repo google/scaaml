@@ -1,4 +1,5 @@
-"""Generates the DEPENDENCY_LICENSES file, by extracting and classifying dependencies."""
+"""Generates the DEPENDENCY_LICENSES file, by extracting and classifying
+dependencies."""
 import setuptools
 import pkg_resources
 import re
