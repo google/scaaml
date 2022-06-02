@@ -165,6 +165,10 @@ class CaptureSettings(object):
         self._probe_attenuation = self.ATTENUATION[val]
 
     @property
+    def coupling_picoapi(self):
+        return self._coupling
+
+    @property
     def coupling(self):
         return self._rev_couplings[self._coupling]
 
@@ -546,7 +550,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             ps.ps6000aSetChannelOn(
                 self.ps_handle,  # handle
                 self.trace.ps_api_channel,  # channel
-                self.trace._coupling,  # coupling  # pylint: disable=W0212
+                self.trace.coupling_picoapi,  # coupling
                 self.trace.ps_api_range,  # range
                 0,  # analogue offset
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
@@ -557,7 +561,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             ps.ps6000aSetChannelOn(
                 self.ps_handle,  # handle
                 self.trigger.ps_api_channel,  # channel
-                self.trigger._coupling,  # coupling  # pylint: disable=W0212
+                self.trigger.coupling_picoapi,  # coupling
                 self.trigger.ps_api_range,  # range
                 0,  # analogue offset
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
