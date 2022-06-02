@@ -70,13 +70,14 @@ def plot_comparaison(traces, labels, title):
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
         label = labels[idx]
+        label_lower: str = label.lower()
         if label == "SNR":
             color = "#8E24AA"
-        elif "activation" in label.lower():
+        elif "activation" in label_lower:
             color = "#64DD17"
-        elif "grad" in label.lower():
+        elif "grad" in label_lower:
             color = "#26A69A"
-        elif "scald" in label.lower():
+        elif "scald" in label_lower:
             color = "#03A9F4"
         plt.plot(trace, label=label, color=color)
 
