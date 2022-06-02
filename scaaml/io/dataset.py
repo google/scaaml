@@ -351,7 +351,8 @@ class Dataset():
                      split: str,
                      attack_points: Union[List[str], str],
                      traces: Union[List[str], str],
-                     bytes: Union[List, int],
+                     # TODO(https://github.com/google/scaaml/issues/69)
+                     bytes: Union[List, int],  # pylint: disable=W0622
                      shards: int = None,
                      parts: Union[List[int], int] = None,
                      trace_start: int = 0,
@@ -1021,7 +1022,6 @@ class Dataset():
         config["shards_list"] = new_shards_list
         examples_per_split = {}
         examples_per_group = {}
-        keys_per_group = {}
         for split, slist in config["shards_list"].items():
             examples_per_split[split] = config["examples_per_shard"] * len(
                 config["shards_list"][split])
