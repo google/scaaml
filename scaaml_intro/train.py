@@ -31,18 +31,18 @@ from scaaml.utils import tf_cap_memory
 
 def train_model(config):
     tf_cap_memory()
-    TRAIN_GLOB = f"datasets/{config['algorithm']}/train/*"  # pylint: disable=C0103
-    TEST_GLOB = f"datasets/{config['algorithm']}/test/*"  # pylint: disable=C0103
-    TEST_SHARDS = 256  # pylint: disable=C0103
-    NUM_TRACES_PER_TEST_SHARDS = 16  # pylint: disable=C0103
-    BATCH_SIZE = config["batch_size"] * get_num_gpu()  # pylint: disable=C0103
+    train_glob = f"datasets/{config['algorithm']}/train/*"
+    test_glob = f"datasets/{config['algorithm']}/test/*"
+    test_shards = 256
+    num_traces_per_test_shards = 16
+    batch_size = config["batch_size"] * get_num_gpu()
 
     for attack_byte in config["attack_bytes"]:
         for attack_point in config["attack_points"]:
 
             x_train, y_train = create_dataset(
-                TRAIN_GLOB,
-                batch_size=BATCH_SIZE,
+                train_glob,
+                batch_size=batch_size,
                 attack_point=attack_point,
                 attack_byte=attack_byte,
                 num_shards=config["num_shards"],
@@ -51,12 +51,12 @@ def train_model(config):
                 is_training=True)
 
             x_test, y_test = create_dataset(
-                TEST_GLOB,
-                batch_size=BATCH_SIZE,
+                test_glob,
+                batch_size=batch_size,
                 attack_point=attack_point,
                 attack_byte=attack_byte,
-                num_shards=TEST_SHARDS,
-                num_traces_per_shard=NUM_TRACES_PER_TEST_SHARDS,
+                num_shards=test_shards,
+                num_traces_per_shard=num_traces_per_test_shards,
                 max_trace_length=config["max_trace_len"],
                 is_training=False)
 
