@@ -102,5 +102,5 @@ if __name__ == "__main__":
     if not args.config:
         parser.print_help()
         sys.exit()
-    config = json.loads(open(args.config).read())
+    config = json.loads(open(args.config, encoding="utf-8").read())
     train_model(config)

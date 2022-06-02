@@ -88,7 +88,7 @@ def _create_resume_kti(keys: np.ndarray,
         print(f'File {kt_filename} already exists, if you want to generate new'
               ' keys, remove it first.')
         return
-    with open(progress_filename, 'w') as progress_file:
+    with open(progress_filename, 'w', encoding="utf-8") as progress_file:
         progress_file.write('0')
 
 
@@ -124,7 +124,7 @@ class ResumeKTI:
 
         # Load previous progress.
         self._progress_filename = progress_filename
-        with open(self._progress_filename) as progress_file:
+        with open(self._progress_filename, encoding="utf-8") as progress_file:
             # Ensure self._index is a multiple of self._shard_length.
             i = int(progress_file.read())
             self._index = i - (i % self._shard_length)
@@ -142,7 +142,8 @@ class ResumeKTI:
 
         Not atomic. Calling this 1000 times takes ~1s.
         """
-        with open(self._progress_filename, 'w') as progress_file:
+        with open(self._progress_filename, 'w',
+                  encoding="utf-8") as progress_file:
             # Ensure the saved index is the largest multiple of
             # self._shard_length which is at most self._index.
             i = self._index - (self._index % self._shard_length

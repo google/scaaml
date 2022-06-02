@@ -33,7 +33,7 @@ def GetDependencies():
         dependencies.extend(kwargs["install_requires"])
 
     setuptools.setup = setup
-    content = open("setup.py").read()
+    content = open("setup.py", encoding="utf-8").read()
     exec(content)
     return dependencies
 
@@ -73,7 +73,7 @@ def GenerateDependencyLicensesFile():
         headers=["Package", "License", "Category", "Homepage"],
     )
     print(table)
-    with open("DEPENDENCY_LICENSES", "w") as f:
+    with open("DEPENDENCY_LICENSES", "w", encoding="utf-8") as f:
         f.write(table)
 
 

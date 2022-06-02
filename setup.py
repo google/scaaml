@@ -16,8 +16,9 @@ from setuptools import find_packages
 from setuptools import setup
 from time import time
 
-long_description = open("README.md").read()
-version = "2.0.1r%s" % int(time())
+with open("README.md", encoding="utf-8") as readme_file:
+    long_description = readme_file.read()
+version = f"2.0.1r{int(time())}"
 
 setup(
     name="scaaml",

@@ -927,7 +927,8 @@ class Dataset():
 
     def _write_config(self):
         """Save configuration as json."""
-        with open(self._get_config_path(self.path), "w+") as f:
+        with open(self._get_config_path(self.path), "w+",
+                  encoding="utf-8") as f:
             json.dump(self._get_config_dictionary(), f)
 
     @staticmethod
@@ -1068,14 +1069,15 @@ class Dataset():
         # Save the old config.
         save_path = Path(f"{str(fpath)}.sav.{time()}.json")
         assert not save_path.exists()  # Do not overwrite.
-        save_path.write_text(fpath.read_text())
+        save_path.write_text(fpath.read_text(encoding="utf-8"),
+                             encoding="utf-8")
         cprint(f"Saving old config to {save_path}", "cyan")
 
         # Rewrite with the new config.
         cprint("Writing cleaned config", "green")
         new_config = Dataset._cleanup_shards(dataset_path=Path(dataset_path),
                                              print_info=True)
-        with open(fpath, "w+") as o:
+        with open(fpath, "w+", encoding="utf-8") as o:
             json.dump(new_config, o)
 
     def _move_shard(self, from_split: str, to_split: str,
