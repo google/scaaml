@@ -511,9 +511,6 @@ class Pico6424E(ChipWhispererCommonInterface):
 
         return np.array(self._buffers[0][:], dtype=np.float32)
 
-    # Legacy naming.
-    getLastTrace = util.camel_case_deprecated(get_last_trace)  # pylint: disable=C0103
-
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
         return np.array(self._buffers[1][:])

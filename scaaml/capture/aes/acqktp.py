@@ -16,7 +16,6 @@
 import random
 import numpy as np
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
-from chipwhisperer.common.utils.util import camel_case_deprecated
 
 
 class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
@@ -140,8 +139,6 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                 raise ValueError("Unsupported dataset")
 
     init_pair = init
-    # Legacy API
-    initPair = camel_case_deprecated(init_pair)  # pylint: disable=C0103
 
     def _generate_inputs(self):
 
@@ -214,9 +211,6 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
         self.validateText()
 
         return self._key, self._textin
-
-    # Legacy API
-    newPair = camel_case_deprecated(new_pair)  # pylint: disable=C0103
 
     def __str__(self):
         return f"{self._name} ({self._dataset}, {self._pt_per_key}, " \
