@@ -18,8 +18,7 @@ SUCCESS=0
 # Ensure we are at the project root directory
 cd $(readlink -f $(dirname $0))/..
 
-# For .py files which are not in tests or notebook checkpoints
-for file in `find . ! \( -path "./tests/*" -o -path "*/.ipynb_checkpoints/*" \) -type f -name '*.py'`
+for file in `find . -type f -name '*.py'`
 do
   # Output header for our custom matcher on Github workflow
   echo "PYLINT:${file}"
