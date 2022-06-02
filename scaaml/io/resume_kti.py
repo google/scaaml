@@ -56,8 +56,8 @@ import numpy as np
 def _create_resume_kti(keys: np.ndarray,
                        texts: np.ndarray,
                        shard_length: np.uint64,
-                       kt_filename: str = 'key_text_pairs.txt',
-                       progress_filename: str = 'progress_pairs.txt',
+                       kt_filename: str = "key_text_pairs.txt",
+                       progress_filename: str = "progress_pairs.txt",
                        allow_pickle: bool = False) -> None:
     """Saves the key-text pairs for later use. See create_resume_kti convenience
     function.
@@ -80,16 +80,16 @@ def _create_resume_kti(keys: np.ndarray,
     assert len(keys) >= 1
     assert len(keys) % shard_length == 0
     try:
-        with open(kt_filename, 'xb') as kt_file:
+        with open(kt_filename, "xb") as kt_file:
             np.save(kt_file, shard_length, allow_pickle=allow_pickle)
             np.save(kt_file, keys, allow_pickle=allow_pickle)
             np.save(kt_file, texts, allow_pickle=allow_pickle)
     except FileExistsError:
-        print(f'File {kt_filename} already exists, if you want to generate new'
-              ' keys, remove it first.')
+        print(f"File {kt_filename} already exists, if you want to generate new"
+              " keys, remove it first.")
         return
-    with open(progress_filename, 'w', encoding="utf-8") as progress_file:
-        progress_file.write('0')
+    with open(progress_filename, "w", encoding="utf-8") as progress_file:
+        progress_file.write("0")
 
 
 class ResumeKTI:
@@ -100,8 +100,8 @@ class ResumeKTI:
     """
 
     def __init__(self,
-                 kt_filename: str = 'key_text_pairs.txt',
-                 progress_filename: str = 'progress_pairs.txt',
+                 kt_filename: str = "key_text_pairs.txt",
+                 progress_filename: str = "progress_pairs.txt",
                  allow_pickle: bool = False) -> None:
         """Create a resumeable key-text iterable.
 
@@ -113,7 +113,7 @@ class ResumeKTI:
             allow_pickle: Parameter for numpy.load.
         """
         # Load shard length, keys, and texts.
-        with open(kt_filename, 'rb') as kt_pairs:
+        with open(kt_filename, "rb") as kt_pairs:
             self._shard_length = np.load(kt_pairs, allow_pickle=allow_pickle)
             self._keys = np.load(kt_pairs, allow_pickle=allow_pickle)
             self._texts = np.load(kt_pairs, allow_pickle=allow_pickle)
@@ -142,7 +142,7 @@ class ResumeKTI:
 
         Not atomic. Calling this 1000 times takes ~1s.
         """
-        with open(self._progress_filename, 'w',
+        with open(self._progress_filename, "w",
                   encoding="utf-8") as progress_file:
             # Ensure the saved index is the largest multiple of
             # self._shard_length which is at most self._index.
@@ -177,8 +177,8 @@ class ResumeKTI:
 def create_resume_kti(keys: np.ndarray,
                       texts: np.ndarray,
                       shard_length: np.uint64,
-                      kt_filename: str = 'key_text_pairs.txt',
-                      progress_filename: str = 'progress_pairs.txt',
+                      kt_filename: str = "key_text_pairs.txt",
+                      progress_filename: str = "progress_pairs.txt",
                       allow_pickle: bool = False) -> ResumeKTI:
     """Saves the key-text pairs and returns a ResumeKTI object for immediate
     use.
