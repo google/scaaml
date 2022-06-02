@@ -692,9 +692,11 @@ class Dataset():
         # Check that the info corresponds to the filename:
         file_info = Dataset._shard_info_from_name(shard_info["path"])
         for key in ["group", "part"]:
-            if file_info["shard_" + key] != shard_info[key]:
+            # either shard_group or shard_part
+            shard_membership: str = f"shard_{key}"
+            if file_info[shard_membership] != shard_info[key]:
                 raise ValueError(f"{key} does not match filename, expected: "
-                                 f"{file_info['shard_' + key]}, got: "
+                                 f"{file_info[shard_membership]}, got: "
                                  f"{shard_info[key]}, in shard: {shard_info}")
         # Check key (in filename it is lower case, in info it is upper case)
         if file_info["shard_key"].lower() != shard_info["key"].lower():
