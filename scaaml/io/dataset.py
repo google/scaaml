@@ -146,13 +146,13 @@ class Dataset():
             cprint(f"Dataset path: {self.path}", "green")
 
         # current shard tracking
-        self.shard_key = None
+        self.shard_key: Optional[str] = None
         self.prev_shard_key = None  # track key change for counting
-        self.shard_path = None
-        self.shard_split = None
-        self.shard_part = None
-        self.shard_relative_path = None  # for the shardlist
-        self.curr_shard = None  # current_ shard object
+        self.shard_path: Optional[str] = None
+        self.shard_split: Optional[str] = None
+        self.shard_part: Optional[int] = None
+        self.shard_relative_path: Optional[str] = None  # for the shardlist
+        self.curr_shard: Optional[Shard] = None  # current_ shard object
 
         # [counters] - must be passed as param to allow reload.
         # shards_list[split] is a list of shard info dictionaries (where split
@@ -242,7 +242,7 @@ class Dataset():
             if dir_separator in shard_name:
                 shard_name = shard_name.split(dir_separator)[-1]
         parts = shard_name.split("_")
-        kwargs = {}
+        kwargs: Dict[str, Union[int, str]] = {}
         kwargs["shard_group"] = int(parts[0])
         kwargs["shard_key"] = parts[1]
         kwargs["shard_part"] = int(parts[2].split(".")[0])
@@ -298,6 +298,7 @@ class Dataset():
                                 compression=self.compression)
 
     def write_example(self, attack_points: Dict, measurement: Dict):
+        assert self.curr_shard is not None
         self.curr_shard.write(attack_points, measurement)
 
     def close_shard(self):
@@ -360,8 +361,8 @@ class Dataset():
             trace_len: int = None,
             batch_size: int = 32,
             prefetch: int = 4,
-            file_parallelism: int = os.cpu_count(),
-            parallelism: int = os.cpu_count(),
+            file_parallelism: Optional[int] = os.cpu_count(),
+            parallelism: Optional[int] = os.cpu_count(),
             shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
@@ -701,7 +702,7 @@ class Dataset():
                                  f"{file_info[shard_membership]}, got: "
                                  f"{shard_info[key]}, in shard: {shard_info}")
         # Check key (in filename it is lower case, in info it is upper case)
-        if file_info["shard_key"].lower() != shard_info["key"].lower():
+        if str(file_info["shard_key"]).lower() != shard_info["key"].lower():
             raise ValueError(f"key does not match filename, expected: "
                              f"{file_info['shard_key']}, got: "
                              f"{shard_info['key']} (not case sensitive), in "
@@ -761,7 +762,7 @@ class Dataset():
             # JSON file-format only allows keys to be strings. When the dataset
             # is created the group ids are integers, but when dataset is loaded
             # they are strings. We check the case where all keys are strings.
-            examples_per_group = defaultdict(int)
+            examples_per_group: Dict[str, int] = defaultdict(int)
             for shard in slist:
                 examples_per_group[str(shard["group"])] += shard["examples"]
             examples_per_group_config = {
@@ -1022,7 +1023,7 @@ class Dataset():
 
         config["shards_list"] = new_shards_list
         examples_per_split = {}
-        examples_per_group = {}
+        examples_per_group: Dict[str, Dict[int, int]] = {}
         for split, slist in config["shards_list"].items():
             examples_per_split[split] = config["examples_per_shard"] * len(
                 config["shards_list"][split])
@@ -1030,13 +1031,13 @@ class Dataset():
             examples_per_group[split] = {
                 k: 0 for k in config["examples_per_group"][split]
             }
-            names_keys_per_group = {
+            names_keys_per_group: Dict[int, Set] = {
                 k: set() for k in config["keys_per_group"][split]
             }
             key_names_per_split = set()
             for shard in slist:
                 shard_info = Dataset._shard_info_from_name(shard["path"])
-                sg = shard_info["shard_group"]
+                sg: int = int(shard_info["shard_group"])
                 examples_per_group[split][sg] += config["examples_per_shard"]
                 key_names_per_split.add(shard_info["shard_key"])
                 names_keys_per_group[sg].add(shard_info["shard_key"])
@@ -1272,10 +1273,10 @@ class Dataset():
                         # Open a new shard
                         shard = config["shards_list"][split][i]
                         k = shard["key"].lower()
-                        cur_key = np.array([
+                        cur_key = [
                             int(k[2 * i:2 * i + 2], 16)
                             for i in range(len(k) // 2)
-                        ])
+                        ]
                         # Compute the part_id based on the part of the original
                         # shard.
                         shard_divisions = (self.examples_per_shard //

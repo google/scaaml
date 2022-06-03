@@ -17,7 +17,7 @@ import chipwhisperer as cw
 
 from scaaml.capture.capture_runner import AbstractCaptureRunner
 from scaaml.capture.aes.crypto_input import CryptoInput
-from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
+from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 
 
 class CaptureRunner(AbstractCaptureRunner):
@@ -56,9 +56,9 @@ class CaptureRunner(AbstractCaptureRunner):
                                  key=crypto_input.key)
         return trace
 
-    def get_attack_points_and_measurement(
-            self, crypto_alg: SCryptoAlgorithm,
-            crypto_input: CryptoInput) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(self,
+                                          crypto_alg: AbstractSCryptoAlgorithm,
+                                          crypto_input) -> Tuple[Dict, Dict]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 

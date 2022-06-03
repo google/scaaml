@@ -13,7 +13,7 @@
 # limitations under the License.
 """Iterates over examples in a dataset."""
 
-from typing import Union
+from typing import Iterator, List, Optional
 
 from scaaml.io import Dataset
 
@@ -30,24 +30,25 @@ class ExampleIterator:
 
     def __init__(self,
                  dataset_path: str,
-                 split: Union[None, str] = None,
-                 group: Union[None, int] = None,
-                 part: Union[None, int] = None) -> None:
+                 split: Optional[str] = None,
+                 group: Optional[int] = None,
+                 part: Optional[int] = None) -> None:
         """Example iterator.
 
         Args:
-          dataset_path: Path to the dataset.
-          split: If None, then all splits are iterated. Otherwise only one
-            split is iterated (one of 'train', 'test', 'holdout', for more
-            info see scaaml.io.Dataset.SPLITS).
-          group: If None, then all groups are iterated. Otherwise only shards
-            belonging to this group.
-          part: If None, then all parts are iterated. Otherwise only shards
-            belonging to this part.
+          dataset_path (str): Path to the dataset.
+          split (Optional[str]): If None, then all splits are iterated.
+            Otherwise only one split is iterated (one of 'train', 'test',
+            'holdout', for more info see scaaml.io.Dataset.SPLITS).
+          group (Optional[int]): If None, then all groups are iterated.
+            Otherwise only shards belonging to this group.
+          part (Optional[int]): If None, then all parts are iterated. Otherwise
+            only shards belonging to this part.
         """
         self._dataset_path = dataset_path
+        splits: List[str]
         if split is None:
-            splits = Dataset.SPLITS
+            splits = list(Dataset.SPLITS)
         else:
             splits = [split]
         self._shards_list = []
@@ -62,7 +63,7 @@ class ExampleIterator:
                 self._shards_list.append((shard_id, shard, current_split))
         self._shard_idx = 0
         # _shard_iterator is initialized by the first call of __next__.
-        self._shard_iterator = iter([])
+        self._shard_iterator: Iterator = iter([])
 
     def __iter__(self):
         """Returns self."""

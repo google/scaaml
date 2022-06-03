@@ -14,7 +14,7 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Literal, Iterable
+from typing import Dict, Iterable, Literal, Optional
 
 
 class AbstractSCryptoAlgorithm(ABC):
@@ -72,7 +72,7 @@ class AbstractSCryptoAlgorithm(ABC):
         self._full_progress_filename = full_progress_filename
 
         # Initialized in a child class.
-        self._kti = None
+        self._kti: Optional[Iterable] = None
         self._stabilization_ktp = None
 
     @abstractmethod
@@ -159,7 +159,7 @@ class AbstractSCryptoAlgorithm(ABC):
     def _dataset(self) -> Literal['Training', 'Validation']:
         """Return the dataset type used in ktp_scaaml."""
         # purpose is used in scaaml.io.Dataset
-        purpose_to_dataset = {
+        purpose_to_dataset: Dict[str, Literal['Training', 'Validation']] = {
             'train': 'Training',
             'test': 'Training',
             'holdout': 'Validation',

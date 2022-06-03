@@ -71,9 +71,9 @@ class AbstractCaptureRunner(ABC):
         """
 
     @abstractmethod
-    def get_attack_points_and_measurement(
-            self, crypto_alg: AbstractSCryptoAlgorithm,
-            crypto_input: AbstractCryptoInput) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(self,
+                                          crypto_alg: AbstractSCryptoAlgorithm,
+                                          crypto_input) -> Tuple[Dict, Dict]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
@@ -94,7 +94,7 @@ class AbstractCaptureRunner(ABC):
           crypto_alg: The object used to get stabilization attack points.
         """
         skti = crypto_alg.get_stabilization_kti()
-        crypto_input = self.get_crypto_input(next(skti))
+        crypto_input = self.get_crypto_input(next(iter(skti)))
         try:
             _, _ = self.get_attack_points_and_measurement(
                 crypto_alg=crypto_alg, crypto_input=crypto_input)

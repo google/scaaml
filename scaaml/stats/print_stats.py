@@ -18,7 +18,7 @@ standalone."""
 from __future__ import annotations
 from collections import defaultdict
 from itertools import product
-from typing import Dict
+from typing import Any, Dict, Set
 
 from tabulate import tabulate
 from tqdm import tqdm
@@ -80,13 +80,13 @@ class PrintStats:
                 for trace_name in measurements_info
             } for split in Dataset.SPLITS
         }
-        self._split_trace_group_stats = {
+        self._split_trace_group_stats: Dict[str, Dict[str, Any]] = {
             split: {
                 trace_name: defaultdict(self._all_trace_stats)
                 for trace_name in measurements_info
             } for split in Dataset.SPLITS
         }
-        self._all_groups = set()
+        self._all_groups: Set = set()
 
     @staticmethod
     def from_config(dataset_path: str) -> PrintStats:
