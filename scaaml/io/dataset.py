@@ -347,20 +347,22 @@ class Dataset():
         raise NotImplementedError("implement me using keras dl mechanism")
 
     @staticmethod
-    def as_tfdataset(dataset_path: str,
-                     split: str,
-                     attack_points: Union[List[str], str],
-                     traces: Union[List[str], str],
-                     bytes: Union[List, int],
-                     shards: int = None,
-                     parts: Union[List[int], int] = None,
-                     trace_start: int = 0,
-                     trace_len: int = None,
-                     batch_size: int = 32,
-                     prefetch: int = 4,
-                     file_parallelism: int = os.cpu_count(),
-                     parallelism: int = os.cpu_count(),
-                     shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
+    def as_tfdataset(
+            dataset_path: str,
+            split: str,
+            attack_points: Union[List[str], str],
+            traces: Union[List[str], str],
+            # TODO(https://github.com/google/scaaml/issues/69)
+            bytes: Union[List, int],  # pylint: disable=W0622
+            shards: int = None,
+            parts: Union[List[int], int] = None,
+            trace_start: int = 0,
+            trace_len: int = None,
+            batch_size: int = 32,
+            prefetch: int = 4,
+            file_parallelism: int = os.cpu_count(),
+            parallelism: int = os.cpu_count(),
+            shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
         FIXME: restrict shards to specific part if they exists.
@@ -591,7 +593,7 @@ class Dataset():
         else:
             # Redefine tqdm to the identity function returning the first unnamed
             # parameter.
-            pbar = lambda *args, **kwargs: args[0]
+            pbar = lambda *args, **kwargs: args[0]  # pylint: disable=C3001
 
         Dataset._check_metadata(config=self._get_config_dictionary())
         Dataset._check_sha256sums(shards_list=self.shards_list,
@@ -927,7 +929,8 @@ class Dataset():
 
     def _write_config(self):
         """Save configuration as json."""
-        with open(self._get_config_path(self.path), "w+") as f:
+        with open(self._get_config_path(self.path), "w+",
+                  encoding="utf-8") as f:
             json.dump(self._get_config_dictionary(), f)
 
     @staticmethod
@@ -1020,7 +1023,6 @@ class Dataset():
         config["shards_list"] = new_shards_list
         examples_per_split = {}
         examples_per_group = {}
-        keys_per_group = {}
         for split, slist in config["shards_list"].items():
             examples_per_split[split] = config["examples_per_shard"] * len(
                 config["shards_list"][split])
@@ -1068,14 +1070,15 @@ class Dataset():
         # Save the old config.
         save_path = Path(f"{str(fpath)}.sav.{time()}.json")
         assert not save_path.exists()  # Do not overwrite.
-        save_path.write_text(fpath.read_text())
+        save_path.write_text(fpath.read_text(encoding="utf-8"),
+                             encoding="utf-8")
         cprint(f"Saving old config to {save_path}", "cyan")
 
         # Rewrite with the new config.
         cprint("Writing cleaned config", "green")
         new_config = Dataset._cleanup_shards(dataset_path=Path(dataset_path),
                                              print_info=True)
-        with open(fpath, "w+") as o:
+        with open(fpath, "w+", encoding="utf-8") as o:
             json.dump(new_config, o)
 
     def _move_shard(self, from_split: str, to_split: str,

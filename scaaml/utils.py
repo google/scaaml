@@ -111,15 +111,15 @@ def convert_to_chipwispher_format(filepattern, num_shards, num_traces_by_shard,
             "trace_len": trace_len
         })
 
-    p = Pool()
-    cw_traces = []
-    pb = tqdm(total=num_traces, desc="Converting", unit="traces")
-    for traces in p.imap_unordered(convert_shard_to_cw, chunks):
-        cw_traces.extend(traces)
-        pb.update(num_traces_by_shard)
+    with Pool() as p:
+        cw_traces = []
+        pb = tqdm(total=num_traces, desc="Converting", unit="traces")
+        for traces in p.imap_unordered(convert_shard_to_cw, chunks):
+            cw_traces.extend(traces)
+            pb.update(num_traces_by_shard)
 
-    pb.close()
-    return cw_traces
+        pb.close()
+        return cw_traces
 
 
 def display_config(config_name, config):
