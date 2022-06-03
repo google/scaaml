@@ -30,12 +30,14 @@ def GetDependencies():
     """Extracts dependencies from setup.py"""
     dependencies = []
 
-    def setup(**kwargs):
+    # pylint set_up fails, setup is the name in setuptools, pylint has an
+    # extempt on setUp.
+    def setup(**kwargs):  # pylint: disable=C0103
         dependencies.extend(kwargs["install_requires"])
 
     setuptools.setup = setup
-    content = open("setup.py", encoding="utf-8").read()
-    exec(content)
+    with open("setup.py", encoding="utf-8") as setup_file:
+        exec(setup_file.read())  # pylint: disable=W0122
     return dependencies
 
 
@@ -48,17 +50,17 @@ def GetPackageLicenses(package_name):
             continue
         metadata = package.get_metadata(metadata_file)
         if package_name in LICENSE_OVERRIDES:
-            license = LICENSE_OVERRIDES[package_name]
+            package_license = LICENSE_OVERRIDES[package_name]
         else:
             match = re.search("^License:\s*(.*)$", metadata,
                               re.MULTILINE | re.IGNORECASE)
-            license = re.sub("\sLicences|\sLicense,?|Version\s", "",
-                             match.group(1))
-            license = re.sub("-", " ", license)
+            package_license = re.sub("\sLicences|\sLicense,?|Version\s", "",
+                                     match.group(1))
+            package_license = re.sub("-", " ", package_license)
         match = re.search("^Home-page:\s*(.*)$", metadata,
                           re.MULTILINE | re.IGNORECASE)
         homepage = match.group(1)
-        return license, homepage
+        return package_license, homepage
     return None
 
 
@@ -66,9 +68,10 @@ def GenerateDependencyLicensesFile():
     """Generates the DEPENDENCY_LICENSES file."""
     license_data = []
     for package_name in GetDependencies():
-        license, homepage = GetPackageLicenses(package_name)
-        license_category = LICENSE_CATEGORIES.get(license, "")
-        license_data.append((package_name, license, license_category, homepage))
+        package_license, homepage = GetPackageLicenses(package_name)
+        license_category = LICENSE_CATEGORIES.get(package_license, "")
+        license_data.append((package_name, package_license, license_category,
+                             homepage))
     table = tabulate.tabulate(
         sorted(license_data, key=lambda x: x[1]),
         headers=["Package", "License", "Category", "Homepage"],
