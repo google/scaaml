@@ -52,12 +52,12 @@ def GetPackageLicenses(package_name):
         if package_name in LICENSE_OVERRIDES:
             package_license = LICENSE_OVERRIDES[package_name]
         else:
-            match = re.search("^License:\s*(.*)$", metadata,
+            match = re.search(r"^License:\s*(.*)$", metadata,
                               re.MULTILINE | re.IGNORECASE)
-            package_license = re.sub("\sLicences|\sLicense,?|Version\s", "",
+            package_license = re.sub(r"\sLicences|\sLicense,?|Version\s", "",
                                      match.group(1))
             package_license = re.sub("-", " ", package_license)
-        match = re.search("^Home-page:\s*(.*)$", metadata,
+        match = re.search(r"^Home-page:\s*(.*)$", metadata,
                           re.MULTILINE | re.IGNORECASE)
         homepage = match.group(1)
         return package_license, homepage
@@ -70,8 +70,8 @@ def GenerateDependencyLicensesFile():
     for package_name in GetDependencies():
         package_license, homepage = GetPackageLicenses(package_name)
         license_category = LICENSE_CATEGORIES.get(package_license, "")
-        license_data.append((package_name, package_license, license_category,
-                             homepage))
+        license_data.append(
+            (package_name, package_license, license_category, homepage))
     table = tabulate.tabulate(
         sorted(license_data, key=lambda x: x[1]),
         headers=["Package", "License", "Category", "Homepage"],
