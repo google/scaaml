@@ -31,7 +31,7 @@ def GetDependencies():
     dependencies = []
 
     # pylint set_up fails, setup is the name in setuptools, pylint has an
-    # extempt on setUp.
+    # exempt on setUp.
     def setup(**kwargs):  # pylint: disable=C0103
         dependencies.extend(kwargs["install_requires"])
 
