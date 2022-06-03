@@ -347,21 +347,22 @@ class Dataset():
         raise NotImplementedError("implement me using keras dl mechanism")
 
     @staticmethod
-    def as_tfdataset(dataset_path: str,
-                     split: str,
-                     attack_points: Union[List[str], str],
-                     traces: Union[List[str], str],
-                     # TODO(https://github.com/google/scaaml/issues/69)
-                     bytes: Union[List, int],  # pylint: disable=W0622
-                     shards: int = None,
-                     parts: Union[List[int], int] = None,
-                     trace_start: int = 0,
-                     trace_len: int = None,
-                     batch_size: int = 32,
-                     prefetch: int = 4,
-                     file_parallelism: int = os.cpu_count(),
-                     parallelism: int = os.cpu_count(),
-                     shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
+    def as_tfdataset(
+            dataset_path: str,
+            split: str,
+            attack_points: Union[List[str], str],
+            traces: Union[List[str], str],
+            # TODO(https://github.com/google/scaaml/issues/69)
+            bytes: Union[List, int],  # pylint: disable=W0622
+            shards: int = None,
+            parts: Union[List[int], int] = None,
+            trace_start: int = 0,
+            trace_len: int = None,
+            batch_size: int = 32,
+            prefetch: int = 4,
+            file_parallelism: int = os.cpu_count(),
+            parallelism: int = os.cpu_count(),
+            shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
         FIXME: restrict shards to specific part if they exists.
