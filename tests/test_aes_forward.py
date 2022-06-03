@@ -30,7 +30,6 @@ def test_bs_in():
 
 def test_bs_out():
     """Test getting output of the SBOX."""
-    # yapf: disable
     keys = [
         bytearray([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
@@ -61,7 +60,6 @@ def test_bs_out():
             0x63
         ]),
     ]
-    # yapf: enable
 
     for key, text, result in zip(keys, texts, results):
         assert result == AESSBOX.sub_bytes_out(key, text)
@@ -70,7 +68,6 @@ def test_bs_out():
 def test_inverse():
     """Test that ap_preds_to_key_preds . AESSBOX.sub_bytes_out is identity."""
     # Test if ap_preds_to_key_preds is an inverse to AESSBOX.sub_bytes_out.
-    # yapf: disable
     keys = [
         bytearray([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
@@ -107,7 +104,6 @@ def test_inverse():
             0xef
         ]),
     ]
-    # yapf: enable
     for key, text in zip(keys, texts):
         sb_cat = tf.keras.utils.to_categorical(
             AESSBOX.sub_bytes_out(key, text),
@@ -123,20 +119,15 @@ def test_inverse():
 
 def test_attack_points():
     """test getting different attack points using AESSBOX.get_attack_point"""
-    # yapf: disable
     key = bytearray([
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
-        0x0b
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b
     ])
     text = bytearray([
-        0x03, 0x01, 0x04, 0x01, 0x05, 0x09, 0x02, 0x06, 0x03, 0x01, 0x07,
-        0x00
+        0x03, 0x01, 0x04, 0x01, 0x05, 0x09, 0x02, 0x06, 0x03, 0x01, 0x07, 0x00
     ])
     sub_bytes_out = bytearray([
-        0x7b, 0x63, 0x6f, 0x77, 0x7c, 0xfe, 0xf2, 0x7c, 0x2b, 0x30, 0xd7,
-        0x2b
+        0x7b, 0x63, 0x6f, 0x77, 0x7c, 0xfe, 0xf2, 0x7c, 0x2b, 0x30, 0xd7, 0x2b
     ])
-    # yapf: enable
 
     assert AESSBOX.get_attack_point('key', key=key, plaintext=text) == key
     assert AESSBOX.get_attack_point('sub_bytes_in', key=key,
