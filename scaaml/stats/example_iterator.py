@@ -37,20 +37,16 @@ class ExampleIterator:
 
         Args:
           dataset_path (str): Path to the dataset.
-          split (Optional[str]): If None, then all splits are iterated.
-            Otherwise only one split is iterated (one of 'train', 'test',
-            'holdout', for more info see scaaml.io.Dataset.SPLITS).
+          split (Optional[str]): If None or empty string, then all splits are
+            iterated.  Otherwise only one split is iterated (one of 'train',
+            'test', 'holdout', for more info see scaaml.io.Dataset.SPLITS).
           group (Optional[int]): If None, then all groups are iterated.
             Otherwise only shards belonging to this group.
           part (Optional[int]): If None, then all parts are iterated. Otherwise
             only shards belonging to this part.
         """
         self._dataset_path = dataset_path
-        splits: List[str]
-        if split is None:
-            splits = list(Dataset.SPLITS)
-        else:
-            splits = [split]
+        splits: List[str] = [split] if split else list(Dataset.SPLITS)
         self._shards_list = []
         dataset = Dataset.from_config(dataset_path=dataset_path, verbose=False)
         for current_split in splits:
