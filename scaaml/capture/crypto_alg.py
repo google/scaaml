@@ -73,7 +73,7 @@ class AbstractSCryptoAlgorithm(ABC):
 
         # Initialized in a child class.
         self._kti: Optional[Iterable] = None
-        self._stabilization_ktp = None
+        self._stabilization_ktp: Optional[Iterable] = None
 
     @abstractmethod
     def get_stabilization_kti(self) -> Iterable:

@@ -90,7 +90,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
         # Set in get_stabilization_kti.
-        self._stabilization_ktp: Optional[Any] = None
+        self._stabilization_ktp: Optional[Iterable] = None
 
     def _get_new_ktp(self):
         ktp = ktp_scaaml()
