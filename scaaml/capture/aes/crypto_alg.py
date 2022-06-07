@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
-from typing import Any, Iterator, Literal, Optional
+from typing import Iterator, Literal, Optional
 import numpy as np
 
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
