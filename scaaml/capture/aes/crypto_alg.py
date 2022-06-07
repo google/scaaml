@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
-from typing import Any, Iterable, Literal, Optional
+from typing import Any, Iterator, Literal, Optional
 import numpy as np
 
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
@@ -86,7 +86,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
         # Set in get_stabilization_kti.
-        self._stabilization_ktp: Optional[Iterable] = None
+        self._stabilization_ktp: Optional[Iterator] = None
 
     def _get_new_ktp(self):
         ktp = ktp_scaaml()
@@ -97,7 +97,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
         ktp.init(0)
         return ktp
 
-    def get_stabilization_kti(self) -> Iterable:
+    def get_stabilization_kti(self) -> Iterator:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """

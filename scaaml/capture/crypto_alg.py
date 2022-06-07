@@ -14,7 +14,7 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Iterable, Literal, Optional
+from typing import Dict, Iterator, Literal, Optional
 
 
 class AbstractSCryptoAlgorithm(ABC):
@@ -72,11 +72,11 @@ class AbstractSCryptoAlgorithm(ABC):
         self._full_progress_filename = full_progress_filename
 
         # Initialized in a child class.
-        self._kti: Optional[Iterable] = None
-        self._stabilization_ktp: Optional[Iterable] = None
+        self._kti: Optional[Iterator] = None
+        self._stabilization_ktp: Optional[Iterator] = None
 
     @abstractmethod
-    def get_stabilization_kti(self) -> Iterable:
+    def get_stabilization_kti(self) -> Iterator:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """
