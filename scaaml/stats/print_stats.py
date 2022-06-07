@@ -81,12 +81,13 @@ class PrintStats:
                 for trace_name in measurements_info
             } for split in Dataset.SPLITS
         }
-        self._split_trace_group_stats: Dict[str, Dict[str, Dict[int, List[STDDEVofSTATofTraces]]]] = {
-            split: {
-                trace_name: defaultdict(self._all_trace_stats)
-                for trace_name in measurements_info
-            } for split in Dataset.SPLITS
-        }
+        self._split_trace_group_stats: Dict[str, Dict[str, Dict[
+            int, List[STDDEVofSTATofTraces]]]] = {
+                split: {
+                    trace_name: defaultdict(self._all_trace_stats)
+                    for trace_name in measurements_info
+                } for split in Dataset.SPLITS
+            }
         self._all_groups: Set = set()
 
     @staticmethod
