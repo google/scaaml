@@ -14,24 +14,27 @@
 """Dataset shard manipulation."""
 
 import math
+from typing import Dict, List, Optional
+
 import tensorflow as tf
-from typing import Dict, List
 from .tfdata import int64_feature, float_feature
 
 
 class Shard():
     """A shard contains N measurement pertaining to the same key"""
 
-    def __init__(self, path: str, attack_points_info: Dict,
-                 measurements_info: Dict, compression: True) -> None:
+    def __init__(self,
+                 path: str,
+                 attack_points_info: Dict,
+                 measurements_info: Dict,
+                 compression: str = "GZIP") -> None:
         self.path = path
         self.attack_points_info = attack_points_info
         self.measurements_info = measurements_info
         self.compression = compression
 
         # Writer if needed
-        self.has_writer = False
-        self.writer = None
+        self.writer: Optional[tf.io.TFRecordWriter] = None
 
         # counters
         self.examples = 0
@@ -55,9 +58,8 @@ class Shard():
         with tf.device("/cpu:0"):
             # open writer if needed
             # !do not put in the init to avoid erasing on read
-            if not self.has_writer:
+            if self.writer is None:
                 self.writer = tf.io.TFRecordWriter(self.path, self.compression)
-                self.has_writer = True
             example = self._to_tfrecord(attack_points, measurements)
             self.writer.write(example)
             self.examples += 1

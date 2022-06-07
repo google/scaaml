@@ -71,9 +71,9 @@ class AbstractCaptureRunner(ABC):
         """
 
     @abstractmethod
-    def get_attack_points_and_measurement(
-            self, crypto_alg: AbstractSCryptoAlgorithm,
-            crypto_input: AbstractCryptoInput) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(self,
+                                          crypto_alg: AbstractSCryptoAlgorithm,
+                                          crypto_input) -> Tuple[Dict, Dict]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 

@@ -47,6 +47,8 @@ class DefaultCWScope(AbstractSScope):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+        if self._scope is None:
+            return
         self._scope.dis()
         self._scope = None
 

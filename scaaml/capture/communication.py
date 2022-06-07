@@ -14,6 +14,9 @@
 """Communication protocols between the capturing host and the chip."""
 
 from abc import ABC, abstractmethod
+from typing import Optional
+
+from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
 
 
 class AbstractSCommunication(ABC):
@@ -36,3 +39,8 @@ class AbstractSCommunication(ABC):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+
+    @property
+    def target(self) -> Optional[ChipWhispererCommonInterface]:
+        """The target object. Returns None if no target is available."""
+        return None

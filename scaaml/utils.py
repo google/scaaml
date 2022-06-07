@@ -33,7 +33,7 @@ def pretty_hex(val):
     return s.upper()
 
 
-def bytelist_to_hex(lst, spacer=" "):
+def bytelist_to_hex(lst: list, spacer: str = " ") -> str:
     h = []
 
     for e in lst:

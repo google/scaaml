@@ -13,7 +13,7 @@
 # limitations under the License.
 """Capture script for easier manipulation."""
 from pathlib import Path
-from typing import Dict, List, Literal
+from typing import Any, Dict, List, Literal
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -213,7 +213,7 @@ def capture_aes_dataset(
     )
 
 
-def _capture(scope_class, capture_info: Dict[str, any], chip_id: int,
+def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
              crypto_algorithms: List, dataset) -> None:
     """Create scope contexts managers and capture the dataset.
 

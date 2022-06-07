@@ -191,6 +191,15 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                 for _ in range(self._repeat):
                     yield key, plain_text
 
+    def __iter__(self):
+        """Return self as an iterator."""
+        return self
+
+    def __next__(self):
+        """Convenience for calling new_pair (allow to use self in a for loop).
+        """
+        return self.new_pair()
+
     def new_pair(self):
         self._key, self._textin = next(self._input_generator)
         if self._dataset == self.DATASET_TRAINING:

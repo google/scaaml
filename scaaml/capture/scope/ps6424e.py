@@ -367,8 +367,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             timebase = (156_250_000 * s_per_sample) + 4
             # Round carefully
             timebase = timebase.to_integral_exact(rounding=ROUND_HALF_DOWN)
-            timebase = int(timebase)
-            return ctypes.c_uint32(timebase)
+            return ctypes.c_uint32(int(timebase))
 
         # timebase should be <= 4
         smallest_timebase = Decimal("0.2e-9")  # 200ps

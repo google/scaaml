@@ -14,6 +14,9 @@
 """Context manager for the scope."""
 
 from abc import ABC, abstractmethod
+from typing import Optional
+
+from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
 
 
 class AbstractSScope(ABC):
@@ -27,7 +30,7 @@ class AbstractSScope(ABC):
           offset: Number of samples to wait after trigger event occurred before
             starting recording data.
         """
-        self._scope = None
+        self._scope: Optional[ChipWhispererCommonInterface] = None
         self._samples = samples
         self._offset = offset
 
@@ -47,3 +50,8 @@ class AbstractSScope(ABC):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+
+    @property
+    @abstractmethod
+    def scope(self):
+        """Scope object."""

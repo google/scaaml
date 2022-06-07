@@ -13,6 +13,8 @@
 # limitations under the License.
 """Context manager for the scope."""
 
+from typing import Optional
+
 from scaaml.capture.scope import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
@@ -46,7 +48,7 @@ class PicoScope(AbstractSScope):
         self._trigger_range = trigger_range
         self._trace_probe_range = trace_probe_range
         self._trigger_level = trigger_level
-        self._scope = None
+        self._scope: Optional[PicoScope6424E] = None
 
     def __enter__(self):
         """Create scope context.
@@ -95,6 +97,8 @@ class PicoScope(AbstractSScope):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+        if self._scope is None:
+            return
         self._scope.dis()
         self._scope = None
 
