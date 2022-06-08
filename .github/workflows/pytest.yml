@@ -25,10 +25,10 @@ jobs:
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
           sudo apt-get update
           sudo apt-get install libps6000a
-          sudo apt-get install libpswrappers
       - name: Installing package
         run:
           pip install -r requirements.txt
+          pip install picosdk
       - name: Running unit tests
         run: |
           pytest
