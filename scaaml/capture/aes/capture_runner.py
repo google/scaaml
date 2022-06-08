@@ -54,8 +54,14 @@ class CaptureRunner(AbstractCaptureRunner):
         # Convert to cw bytearray, which has nicer __str__ and __repr__.
         plaintext = cw.common.utils.util.bytearray(crypto_input.plaintext)
         key = cw.common.utils.util.bytearray(crypto_input.key)
+
+        # Get a target from Optional[TargetTypes].
+        target = self._communication.target
+        assert target is not None
+
+        # Capture the trace.
         trace = cw.capture_trace(scope=self._scope.scope,
-                                 target=self._communication.target,
+                                 target=target,
                                  plaintext=plaintext,
                                  key=key)
         return trace

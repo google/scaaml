@@ -16,7 +16,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
+from chipwhisperer.capture.targets import TargetTypes
 
 
 class AbstractSCommunication(ABC):
@@ -41,6 +41,6 @@ class AbstractSCommunication(ABC):
         """
 
     @property
-    def target(self) -> Optional[ChipWhispererCommonInterface]:
+    def target(self) -> Optional[TargetTypes]:
         """The target object. Returns None if no target is available."""
         return None
