@@ -8,7 +8,7 @@ from decimal import Decimal, ROUND_HALF_DOWN
 import traceback
 from typing import OrderedDict
 
-from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
+import chipwhisperer as cw
 from chipwhisperer.common.utils import util
 import numpy as np
 from picosdk.ps6000a import ps6000a as ps
@@ -299,7 +299,7 @@ class TriggerSettings(CaptureSettings):
         return ret
 
 
-class Pico6424E(ChipWhispererCommonInterface):
+class Pico6424E(cw.capture.scopes.OpenADC):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS = 4  # Number of analog channels
