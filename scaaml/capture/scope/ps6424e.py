@@ -46,10 +46,12 @@ class CaptureSettings(object):
         "AC": picoEnum.PICO_COUPLING["PICO_AC"],
     }
     CHANNELS = {
-        "A": 0,
-        "B": 1,
-        "C": 2,
-        "D": 3,
+        "A": picoEnum.PICO_CHANNEL["PICO_CHANNEL_A"],
+        "B": picoEnum.PICO_CHANNEL["PICO_CHANNEL_B"],
+        "C": picoEnum.PICO_CHANNEL["PICO_CHANNEL_C"],
+        "D": picoEnum.PICO_CHANNEL["PICO_CHANNEL_D"],
+        "PORT0": picoEnum.PICO_CHANNEL["PICO_PORT0"],
+        "PORT1": picoEnum.PICO_CHANNEL["PICO_PORT1"],
         "External": 4,
         "MaxChannels": 4,
         "TriggerAux": 5
@@ -146,15 +148,7 @@ class CaptureSettings(object):
     @property
     def ps_api_channel(self):
         """Channel for PicoScope API."""
-        channel_enums = {
-            0: picoEnum.PICO_CHANNEL["PICO_CHANNEL_A"],
-            1: picoEnum.PICO_CHANNEL["PICO_CHANNEL_B"],
-            2: picoEnum.PICO_CHANNEL["PICO_CHANNEL_C"],
-            3: picoEnum.PICO_CHANNEL["PICO_CHANNEL_D"],
-        }
-        # Ensure that we did not forget any channel
-        assert len(channel_enums) == self.CHANNELS["MaxChannels"]
-        return channel_enums[self._channel]
+        return self._channel
 
     @property
     def channel(self):
@@ -177,7 +171,7 @@ class CaptureSettings(object):
         self._probe_attenuation = self.ATTENUATION[val]
 
     @property
-    def coupling_picoapi(self):
+    def ps_api_coupling(self):
         return self._coupling
 
     @property
@@ -230,6 +224,13 @@ class CaptureSettings(object):
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def is_digital(self) -> bool:
+        """An MSO Pod can be connected as trigger, but for trace it does not
+        make sense.
+        """
+        return False
 
 
 class TriggerSettings(CaptureSettings):
@@ -310,6 +311,15 @@ class TriggerSettings(CaptureSettings):
         ret["trigger_direction"] = self.trigger_direction
         return ret
 
+    @property
+    def is_digital(self) -> bool:
+        """Return True iff this channel is a digital channel (PORT0 or PORT1).
+        """
+        return self.ps_api_channel in [
+            picoEnum.PICO_CHANNEL["PICO_PORT0"],
+            picoEnum.PICO_CHANNEL["PICO_PORT1"],
+        ]
+
 
 class Pico6424E(ScopeTemplate):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
@@ -344,6 +354,9 @@ class Pico6424E(ScopeTemplate):
         # Part of cw API
         self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103
         self._max_adc = ctypes.c_int16()  # To get mV values
+
+        # TODO DO NOT SUBMIT
+        self._ntraces: int = 0
 
     @staticmethod
     def _get_timebase(sample_rate: float):
@@ -509,6 +522,19 @@ class Pico6424E(ScopeTemplate):
             self.trigger.ps_api_range,  # range
             self._max_adc)[:max_samples.value]
 
+        # TODO DO NOT SUBMIT
+        # Print the trace and trigger
+        plt_trace = np.array(self._buffers[0][:], dtype=np.float32)
+        plt_trigger = np.array(self._buffers[1][:])
+        self._ntraces += 1
+        if self._ntraces % 10 == 0:
+            from scaaml.plot import plot_trace_and_trigger  # does not pass pylint, good, will not be submitted
+            plot_trace_and_trigger(
+                trace=plt_trace,
+                trigger=plt_trigger,
+                fig_filename="capture.pdf",
+            )
+
         # print("Overflow: {}".format(overflow.value))
         # print("Samples: {}".format(len(self._trace_buffer)))
         # print("Max samples: {}".format(max_samples.value))
@@ -532,7 +558,55 @@ class Pico6424E(ScopeTemplate):
 
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
-        return np.array(self._buffers[1][:])
+        assert not self.trigger.is_digital  # not implemented
+        # TODO can we do dtype=bool and save as trace?
+        return np.array(self._buffers[1][:], dtype=np.float32)
+
+    def _set_channel_on(self, channel_info: CaptureSettings) -> None:
+        """Turn on a single channel.
+
+        Args:
+          channel_info (CaptureSettings): Either the trace or the trigger
+            channel.
+        """
+        if channel_info.is_digital:
+            # Turn on a digital port.
+            # Logic level needs to be set individually for each digital
+            # channel/pin in the port.
+            pins = 8
+            # A list of threshold voltages (one for each port pin), used to
+            # distinguish 0 and 1 states. Range -32_767 (-5V) to 32_767 (5V).
+            logicThresholdLevel = (ctypes.c_int16 * pins)(0)
+            logicThresholdLevel[0] = 1000
+            logicThresholdLevelLength = len(logicThresholdLevel)
+            hysteresis = enums.PICO_DIGITAL_PORT_HYSTERESIS["PICO_VERY_HIGH_400MV"]
+            assert_ok(
+                ps.ps6000aSetDigitalPortOn(
+                    self.ps_handle,  # handle
+                    channel_info.ps_api_channel,  # port
+                    ctypes.byref(logicThresholdLevel),
+                    logicThresholdLevelLength,
+                    hysteresis,
+                ))
+        else:
+            # Turn on an analog channel.
+            assert_ok(
+                ps.ps6000aSetChannelOn(
+                    self.ps_handle,  # handle
+                    channel_info.ps_api_channel,  # channel
+                    channel_info.ps_api_coupling,  # coupling
+                    channel_info.ps_api_range,  # range
+                    0,  # analogue offset
+                    picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
+                ))
+
+
+    def _set_digital_trigger(self, trigger_channel: TriggerSettings) -> None:
+        """Set a trigger on a digital channel.
+
+        Args:
+          trigger_channel (TriggerSettings): The port to set trigger on.
+        """
 
     def _set_channels(self):
         """Setup channels, buffers, and trigger."""
@@ -549,52 +623,36 @@ class Pico6424E(ScopeTemplate):
                 c,  # channel
             ))
         # Set MSO pods off
-        assert_ok(
-            ps.ps6000aSetDigitalPortOff(
-                self.ps_handle,  # handle
-                picoEnum.PICO_CHANNEL["PICO_PORT0"],  # port
-            ))
-        assert_ok(
-            ps.ps6000aSetDigitalPortOff(
-                self.ps_handle,  # handle
-                picoEnum.PICO_CHANNEL["PICO_PORT1"],  # port
-            ))
+        for port in [
+                picoEnum.PICO_CHANNEL["PICO_PORT0"],
+                picoEnum.PICO_CHANNEL["PICO_PORT1"],
+        ]:
+            assert_ok(
+                ps.ps6000aSetDigitalPortOff(
+                    self.ps_handle,  # handle
+                    port,  # port
+                ))
 
-        # Trace channel configuration
-        assert_ok(
-            ps.ps6000aSetChannelOn(
-                self.ps_handle,  # handle
-                self.trace.ps_api_channel,  # channel
-                self.trace.coupling_picoapi,  # coupling
-                self.trace.ps_api_range,  # range
-                0,  # analogue offset
-                picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
-            ))
+        # Turn on trace and trigger channels.
+        self._set_channel_on(channel_info=self.trace)
+        self._set_channel_on(channel_info=self.trigger)
 
-        # Trigger channel configuration
-        assert_ok(
-            ps.ps6000aSetChannelOn(
-                self.ps_handle,  # handle
-                self.trigger.ps_api_channel,  # channel
-                self.trigger.coupling_picoapi,  # coupling
-                self.trigger.ps_api_range,  # range
-                0,  # analogue offset
-                picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
-            ))
-
-        # TODO(issue #88): implement MSO pod trigger
-
-        # Set simple trigger
-        assert_ok(
-            ps.ps6000aSetSimpleTrigger(
-                self.ps_handle,  # handle
-                1,  # enable=1 (for disable set to 0)
-                self.trigger.ps_api_channel,  # channel
-                self.trigger.ps_api_trigger_level,  # threshold in mV
-                self.trigger.ps_api_trigger_direction,  # direction
-                0,  # delay = 0 s
-                100_000_000,  # autoTriggerMicroSeconds = 100s
-            ))
+        # Set a trigger.
+        if self.trigger.is_digital:
+            # Set a digital trigger.
+            self._set_digital_trigger(trigger_channel=self.trigger)
+        else:
+            # Set simple trigger
+            assert_ok(
+                ps.ps6000aSetSimpleTrigger(
+                    self.ps_handle,  # handle
+                    1,  # enable=1 (for disable set to 0)
+                    self.trigger.ps_api_channel,  # channel
+                    self.trigger.ps_api_trigger_level,  # threshold in mV
+                    self.trigger.ps_api_trigger_direction,  # direction
+                    0,  # delay = 0 s
+                    100_000_000,  # autoTriggerMicroSeconds = 100s
+                ))
 
         # Set data buffers
         self._total_samples = self.DOWNSAMPLING_RATIO * (self._sample_length +
