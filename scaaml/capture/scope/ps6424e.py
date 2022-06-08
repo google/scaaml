@@ -299,7 +299,7 @@ class TriggerSettings(CaptureSettings):
         return ret
 
 
-class Pico6424E(cw.capture.scopes.OpenADC):
+class Pico6424E(cw.capture.api.cwcommon.ChipWhispererCommonInterface):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS = 4  # Number of analog channels
