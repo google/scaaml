@@ -14,14 +14,12 @@
 """Base class for a scope handle. An object that can be passed as a scope to
 chipwhisperer API."""
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
-from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
 
-
-class ScopeTemplate(ChipWhispererCommonInterface):
+class ScopeTemplate(ABC):
     """A base class for scope objects that can be passed as a scope to
     chipwhisperer API (such as Pico6424E)."""
 

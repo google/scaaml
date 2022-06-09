@@ -99,8 +99,3 @@ class PicoScope(AbstractSScope):
             return
         self._scope.dis()
         self._scope = None
-
-    @property
-    def scope(self):
-        """Returns the scope object."""
-        return self._scope
