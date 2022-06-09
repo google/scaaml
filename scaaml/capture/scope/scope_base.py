@@ -16,7 +16,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
+from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
 class AbstractSScope(ABC):
@@ -30,7 +30,7 @@ class AbstractSScope(ABC):
           offset: Number of samples to wait after trigger event occurred before
             starting recording data.
         """
-        self._scope: Optional[ChipWhispererCommonInterface] = None
+        self._scope: Optional[ScopeTemplate] = None
         self._samples = samples
         self._offset = offset
 
