@@ -36,7 +36,8 @@ class ScopeTemplate(ABC):
             force: bool = False,
             prog_speed: float = 10E6,
             **kwargs) -> bool:
-        """Connect to the attached hardware.
+        """Connect to the attached hardware. Same signature as
+        cw.capture.scopes.OpenADC.
 
         Returns: True if the connection was successful, False otherwise.
         """
@@ -54,14 +55,16 @@ class ScopeTemplate(ABC):
 
     @abstractmethod
     def capture(self, poll_done: bool = False) -> bool:
-        """Capture trace (must be armed first).
+        """Capture trace (must be armed first). Same signature as
+        cw.capture.scopes.OpenADC.
 
         Returns: True if the capture timed out, False if it did not.
         """
 
     @abstractmethod
     def get_last_trace(self, as_int: bool = False) -> np.ndarray:
-        """Return the last trace."""
+        """Return the last trace. Same signature as cw.capture.scopes.OpenADC.
+        """
 
     @abstractmethod
     def __str__(self) -> str:
