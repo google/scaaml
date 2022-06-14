@@ -348,23 +348,45 @@ class Dataset():
         raise NotImplementedError("implement me using keras dl mechanism")
 
     @staticmethod
-    def as_tfdataset(
-            dataset_path: str,
-            split: str,
-            attack_points: Union[List[str], str],
-            traces: Union[List[str], str],
-            # TODO(https://github.com/google/scaaml/issues/69)
-            bytes: Union[List, int],  # pylint: disable=W0622
-            shards: int = None,
-            parts: Union[List[int], int] = None,
-            trace_start: int = 0,
-            trace_len: int = None,
-            batch_size: int = 32,
-            prefetch: int = 4,
-            file_parallelism: Optional[int] = os.cpu_count(),
-            parallelism: Optional[int] = os.cpu_count(),
-            shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
+    def as_tfdataset(dataset_path: str,
+                     split: str,
+                     attack_points: List[Dict[str, List]],
+                     traces: Union[List[str], str],
+                     shards: Optional[int] = None,
+                     parts: Optional[Union[List[int], int]] = None,
+                     trace_start: int = 0,
+                     trace_len: Optional[int] = None,
+                     batch_size: int = 32,
+                     prefetch: int = 4,
+                     file_parallelism: Optional[int] = os.cpu_count(),
+                     parallelism: Optional[int] = os.cpu_count(),
+                     shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
+
+        Args:
+          dataset_path (str): The root path of the dataset.
+          split (str): Split, see Dataset.SPLITS.
+          attack_points (List[Dict[str, List]]): Attack point information. For
+            example: [
+              { "name": "key", "indexes": [1] },
+              { "name": "sub_bytes_out", "indexes": [0, 1, 2] }
+            ].
+          traces (Union[List[str], str]): Either a single trace name or a list
+            of trace names.
+          shards (Optional[int]): If specified limits the dataset to the first
+            `shards` shards.
+          parts (Optional[Union[List[int], int]]): Not implemented.
+          trace_start (int): Skip this many first points of each trace.
+          trace_len (Optional[int]): Return trace of this length (more
+            formally of length min(trace_len, original length - trace_start)).
+            If None then trace[trace_start:] is used.
+          batch_size (int): Number of examples in a single batch.
+          prefetch (int): Prefetch this many batches.
+          file_parallelism (Optional[int]): IO parallelism.
+          parallelism (Optional[int]): Parallelism of trace decoding and
+            processing.
+          shuffle (int): How many examples should be shuffled across shards
+            (note that shards are shuffled by default).
 
         FIXME: restrict shards to specific part if they exists.
 
@@ -376,10 +398,6 @@ class Dataset():
         # boxing
         if isinstance(traces, str):
             traces = [traces]
-        if isinstance(bytes, int):
-            bytes = [bytes]
-        if isinstance(attack_points, str):
-            attack_points = [attack_points]
 
         # loading info
         dpath = Path(dataset_path)
@@ -413,13 +431,18 @@ class Dataset():
 
         # output construction
         outputs = {}  # model outputs
-        for name in attack_points:
-            for b in bytes:
-                n = f"{name}_{b}"
-                ap = dataset.attack_points_info[name]
-                outputs[n] = ap
-                outputs[n]["ap"] = name
-                outputs[n]["byte"] = b
+        for attack_point in attack_points:
+            # index is the byte/bit index
+            for index in attack_point["indexes"]:
+                ap_name = attack_point["name"]
+                full_name = f"{ap_name}_{index}"
+
+                # Add attack point info (len, max_val).
+                outputs[full_name] = dataset.attack_points_info[ap_name]
+                # Set the attack point name (keep backwards compatibility).
+                outputs[full_name]["ap"] = ap_name
+                # Set the byte/bit index (keep backwards compatibility).
+                outputs[full_name]["byte"] = index
 
         # processing function
         # @tf.function
