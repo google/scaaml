@@ -28,7 +28,8 @@ class ScopeTemplate(ABC):
         """Initialize the base."""
 
     @abstractmethod
-    def con(self,
+    def con(
+            self,
             sn: Optional[str] = None,
             idProduct: Optional[int] = None,  # pylint: disable=C0103
             bitstream: Optional[str] = None,
