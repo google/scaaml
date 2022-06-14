@@ -35,20 +35,29 @@ class ScopeTemplate(ABC):
             bitstream: Optional[str] = None,
             force: bool = False,
             prog_speed: float = 10E6,
-            **kwargs):
-        """Connect to the attached hardware."""
+            **kwargs) -> bool:
+        """Connect to the attached hardware.
+
+        Returns: True if the connection was successful, False otherwise.
+        """
 
     @abstractmethod
-    def dis(self):
-        """Disconnect."""
+    def dis(self) -> bool:
+        """Disconnect.
+
+        Returns: True if the disconnection was successful, False otherwise.
+        """
 
     @abstractmethod
-    def arm(self):
+    def arm(self) -> None:
         """Setup scope to begin capture when triggered."""
 
     @abstractmethod
     def capture(self, poll_done: bool = False) -> bool:
-        """Capture trace (must be armed first)."""
+        """Capture trace (must be armed first).
+
+        Returns: True if the capture timed out, False if it did not.
+        """
 
     @abstractmethod
     def get_last_trace(self, as_int: bool = False) -> np.ndarray:
