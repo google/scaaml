@@ -9,6 +9,7 @@ import traceback
 from typing import OrderedDict
 
 from chipwhisperer.common.utils import util
+from chipwhisperer.capture.scopes import OpenADC
 import numpy as np
 from picosdk.ps6000a import ps6000a as ps
 from picosdk.PicoDeviceEnums import picoEnum
@@ -300,7 +301,7 @@ class TriggerSettings(CaptureSettings):
         return ret
 
 
-class Pico6424E(ScopeTemplate):
+class Pico6424E(ScopeTemplate, OpenADC):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS = 4  # Number of analog channels
