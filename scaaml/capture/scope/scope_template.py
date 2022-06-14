@@ -15,6 +15,7 @@
 chipwhisperer API."""
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import numpy as np
 
@@ -27,7 +28,13 @@ class ScopeTemplate(ABC):
         """Initialize the base."""
 
     @abstractmethod
-    def con(self):
+    def con(self,
+            sn: Optional[str] = None,
+            idProduct: Optional[int] = None,  # pylint: disable=C0103
+            bitstream: Optional[str] = None,
+            force: bool = False,
+            prog_speed: float = 10E6,
+            **kwargs):
         """Connect to the attached hardware."""
 
     @abstractmethod
@@ -39,7 +46,7 @@ class ScopeTemplate(ABC):
         """Setup scope to begin capture when triggered."""
 
     @abstractmethod
-    def capture(self):
+    def capture(self, poll_done: bool = False) -> bool:
         """Capture trace (must be armed first)."""
 
     @abstractmethod
