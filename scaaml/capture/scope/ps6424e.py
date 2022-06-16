@@ -376,7 +376,7 @@ class Pico6424E(ScopeTemplate):
             if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
 
-    def con(self, sn=None):
+    def con(self, sn=None) -> bool:
         del sn  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.

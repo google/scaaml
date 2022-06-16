@@ -15,7 +15,6 @@
 chipwhisperer API."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import numpy as np
 
@@ -28,16 +27,10 @@ class ScopeTemplate(ABC):
         """Initialize the base."""
 
     @abstractmethod
-    def con(
-            self,
-            sn: Optional[str] = None,
-            idProduct: Optional[int] = None,  # pylint: disable=C0103
-            bitstream: Optional[str] = None,
-            force: bool = False,
-            prog_speed: float = 10E6,
-            **kwargs) -> bool:
-        """Connect to the attached hardware. Same signature as
-        cw.capture.scopes.OpenADC.
+    def con(self, sn=None) -> bool:
+        """Connect to the attached hardware. Trying to keep compatibility with
+        cw.capture.scopes.OpenADC and being able to pass as `scope` argument to
+        `cw.capture_trace`.
 
         Returns: True if the connection was successful, False otherwise.
         """
