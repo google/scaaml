@@ -16,6 +16,7 @@ from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.capture.scope.connection_options import ConnectionOptions
 
 
 def assert_ok(status):
@@ -376,8 +377,8 @@ class Pico6424E(ScopeTemplate):
             if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
 
-    def con(self, sn=None):
-        del sn  # unused
+    def con(self, options: ConnectionOptions) -> bool:
+        del options  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit

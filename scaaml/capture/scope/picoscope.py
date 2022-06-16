@@ -14,6 +14,7 @@
 """Context manager for the scope."""
 
 from scaaml.capture.scope import AbstractSScope
+from scaaml.capture.scope.connection_options import ConnectionOptions
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
 
@@ -60,7 +61,7 @@ class PicoScope(AbstractSScope):
 
         # Connect to the oscilloscope.
         self._scope = PicoScope6424E()
-        self._scope.con()
+        self._scope.con(ConnectionOptions())
 
         # Trace channel settings.
         self._scope.trace.range = self._trace_probe_range
