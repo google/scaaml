@@ -14,9 +14,11 @@
 """Context manager for the scope."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Union
 
-from scaaml.capture.scope.chipwhisperer_scope import ChipwhispererScope
+from chipwhisperer.capture.scopes import OpenADC
+
+from scaaml.capture.scope.ps6424e import Pico6424E
 
 
 class AbstractSScope(ABC):
@@ -30,7 +32,7 @@ class AbstractSScope(ABC):
           offset: Number of samples to wait after trigger event occurred before
             starting recording data.
         """
-        self._scope: Optional[ChipwhispererScope] = None
+        self._scope: Optional[Union[OpenADC, Pico6424E]] = None
         self._samples: int = samples
         self._offset: int = offset
 
@@ -52,6 +54,6 @@ class AbstractSScope(ABC):
         """
 
     @property
-    def scope(self) -> Optional[ChipwhispererScope]:
+    def scope(self) -> Optional[Union[OpenADC, Pico6424E]]:
         """Scope object for chipwhisperer API."""
         return self._scope

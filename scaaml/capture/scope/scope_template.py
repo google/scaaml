@@ -18,8 +18,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from scaaml.capture.scope.connection_options import ConnectionOptions
-
 
 class ScopeTemplate(ABC):
     """A base class for scope objects that can be passed as a scope to
@@ -29,9 +27,10 @@ class ScopeTemplate(ABC):
         """Initialize the base."""
 
     @abstractmethod
-    def con(self, options: ConnectionOptions) -> bool:
-        """Connect to the attached hardware. Same signature as
-        cw.capture.scopes.OpenADC.
+    def con(self, sn=None) -> bool:
+        """Connect to the attached hardware. Trying to keep compatibility with
+        cw.capture.scopes.OpenADC and being able to pass as `scope` argument to
+        `cw.capture_trace`.
 
         Returns: True if the connection was successful, False otherwise.
         """

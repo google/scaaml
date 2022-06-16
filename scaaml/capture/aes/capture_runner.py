@@ -64,10 +64,12 @@ class CaptureRunner(AbstractCaptureRunner):
         assert target is not None
 
         # Capture the trace.
-        trace = cw.capture_trace(scope=scope,
-                                 target=target,
-                                 plaintext=plaintext,
-                                 key=key)
+        # TODO(issue #79): Allow typechecking of this call.
+        trace = cw.capture_trace(
+            scope=scope,  # type: ignore
+            target=target,
+            plaintext=plaintext,
+            key=key)
         return trace
 
     def get_attack_points_and_measurement(self,
