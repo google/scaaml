@@ -8,13 +8,14 @@ from decimal import Decimal, ROUND_HALF_DOWN
 import traceback
 from typing import OrderedDict
 
-from chipwhisperer.capture.api.cwcommon import ChipWhispererCommonInterface
 from chipwhisperer.common.utils import util
 import numpy as np
 from picosdk.ps6000a import ps6000a as ps
 from picosdk.PicoDeviceEnums import picoEnum
 from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
+
+from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
 def assert_ok(status):
@@ -299,7 +300,7 @@ class TriggerSettings(CaptureSettings):
         return ret
 
 
-class Pico6424E(ChipWhispererCommonInterface):
+class Pico6424E(ScopeTemplate):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS = 4  # Number of analog channels
@@ -375,7 +376,7 @@ class Pico6424E(ChipWhispererCommonInterface):
             if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
 
-    def con(self, sn=None):
+    def con(self, sn=None) -> bool:
         del sn  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.

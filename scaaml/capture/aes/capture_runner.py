@@ -13,6 +13,7 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from typing import Dict, Tuple
+
 import chipwhisperer as cw
 
 from scaaml.capture.capture_runner import AbstractCaptureRunner
@@ -50,10 +51,25 @@ class CaptureRunner(AbstractCaptureRunner):
           AssertionError: If the textin in the trace is different from
             plaintext.
         """
-        trace = cw.capture_trace(scope=self._scope.scope,
-                                 target=self._communication.target,
-                                 plaintext=crypto_input.plaintext,
-                                 key=crypto_input.key)
+        # Convert to cw bytearray, which has nicer __str__ and __repr__.
+        plaintext = cw.common.utils.util.bytearray(crypto_input.plaintext)
+        key = cw.common.utils.util.bytearray(crypto_input.key)
+
+        # Get the scope object.
+        scope = self._scope.scope
+        assert scope is not None
+
+        # Get a target from Optional[TargetTypes].
+        target = self._communication.target
+        assert target is not None
+
+        # Capture the trace.
+        # TODO(issue #79): Allow typechecking of this call.
+        trace = cw.capture_trace(
+            scope=scope,  # type: ignore
+            target=target,
+            plaintext=plaintext,
+            key=key)
         return trace
 
     def get_attack_points_and_measurement(self,
