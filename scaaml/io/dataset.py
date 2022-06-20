@@ -366,8 +366,9 @@ class Dataset():
         Args:
           dataset_path (str): The root path of the dataset.
           split (str): Split, see Dataset.SPLITS.
-          attack_points (List[Dict[str, Union[str, int]]]): Attack point information.
-            Contains the attack point name, index, and type. For example:
+          attack_points (List[Dict[str, Union[str, int]]]): Attack point
+            information. Contains the attack point name, index, and type. For
+            example:
             ```python
             [
               { "name": "key", "index": 1, "type": "byte" },
