@@ -367,10 +367,13 @@ class Dataset():
           dataset_path (str): The root path of the dataset.
           split (str): Split, see Dataset.SPLITS.
           attack_points (List[Dict[str, List]]): Attack point information. For
-            example: [
+            example:
+            ```python
+            [
               { "name": "key", "indexes": [1] },
               { "name": "sub_bytes_out", "indexes": [0, 1, 2] }
-            ].
+            ]
+          ```
           traces (Union[List[str], str]): Either a single trace name or a list
             of trace names.
           shards (Optional[int]): If specified limits the dataset to the first
