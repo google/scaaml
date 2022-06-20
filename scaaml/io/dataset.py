@@ -350,7 +350,7 @@ class Dataset():
     @staticmethod
     def as_tfdataset(dataset_path: str,
                      split: str,
-                     attack_points: List[Dict[str, List]],
+                     attack_points: List[Dict[str, Union[str, int]]],
                      traces: Union[List[str], str],
                      shards: Optional[int] = None,
                      parts: Optional[Union[List[int], int]] = None,
@@ -366,12 +366,14 @@ class Dataset():
         Args:
           dataset_path (str): The root path of the dataset.
           split (str): Split, see Dataset.SPLITS.
-          attack_points (List[Dict[str, List]]): Attack point information. For
-            example:
+          attack_points (List[Dict[str, Union[str, int]]]): Attack point information.
+            Contains the attack point name, index, and type. For example:
             ```python
             [
-              { "name": "key", "indexes": [1] },
-              { "name": "sub_bytes_out", "indexes": [0, 1, 2] }
+              { "name": "key", "index": 1, "type": "byte" },
+              { "name": "sub_bytes_out", "index": 0, "type": "byte" },
+              { "name": "sub_bytes_out", "index": 1, "type": "byte" },
+              { "name": "sub_bytes_out", "index": 2, "type": "byte" },
             ]
           ```
           traces (Union[List[str], str]): Either a single trace name or a list
@@ -435,17 +437,19 @@ class Dataset():
         # output construction
         outputs = {}  # model outputs
         for attack_point in attack_points:
-            # index is the byte/bit index
-            for index in attack_point["indexes"]:
-                ap_name = attack_point["name"]
-                full_name = f"{ap_name}_{index}"
+            ap_name = attack_point["name"]
+            ap_index = attack_point["index"]
+            ap_type = attack_point["type"]
+            full_name = f"{ap_name}_{ap_index}"
 
-                # Add attack point info (len, max_val).
-                outputs[full_name] = dataset.attack_points_info[ap_name]
-                # Set the attack point name (keep backwards compatibility).
-                outputs[full_name]["ap"] = ap_name
-                # Set the byte/bit index (keep backwards compatibility).
-                outputs[full_name]["byte"] = index
+            # Add attack point info (len, max_val).
+            outputs[full_name] = dataset.attack_points_info[ap_name]
+            # Set the attack point name (keep backwards compatibility).
+            outputs[full_name]["ap"] = ap_name
+            # Set the byte/bit index (keep backwards compatibility).
+            outputs[full_name]["byte"] = ap_index
+            # Set the type of the attack point.
+            outputs[full_name]["type"] = ap_type
 
         # processing function
         # @tf.function
