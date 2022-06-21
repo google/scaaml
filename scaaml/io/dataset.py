@@ -446,10 +446,16 @@ class Dataset():
                 # assign
                 x[name] = trace
                 inputs[name]["shape"] = trace.shape  # (trace_len - trace_start)
-            # one_hot the outptut for each ap/byte
+            # Encoding the outptut for each ap/byte
             y = {}
             for name, data in outputs.items():
-                v = tf.one_hot(rec[data["ap"]][data["byte"]], data["max_val"])
+                max_val = data["max_val"]
+                if max_val == 2:
+                    # Binary classification.
+                    v = rec[data["ap"]][data["byte"]]
+                else:
+                    # Multiple classes classification.
+                    v = tf.one_hot(rec[data["ap"]][data["byte"]], max_val)
                 y[name] = v
 
             return (x, y)
