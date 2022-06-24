@@ -70,6 +70,7 @@ class CaptureRunner(AbstractCaptureRunner):
             target=target,
             plaintext=plaintext,
             key=key)
+
         return trace
 
     def get_attack_points_and_measurement(self,
