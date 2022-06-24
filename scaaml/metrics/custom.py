@@ -48,7 +48,7 @@ def rank(y_true, y_pred):
 
     Args:
       y_true (batch of one-hot): One-hot ground truth values.
-      y_pred (batch of one-hot): The prediction values.
+      y_pred (batch of probabilities): The prediction values.
 
     Returns:
       Rank values.
@@ -80,6 +80,66 @@ def rank(y_true, y_pred):
     # ranks is of shape (None,)
     # Do not count the correct class itself (rank is counted from 0).
     return ranks - 1
+
+
+@tf.function
+def confidence(y_true, y_pred):
+    """Return the confidence of the prediction, that is the difference of the
+    highest value and the second highest value. A prediction contributes to
+    the overall score even if the prediction was incorrect.
+
+    Standalone usage:
+    >>> y_true = [[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]]
+    >>> y_pred = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.], [0.5, 0.5, 0.]]
+    >>> c = confidence(y_true, y_pred)
+    >>> assert c.shape == (3,)
+    >>> c.numpy()
+    array([0.1, 0.9, 0.0], dtype=float32)
+
+    Args:
+      y_true (batch of one-hot): One-hot ground truth values. Part of API,
+        ignored in this function.
+      y_pred (batch of probabilities): The prediction values.
+    """
+    del y_true  # unused
+
+    # Take the first two predictions, top_two.values are their values,
+    # top_two.indices are their indexes.
+    top_two = tf.math.top_k(y_pred, k=2)
+
+    # Compute the difference of the top and the second prediction (regardless
+    # if the prediction is correct or not).
+    return top_two.values[:, 0] - top_two.values[:, 1]
+
+
+@tf.keras.utils.register_keras_serializable(package="SCAAML")
+class MeanConfidence(keras.metrics.MeanMetricWrapper):
+    """Calculates the average confidence of a prediction, that is the difference
+    of the two largest values (regardless if the prediction is correct or not).
+
+    Args:
+      name (str): String name of the metric instance. Defaults to
+        "mean_confidence".
+      dtype (Optional): Data type of the metric result. Defaults to None.
+
+    Standalone usage:
+
+    >>> m = MeanConfidence()
+    >>> m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
+    >>> m.result().numpy()
+    0.4
+
+    Usage with `compile()` API:
+
+    ```python
+    model.compile(optimizer="sgd",
+                  loss="mse",
+                  metrics=[MeanConfidence()])
+    ```
+    """
+
+    def __init__(self, name: str = "mean_confidence", dtype=None) -> None:
+        super().__init__(confidence, name, dtype=dtype)
 
 
 @tf.keras.utils.register_keras_serializable(package="SCAAML")
