@@ -32,7 +32,7 @@ def test_context_manager():
             plaintexts_per_key=256,
             repetitions=1,
     ) as dataset_filler:
-        # Assure that the context type is right.
+        # Ensure that the context type is right.
         assert type(dataset_filler) is _DatasetFillerContext
 
 
