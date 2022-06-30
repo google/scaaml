@@ -13,5 +13,5 @@
 # limitations under the License.
 """Dataset creation and usage."""
 
-from .dataset import Dataset  # noqa
-from .dataset_filler import DatasetFiller  # noqa
+from scaaml.io.dataset import Dataset
+from scaaml.io.dataset_filler import DatasetFiller
