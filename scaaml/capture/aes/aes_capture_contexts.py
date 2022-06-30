@@ -140,13 +140,13 @@ def capture_aes_dataset(
     # Check that if we are capturing train or holdout then the other split has
     # different chip_id.
     if holdout_keys:  # Capturing holdout, check train and test.
-        if dataset.shards_list["train"]:
-            if dataset.shards_list["train"][0]["chip_id"] == chip_id:
+        if dataset.shards_list[Dataset.TRAIN_SPLIT]:
+            if dataset.shards_list[Dataset.TRAIN_SPLIT][0]["chip_id"] == chip_id:
                 raise ValueError("Capturing holdout using the same chip as "
                                  "train.")
     if train_keys:  # Capturing train and test, check holdout.
-        if dataset.shards_list["holdout"]:
-            if dataset.shards_list["holdout"][0]["chip_id"] == chip_id:
+        if dataset.shards_list[Dataset.HOLDOUT_SPLIT]:
+            if dataset.shards_list[Dataset.HOLDOUT_SPLIT][0]["chip_id"] == chip_id:
                 raise ValueError("Capturing train using the same chip as "
                                  "holdout.")
 
@@ -183,17 +183,17 @@ def capture_aes_dataset(
         crypto_algorithms.append(new_crypto_alg)
 
     if test_keys:
-        add_crypto_alg(split="test",
+        add_crypto_alg(split=Dataset.TEST_SPLIT,
                        keys=test_keys,
                        plaintexts=test_plaintexts,
                        repetitions=repetitions)
     if train_keys:
-        add_crypto_alg(split="train",
+        add_crypto_alg(split=Dataset.TRAIN_SPLIT,
                        keys=train_keys,
                        plaintexts=train_plaintexts,
                        repetitions=repetitions)
     if holdout_keys:
-        add_crypto_alg(split="holdout",
+        add_crypto_alg(split=Dataset.HOLDOUT_SPLIT,
                        keys=holdout_keys,
                        plaintexts=holdout_plaintexts,
                        repetitions=repetitions)
