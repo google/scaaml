@@ -14,7 +14,9 @@
 
 import numpy as np
 
+from scaaml.metrics import MeanConfidence
 from scaaml.metrics import MaxRank, MeanRank
+from scaaml.metrics.custom import confidence
 from scaaml.metrics.custom import rank
 
 
@@ -126,3 +128,39 @@ def test_maxrank_doc():
     r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
     assert r.result().numpy() == 1
     assert r.result().numpy().dtype == np.int32
+
+
+def test_confidence_doc():
+    y_true = [[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]]
+    y_pred = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.], [0.5, 0.5, 0.]]
+
+    c = confidence(y_true, y_pred)
+
+    assert c.shape == (3,)
+    assert np.allclose(c.numpy(), np.array([0.1, 0.9, 0.0], dtype=np.float32))
+
+
+def test_mean_confidence_doc():
+    m = MeanConfidence()
+    m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
+    assert np.isclose(m.result().numpy(), 0.4)
+
+
+def test_confidence_random():
+    # Make the test deterministic
+    np.random.seed(42)
+    byte_values = 256
+    batch_size = 1_000
+
+    # Targets do not matter
+    y_true = [np.random.random(byte_values) for _ in range(batch_size)]
+    y_pred = [np.random.random(byte_values) for _ in range(batch_size)]
+
+    c = confidence(y_true, y_pred)
+
+    # Compute expected result
+    s = np.sort(y_pred)
+    expected = s[:, -1] - s[:, -2]
+
+    assert c.shape == (batch_size,)
+    assert np.allclose(c.numpy(), expected)
