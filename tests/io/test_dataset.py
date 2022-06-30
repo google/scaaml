@@ -173,14 +173,14 @@ def test_get_config_dictionary_urls(tmp_path):
                                         url=url)
     # Create the dataset
     ds = Dataset.get_dataset(**kwargs)
-    conf = ds._get_config_dictionary()
+    conf = ds.get_config_dictionary()
     assert conf["licence"] == licence
     assert conf["url"] == url
     assert conf["paper_url"] == paper_url
     assert conf["firmware_url"] == firmware_url
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
-    conf = ds._get_config_dictionary()
+    conf = ds.get_config_dictionary()
     assert conf["licence"] == licence
     assert conf["url"] == url
     assert conf["paper_url"] == paper_url
@@ -189,7 +189,7 @@ def test_get_config_dictionary_urls(tmp_path):
 
 def test_scaaml_version_present(tmp_path):
     ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
-    config = ds._get_config_dictionary()
+    config = ds.get_config_dictionary()
     assert "scaaml_version" in config.keys()
 
 
@@ -342,13 +342,13 @@ def test_move_shards(tmp_path):
 
 def same_examples(ds1, ds2):
     # Check that there are the same number of examples
-    config1 = ds1._get_config_dictionary()
-    config2 = ds1._get_config_dictionary()
+    config1 = ds1.get_config_dictionary()
+    config2 = ds1.get_config_dictionary()
     assert config1["examples_per_split"] == config2["examples_per_split"]
 
     def example_iterator(dataset, split):
         """Return iterator of examples contained in a dataset."""
-        config = dataset._get_config_dictionary()
+        config = dataset.get_config_dictionary()
         from itertools import chain
         # Concatenate all examples that are returned by Dataset.inspect.
         return chain.from_iterable(
@@ -598,7 +598,7 @@ def test_min_max_values_ok(tmp_path):
         ds.new_shard(key=key, part=0, split="train", group=0, chip_id=1)
         ds.write_example({"key": key}, {"trace1": trace})
         ds.close_shard()
-        config_dict = ds._get_config_dictionary()
+        config_dict = ds.get_config_dictionary()
         assert config_dict["min_values"]["trace1"] == min_value
         assert config_dict["max_values"]["trace1"] == max_value
 
@@ -623,7 +623,7 @@ def test_resume_capture(tmp_path):
     ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
-    config_dict = ds._get_config_dictionary()
+    config_dict = ds.get_config_dictionary()
 
     assert len(config_dict["shards_list"]["train"]) == 2
     assert config_dict["max_values"]["trace1"] == 0.8
@@ -686,7 +686,7 @@ def test_from_loaded_json(tmp_path):
     ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
-    config_dict = ds._get_config_dictionary()
+    config_dict = ds.get_config_dictionary()
     json_dict = json.loads(json.dumps(config_dict))
 
     loaded_dict = Dataset._from_loaded_json(json_dict)

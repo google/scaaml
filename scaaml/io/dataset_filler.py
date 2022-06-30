@@ -16,6 +16,8 @@ number."""
 
 from typing import Dict, List
 
+from scaaml.io.dataset import Dataset
+
 
 class _DatasetFillerContext:
     """The actual context. Use DatasetFiller which closes the last shard on
@@ -33,7 +35,7 @@ class _DatasetFillerContext:
     """
 
     def __init__(self,
-                 dataset,
+                 dataset: Dataset,
                  plaintexts_per_key: int,
                  repetitions: int,
                  skip_examples: int = 0) -> None:
@@ -159,7 +161,7 @@ class DatasetFiller:
     """
 
     def __init__(self,
-                 dataset,
+                 dataset: Dataset,
                  plaintexts_per_key: int,
                  repetitions: int,
                  skip_examples: int = 0) -> None:
