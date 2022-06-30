@@ -673,16 +673,18 @@ class Dataset():
                                            verbose=False).as_numpy_iterator():
                 seen_keys.add(example[key_ap].astype(np.uint8).tobytes())
         if deep_check:
-            Dataset._deep_check(seen_keys=seen_keys,
-                                dpath=self.path,
-                                train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
-                                pbar=pbar,
-                                examples_per_shard=self.examples_per_shard,
-                                key_ap=key_ap)
+            Dataset._deep_check(
+                seen_keys=seen_keys,
+                dpath=self.path,
+                train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
+                pbar=pbar,
+                examples_per_shard=self.examples_per_shard,
+                key_ap=key_ap)
         else:
-            Dataset._shallow_check(seen_keys=seen_keys,
-                                   train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
-                                   pbar=pbar)
+            Dataset._shallow_check(
+                seen_keys=seen_keys,
+                train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
+                pbar=pbar)
 
     @staticmethod
     def _check_sha256sums(shards_list, dpath: Path, pbar):

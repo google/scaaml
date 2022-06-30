@@ -141,12 +141,14 @@ def capture_aes_dataset(
     # different chip_id.
     if holdout_keys:  # Capturing holdout, check train and test.
         if dataset.shards_list[Dataset.TRAIN_SPLIT]:
-            if dataset.shards_list[Dataset.TRAIN_SPLIT][0]["chip_id"] == chip_id:
+            if dataset.shards_list[
+                    Dataset.TRAIN_SPLIT][0]["chip_id"] == chip_id:
                 raise ValueError("Capturing holdout using the same chip as "
                                  "train.")
     if train_keys:  # Capturing train and test, check holdout.
         if dataset.shards_list[Dataset.HOLDOUT_SPLIT]:
-            if dataset.shards_list[Dataset.HOLDOUT_SPLIT][0]["chip_id"] == chip_id:
+            if dataset.shards_list[
+                    Dataset.HOLDOUT_SPLIT][0]["chip_id"] == chip_id:
                 raise ValueError("Capturing train using the same chip as "
                                  "holdout.")
 
