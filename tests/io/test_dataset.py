@@ -27,6 +27,7 @@ from scaaml.io import Dataset
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
+from scaaml.io.reshape import reshape_into_new_dataset
 
 
 def dataset_constructor_kwargs(root_path, **kwargs):
@@ -372,6 +373,8 @@ def same_examples(ds1, ds2):
 
 def test_reshape_into_new_dataset_filled(tmp_path):
     # Fix numpy randomness not to cause flaky tests.
+    # Test this function here so that we do not have to redefine
+    # dataset_constructor_kwargs.
     np.random.seed(42)
 
     old_examples_per_shard = 16
@@ -387,7 +390,7 @@ def test_reshape_into_new_dataset_filled(tmp_path):
                              {"trace1": np.random.rand(1024)})
     old_ds.close_shard()
 
-    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
+    new_ds = reshape_into_new_dataset(old_ds, examples_per_shard=4)
     old_ds.check()
     new_ds.check()
     same_examples(old_ds, new_ds)
