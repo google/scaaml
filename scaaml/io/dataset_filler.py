@@ -76,8 +76,8 @@ class _DatasetFillerContext:
         if self._need_to_open_new_shard():
             self._dataset.new_shard(
                 key=current_key,
-                part=self._part_number,
-                group=self._group_number,
+                part=self.part_number,
+                group=self.group_number,
                 split=split_name,
                 chip_id=chip_id,
             )
@@ -98,7 +98,7 @@ class _DatasetFillerContext:
         return self._written_examples % self._examples_per_shard == 0
 
     @property
-    def _part_number(self):
+    def part_number(self):
         """A part is the id of the shard of a single key."""
         # How many examples with the same key.
         examples_with_same_key = self._plaintexts_per_key * self._repetitions
@@ -108,7 +108,7 @@ class _DatasetFillerContext:
         return examples_in_this_part // self._examples_per_shard
 
     @property
-    def _group_number(self):
+    def group_number(self):
         """A group is 1 full rotation of the key bytes (0 - 255)."""
         # How many examples are there in a group (256 different byte values ==
         # 256 different keys).
