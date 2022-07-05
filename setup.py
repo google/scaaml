@@ -45,7 +45,6 @@ setup(
         "chipwhisperer",
         "scipy",
         "semver",
-        "typing-extensions",
     ],
     package_data={"": ["*.pickle"]},
     classifiers=[
