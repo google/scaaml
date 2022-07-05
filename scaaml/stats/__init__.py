@@ -18,11 +18,11 @@ ExampleIterator iterates over examples from a given dataset.
 
 APCounter counts how many times does each value of an attack point occur.
 """
-from .ap_checker import APChecker
-from .ap_counter import APCounter
-from .example_iterator import ExampleIterator
-from .print_stats import PrintStats
-from .trace_stddev_of_stat import STDDEVofAVGofTraces
-from .trace_stddev_of_stat import STDDEVofMAXofTraces
-from .trace_stddev_of_stat import STDDEVofMINofTraces
-from .trace_stddev_of_stat import STDDEVofSTATofTraces
+from scaaml.stats.ap_checker import APChecker
+from scaaml.stats.ap_counter import APCounter
+from scaaml.stats.example_iterator import ExampleIterator
+from scaaml.stats.print_stats import PrintStats
+from scaaml.stats.trace_stddev_of_stat import STDDEVofAVGofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofMAXofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofMINofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
