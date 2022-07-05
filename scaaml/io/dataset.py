@@ -19,8 +19,10 @@ import json
 import os
 from collections import defaultdict
 import shutil
+import sys
 from time import time
-from typing import Dict, List, Optional, Union, Set
+from typing_extensions import TypeAlias
+from typing import Dict, List, Optional, Union, Set, Tuple
 from pathlib import Path
 import pprint
 
@@ -38,14 +40,25 @@ import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
 
+# Prevent importing Literal with older versions.
+if sys.version_info >= (3, 8):
+    from typing import Literal
+
 
 class Dataset():
     """Dataset class."""
-    # Valid split values.
-    TRAIN_SPLIT = "train"
-    TEST_SPLIT = "test"
-    HOLDOUT_SPLIT = "holdout"
-    SPLITS = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
+    # Valid split values (used also as directory names).
+    # Define split type, keep compatibility (Literal was introduced in
+    # Python3.8).
+    if sys.version_info >= (3, 8):
+        SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
+    else:
+        SPLIT_T: TypeAlias = str
+    TRAIN_SPLIT: SPLIT_T = "train"
+    TEST_SPLIT: SPLIT_T = "test"
+    HOLDOUT_SPLIT: SPLIT_T = "holdout"
+    SPLITS: Tuple[SPLIT_T, SPLIT_T,
+                  SPLIT_T] = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
 
     def __init__(
         self,
@@ -138,9 +151,9 @@ class Dataset():
             else:
                 # create path if needed
                 self.path.mkdir(parents=True)
-                Path(self.path / "train").mkdir()
-                Path(self.path / "test").mkdir()
-                Path(self.path / "holdout").mkdir()
+                Path(self.path / Dataset.TRAIN_SPLIT).mkdir()
+                Path(self.path / Dataset.TEST_SPLIT).mkdir()
+                Path(self.path / Dataset.HOLDOUT_SPLIT).mkdir()
 
         if verbose:
             cprint(f"Dataset path: {self.path}", "green")
@@ -156,7 +169,7 @@ class Dataset():
 
         # [counters] - must be passed as param to allow reload.
         # shards_list[split] is a list of shard info dictionaries (where split
-        # in ["test", "train", "holdout"]
+        # in Dataset.SPLITS).
         self.shards_list = siutils.ddict(value=shards_list,
                                          levels=1,
                                          type_var=list)
@@ -273,8 +286,8 @@ class Dataset():
         if self.curr_shard:
             self.close_shard()
 
-        if split not in ["train", "test", "holdout"]:
-            raise ValueError("Invalid split, must be: {train, test, holdout}")
+        if split not in Dataset.SPLITS:
+            raise ValueError(f"Invalid split, must be in {Dataset.SPLITS}")
 
         if part < 0 or part > 10:
             raise ValueError("Invalid part value -- muse be in [0, 10]")
@@ -574,12 +587,11 @@ class Dataset():
         print(tabulate(d, ["split", "num_shards", "num_keys", "num_examples"]))
 
     @staticmethod
-    def inspect(
-            dataset_path,
-            split: str,  # typing.Literal["train", "test", "holdout"],
-            shard_id: int,
-            num_example: int,
-            verbose: bool = True):
+    def inspect(dataset_path,
+                split: SPLIT_T,
+                shard_id: int,
+                num_example: int,
+                verbose: bool = True):
         """Display the content of a given shard.
 
         Args:
@@ -665,24 +677,26 @@ class Dataset():
         Raises: ValueError if some key from train is present in test.
         """
         seen_keys = set()
-        for i in range(len(self.shards_list["test"])):
+        for i in range(len(self.shards_list[Dataset.TEST_SPLIT])):
             for example in Dataset.inspect(dataset_path=self.path,
-                                           split="test",
+                                           split=Dataset.TEST_SPLIT,
                                            shard_id=i,
                                            num_example=self.examples_per_shard,
                                            verbose=False).as_numpy_iterator():
                 seen_keys.add(example[key_ap].astype(np.uint8).tobytes())
         if deep_check:
-            Dataset._deep_check(seen_keys=seen_keys,
-                                dpath=self.path,
-                                train_shards=self.shards_list["train"],
-                                pbar=pbar,
-                                examples_per_shard=self.examples_per_shard,
-                                key_ap=key_ap)
+            Dataset._deep_check(
+                seen_keys=seen_keys,
+                dpath=self.path,
+                train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
+                pbar=pbar,
+                examples_per_shard=self.examples_per_shard,
+                key_ap=key_ap)
         else:
-            Dataset._shallow_check(seen_keys=seen_keys,
-                                   train_shards=self.shards_list["train"],
-                                   pbar=pbar)
+            Dataset._shallow_check(
+                seen_keys=seen_keys,
+                train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
+                pbar=pbar)
 
     @staticmethod
     def _check_sha256sums(shards_list, dpath: Path, pbar):
@@ -827,7 +841,8 @@ class Dataset():
 
         Args:
           seen_keys: Set of all keys that are present in the test split.
-          train_shards: Description of train shards (self.shards_list["train"]).
+          train_shards: Description of train shards
+            (self.shards_list[Dataset.TRAIN_SPLIT]).
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
         """
@@ -847,7 +862,8 @@ class Dataset():
         Args:
           seen_keys: Set of all keys that are present in the test split.
           dpath: Root path of this dataset.
-          train_shards: Description of train shards (self.shards_list["train"]).
+          train_shards: Description of train shards
+            (self.shards_list[Dataset.TRAIN_SPLIT]).
           pbar: Either tqdm.tqdm or an identity function (in order not to
             print).
           examples_per_shard: Number of examples in each shard.
@@ -857,7 +873,7 @@ class Dataset():
         for i in pbar(range(len(train_shards)),
                       desc="Checking test key uniqueness"):
             for example in Dataset.inspect(dataset_path=dpath,
-                                           split="train",
+                                           split=Dataset.TRAIN_SPLIT,
                                            shard_id=i,
                                            num_example=examples_per_shard,
                                            verbose=False).as_numpy_iterator():
@@ -1184,10 +1200,12 @@ class Dataset():
         Example use:
           # Make a backup of the original dataset.
           # Either call:
-          dataset.move_shards(from_split="train", to_split="test", shards=3)
+          dataset.move_shards(from_split=Dataset.TRAIN_SPLIT,
+                              to_split=Dataset.TEST_SPLIT,
+                              shards=3)
           # Or call:
-          dataset.move_shards(from_split="train",
-                              to_split="test",
+          dataset.move_shards(from_split=Dataset.TRAIN_SPLIT,
+                              to_split=Dataset.TEST_SPLIT,
                               shards={0, 1, 2})
         """
         if isinstance(shards, int):

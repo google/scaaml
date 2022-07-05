@@ -16,6 +16,8 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Iterator, Literal, Optional
 
+from scaaml.io import Dataset
+
 
 class AbstractSCryptoAlgorithm(ABC):
     """Attack points and basic information about it (e.g. key length, etc.)"""
@@ -23,15 +25,15 @@ class AbstractSCryptoAlgorithm(ABC):
     def __init__(self,
                  firmware_sha256: str,
                  crypto_implementation,
-                 purpose: Literal['train', 'test', 'holdout'],
+                 purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,
                  keys: int,
                  plaintexts: int,
                  repetitions: int,
                  examples_per_shard: int,
-                 full_kt_filename: str = 'key_text_pairs.txt',
-                 full_progress_filename: str = 'progress_pairs.txt') -> None:
+                 full_kt_filename: str = "key_text_pairs.txt",
+                 full_progress_filename: str = "progress_pairs.txt") -> None:
         """Generates a set of key-text pairs and saves those. Does not overwrite
         existing files.
 
@@ -56,7 +58,7 @@ class AbstractSCryptoAlgorithm(ABC):
         """
         # When changing the following assert update also
         # SCryptoAlgorithm._dataset
-        assert purpose in ['train', 'test', 'holdout']
+        assert purpose in Dataset.SPLITS
         self._firmware_sha256 = firmware_sha256
         self._crypto_implementation = crypto_implementation
         self._implementation = implementation
@@ -152,16 +154,16 @@ class AbstractSCryptoAlgorithm(ABC):
     @property
     def purpose(self):
         """The parameter split in scaaml.io.Database.new_shard, in
-        ['train', 'test', 'holdout']"""
+        Dataset.SPLITS."""
         return self._purpose
 
     @property
-    def _dataset(self) -> Literal['Training', 'Validation']:
+    def _dataset(self) -> Literal["Training", "Validation"]:
         """Return the dataset type used in ktp_scaaml."""
         # purpose is used in scaaml.io.Dataset
-        purpose_to_dataset: Dict[str, Literal['Training', 'Validation']] = {
-            'train': 'Training',
-            'test': 'Training',
-            'holdout': 'Validation',
+        purpose_to_dataset: Dict[str, Literal["Training", "Validation"]] = {
+            Dataset.TRAIN_SPLIT: "Training",
+            Dataset.TEST_SPLIT: "Training",
+            Dataset.HOLDOUT_SPLIT: "Validation",
         }
         return purpose_to_dataset[self._purpose]

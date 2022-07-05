@@ -122,7 +122,7 @@ class PrintStats:
         print_stats.print()
         return print_stats
 
-    def add_example(self, example: Dict, split: str, group: int,
+    def add_example(self, example: Dict, split: Dataset.SPLIT_T, group: int,
                     part: int) -> None:
         """Add another example.
 
