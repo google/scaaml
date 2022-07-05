@@ -40,18 +40,20 @@ import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
 
+# Prevent importing Literal with older versions.
+if sys.version_info >= (3, 8):
+    from typing import Literal
+
 
 class Dataset():
     """Dataset class."""
     # Valid split values (used also as directory names).
     # Define split type, keep compatibility (Literal was introduced in
     # Python3.8).
-    if sys.version_info <= (3, 7):
-        SPLIT_T: TypeAlias = str
-    else:
-        # Prevent importing Literal with older versions.
-        from typing import Literal  # pylint: disable=C0415
+    if sys.version_info >= (3, 8):
         SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
+    else:
+        SPLIT_T: TypeAlias = str
     TRAIN_SPLIT: SPLIT_T = "train"
     TEST_SPLIT: SPLIT_T = "test"
     HOLDOUT_SPLIT: SPLIT_T = "holdout"
