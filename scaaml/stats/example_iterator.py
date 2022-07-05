@@ -24,8 +24,9 @@ class ExampleIterator:
     is a dictionary of attack points and traces.
 
     Example use:
-      for example in ExampleIterator(dataset_path='ds_folder', split='test'):
-          print(example['key'])
+      for example in ExampleIterator(dataset_path="ds_folder",
+                                     split=Dataset.TEST_SPLIT):
+          print(example["key"])
     """
 
     def __init__(self,
@@ -38,8 +39,8 @@ class ExampleIterator:
         Args:
           dataset_path (str): Path to the dataset.
           split (Optional[str]): If None or empty string, then all splits are
-            iterated.  Otherwise only one split is iterated (one of 'train',
-            'test', 'holdout', for more info see scaaml.io.Dataset.SPLITS).
+            iterated.  Otherwise only one split is iterated (one of
+            scaaml.io.Dataset.SPLITS).
           group (Optional[int]): If None, then all groups are iterated.
             Otherwise only shards belonging to this group.
           part (Optional[int]): If None, then all parts are iterated. Otherwise
@@ -52,9 +53,9 @@ class ExampleIterator:
         for current_split in splits:
             for shard_id, shard in enumerate(
                     dataset.shards_list[current_split]):
-                if group is not None and shard['group'] != group:
+                if group is not None and shard["group"] != group:
                     continue  # Skip this shard.
-                if part is not None and shard['part'] != part:
+                if part is not None and shard["part"] != part:
                     continue  # Skip this shard.
                 self._shards_list.append((shard_id, shard, current_split))
         self._shard_idx = 0
@@ -85,7 +86,7 @@ class ExampleIterator:
             shard = self._shards_list[self._shard_idx][1]
             split = self._shards_list[self._shard_idx][2]
             self._shard_idx += 1
-            num_example = shard['examples']
+            num_example = shard["examples"]
             self._shard_iterator = Dataset.inspect(
                 dataset_path=self._dataset_path,
                 split=split,
@@ -103,5 +104,5 @@ class ExampleIterator:
         if not self._shards_list:
             return 0
         n_shards = len(self._shards_list)
-        n_examples = self._shards_list[0][1]['examples']
+        n_examples = self._shards_list[0][1]["examples"]
         return n_shards * n_examples

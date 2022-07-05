@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
-from typing import Iterator, Literal, Optional
+from typing import Iterator, Optional
 import numpy as np
 
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.aes.acqktp import AcqKeyTextPatternScaaml as ktp_scaaml
+from scaaml.io import Dataset
 from scaaml.io import resume_kti
 
 
@@ -27,7 +28,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     def __init__(self,
                  firmware_sha256: str,
                  crypto_implementation,
-                 purpose: Literal["train", "test", "holdout"],
+                 purpose: Dataset.SPLIT_T,
                  implementation: str = "MBEDTLS",
                  algorithm: str = "simpleserial-aes",
                  keys: int = 3072,

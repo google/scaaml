@@ -89,13 +89,21 @@ def test_defaultdict(tmp_path):
     key = np.random.randint(0, 255, 16)
     trace1 = np.random.random(1024)
     trace2 = np.random.random(1024)
-    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
     del ds
     key2 = np.random.randint(0, 255, 16)
     ds = Dataset.get_dataset(**kwargs)
-    ds.new_shard(key=key2, part=1, split="test", group=1, chip_id=chip_id)
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TEST_SPLIT,
+                 group=1,
+                 chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
 
@@ -112,7 +120,11 @@ def test_mutable_defaults(tmp_path):
     trace1[2] = 0.8  # max_val is written before deleting ds
     trace1[1] = -0.3  # max_val is written before deleting ds
     chip_id = 1
-    ds1.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds1.new_shard(key=key,
+                  part=0,
+                  split=Dataset.TRAIN_SPLIT,
+                  group=0,
+                  chip_id=chip_id)
     ds1.write_example({"key": key}, {"trace1": trace1})
     ds1.close_shard()
 
@@ -210,12 +222,20 @@ def test_check_key_ap(tmp_path):
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
-    dataset.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
+    dataset.new_shard(key=key1,
+                      part=0,
+                      split=Dataset.TRAIN_SPLIT,
+                      group=0,
+                      chip_id=1)
     dataset.write_example({key_ap: key1},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
     key2 = np.random.randint(256, size=16)
-    dataset.new_shard(key=key2, part=0, split="test", group=0, chip_id=1)
+    dataset.new_shard(key=key2,
+                      part=0,
+                      split=Dataset.TEST_SPLIT,
+                      group=0,
+                      chip_id=1)
     dataset.write_example({key_ap: key2},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
@@ -223,7 +243,11 @@ def test_check_key_ap(tmp_path):
     dataset.check(key_ap=key_ap)
 
     # Make a duplicate key
-    dataset.new_shard(key=key1, part=0, split="test", group=0, chip_id=1)
+    dataset.new_shard(key=key1,
+                      part=0,
+                      split=Dataset.TEST_SPLIT,
+                      group=0,
+                      chip_id=1)
     dataset.write_example({key_ap: key1},
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
@@ -251,16 +275,32 @@ def test_merge_with(tmp_path):
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
-    other_ds.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
+    other_ds.new_shard(key=key1,
+                       part=0,
+                       split=Dataset.TRAIN_SPLIT,
+                       group=0,
+                       chip_id=1)
     other_ds.write_example({"key": key1}, {"trace1": trace})
     trace[0] = 0.9
-    other_ds.new_shard(key=key1, part=1, split="train", group=0, chip_id=1)
+    other_ds.new_shard(key=key1,
+                       part=1,
+                       split=Dataset.TRAIN_SPLIT,
+                       group=0,
+                       chip_id=1)
     other_ds.write_example({"key": key1}, {"trace1": trace})
     # Two shards with a different key
     key2 = np.random.randint(256, size=16)
-    other_ds.new_shard(key=key2, part=0, split="train", group=1, chip_id=1)
+    other_ds.new_shard(key=key2,
+                       part=0,
+                       split=Dataset.TRAIN_SPLIT,
+                       group=1,
+                       chip_id=1)
     other_ds.write_example({"key": key2}, {"trace1": trace})
-    other_ds.new_shard(key=key2, part=1, split="train", group=1, chip_id=1)
+    other_ds.new_shard(key=key2,
+                       part=1,
+                       split=Dataset.TRAIN_SPLIT,
+                       group=1,
+                       chip_id=1)
     other_ds.write_example({"key": key2}, {"trace1": trace})
     other_ds.close_shard()
 
@@ -276,16 +316,24 @@ def test_merge_with(tmp_path):
     key3 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
     trace[1] = -0.5
-    yet_another_ds.new_shard(key=key3, part=0, split="test", group=1, chip_id=1)
+    yet_another_ds.new_shard(key=key3,
+                             part=0,
+                             split=Dataset.TEST_SPLIT,
+                             group=1,
+                             chip_id=1)
     yet_another_ds.write_example({"key": key3}, {"trace1": trace})
-    yet_another_ds.new_shard(key=key3, part=1, split="test", group=1, chip_id=1)
+    yet_another_ds.new_shard(key=key3,
+                             part=1,
+                             split=Dataset.TEST_SPLIT,
+                             group=1,
+                             chip_id=1)
     yet_another_ds.write_example({"key": key3}, {"trace1": trace})
     yet_another_ds.close_shard()
     key4 = np.random.randint(256, size=16)
     trace = np.zeros(trace_len)
     yet_another_ds.new_shard(key=key4,
                              part=1,
-                             split="train",
+                             split=Dataset.TRAIN_SPLIT,
                              group=1,
                              chip_id=1)
     yet_another_ds.write_example({"key": key4}, {"trace1": trace})
@@ -294,10 +342,13 @@ def test_merge_with(tmp_path):
     resulting.merge_with(yet_another_ds)
     assert resulting.min_values == {"trace1": -0.5}
     assert resulting.max_values == {"trace1": 0.9}
-    assert resulting.examples_per_split == {"train": 5, "test": 2}
+    assert resulting.examples_per_split == {
+        Dataset.TRAIN_SPLIT: 5,
+        Dataset.TEST_SPLIT: 2
+    }
     # The right number of files.
-    assert len(list((resulting.path / "train").glob("*"))) == 5
-    assert len(list((resulting.path / "test").glob("*"))) == 2
+    assert len(list((resulting.path / Dataset.TRAIN_SPLIT).glob("*"))) == 5
+    assert len(list((resulting.path / Dataset.TEST_SPLIT).glob("*"))) == 2
 
 
 def test_move_shards(tmp_path):
@@ -310,34 +361,58 @@ def test_move_shards(tmp_path):
     # Fill the dataset.
     # Two shards with the same key
     key1 = np.random.randint(256, size=16)
-    ds.new_shard(key=key1, part=0, split="train", group=0, chip_id=1)
+    ds.new_shard(key=key1,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=1)
     ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
-    ds.new_shard(key=key1, part=1, split="train", group=0, chip_id=1)
+    ds.new_shard(key=key1,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=1)
     ds.write_example({"key": key1}, {"trace1": np.random.rand(1024)})
     # Two shards with a different key
     key2 = np.random.randint(256, size=16)
-    ds.new_shard(key=key2, part=0, split="train", group=1, chip_id=1)
+    ds.new_shard(key=key2,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=1,
+                 chip_id=1)
     ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
-    ds.new_shard(key=key2, part=1, split="train", group=1, chip_id=1)
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=1,
+                 chip_id=1)
     ds.write_example({"key": key2}, {"trace1": np.random.rand(1024)})
     ds.close_shard()
 
     # This is ok.
-    ds.move_shards(from_split="train", to_split="test", shards={2, 3})
-    assert len(ds.shards_list["train"]) == 2
-    assert len(ds.shards_list["test"]) == 2
+    ds.move_shards(from_split=Dataset.TRAIN_SPLIT,
+                   to_split=Dataset.TEST_SPLIT,
+                   shards={2, 3})
+    assert len(ds.shards_list[Dataset.TRAIN_SPLIT]) == 2
+    assert len(ds.shards_list[Dataset.TEST_SPLIT]) == 2
     # Move all shards back.
-    ds.move_shards(from_split="test", to_split="train", shards=2)
-    assert len(ds.shards_list["train"]) == 4
-    assert len(ds.shards_list["test"]) == 0
+    ds.move_shards(from_split=Dataset.TEST_SPLIT,
+                   to_split=Dataset.TRAIN_SPLIT,
+                   shards=2)
+    assert len(ds.shards_list[Dataset.TRAIN_SPLIT]) == 4
+    assert len(ds.shards_list[Dataset.TEST_SPLIT]) == 0
     # Move nothing.
-    ds.move_shards(from_split="test", to_split="train", shards=0)
-    assert len(ds.shards_list["train"]) == 4
-    assert len(ds.shards_list["test"]) == 0
+    ds.move_shards(from_split=Dataset.TEST_SPLIT,
+                   to_split=Dataset.TRAIN_SPLIT,
+                   shards=0)
+    assert len(ds.shards_list[Dataset.TRAIN_SPLIT]) == 4
+    assert len(ds.shards_list[Dataset.TEST_SPLIT]) == 0
     # Move just one, so that check fails on having the same key in test and
     # train.
     with pytest.raises(ValueError) as verror:
-        ds.move_shards(from_split="train", to_split="test", shards=1)
+        ds.move_shards(from_split=Dataset.TRAIN_SPLIT,
+                       to_split=Dataset.TEST_SPLIT,
+                       shards=1)
     assert "Duplicate key" in str(verror.value)
 
 
@@ -384,7 +459,11 @@ def test_reshape_into_new_dataset_filled(tmp_path):
     ))
     # Fill in the old dataset.
     key = np.random.randint(256, size=16)
-    old_ds.new_shard(key=key, part=0, split="train", group=0, chip_id=1)
+    old_ds.new_shard(key=key,
+                     part=0,
+                     split=Dataset.TRAIN_SPLIT,
+                     group=0,
+                     chip_id=1)
     for _ in range(old_examples_per_shard):
         old_ds.write_example({"key": np.random.randint(256, size=16)},
                              {"trace1": np.random.rand(1024)})
@@ -598,7 +677,11 @@ def test_min_max_values_ok(tmp_path):
         trace[0] = min_value
         trace[1] = max_value
         key = np.zeros(16, dtype=np.uint8)
-        ds.new_shard(key=key, part=0, split="train", group=0, chip_id=1)
+        ds.new_shard(key=key,
+                     part=0,
+                     split=Dataset.TRAIN_SPLIT,
+                     group=0,
+                     chip_id=1)
         ds.write_example({"key": key}, {"trace1": trace})
         ds.close_shard()
         config_dict = ds.get_config_dictionary()
@@ -618,17 +701,25 @@ def test_resume_capture(tmp_path):
     trace1[2] = 0.8  # max_val is written before deleting ds
     trace2 = np.zeros(1024, dtype=np.float)
     chip_id = 1
-    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
     del ds
     ds = Dataset.get_dataset(**kwargs)
-    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
     config_dict = ds.get_config_dictionary()
 
-    assert len(config_dict["shards_list"]["train"]) == 2
+    assert len(config_dict["shards_list"][Dataset.TRAIN_SPLIT]) == 2
     assert config_dict["max_values"]["trace1"] == 0.8
 
 
@@ -683,10 +774,18 @@ def test_from_loaded_json(tmp_path):
     key2 = np.random.randint(0, 255, 16)
     trace1 = np.random.rand(1024)
     chip_id = 1
-    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
-    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
     config_dict = ds.get_config_dictionary()
@@ -754,18 +853,26 @@ def test_close_shard(tmp_path):
 
     assert ds.examples_per_group == {}
     assert ds.examples_per_split == {}
-    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
-    assert ds.examples_per_group == {"train": {0: 2}}
-    assert ds.examples_per_split == {"train": 2}
-    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
+    assert ds.examples_per_group == {Dataset.TRAIN_SPLIT: {0: 2}}
+    assert ds.examples_per_split == {Dataset.TRAIN_SPLIT: 2}
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
-    assert ds.examples_per_group == {"train": {0: 4}}
-    assert ds.examples_per_split == {"train": 4}
+    assert ds.examples_per_group == {Dataset.TRAIN_SPLIT: {0: 4}}
+    assert ds.examples_per_split == {Dataset.TRAIN_SPLIT: 4}
     ds.check()
 
 
@@ -797,7 +904,7 @@ def test_from_config(tmp_path):
 @patch.object(Shard, "__init__")
 @patch.object(Shard, "read")
 def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
-    split = "test"
+    split = Dataset.TEST_SPLIT
     shard_id = 0
     num_example = 5
     mock_shard_init.return_value = None
@@ -805,12 +912,12 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
         "keys_per_group": {},
         "examples_per_group": {},
         "shards_list": {
-            "test": [{
+            Dataset.TEST_SPLIT: [{
                 "path": "test/0_abcd_1.tfrec"
             }, {
                 "path": "test/2_ef12_3.tfrec"
             }],
-            "train": [{
+            Dataset.TRAIN_SPLIT: [{
                 "path": "train/2_dcea_0.tfrec"
             }, {
                 "path": "train/3_beef_1.tfrec"
@@ -856,7 +963,7 @@ def test_check_sha256sums(mock_sha256sum):
     dpath = Path("/home/noanuser/notadir")
     mock_sha256sum.side_effect = lambda x: shadict[f"{x.parent.name}/{x.name}"]
     shards_list = {
-        "test": [{
+        Dataset.TEST_SPLIT: [{
             "path": f,
             "sha256": s,
         } for f, s in shadict.items()],
@@ -875,7 +982,7 @@ def test_check_sha256sums(mock_sha256sum):
 def test_check_metadata():
     config = {
         "shards_list": {
-            "test": [{
+            Dataset.TEST_SPLIT: [{
                 "examples": 64,
                 "group": 0,
                 "key": "01F6E272B933EC2B80AB53AF245F7FA6",
@@ -891,7 +998,7 @@ def test_check_metadata():
                 "key": "69A283F6B1EEA6327AFDB30F76E6FE30",
                 "part": 0,
             }],
-            "train": [
+            Dataset.TRAIN_SPLIT: [
                 {
                     "examples": 64,
                     "group": 0,
@@ -907,17 +1014,17 @@ def test_check_metadata():
             ]
         },
         "examples_per_group": {
-            "test": {
+            Dataset.TEST_SPLIT: {
                 "0": 2 * 64,
                 "1": 1 * 64,
             },
-            "train": {
+            Dataset.TRAIN_SPLIT: {
                 "0": 2 * 64
             }
         },
         "examples_per_split": {
-            "test": 3 * 64,
-            "train": 2 * 64
+            Dataset.TEST_SPLIT: 3 * 64,
+            Dataset.TRAIN_SPLIT: 2 * 64
         },
         "examples_per_shard": 64,
     }
@@ -925,22 +1032,22 @@ def test_check_metadata():
 
     # Wrong number of examples_per_split
     bad_config = copy.deepcopy(config)
-    bad_config["examples_per_split"]["test"] = 5
+    bad_config["examples_per_split"][Dataset.TEST_SPLIT] = 5
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Num shards in shard_list !=" in str(metadata_error.value)
 
     # Wrong number of examples_per_group
     bad_config = copy.deepcopy(config)
-    bad_config["examples_per_group"]["test"]["0"] = 5
+    bad_config["examples_per_group"][Dataset.TEST_SPLIT]["0"] = 5
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Wrong sum of examples_per_group in" in str(metadata_error.value)
 
     # Not constant number of examples in shards
     bad_config = copy.deepcopy(config)
-    bad_config["shards_list"]["test"][0]["examples"] = 63
-    bad_config["shards_list"]["test"][2]["examples"] = 65
+    bad_config["shards_list"][Dataset.TEST_SPLIT][0]["examples"] = 63
+    bad_config["shards_list"][Dataset.TEST_SPLIT][2]["examples"] = 65
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config,
                                 n_examples_in_each_shard_is_constant=True)
@@ -948,8 +1055,8 @@ def test_check_metadata():
 
     # Wrong number of examples_per_group
     bad_config = copy.deepcopy(config)
-    bad_config["examples_per_group"]["test"]["0"] = 127
-    bad_config["examples_per_group"]["test"]["1"] = 65
+    bad_config["examples_per_group"][Dataset.TEST_SPLIT]["0"] = 127
+    bad_config["examples_per_group"][Dataset.TEST_SPLIT]["1"] = 65
     with pytest.raises(ValueError) as metadata_error:
         Dataset._check_metadata(config=bad_config)
     assert "Wrong examples_per_group in" in str(metadata_error.value)
@@ -1056,13 +1163,21 @@ def test_basic_workflow(tmp_path):
                  attack_points_info=apinfo)
 
     chip_id = 1
-    ds.new_shard(key=key, part=0, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key,
+                 part=0,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key}, {"trace1": trace1})
     ds.close_shard()
 
     # 256 keys - with uniform bytes
 
-    ds.new_shard(key=key2, part=1, split="train", group=0, chip_id=chip_id)
+    ds.new_shard(key=key2,
+                 part=1,
+                 split=Dataset.TRAIN_SPLIT,
+                 group=0,
+                 chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
 
@@ -1071,7 +1186,7 @@ def test_basic_workflow(tmp_path):
     slug = ds.slug
     # reload
     ds2 = Dataset.from_config(root_path / slug)
-    ds2.inspect(root_path / slug, "train", 0, 1)
+    ds2.inspect(root_path / slug, Dataset.TRAIN_SPLIT, 0, 1)
     ds2.summary(root_path / slug)
 
 
@@ -1097,37 +1212,37 @@ def test_cleanup_shards(tmp_path):
         "firmware_url": "fm_url",
         "examples_per_shard": 64,
         "examples_per_group": {
-            "test": {
+            Dataset.TEST_SPLIT: {
                 0: 2 * 64,
                 1: 1 * 64,
                 2: 1 * 64,
                 3: 2 * 64,
             },
-            "train": {
+            Dataset.TRAIN_SPLIT: {
                 0: 5 * 64,
             }
         },
         "examples_per_split": {
-            "test": 6 * 64,
-            "train": 5 * 64,
+            Dataset.TEST_SPLIT: 6 * 64,
+            Dataset.TRAIN_SPLIT: 5 * 64,
         },
         "keys_per_split": {
-            "test": 4,
-            "train": 4,
+            Dataset.TEST_SPLIT: 4,
+            Dataset.TRAIN_SPLIT: 4,
         },
         "keys_per_group": {
-            "test": {
+            Dataset.TEST_SPLIT: {
                 0: 1,
                 1: 1,
                 2: 1,
                 3: 1,
             },
-            "train": {
+            Dataset.TRAIN_SPLIT: {
                 0: 4,
             }
         },
         "shards_list": {
-            "test": [
+            Dataset.TEST_SPLIT: [
                 shard_info(group=0, key="KEYA", part=0),
                 shard_info(group=0, key="KEYA", part=2),  # del
                 shard_info(group=1, key="KEYB", part=2),  # del
@@ -1135,7 +1250,7 @@ def test_cleanup_shards(tmp_path):
                 shard_info(group=3, key="KEYD", part=1),
                 shard_info(group=3, key="KEYD", part=2),
             ],
-            "train": [
+            Dataset.TRAIN_SPLIT: [
                 shard_info(group=0, key="keyA", part=2),  # del
                 shard_info(group=0, key="keyA", part=1),
                 shard_info(group=0, key="keyB", part=3),
@@ -1146,39 +1261,39 @@ def test_cleanup_shards(tmp_path):
     }
     # Populate the mock database
     Dataset._get_config_path(tmp_path).write_text(json.dumps(old_config))
-    for s in ["train", "test", "holdout"]:
+    for s in Dataset.SPLITS:
         (tmp_path / s).mkdir()
 
     new_config = copy.deepcopy(old_config)
     # Delete some files. Remember to update "examples_per_group" and "example_per_shard".
     for i in sorted([0, 3], reverse=True):  # Remove in descending order.
-        del new_config["shards_list"]["train"][i]
-    new_config["examples_per_group"]["train"] = {
+        del new_config["shards_list"][Dataset.TRAIN_SPLIT][i]
+    new_config["examples_per_group"][Dataset.TRAIN_SPLIT] = {
         0: 3 * 64,
     }
-    new_config["examples_per_split"]["train"] = 3 * 64
-    new_config["keys_per_split"]["train"] = 3
-    new_config["keys_per_group"]["train"] = {
+    new_config["examples_per_split"][Dataset.TRAIN_SPLIT] = 3 * 64
+    new_config["keys_per_split"][Dataset.TRAIN_SPLIT] = 3
+    new_config["keys_per_group"][Dataset.TRAIN_SPLIT] = {
         0: 3,
     }
     for i in sorted([1, 2], reverse=True):  # Remove in descending order.
-        del new_config["shards_list"]["test"][i]
-    new_config["examples_per_group"]["test"] = {
+        del new_config["shards_list"][Dataset.TEST_SPLIT][i]
+    new_config["examples_per_group"][Dataset.TEST_SPLIT] = {
         0: 1 * 64,
         1: 0 * 64,
         2: 1 * 64,
         3: 2 * 64,
     }
-    new_config["examples_per_split"]["test"] = 4 * 64
-    new_config["keys_per_split"]["test"] = 3
-    new_config["keys_per_group"]["test"] = {
+    new_config["examples_per_split"][Dataset.TEST_SPLIT] = 4 * 64
+    new_config["keys_per_split"][Dataset.TEST_SPLIT] = 3
+    new_config["keys_per_group"][Dataset.TEST_SPLIT] = {
         0: 1,
         1: 0,
         2: 1,
         3: 1,
     }
     for i in []:  # Fill this split in old_config first
-        del new_config["shards_list"]["holdout"][i]
+        del new_config["shards_list"][Dataset.HOLDOUT_SPLIT][i]
     # Create existing files.
     for s in new_config["shards_list"]:
         for f in new_config["shards_list"][s]:
@@ -1186,7 +1301,7 @@ def test_cleanup_shards(tmp_path):
     # Other files should be neither deleted nor added to the dataset.
     other_files = [
         tmp_path / "iamnothere.txt",
-        tmp_path / "train" / "not_a_shard.tfrec",
+        tmp_path / Dataset.TRAIN_SPLIT / "not_a_shard.tfrec",
     ]
     for f in other_files:
         f.touch()
