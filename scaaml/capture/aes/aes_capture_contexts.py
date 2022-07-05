@@ -13,7 +13,7 @@
 # limitations under the License.
 """Capture script for easier manipulation."""
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -155,8 +155,8 @@ def capture_aes_dataset(
     # Generators of key-plaintext pairs for different splits.
     crypto_algorithms = []
 
-    def add_crypto_alg(split: Literal["test", "train", "holdout"], keys: int,
-                       plaintexts: int, repetitions: int):
+    def add_crypto_alg(split: Dataset.SPLIT_T, keys: int, plaintexts: int,
+                       repetitions: int):
         """Does not overwrite, safe to call multiple times.
 
         Args:

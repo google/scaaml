@@ -19,8 +19,10 @@ import json
 import os
 from collections import defaultdict
 import shutil
+import sys
 from time import time
-from typing import Dict, List, Optional, Union, Set
+from type_extensions import TypeAlias
+from typing import Dict, List, Optional, Union, Set, Tuple
 from pathlib import Path
 import pprint
 
@@ -42,10 +44,19 @@ from .errors import DatasetExistsError
 class Dataset():
     """Dataset class."""
     # Valid split values (used also as directory names).
-    TRAIN_SPLIT = "train"
-    TEST_SPLIT = "test"
-    HOLDOUT_SPLIT = "holdout"
-    SPLITS = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
+    # Define split type, keep compatibility (Literal was introduced in
+    # Python3.8).
+    if sys.version_info <= (3, 7):
+        SPLIT_T: TypeAlias = str
+    else:
+        # Prevent importing Literal with older versions.
+        from typing import Literal  # pylint: disable=C0415
+        SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
+    TRAIN_SPLIT: SPLIT_T = "train"
+    TEST_SPLIT: SPLIT_T = "test"
+    HOLDOUT_SPLIT: SPLIT_T = "holdout"
+    SPLITS: Tuple[SPLIT_T, SPLIT_T,
+                  SPLIT_T] = (TRAIN_SPLIT, TEST_SPLIT, HOLDOUT_SPLIT)
 
     def __init__(
         self,
@@ -574,12 +585,11 @@ class Dataset():
         print(tabulate(d, ["split", "num_shards", "num_keys", "num_examples"]))
 
     @staticmethod
-    def inspect(
-            dataset_path,
-            split: str,  # typing.Literal["train", "test", "holdout"],
-            shard_id: int,
-            num_example: int,
-            verbose: bool = True):
+    def inspect(dataset_path,
+                split: SPLIT_T,
+                shard_id: int,
+                num_example: int,
+                verbose: bool = True):
         """Display the content of a given shard.
 
         Args:

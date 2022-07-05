@@ -25,7 +25,7 @@ class AbstractSCryptoAlgorithm(ABC):
     def __init__(self,
                  firmware_sha256: str,
                  crypto_implementation,
-                 purpose: Literal["train", "test", "holdout"],
+                 purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,
                  keys: int,
