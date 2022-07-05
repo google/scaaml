@@ -21,7 +21,7 @@ from collections import defaultdict
 import shutil
 import sys
 from time import time
-from type_extensions import TypeAlias
+from typing_extensions import TypeAlias
 from typing import Dict, List, Optional, Union, Set, Tuple
 from pathlib import Path
 import pprint
