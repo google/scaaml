@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Custom metrics."""
-from .custom import MaxRank  # noqa
-from .custom import MeanRank  # noqa
-from .custom import MeanConfidence  # noqa
+from scaaml.metrics.custom import MaxRank
+from scaaml.metrics.custom import MeanRank
+from scaaml.metrics.custom import MeanConfidence
