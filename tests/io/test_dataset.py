@@ -27,6 +27,7 @@ from scaaml.io import Dataset
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
+from scaaml.io.reshape import reshape_into_new_dataset
 
 
 def dataset_constructor_kwargs(root_path, **kwargs):
@@ -185,14 +186,14 @@ def test_get_config_dictionary_urls(tmp_path):
                                         url=url)
     # Create the dataset
     ds = Dataset.get_dataset(**kwargs)
-    conf = ds._get_config_dictionary()
+    conf = ds.get_config_dictionary()
     assert conf["licence"] == licence
     assert conf["url"] == url
     assert conf["paper_url"] == paper_url
     assert conf["firmware_url"] == firmware_url
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
-    conf = ds._get_config_dictionary()
+    conf = ds.get_config_dictionary()
     assert conf["licence"] == licence
     assert conf["url"] == url
     assert conf["paper_url"] == paper_url
@@ -201,7 +202,7 @@ def test_get_config_dictionary_urls(tmp_path):
 
 def test_scaaml_version_present(tmp_path):
     ds = Dataset(**dataset_constructor_kwargs(root_path=tmp_path))
-    config = ds._get_config_dictionary()
+    config = ds.get_config_dictionary()
     assert "scaaml_version" in config.keys()
 
 
@@ -417,13 +418,13 @@ def test_move_shards(tmp_path):
 
 def same_examples(ds1, ds2):
     # Check that there are the same number of examples
-    config1 = ds1._get_config_dictionary()
-    config2 = ds1._get_config_dictionary()
+    config1 = ds1.get_config_dictionary()
+    config2 = ds1.get_config_dictionary()
     assert config1["examples_per_split"] == config2["examples_per_split"]
 
     def example_iterator(dataset, split):
         """Return iterator of examples contained in a dataset."""
-        config = dataset._get_config_dictionary()
+        config = dataset.get_config_dictionary()
         from itertools import chain
         # Concatenate all examples that are returned by Dataset.inspect.
         return chain.from_iterable(
@@ -447,6 +448,8 @@ def same_examples(ds1, ds2):
 
 def test_reshape_into_new_dataset_filled(tmp_path):
     # Fix numpy randomness not to cause flaky tests.
+    # Test this function here so that we do not have to redefine
+    # dataset_constructor_kwargs.
     np.random.seed(42)
 
     old_examples_per_shard = 16
@@ -466,7 +469,7 @@ def test_reshape_into_new_dataset_filled(tmp_path):
                              {"trace1": np.random.rand(1024)})
     old_ds.close_shard()
 
-    new_ds = old_ds.reshape_into_new_dataset(examples_per_shard=4)
+    new_ds = reshape_into_new_dataset(old_ds, examples_per_shard=4)
     old_ds.check()
     new_ds.check()
     same_examples(old_ds, new_ds)
@@ -681,7 +684,7 @@ def test_min_max_values_ok(tmp_path):
                      chip_id=1)
         ds.write_example({"key": key}, {"trace1": trace})
         ds.close_shard()
-        config_dict = ds._get_config_dictionary()
+        config_dict = ds.get_config_dictionary()
         assert config_dict["min_values"]["trace1"] == min_value
         assert config_dict["max_values"]["trace1"] == max_value
 
@@ -714,7 +717,7 @@ def test_resume_capture(tmp_path):
                  chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace2})
     ds.close_shard()
-    config_dict = ds._get_config_dictionary()
+    config_dict = ds.get_config_dictionary()
 
     assert len(config_dict["shards_list"][Dataset.TRAIN_SPLIT]) == 2
     assert config_dict["max_values"]["trace1"] == 0.8
@@ -785,7 +788,7 @@ def test_from_loaded_json(tmp_path):
                  chip_id=chip_id)
     ds.write_example({"key": key2}, {"trace1": trace1})
     ds.close_shard()
-    config_dict = ds._get_config_dictionary()
+    config_dict = ds.get_config_dictionary()
     json_dict = json.loads(json.dumps(config_dict))
 
     loaded_dict = Dataset._from_loaded_json(json_dict)

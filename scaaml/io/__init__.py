@@ -14,3 +14,4 @@
 """Dataset creation and usage."""
 
 from scaaml.io.dataset import Dataset
+from scaaml.io.dataset_filler import DatasetFiller
