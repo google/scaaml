@@ -292,8 +292,9 @@ class Dataset():
             raise ValueError(f"Invalid split, must be in {Dataset.SPLITS}")
 
         if part < 0 or part > self.MAX_PART_NUMBER:
-            raise ValueError(
-                "Invalid part value -- must be in [0, self.MAX_PART_NUMBER]")
+            raise ValueError(f"Invalid part value -- must be in "
+                             f"[0, Dataset.MAX_PART_NUMBER] "
+                             f"(that is [0, {self.MAX_PART_NUMBER}]).")
 
         self.shard_split = split
         self.shard_part = part
