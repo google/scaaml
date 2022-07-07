@@ -11,11 +11,5 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-        name: Check out the code
-      - uses: actions/setup-node@v1
-        name: Run spell check
-        with:
-          node-version: "16"
-      - run: npm install -g cspell
-      - run: cspell --config ./cspell.json "**/*.{md,py,ipynb,yml,ini,json,sh,txt}"
+      - uses: actions/checkout@v3
+      - uses: streetsidesoftware/cspell-action@v2
