@@ -6,7 +6,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  pylint:
+  spellchecking:
     runs-on: ubuntu-22.04
     steps:
       - uses: zwaldowski/cspell-action@v1
