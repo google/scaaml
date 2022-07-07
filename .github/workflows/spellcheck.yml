@@ -11,8 +11,8 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
+      # Run cspell everywhere, DO NOT SUBMIT
       - uses: actions/checkout@v3
-      - uses: streetsidesoftware/cspell-action@v1
-        with:
-          # DO_NOT_SUBMIT Check all files (not only the changed ones).
-          incremental_files_only: false
+      - uses: actions/setup-node@v1
+      - run: npm install -g cspell
+      - run: cspell --config ./cspell.json "**/*.{py,md,ipynb}"
