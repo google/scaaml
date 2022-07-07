@@ -4,7 +4,7 @@
             "owner": "spellcheck",
             "pattern": [
                 {
-                    "regexp": "^([^:]+):(\\d+):([^:]+)\\s*-\\s*(.*)$",
+                    "regexp": "^/home/runner/work/scaaml/([^:]+):(\\d+):([^:]+)\\s*-\\s*(.*)$",
                     "file": 1,
                     "line": 2,
                     "column": 3,
