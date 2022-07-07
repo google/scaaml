@@ -95,7 +95,7 @@ class Dataset():
 
         Args:
           url: Where to download this dataset.
-          firmware_url: Where to dowload the firmware used while capture.
+          firmware_url: Where to download the firmware used while capture.
           paper_url: Where to find the published paper.
           licence: URL or the whole licence the dataset is published under.
           from_config: This Dataset object has been created from a saved
@@ -166,7 +166,7 @@ class Dataset():
         self.shard_path: Optional[str] = None
         self.shard_split: Optional[str] = None
         self.shard_part: Optional[int] = None
-        self.shard_relative_path: Optional[str] = None  # for the shardlist
+        self.shard_relative_path: Optional[str] = None  # for the shard list
         self.curr_shard: Optional[Shard] = None  # current_ shard object
 
         # [counters] - must be passed as param to allow reload.
@@ -343,7 +343,7 @@ class Dataset():
         self.examples_per_group[self.shard_split][
             self.shard_group] += stats["examples"]
 
-        # record in shardlist
+        # record in shard list
         self.shards_list[self.shard_split].append({
             "path": str(self.shard_relative_path),
             "examples": stats["examples"],
