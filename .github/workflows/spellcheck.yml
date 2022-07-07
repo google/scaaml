@@ -1,0 +1,14 @@
+name: spellcheck
+on:
+  push:
+    paths:
+      - '**/*.py'
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  pylint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: zwaldowski/cspell-action@v1
+        with:
+          paths: "**/*.{py,ipynb,md}"
