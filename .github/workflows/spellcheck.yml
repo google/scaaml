@@ -11,13 +11,15 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-        name: Check out the code
-      - uses: actions/setup-node@v1
-        name: Set up node
+      - name: Check out the code
+        uses: actions/checkout@v2
+      - name: Set up node
+        uses: actions/setup-node@v1
         with:
           node-version: "16"
-      - run: npm install -g cspell
-        name: Install cspell
-      - run: cspell --config ./cspell.json "**"
-        name: Run spell check
+      - name: Install cspell
+        run: npm install -g cspell
+      - name: Run spell check
+        run: |
+          echo ::add-matcher::./.github/cspell_matcher.json
+          cspell --config ./cspell.json "**"
