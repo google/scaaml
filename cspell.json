@@ -8,6 +8,6 @@
       "addWords": true
     }
   ],
-  "dictionaries": ["project-words"],
-  "ignorePaths": ["en_US", "en-gb", "python", "/project-words.txt"]
+  "dictionaries": ["project-words", "en_US", "en-gb", "python"],
+  "ignorePaths": ["node_modules", "/project-words.txt"]
 }
