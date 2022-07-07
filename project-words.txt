@@ -14,11 +14,14 @@ bibtex
 booktitle
 Bursztein
 burszteindc
+burzteindc
 bytelist
 chipwhisperer
+chipwispher
 clkgen
 cmap
 colorbar
+comparaison
 cprint
 crossentropy
 cwscope
@@ -26,6 +29,7 @@ ddict
 dpath
 dtype
 figsize
+filepattern
 firstrow
 howpublished
 HWAES
