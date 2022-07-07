@@ -1,1 +1,6 @@
+bytelist
+cprint
+ipynb
 scaaml
+termcolor
+tqdm
