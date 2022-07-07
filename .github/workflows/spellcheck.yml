@@ -3,12 +3,21 @@ on:
   push:
     paths:
       - '**/*.py'
+      - '**/*.ipynb'
+      - '**/*.md'
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      - uses: zwaldowski/cspell-action@v1
+      - uses: actions/checkout@v2
+        name: Check out the code
+      - uses: actions/setup-node@v1
+        name: Set up node
         with:
-          paths: "**/*.{py,ipynb,md}"
+          node-version: "16"
+      - run: npm install -g cspell
+        name: Install cspell
+      - run: cspell --config ./cspell.json "**/*.{py,ipynb,md}"
+        name: Run cspell
