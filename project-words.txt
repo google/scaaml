@@ -4,7 +4,10 @@ allclose
 arange
 argmax
 argmin
+argsort
+ascad
 astype
+autoreload
 batchnorm
 batchnormalization
 bibtex
@@ -22,8 +25,10 @@ cwscope
 ddict
 dpath
 dtype
+figsize
 firstrow
 howpublished
+HWAES
 imshow
 inproceedings
 ipynb
@@ -35,12 +40,14 @@ kidxs
 logit
 logits
 matplotlib
+maxtraces
 mbed
 MBEDTLS
 nbkeys
 ndarray
 newaxis
 nrst
+optim
 pbar
 picoapi
 Picod
@@ -63,6 +70,7 @@ scipy
 simpleserial
 siutils
 sname
+softmax
 Tensorboard
 termcolor
 textin
@@ -74,6 +82,7 @@ tfrecord
 tinyaes
 tobytes
 tqdm
+vals
 vispy
 xlabel
 xticks

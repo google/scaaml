@@ -94,8 +94,8 @@ class AbstractCaptureRunner(ABC):
         Args:
           crypto_alg: The object used to get stabilization attack points.
         """
-        skti = crypto_alg.get_stabilization_kti()
-        crypto_input = self.get_crypto_input(next(skti))
+        stabilization_iterator = crypto_alg.get_stabilization_kti()
+        crypto_input = self.get_crypto_input(next(stabilization_iterator))
         try:
             _, _ = self.get_attack_points_and_measurement(
                 crypto_alg=crypto_alg, crypto_input=crypto_input)
