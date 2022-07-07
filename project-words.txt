@@ -2,7 +2,6 @@ astype
 bytelist
 chipwhisperer
 cprint
-cprint
 ddict
 dpath
 dtype
