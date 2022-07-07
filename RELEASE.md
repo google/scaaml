@@ -8,7 +8,7 @@ Initial public release.
 
 ## Breaking Changes
 
-* SCAAML full re-architecturing around Tensorflow 2.2+
+* SCAAML full rearchitecting around Tensorflow 2.2+
 * Models reworked
 * Attack code refactored
 * Visualization redone
