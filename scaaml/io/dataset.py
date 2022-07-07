@@ -44,6 +44,20 @@ from .errors import DatasetExistsError
 if sys.version_info >= (3, 8):
     from typing import Literal
 
+# BEGIN DO NOT SUBMIT
+
+# DO NOT SUBMIT speel chekcer tets
+
+# DO NOT SUBMIT spell checker test in code
+
+def sime_function():
+    varyable0 = 5
+    anotherVar = 6
+    anotherVariable = 7
+    return varyable0 + anotherVar + anotherVariable
+
+# END DO NOT SUBMIT
+
 
 class Dataset():
     """Dataset class."""
