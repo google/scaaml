@@ -9,5 +9,5 @@
     }
   ],
   "dictionaries": ["project-words"],
-  "ignorePaths": ["node_modules", "/project-words.txt"]
+  "ignorePaths": ["en_US", "en-gb", "python", "/project-words.txt"]
 }
