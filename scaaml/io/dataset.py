@@ -716,7 +716,8 @@ class Dataset():
         Raises: ValueError if some hash does not match.
         """
         for split, shard_list in shards_list.items():
-            for shard_info in pbar(shard_list, desc=f"Checking sha for {split}"):
+            for shard_info in pbar(shard_list,
+                                   desc=f"Checking sha for {split}"):
                 shard_path = dpath / shard_info["path"]
                 sha_hash = siutils.sha256sum(shard_path)
                 if sha_hash != shard_info["sha256"]:
@@ -788,7 +789,8 @@ class Dataset():
         for split, expected_examples in config["examples_per_split"].items():
             shard_list = config["shards_list"][split]
             # Checking we have the right number of shards.
-            if len(shard_list) != expected_examples // config["examples_per_shard"]:
+            n_shards: int = expected_examples // config["examples_per_shard"]
+            if len(shard_list) != n_shards:
                 raise ValueError("Num shards in shard_list != "
                                  "examples_per_split // examples_per_shard")
             # Check that expected_examples is a multiple of examples_per_shard.
