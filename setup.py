@@ -40,7 +40,6 @@ setup(
         "matplotlib",
         "Pillow",
         "tensorflow>=2.2.0",
-        "future-fstrings",
         "pygments",
         "chipwhisperer",
         "scipy",

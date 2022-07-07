@@ -77,7 +77,7 @@ def test_skip_examples_skip_shards_only():
     # Testing skipping not a whole number of shards.
     assert mock_dataset.examples_per_shard % skip_examples_n
 
-    with pytest.raises(ValueError) as aerror:
+    with pytest.raises(ValueError) as value_error:
         with DatasetFiller(
                 dataset=mock_dataset,
                 plaintexts_per_key=256,
@@ -86,7 +86,7 @@ def test_skip_examples_skip_shards_only():
         ) as dataset_filler:
             pass
         msg = f'{skip_examples_n} is not divisible by {mock_dataset.examples_per_shard}'
-        assert msg == str(aerror.value)
+        assert msg == str(value_error.value)
 
 
 def test_add_examples():

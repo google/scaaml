@@ -143,9 +143,9 @@ def test_version_old_software(tmp_path):
     ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     scaaml.__version__ = "1.2.3"
     # Reload the dataset raises
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         ds = Dataset.from_config(ds.path)
-    assert "SCAAML module is outdated" in str(verror.value)
+    assert "SCAAML module is outdated" in str(value_error.value)
 
 
 def test_version_newer_software(tmp_path):
@@ -169,9 +169,9 @@ def test_version_same(tmp_path):
 
 def test_firmware_url_mandatory(tmp_path):
     kwargs = dataset_constructor_kwargs(root_path=tmp_path, firmware_url="")
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         ds = Dataset.get_dataset(**kwargs)
-    assert "Firmware URL is required" in str(verror.value)
+    assert "Firmware URL is required" in str(value_error.value)
 
 
 def test_get_config_dictionary_urls(tmp_path):
@@ -252,9 +252,9 @@ def test_check_key_ap(tmp_path):
                           {"trace1": np.random.random(trace_len)})
     dataset.close_shard()
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         dataset.check(key_ap=key_ap)
-    assert "Duplicate key" in str(verror.value)
+    assert "Duplicate key" in str(value_error.value)
 
 
 def test_merge_with(tmp_path):
@@ -409,11 +409,11 @@ def test_move_shards(tmp_path):
     assert len(ds.shards_list[Dataset.TEST_SPLIT]) == 0
     # Move just one, so that check fails on having the same key in test and
     # train.
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         ds.move_shards(from_split=Dataset.TRAIN_SPLIT,
                        to_split=Dataset.TEST_SPLIT,
                        shards=1)
-    assert "Duplicate key" in str(verror.value)
+    assert "Duplicate key" in str(value_error.value)
 
 
 def same_examples(ds1, ds2):
@@ -493,9 +493,9 @@ def test_shard_metadata_negative_chip_id(tmp_path):
         "chip_id": -13,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "Wrong chip_id, got" in str(verror.value)
+    assert "Wrong chip_id, got" in str(value_error.value)
 
 
 def test_shard_metadata_float_chip_id(tmp_path):
@@ -516,9 +516,9 @@ def test_shard_metadata_float_chip_id(tmp_path):
         "chip_id": 13.,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "Wrong chip_id, got" in str(verror.value)
+    assert "Wrong chip_id, got" in str(value_error.value)
 
 
 def test_shard_metadata_str_chip_id(tmp_path):
@@ -539,9 +539,9 @@ def test_shard_metadata_str_chip_id(tmp_path):
         "chip_id": "13",
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "Wrong chip_id, got" in str(verror.value)
+    assert "Wrong chip_id, got" in str(value_error.value)
 
 
 def test_shard_metadata_wrong_size(tmp_path):
@@ -562,9 +562,9 @@ def test_shard_metadata_wrong_size(tmp_path):
         "chip_id": 13,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "Wrong size, got" in str(verror.value)
+    assert "Wrong size, got" in str(value_error.value)
 
 
 def test_shard_metadata_wrong_path_k(tmp_path):
@@ -585,9 +585,9 @@ def test_shard_metadata_wrong_path_k(tmp_path):
         "chip_id": 13,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "key does not match filename" in str(verror.value)
+    assert "key does not match filename" in str(value_error.value)
 
 
 def test_shard_metadata_wrong_path(tmp_path):
@@ -608,9 +608,9 @@ def test_shard_metadata_wrong_path(tmp_path):
         "chip_id": 13,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "group does not match filename" in str(verror.value)
+    assert "group does not match filename" in str(value_error.value)
 
 
 def test_shard_metadata_extra_key(tmp_path):
@@ -632,15 +632,15 @@ def test_shard_metadata_extra_key(tmp_path):
         "chip_id": 13,
     }
 
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info=si, dataset_path=tmp_path)
-    assert "Shard info keys are" in str(verror.value)
+    assert "Shard info keys are" in str(value_error.value)
 
 
 def test_shard_metadata_missing_keys(tmp_path):
-    with pytest.raises(ValueError) as verror:
+    with pytest.raises(ValueError) as value_error:
         Dataset._check_shard_metadata(shard_info={}, dataset_path=tmp_path)
-    assert "Shard info keys are" in str(verror.value)
+    assert "Shard info keys are" in str(value_error.value)
 
 
 def test_shard_metadata_ok(tmp_path):
@@ -724,13 +724,13 @@ def test_resume_capture(tmp_path):
 
 
 def test_info_file_raises(tmp_path):
-    # Make the dataset directory with info.json in it (the "sn_al_ar_vimp_1" is
-    # the slug).
-    dpath = tmp_path / "sn_al_ar_vimp_1"
+    # Make the dataset directory with info.json in it (the
+    # "sn_al_ar_v_implementation_1" is the slug).
+    dpath = tmp_path / "sn_al_ar_v_implementation_1"
     dpath.mkdir()
     Dataset._get_config_path(dpath).write_text("exists")
 
-    with pytest.raises(DatasetExistsError) as verror:
+    with pytest.raises(DatasetExistsError) as value_error:
         ds = Dataset(root_path=tmp_path,
                      shortname="sn",
                      architecture="ar",
@@ -745,7 +745,7 @@ def test_info_file_raises(tmp_path):
                      measurements_info={},
                      attack_points_info={})
     assert ("Dataset info file exists and would be overwritten. "
-            "Use instead:") in str(verror.value)
+            "Use instead:") in str(value_error.value)
 
 
 def test_from_loaded_json(tmp_path):
@@ -821,13 +821,13 @@ def test_from_config(tmp_path):
 
 
 def test_close_shard(tmp_path):
-    minfo = {
+    measurements_info = {
         "trace1": {
             "type": "power",
             "len": 1024,
         }
     }
-    apinfo = {
+    attack_point_info = {
         "key": {
             "len": 16,
             "max_val": 256
@@ -844,8 +844,8 @@ def test_close_shard(tmp_path):
                  firmware_url="url",
                  firmware_sha256="abc1234",
                  examples_per_shard=2,
-                 measurements_info=minfo,
-                 attack_points_info=apinfo)
+                 measurements_info=measurements_info,
+                 attack_points_info=attack_point_info)
     key = np.random.randint(0, 255, 16)
     key2 = np.random.randint(0, 255, 16)
     trace1 = np.random.rand(1024)
@@ -1117,7 +1117,7 @@ def test_basic_workflow(tmp_path):
     implementation = "implem"
     algorithm = "algo"
     version = 1
-    minfo = {
+    measurements_info = {
         # test missing measurem,net raise value
         # test extra measurement raise value
         "trace1": {
@@ -1125,7 +1125,7 @@ def test_basic_workflow(tmp_path):
             "len": 1024,
         }
     }
-    apinfo = {
+    attack_point_info = {
         "key": {
             "len": 16,
             "max_val": 256
@@ -1159,8 +1159,8 @@ def test_basic_workflow(tmp_path):
                  firmware_url="some url",
                  firmware_sha256=fw_sha256,
                  examples_per_shard=example_per_shard,
-                 measurements_info=minfo,
-                 attack_points_info=apinfo)
+                 measurements_info=measurements_info,
+                 attack_points_info=attack_point_info)
 
     chip_id = 1
     ds.new_shard(key=key,
@@ -1243,19 +1243,19 @@ def test_cleanup_shards(tmp_path):
         },
         "shards_list": {
             Dataset.TEST_SPLIT: [
-                shard_info(group=0, key="KEYA", part=0),
-                shard_info(group=0, key="KEYA", part=2),  # del
-                shard_info(group=1, key="KEYB", part=2),  # del
-                shard_info(group=2, key="KEYC", part=2),
-                shard_info(group=3, key="KEYD", part=1),
-                shard_info(group=3, key="KEYD", part=2),
+                shard_info(group=0, key="KEY_A", part=0),
+                shard_info(group=0, key="KEY_A", part=2),  # del
+                shard_info(group=1, key="KEY_B", part=2),  # del
+                shard_info(group=2, key="KEY_C", part=2),
+                shard_info(group=3, key="KEY_D", part=1),
+                shard_info(group=3, key="KEY_D", part=2),
             ],
             Dataset.TRAIN_SPLIT: [
-                shard_info(group=0, key="keyA", part=2),  # del
-                shard_info(group=0, key="keyA", part=1),
-                shard_info(group=0, key="keyB", part=3),
-                shard_info(group=0, key="keyC", part=4),  # del
-                shard_info(group=0, key="keyD", part=5),
+                shard_info(group=0, key="key_A", part=2),  # del
+                shard_info(group=0, key="key_A", part=1),
+                shard_info(group=0, key="key_B", part=3),
+                shard_info(group=0, key="key_C", part=4),  # del
+                shard_info(group=0, key="key_D", part=5),
             ],
         },
     }
@@ -1300,7 +1300,7 @@ def test_cleanup_shards(tmp_path):
             (tmp_path / f["path"]).touch()
     # Other files should be neither deleted nor added to the dataset.
     other_files = [
-        tmp_path / "iamnothere.txt",
+        tmp_path / "i_am_not_here.txt",
         tmp_path / Dataset.TRAIN_SPLIT / "not_a_shard.tfrec",
     ]
     for f in other_files:

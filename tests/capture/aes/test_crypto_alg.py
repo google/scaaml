@@ -30,8 +30,8 @@ def test_init(mock_resumekti, mock_create_resume_kti):
     repetitions = 1
     examples_per_shard = 64
     firmware_sha256 = 'TODO'
-    full_kt_filename = 'ktfilename.txt'
-    full_progress_filename = 'progressfilename.txt'
+    full_kt_filename = 'key_text_filename.txt'
+    full_progress_filename = 'progress_filename.txt'
 
     crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
                                   purpose=description,
@@ -77,8 +77,8 @@ def test_attack_points(mock_resumekti, mock_create_resume_kti):
     repetitions = 1
     examples_per_shard = 64
     firmware_sha256 = 'TODO'
-    full_kt_filename = 'ktfilename.txt'
-    full_progress_filename = 'progressfilename.txt'
+    full_kt_filename = 'key_text_filename.txt'
+    full_progress_filename = 'progress_filename.txt'
     crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
                                   purpose=description,
                                   implementation=implementation,
@@ -112,8 +112,8 @@ def test_attack_points_info(mock_resumekti, mock_create_resume_kti):
     repetitions = 1
     examples_per_shard = 64
     firmware_sha256 = 'TODO'
-    full_kt_filename = 'ktfilename.txt'
-    full_progress_filename = 'progressfilename.txt'
+    full_kt_filename = 'key_text_filename.txt'
+    full_progress_filename = 'progress_filename.txt'
     crypto_alg = SCryptoAlgorithm(crypto_implementation=AESSBOX,
                                   purpose=description,
                                   implementation=implementation,

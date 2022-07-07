@@ -32,7 +32,7 @@ def test_ddict_list_adding():
     original['b'][1].append('hello')
     assert 1 not in d['b']
 
-    # Leaves are copied, not deepcopied.
+    # Leaves are copied, not deep-copied.
     original['a'][1].append(42)
     assert d['a'] == original['a']
     d['a'][1].append(1024)
@@ -86,8 +86,8 @@ def test_ddic_2t_none_and_values():
     assert d['A'] == original['A']
     assert d['C'] == {}
     assert isinstance(d, defaultdict)
-    assert isinstance(d['nothere'], defaultdict)
-    assert isinstance(d['nothere']['promise'], int)
+    assert isinstance(d['not here'], defaultdict)
+    assert isinstance(d['not here']['promise'], int)
     assert isinstance(d['A'], defaultdict)
     assert isinstance(d['C'], defaultdict)
 
@@ -96,15 +96,15 @@ def test_ddic_2t_none():
     d = ddict(value=None, levels=2, type_var=int)
     assert d == {}
     assert isinstance(d, defaultdict)
-    assert isinstance(d['nothere'], defaultdict)
-    assert isinstance(d['nothere']['promise'], int)
+    assert isinstance(d['not here'], defaultdict)
+    assert isinstance(d['not here']['promise'], int)
 
 
 def test_ddic_1t_none():
     d = ddict(value=None, levels=1, type_var=int)
     assert d == {}
     assert isinstance(d, defaultdict)
-    assert isinstance(d['nothere'], int)
+    assert isinstance(d['not here'], int)
 
 
 def test_ddict_doc():
@@ -112,11 +112,11 @@ def test_ddict_doc():
     e = ddict(value=d, levels=1, type_var=int)
     assert e == d
     assert isinstance(e, defaultdict)
-    assert isinstance(e['nothere'], int)
+    assert isinstance(e['not here'], int)
 
     D = {'A': {'a': 1, 'b': 2}, 'C': {}}
     E = ddict(value=D, levels=2, type_var=int)
     assert E == D
     assert isinstance(E, defaultdict)
-    assert isinstance(E['nothere'], defaultdict)
-    assert isinstance(E['nothere']['really'], int)
+    assert isinstance(E['not here'], defaultdict)
+    assert isinstance(E['not here']['really'], int)

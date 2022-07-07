@@ -101,13 +101,13 @@ def test_rank_doc():
     assert (r.numpy() == rank_slow(y_true, y_pred)).all()
 
 
-def test_meanrank_doc():
+def test_mean_rank_doc():
     r = MeanRank()
     r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
     assert r.result().numpy() == 0.5
 
 
-def test_meanrank_decimals_no_rounding():
+def test_mean_rank_decimals_no_rounding():
     # No rounding
     r = MeanRank(decimals=None)
     r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
@@ -115,7 +115,7 @@ def test_meanrank_decimals_no_rounding():
     assert r.result().numpy() == 0.25
 
 
-def test_meanrank_1_decimals():
+def test_mean_rank_1_decimals():
     # One decimal
     r = MeanRank(decimals=1)
     r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
@@ -123,7 +123,7 @@ def test_meanrank_1_decimals():
     assert np.isclose(r.result().numpy(), 0.2)
 
 
-def test_maxrank_doc():
+def test_max_rank_doc():
     r = MaxRank()
     r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
     assert r.result().numpy() == 1

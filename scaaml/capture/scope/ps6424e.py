@@ -571,7 +571,7 @@ class Pico6424E(ScopeTemplate):
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
             ))
 
-        # TODO(kralka): implement MSO pod trigger
+        # TODO(issue #88): implement MSO pod trigger
 
         # Set simple trigger
         assert_ok(

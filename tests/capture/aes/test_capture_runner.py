@@ -115,7 +115,7 @@ def test_capture(m_capture, m_stabilize):
 
 
 @patch.object(CaptureRunner, "get_attack_points_and_measurement")
-def test_capture_dataset(mock_gapam):
+def test_capture_dataset(mock_am):
     m_crypto_alg = MagicMock()
     keys = 3072
     examples_per_shard = 64
@@ -137,7 +137,7 @@ def test_capture_dataset(mock_gapam):
     m_dataset.examples_per_shard = examples_per_shard
     m_attack_points = MagicMock()
     m_measurement = MagicMock()
-    mock_gapam.return_value = (m_attack_points, m_measurement)
+    mock_am.return_value = (m_attack_points, m_measurement)
     capture_runner = CaptureRunner(crypto_algorithms=[m_crypto_alg],
                                    scope=m_scope,
                                    communication=m_communication,
