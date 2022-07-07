@@ -5,7 +5,7 @@
             "pattern": [
                 {
                     "regexp": "^([^:]+):(\\d+):([^:]+)\\s*-\\s*(.*)$",
-                    "file": 1, # ??
+                    "file": 1,
                     "line": 2,
                     "column": 3,
                     "message": 4
