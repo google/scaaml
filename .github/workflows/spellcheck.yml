@@ -18,4 +18,4 @@ jobs:
         with:
           node-version: "16"
       - run: npm install -g cspell
-      - run: cspell --config ./cspell.json "**/*.{md,py,ipynb}"
+      - run: cspell --config ./cspell.json "**/*.{md,py,ipynb,yml,ini,json,sh,txt}"
