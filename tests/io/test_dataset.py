@@ -724,9 +724,9 @@ def test_resume_capture(tmp_path):
 
 
 def test_info_file_raises(tmp_path):
-    # Make the dataset directory with info.json in it (the
-    # "sn_al_ar_v_implementation_1" is the slug).
-    dpath = tmp_path / "sn_al_ar_v_implementation_1"
+    # Make the dataset directory with info.json in it (the "sn_al_ar_vimp_1" is
+    # the slug).
+    dpath = tmp_path / "sn_al_ar_vimp_1"
     dpath.mkdir()
     Dataset._get_config_path(dpath).write_text("exists")
 
@@ -961,7 +961,8 @@ def test_check_sha256sums(mock_sha256sum):
             "f61009a4c6f5a77aa2c6da6d1882a50c3bd6345010966144d16e634ceeaeb730",
     }
     dpath = Path("/home/nobody/not_a_directory")
-    mock_sha256sum.side_effect = lambda x: sha_dictionary[f"{x.parent.name}/{x.name}"]
+    mock_sha256sum.side_effect = lambda x: sha_dictionary[
+        f"{x.parent.name}/{x.name}"]
     shards_list = {
         Dataset.TEST_SPLIT: [{
             "path": f,
@@ -1243,19 +1244,19 @@ def test_cleanup_shards(tmp_path):
         },
         "shards_list": {
             Dataset.TEST_SPLIT: [
-                shard_info(group=0, key="KEY_A", part=0),
-                shard_info(group=0, key="KEY_A", part=2),  # del
-                shard_info(group=1, key="KEY_B", part=2),  # del
-                shard_info(group=2, key="KEY_C", part=2),
-                shard_info(group=3, key="KEY_D", part=1),
-                shard_info(group=3, key="KEY_D", part=2),
+                shard_info(group=0, key="KEY1", part=0),
+                shard_info(group=0, key="KEY1", part=2),  # del
+                shard_info(group=1, key="KEY2", part=2),  # del
+                shard_info(group=2, key="KEY3", part=2),
+                shard_info(group=3, key="KEY4", part=1),
+                shard_info(group=3, key="KEY4", part=2),
             ],
             Dataset.TRAIN_SPLIT: [
-                shard_info(group=0, key="key_A", part=2),  # del
-                shard_info(group=0, key="key_A", part=1),
-                shard_info(group=0, key="key_B", part=3),
-                shard_info(group=0, key="key_C", part=4),  # del
-                shard_info(group=0, key="key_D", part=5),
+                shard_info(group=0, key="keyA", part=2),  # del
+                shard_info(group=0, key="keyA", part=1),
+                shard_info(group=0, key="keyB", part=3),
+                shard_info(group=0, key="keyC", part=4),  # del
+                shard_info(group=0, key="keyD", part=5),
             ],
         },
     }
