@@ -66,7 +66,7 @@ def plot_trace(trace,
 
 
 def plot_comparaison(traces, labels, title):
-    "Color coded comparaison"
+    "Color coded comparison"
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
         label = labels[idx]
@@ -144,5 +144,5 @@ def plot_confusion_matrix(class_ids,
 
     plt.tight_layout()
     plt.ylabel("True intermediate values")
-    plt.xlabel("Predicted intermediat values")
+    plt.xlabel("Predicted intermediate values")
     plt.show()

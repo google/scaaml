@@ -74,7 +74,7 @@ def test_ddict_changing_original():
     assert 'D' not in original
 
 
-def test_ddic_2t_none_and_values():
+def test_ddict_2t_none_and_values():
     original = {
         'A': {
             'a': 1,
@@ -92,7 +92,7 @@ def test_ddic_2t_none_and_values():
     assert isinstance(d['C'], defaultdict)
 
 
-def test_ddic_2t_none():
+def test_ddict_2t_none():
     d = ddict(value=None, levels=2, type_var=int)
     assert d == {}
     assert isinstance(d, defaultdict)
@@ -100,7 +100,7 @@ def test_ddic_2t_none():
     assert isinstance(d['not here']['promise'], int)
 
 
-def test_ddic_1t_none():
+def test_ddict_1t_none():
     d = ddict(value=None, levels=1, type_var=int)
     assert d == {}
     assert isinstance(d, defaultdict)

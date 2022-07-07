@@ -53,15 +53,15 @@ In order to run the notebooks/train models you need to download the following da
 
 Make sure to unzip them in this directory (`scaaml_demo`) otherwise the code won't find them.
 
-Nnote: the Tensorboard logs are optional, they are mostly provided for people interested in looking at how fast the models converged.
+Note: the Tensorboard logs are optional, they are mostly provided for people interested in looking at how fast the models converged.
 
 ## Usage
 
-The code is splitted into two parts:
+The code is split into two parts:
 
 - `train.py` is used to train the attack models. It takes as argument a config
   that define what to train. The configuration used in the tutorial is located here
   `config/stm32f415_tinyaes.json` and you can use it to train your own models by running
   `python train.py -c config/stm32f415_tinyaes.json`
 - `key_recovery_demo.ipynb` is the notebook that showcases how to use the trained model
-  and the `scaaml` librairy to recover TinyAES keys with just 4 traces. You can either use the models provided, or train your own.
+  and the `scaaml` library to recover TinyAES keys with just 4 traces. You can either use the models provided, or train your own.

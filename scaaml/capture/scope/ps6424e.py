@@ -286,7 +286,7 @@ class TriggerSettings(CaptureSettings):
     @trigger_direction.setter
     def trigger_direction(self, val):
         if val not in self._trig_dir:
-            raise ValueError("Unupported value")
+            raise ValueError("Unsupported value")
         self._trigger_direction = self._trig_dir[val]
 
     def _dict_repr(self):
@@ -341,7 +341,7 @@ class Pico6424E(ScopeTemplate):
         Args:
           sample_rate (float): Samples per second (in Hz).
 
-        Returns: Timebase (seconds per sample) representated as ctypes.c_uint32
+        Returns: Timebase (seconds per sample) represented as ctypes.c_uint32
           value for use in ps6000aRunBlock.
         """
         # Handle too large sample_rate

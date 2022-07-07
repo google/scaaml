@@ -918,7 +918,7 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
                 "path": "test/2_ef12_3.tfrec"
             }],
             Dataset.TRAIN_SPLIT: [{
-                "path": "train/2_dcea_0.tfrec"
+                "path": "train/2_dead_0.tfrec"
             }, {
                 "path": "train/3_beef_1.tfrec"
             }],
@@ -932,7 +932,7 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
         "compression": "GZIP",
     }
     mock_read_text.return_value = json.dumps(config)
-    dir_dataset_ok = Path("/home/notanuser")
+    dir_dataset_ok = Path("/home/not_user")
 
     x = Dataset.inspect(dir_dataset_ok,
                         split=split,
@@ -952,7 +952,7 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
 
 @patch.object(siutils, "sha256sum")
 def test_check_sha256sums(mock_sha256sum):
-    shadict = {
+    sha_dictionary = {
         "test/0_01f6e272b933ec2b80ab53af245f7fa6_0.tfrec":
             "b1e3dc7c217b154ded5631d95d6265c6b1ad348ac4968acb1a74b9fb49c09c42",
         "test/1_f2e8de7fdbc602f96261ba5f8d182d73_0.tfrec":
@@ -960,13 +960,13 @@ def test_check_sha256sums(mock_sha256sum):
         "test/0_69a283f6b1eea6327afdb30f76e6fe30_0.tfrec":
             "f61009a4c6f5a77aa2c6da6d1882a50c3bd6345010966144d16e634ceeaeb730",
     }
-    dpath = Path("/home/noanuser/notadir")
-    mock_sha256sum.side_effect = lambda x: shadict[f"{x.parent.name}/{x.name}"]
+    dpath = Path("/home/nobody/not_a_directory")
+    mock_sha256sum.side_effect = lambda x: sha_dictionary[f"{x.parent.name}/{x.name}"]
     shards_list = {
         Dataset.TEST_SPLIT: [{
             "path": f,
             "sha256": s,
-        } for f, s in shadict.items()],
+        } for f, s in sha_dictionary.items()],
     }
     pbar = lambda *args, **kwargs: args[0]
     Dataset._check_sha256sums(shards_list=shards_list, dpath=dpath, pbar=pbar)
@@ -1094,7 +1094,7 @@ def test_deep_check(mock_inspect):
         {},
     ]
     Dataset._deep_check(seen_keys=seen_keys,
-                        dpath="/home/notanuser/notdir",
+                        dpath="/home/not_user/not_a_directory",
                         train_shards=train_shards,
                         examples_per_shard=64,
                         pbar=pbar,
@@ -1103,7 +1103,7 @@ def test_deep_check(mock_inspect):
     seen_keys.add(np.array([3, 1, 4, 1], dtype=np.uint8).tobytes())
     with pytest.raises(ValueError) as intersection_error:
         Dataset._deep_check(seen_keys=seen_keys,
-                            dpath="/home/notanuser/notdir",
+                            dpath="/home/not_user/not_a_directory",
                             train_shards=train_shards,
                             examples_per_shard=64,
                             pbar=pbar,
@@ -1114,11 +1114,11 @@ def test_deep_check(mock_inspect):
 def test_basic_workflow(tmp_path):
     root_path = tmp_path
     architecture = "arch"
-    implementation = "implem"
+    implementation = "implementation"
     algorithm = "algo"
     version = 1
     measurements_info = {
-        # test missing measurem,net raise value
+        # test missing measurement raise value
         # test extra measurement raise value
         "trace1": {
             "type": "power",
@@ -1139,7 +1139,7 @@ def test_basic_workflow(tmp_path):
         # }
     }
 
-    shortname = "ARCHALGO21"
+    shortname = "SHORTNAME"
     description = "this is a test"
     url = "https://"
     example_per_shard = 1

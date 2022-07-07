@@ -19,14 +19,14 @@ from typing import Dict, Optional
 
 
 def ddict(value: Optional[Dict], levels: int, type_var):
-    """Returns nested defaultdict of defaultdicts (nesting level based on
+    """Returns nested defaultdict of defaultdict (nesting level based on
     level), which are updated with the value dictionary.
 
     Args:
       value: The dictionary that holds values needs to be either None or the
-        same level as the result. All occurences of None which should be a Dict
-        as a value are replaced by an empty defaultdict. Values are copied,
-        but not deepcopied.
+        same level as the result. All occurrences of None which should be a
+        Dict as a value are replaced by an empty defaultdict. Values are
+        copied, but not deep-copied.
       levels: Number of defaultdict iterations. Must be non-negative. Level
         zero returns value.
       type_var: The type of the default value.
@@ -49,7 +49,7 @@ def ddict(value: Optional[Dict], levels: int, type_var):
     """
 
     def empty_dd(levels: int, type_var):
-        """Returns the right level of defaultdicts."""
+        """Returns the right level of defaultdict."""
         if levels == 1:
             return defaultdict(type_var)
         return defaultdict(lambda: empty_dd(levels - 1, type_var))

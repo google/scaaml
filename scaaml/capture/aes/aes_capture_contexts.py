@@ -79,7 +79,7 @@ def capture_aes_dataset(
       version: Version of this dataset.
       root_path: Folder in which the dataset will be stored.
       url: Where to download this dataset.
-      firmware_url: Where to dowload the firmware used for this capture.
+      firmware_url: Where to download the firmware used for this capture.
       paper_url: Where to find the published paper.
       licence: URL or the whole licence the dataset is published under.
       examples_per_shard: Size of a single part (for ML training purposes).
