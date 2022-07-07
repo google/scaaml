@@ -19,5 +19,5 @@ jobs:
           node-version: "16"
       - run: npm install -g cspell
         name: Install cspell
-      - run: cspell --config ./cspell.json "**/*.{py,ipynb,md}"
+      - run: cspell "**/*.{py,ipynb,md}"
         name: Run cspell
