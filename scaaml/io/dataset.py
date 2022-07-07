@@ -436,7 +436,7 @@ class Dataset():
         for name, ap in dataset.attack_points_info.items():
             tf_features[name] = tf.io.FixedLenFeature([ap["len"]], tf.int64)
 
-        # decoding funtion
+        # decoding function
         def from_tfrecord(tfrecord):
             rec = tf.io.parse_single_example(tfrecord, tf_features)
             return rec
@@ -494,7 +494,7 @@ class Dataset():
                 # assign
                 x[name] = trace
                 inputs[name]["shape"] = trace.shape  # (trace_len - trace_start)
-            # Encoding the outptut for each ap/byte
+            # Encoding the output for each ap/byte
             y = {}
             for name, data in outputs.items():
                 max_val = data["max_val"]
@@ -654,8 +654,8 @@ class Dataset():
                                   dpath=Path(self.path),
                                   pbar=pbar)
         # Check shard metadata
-        for slist in self.shards_list.values():
-            for shard_info in slist:
+        for shard_list in self.shards_list.values():
+            for shard_info in shard_list:
                 Dataset._check_shard_metadata(shard_info=shard_info,
                                               dataset_path=self.path)
         # Ensure that no keys in the train split are present in the test split.
@@ -715,12 +715,12 @@ class Dataset():
 
         Raises: ValueError if some hash does not match.
         """
-        for split, slist in shards_list.items():
-            for sinfo in pbar(slist, desc=f"Checking sha for {split}"):
-                shard_path = dpath / sinfo["path"]
+        for split, shard_list in shards_list.items():
+            for shard_info in pbar(shard_list, desc=f"Checking sha for {split}"):
+                shard_path = dpath / shard_info["path"]
                 sha_hash = siutils.sha256sum(shard_path)
-                if sha_hash != sinfo["sha256"]:
-                    raise ValueError(sinfo["path"], "SHA256 miss-match")
+                if sha_hash != shard_info["sha256"]:
+                    raise ValueError(shard_info["path"], "SHA256 miss-match")
 
     @staticmethod
     def _check_shard_metadata(shard_info: Dict, dataset_path: Path) -> None:
@@ -786,9 +786,9 @@ class Dataset():
         Raises: ValueError if some metadata do not match.
         """
         for split, expected_examples in config["examples_per_split"].items():
-            slist = config["shards_list"][split]
-            # checking we have the rigt number of shards
-            if len(slist) != expected_examples // config["examples_per_shard"]:
+            shard_list = config["shards_list"][split]
+            # Checking we have the right number of shards.
+            if len(shard_list) != expected_examples // config["examples_per_shard"]:
                 raise ValueError("Num shards in shard_list != "
                                  "examples_per_split // examples_per_shard")
             # Check that expected_examples is a multiple of examples_per_shard.
@@ -796,13 +796,13 @@ class Dataset():
                 raise ValueError("expected_examples is not divisible by "
                                  "examples_per_shard")
 
-            if expected_examples != sum(s["examples"] for s in slist):
+            if expected_examples != sum(s["examples"] for s in shard_list):
                 raise ValueError(f"Mismatch in expected_examples, shards "
                                  f"metadata do not agree in {split}.")
             if n_examples_in_each_shard_is_constant:
                 # All shards have the same number of examples.
                 if any(s["examples"] != config["examples_per_shard"]
-                       for s in slist):
+                       for s in shard_list):
                     raise ValueError(f"Not all shards in {split} contain the "
                                      f"same number of examples.")
 
@@ -818,7 +818,7 @@ class Dataset():
             # is created the group ids are integers, but when dataset is loaded
             # they are strings. We check the case where all keys are strings.
             examples_per_group: Dict[str, int] = defaultdict(int)
-            for shard in slist:
+            for shard in shard_list:
                 examples_per_group[str(shard["group"])] += shard["examples"]
             examples_per_group_config = {
                 str(k): v
@@ -828,12 +828,13 @@ class Dataset():
                 raise ValueError(f"Wrong examples_per_group in {split}")
 
             actual_examples = 0
-            for sinfo in slist:
-                actual_examples += sinfo["examples"]
-                if sinfo["examples"] != config["examples_per_shard"]:
+            for shard_info in shard_list:
+                actual_examples += shard_info["examples"]
+                if shard_info["examples"] != config["examples_per_shard"]:
                     raise ValueError(f"Wrong number of examples, expected: "
                                      f"{config['examples_per_shard']}, got: "
-                                     f"{sinfo['examples']}, in shard: {sinfo}")
+                                     f"{shard_info['examples']}, in shard: "
+                                     f"{shard_info}")
 
             if actual_examples != expected_examples:
                 raise ValueError("sum example don't match top_examples")
@@ -952,13 +953,13 @@ class Dataset():
 
     @staticmethod
     def _from_loaded_json(loaded_dict: Dict) -> Dict:
-        """Fix types in the datastructure loaded from JSON. Necessary as JSON
+        """Fix types in the data-structure loaded from JSON. Necessary as JSON
         allows only string keys, but for instance group keys are integers in
         Dataset.
 
         Args:
-          loaded_dict: The datastructure returned by json.load on the info.json
-            file.
+          loaded_dict: The data-structure returned by json.load on the
+            info.json file.
 
         Returns: The same information with fixed types.
         """
@@ -978,7 +979,7 @@ class Dataset():
         }
         # Fix missing keys
         if "licence" not in fixed_dict:
-            # Do not relicence
+            # Do not re-licence
             fixed_dict["licence"] = ""
         for k in ["firmware_url", "paper_url"]:
             if k not in fixed_dict:
@@ -1064,24 +1065,24 @@ class Dataset():
         config = Dataset._load_config(Dataset._get_config_path(dataset_path))
         stats = []  # Statistic how many were kept and removed in each split.
         new_shards_list = defaultdict(list)
-        for split, slist in config["shards_list"].items():
+        for split, shard_list in config["shards_list"].items():
             kept = 0
             removed = 0
-            for shard in slist:
-                spath = dataset_path / shard["path"]  # The shard.
-                if spath.exists():
+            for shard in shard_list:
+                shard_path = dataset_path / shard["path"]  # The shard.
+                if shard_path.exists():
                     new_shards_list[split].append(shard)
                     kept += 1
                 else:
                     removed += 1
-            assert kept + removed == len(slist)
+            assert kept + removed == len(shard_list)
             assert len(new_shards_list[split]) == kept
             stats.append([split, kept, removed])
 
         config["shards_list"] = new_shards_list
         examples_per_split = {}
         examples_per_group: Dict[str, Dict[int, int]] = {}
-        for split, slist in config["shards_list"].items():
+        for split, shard_list in config["shards_list"].items():
             examples_per_split[split] = config["examples_per_shard"] * len(
                 config["shards_list"][split])
             # Zero examples per a group is a valid option.
@@ -1092,7 +1093,7 @@ class Dataset():
                 k: set() for k in config["keys_per_group"][split]
             }
             key_names_per_split = set()
-            for shard in slist:
+            for shard in shard_list:
                 shard_info = Dataset._shard_info_from_name(shard["path"])
                 sg: int = int(shard_info["shard_group"])
                 examples_per_group[split][sg] += config["examples_per_shard"]
@@ -1292,7 +1293,7 @@ class Dataset():
         assert self.max_values.keys() == other_dataset.max_values.keys()
         assert self.examples_per_shard == other_dataset.examples_per_shard
 
-        # Update metainformation.
+        # Update meta-information.
         # Update extreme values:
         self.min_values = {
             k: min(v, other_dataset.min_values[k])

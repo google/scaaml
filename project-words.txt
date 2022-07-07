@@ -1,10 +1,12 @@
 astype
-ipynb
 bytelist
+chipwhisperer
 cprint
 cprint
 ddict
 dpath
+dtype
+ipynb
 keras
 pbar
 scaaml
