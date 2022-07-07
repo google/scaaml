@@ -13,3 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: streetsidesoftware/cspell-action@v2
+        with:
+          # DO_NOT_SUBMIT Check all files (not only the changed ones).
+          incremental_files_only: false
