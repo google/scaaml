@@ -11,8 +11,11 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      # Run cspell everywhere, DO NOT SUBMIT
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
+        name: Check out the code
       - uses: actions/setup-node@v1
+        name: Run spell check
+        with:
+          node-version: "16"
       - run: npm install -g cspell
-      - run: cspell "**"
+      - run: cspell --config ./cspell.json "**/*.{md,py,ipynb}"
