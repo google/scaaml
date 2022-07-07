@@ -270,7 +270,7 @@ class Dataset():
         Args:
             key: the key that was used to create the measurements.
 
-            part: Indicate which part of a given key set of catpure this
+            part: Indicate which part of a given key set of capture this
             shard represent. Capture are splitted into parts to easily
             allow to restrict the number of traces used per key.
 
