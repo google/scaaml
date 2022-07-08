@@ -43,7 +43,13 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-      - name: Matrix => (${{ matrix.files }})
+      - name: Set up node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16"
+      - name: Install cspell
+        run: npm install --location=global cspell
+      - name: Matrix => Spell check ${{ matrix.files }}
         run: |
           echo ${{ matrix.file }}
           cspell --config ./cspell.json "${{ matrix.file }}"
