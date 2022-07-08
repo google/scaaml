@@ -46,6 +46,7 @@ jobs:
       - name: Matrix => (${{ matrix.files }})
         run: |
           echo ${{ matrix.file }}
+          cspell --config ./cspell.json "${{ matrix.file }}"
 
 
 
