@@ -30,7 +30,7 @@ jobs:
       - list_files
     steps:
       - name: Echo changed files
-        run: echo "${{ toJSON(needs.list_files.outputs }}"
+        run: echo "${{ toJSON(needs.list_files.outputs) }}"
   spellchecking:
     runs-on: ubuntu-22.04
     needs:
