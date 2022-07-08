@@ -40,7 +40,7 @@ import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
 
-# Prevent importing Literal with older versions.
+# Prevent importing Literal with older versons.
 if sys.version_info >= (3, 8):
     from typing import Literal
 
