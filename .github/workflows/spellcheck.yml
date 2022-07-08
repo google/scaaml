@@ -49,9 +49,10 @@ jobs:
           node-version: "16"
       - name: Install cspell
         run: npm install --location=global cspell
-      - name: Matrix => Spell check ${{ matrix.files }}
+      - name: Matrix => (${{ matrix.files }})
         run: |
           echo ${{ matrix.file }}
+          echo ::add-matcher::./.github/cspell_matcher.json
           cspell --config ./cspell.json "${{ matrix.file }}"
 
 
