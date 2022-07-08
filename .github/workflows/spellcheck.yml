@@ -8,8 +8,25 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
+  setupmatrix:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{steps.changed_files.outputs.matrix}}
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+        with:
+          # We need all history to list all changed files.
+          fetch-depth: 0
+      - name: Get changed files
+        id: changed_files
+        run: echo "::set-output name=matrix::$(git diff --name-only origin/master..${{ github.event.after }})"
   spellchecking:
     runs-on: ubuntu-22.04
+    needs: setupmatrix
+    strategy:
+      matrix:
+        changedfile: ${{fromJson(needs.setupmatrix.outputs.matrix)}}
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
@@ -24,8 +41,9 @@ jobs:
         run: npm install --location=global cspell
       - name: Run spell check
         run: |
-          echo ::add-matcher::./.github/cspell_matcher.json
-          for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
-            echo "$CHANGED_FILE"
-            #cspell --config ./cspell.json "$CHANGED_FILE"
-          done
+          echo "changed file is ${{ matrix.changedfile }}"
+          # echo ::add-matcher::./.github/cspell_matcher.json
+          # for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
+          #   echo "$CHANGED_FILE"
+          #   #cspell --config ./cspell.json "$CHANGED_FILE"
+          # done
