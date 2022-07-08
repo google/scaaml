@@ -29,6 +29,6 @@ jobs:
       - name: Run spell check
         run: |
           echo ::add-matcher::./.github/cspell_matcher.json
-          for CHANGED_FILE in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }}); do
+          for CHANGED_FILE in $(git diff --name-only master..${{ github.event.after }}); do
             cspell --config ./cspell.json "$CHANGED_FILE"
           done
