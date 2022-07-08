@@ -23,7 +23,9 @@ jobs:
       - name: Install cspell
         run: npm install --location=global cspell
       - name: Dump github context
-        run: echo ${{ toJson(github) }}
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - name: Run spell check
         run: |
           echo ::add-matcher::./.github/cspell_matcher.json
