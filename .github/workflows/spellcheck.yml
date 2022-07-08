@@ -14,7 +14,7 @@ jobs:
       - name: Check out master branch
         uses: actions/checkout@v3
         with:
-          path: master
+          branches: [master]
       - name: Check out the code
         uses: actions/checkout@v3
       - name: Set up node
