@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Build and load tensorFlow dataset Record wrapper"""
+"""Build and load tensorFlow dataset Record wraper"""
 
 import copy
 import math
