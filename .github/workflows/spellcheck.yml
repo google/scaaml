@@ -39,7 +39,7 @@ jobs:
       - name: Generate matrix
         id: generate-matrix
         run: |
-          FILES='$(git diff --name-only origin/master..${{ github.event.after }})'
+          FILES="$(git diff --name-only origin/master..${{ github.event.after }})"
           echo $FILES
           echo ::set-output name=files::${FILES}
   echo_changed_files:
