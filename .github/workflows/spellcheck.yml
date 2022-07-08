@@ -11,10 +11,12 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v2
+      - name: Check out master branch
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          path: master
+      - name: Check out the code
+        uses: actions/checkout@v3
       - name: Set up node
         uses: actions/setup-node@v1
         with:
