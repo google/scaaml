@@ -22,21 +22,16 @@ jobs:
       - name: Generate matrix
         id: generate-matrix
         run: |
+          # List all files that changed between master and head of the
+          # current branch. Encode the output as json.
           FILES="$(git diff --name-only origin/master..${{ github.event.after }} | jq -cnR '[inputs | select(length>0)]')"
           echo $FILES
+          # Set output variable files to the changed files.
           echo ::set-output name=files::${FILES}
-  echo_changed_files:
-    runs-on: ubuntu-22.04
-    needs:
-      - list_files
-    steps:
-      - name: Echo changed files
-        run: echo "${{ toJSON(needs.list_files.outputs) }}"
   spellchecking:
     runs-on: ubuntu-22.04
     needs:
       - list_files
-      - echo_changed_files
     strategy:
       matrix:
         file: ${{ fromJSON(needs.list_files.outputs.files) }}
@@ -52,49 +47,7 @@ jobs:
       - name: Matrix => (${{ matrix.files }})
         run: |
           echo ${{ matrix.file }}
+          # Add a problem matcher.
           echo ::add-matcher::./.github/cspell_matcher.json
+          # Run the spell checking on the concrete changed file.
           cspell --config ./cspell.json "${{ matrix.file }}"
-
-
-
-#   setupmatrix:
-#     name: setupmatrix
-#     runs-on: ubuntu-22.04
-#     outputs:
-#       matrix: ${{steps.changed_files.outputs.matrix}}
-#     steps:
-#       - name: Check out the code
-#         uses: actions/checkout@v2
-#         with:
-#           # We need all history to list all changed files.
-#           fetch-depth: 0
-#       - name: Get changed files
-#         id: changed_files
-#         run: echo "::set-output name=matrix::$(git diff --name-only origin/master..${{ github.event.after }})"
-#   spellchecking:
-#     name: spellchecking
-#     runs-on: ubuntu-22.04
-#     needs: setupmatrix
-#     strategy:
-#       matrix:
-#         changedfile: ${{fromJson(needs.setupmatrix.outputs.matrix)}}
-#     steps:
-#       - name: Check out the code
-#         uses: actions/checkout@v2
-#         with:
-#           # We need all history to list all changed files.
-#           fetch-depth: 0
-#       - name: Set up node
-#         uses: actions/setup-node@v1
-#         with:
-#           node-version: "16"
-#       - name: Install cspell
-#         run: npm install --location=global cspell
-#       - name: Run spell check
-#         run: |
-#           echo "changed file is ${{ matrix.changedfile }}"
-#           # echo ::add-matcher::./.github/cspell_matcher.json
-#           # for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
-#           #   echo "$CHANGED_FILE"
-#           #   #cspell --config ./cspell.json "$CHANGED_FILE"
-#           # done
