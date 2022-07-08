@@ -20,9 +20,9 @@ jobs:
       - name: Generate matrix
         id: generate-matrix
         run: |
-          for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
-            echo "$CHANGED_FILE"
-          done
+          FILES='$(git diff --name-only origin/master..${{ github.event.after }})'
+          echo $FILES
+          echo "yep it worked"
   list_files:
     name: List changed files
     runs-on: ubuntu-22.04
