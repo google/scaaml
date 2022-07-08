@@ -4,14 +4,11 @@
             "owner": "spellcheck",
             "pattern": [
                 {
-                    "regexp": "^\\d*\\/\\d*\\s*([^\\s]+).*$",
-                    "file": 1
-                },
-                {
-                    "regexp": "^[^:]+:(\\d+):(\\d+)\\s*-\\s*(.*)$",
-                    "line": 1,
-                    "column": 2,
-                    "message": 3
+                    "regexp": "^([^:]+):(\\d+):([^:]+)\\s*-\\s*(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
                 }
             ]
         }

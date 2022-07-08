@@ -22,4 +22,4 @@ jobs:
       - name: Run spell check
         run: |
           echo ::add-matcher::./.github/cspell_matcher.json
-          cspell --config ./cspell.json "**"
+          cspell --config ./cspell.json "**.py"
