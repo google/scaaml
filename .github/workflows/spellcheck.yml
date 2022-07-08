@@ -8,9 +8,26 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
+  test_git:
+    name: Echo changed files
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          # We need all history to list all changed files.
+          fetch-depth: 0
+      - name: Generate matrix
+        id: generate-matrix
+        run: |
+          for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
+            echo "$CHANGED_FILE"
+          done
   list_files:
     name: List changed files
     runs-on: ubuntu-22.04
+    needs:
+      - test_git
     outputs:
       files: ${{ steps.generate-matrix.outputs.files }}
     steps:
