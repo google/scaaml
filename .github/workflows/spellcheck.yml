@@ -26,5 +26,6 @@ jobs:
         run: |
           echo ::add-matcher::./.github/cspell_matcher.json
           for CHANGED_FILE in $(git diff --name-only origin/master..${{ github.event.after }}); do
-            cspell --config ./cspell.json "$CHANGED_FILE"
+            echo "$CHANGED_FILE"
+            #cspell --config ./cspell.json "$CHANGED_FILE"
           done
