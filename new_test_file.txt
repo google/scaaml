@@ -1,0 +1,14 @@
+It seeems that errors are only displayed in changed lines.
+
+1 onee
+2 twoo
+3 threee
+4 foor
+5 fiife
+6 siix
+7 sewen
+8 eihgt
+9 nini
+10 teeen
+11 elefen
+12 dosen
