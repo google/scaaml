@@ -40,6 +40,8 @@ jobs:
       matrix:
         file: ${{ fromJSON(needs.list_files.outputs.files) }}
     steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
       - name: Matrix => (${{ matrix.files }})
         run: |
           echo ${{ matrix.file }}
