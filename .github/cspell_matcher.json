@@ -11,8 +11,7 @@
                     "regexp": "^[^:]+:(\\d+):(\\d+)\\s*-\\s*(.*)$",
                     "line": 1,
                     "column": 2,
-                    "message": 3,
-		    "loop": true
+                    "message": 3
                 }
             ]
         }
