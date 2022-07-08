@@ -22,12 +22,20 @@ jobs:
       - name: Generate matrix
         id: generate-matrix
         run: |
-          FILES="$(git diff --name-only origin/master..${{ github.event.after }})"
+          FILES='$(git diff --name-only origin/master..${{ github.event.after }})'
           echo ::set-output name=files::${FILES}
+  echo_changed_files:
+    runs-on: ubuntu-22.04
+    needs:
+      - list_files
+    steps:
+      - name: Echo changed files
+        run: echo "${{ toJSON(needs.list_files.outputs }}"
   spellchecking:
     runs-on: ubuntu-22.04
     needs:
       - list_files
+      - echo_changed_files
     strategy:
       matrix:
         file: ${{ fromJSON(needs.list_files.outputs.files) }}
