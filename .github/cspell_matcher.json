@@ -4,7 +4,7 @@
             "owner": "spellcheck",
             "pattern": [
                 {
-                    "regexp": "^\\d*/\\d*\\s*\./([^\\s]+).*$",
+                    "regexp": "^\\d*\\/\\d*\\s*\.\\/([^\\s]+).*$",
                     "file": 1
                 },
                 {
