@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: "16"
       - name: Install cspell
-        run: npm install -g cspell
+        run: npm install --location=global cspell
       - name: Run spell check
         run: |
           echo ::add-matcher::./.github/cspell_matcher.json
