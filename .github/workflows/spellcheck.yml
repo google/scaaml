@@ -9,6 +9,7 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   setupmatrix:
+    name: setupmatrix
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{steps.changed_files.outputs.matrix}}
@@ -22,6 +23,7 @@ jobs:
         id: changed_files
         run: echo "::set-output name=matrix::$(git diff --name-only origin/master..${{ github.event.after }})"
   spellchecking:
+    name: spellchecking
     runs-on: ubuntu-22.04
     needs: setupmatrix
     strategy:
