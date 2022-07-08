@@ -11,12 +11,11 @@ jobs:
   spellchecking:
     runs-on: ubuntu-22.04
     steps:
-      - name: Check out master branch
-        uses: actions/checkout@v3
-        with:
-          ref: master
       - name: Check out the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
+        with:
+          # We need all history to list all changed files.
+          fetch-depth: 0
       - name: Set up node
         uses: actions/setup-node@v1
         with:
@@ -25,8 +24,7 @@ jobs:
         run: npm install -g cspell
       - name: Run spell check
         run: |
-          git branch
           echo ::add-matcher::./.github/cspell_matcher.json
-          for CHANGED_FILE in $(git diff --name-only master); do
+          for CHANGED_FILE in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }}); do
             cspell --config ./cspell.json "$CHANGED_FILE"
           done
