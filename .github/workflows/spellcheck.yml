@@ -39,5 +39,5 @@ jobs:
               cspell --config ./cspell.json --no-must-find-files "$CHANGED_FILE" || EXIT_CODE=$?
               echo $EXIT_CODE
             done ;
-            exit $EXIT_CODE ; # Fail if some check failed
+            exit $EXIT_CODE ; # Fail if some check failed.
           } ;
