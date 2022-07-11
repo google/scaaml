@@ -50,7 +50,7 @@ least, you are more than welcome to add your publication/talk to the list below 
 DEF CON talk that provides a practical introduction to AES deep-learning based side-channel attacks
 
 ```bibtex
-@inproceedings{burzteindc27,
+@inproceedings{burszteindc27,
 title={A Hacker Guide To Deep Learning Based Side Channel Attacks},
 author={Elie Bursztein and Jean-Michel Picod},
 booktitle ={DEF CON 27},
