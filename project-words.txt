@@ -27,7 +27,6 @@ ddict
 dpath
 dtype
 figsize
-filepattern
 firstrow
 howpublished
 HWAES

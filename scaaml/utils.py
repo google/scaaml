@@ -96,10 +96,10 @@ def convert_shard_to_cw(info):
     return cw_traces
 
 
-def convert_to_chipwhisperer_format(filepattern, num_shards, num_traces_by_shard,
+def convert_to_chipwhisperer_format(file_pattern, num_shards, num_traces_by_shard,
                                   trace_len):
 
-    filenames = glob(filepattern)[:num_shards]
+    filenames = glob(file_pattern)[:num_shards]
     num_traces = len(filenames) * num_traces_by_shard
 
     # creating info for multiprocessing
