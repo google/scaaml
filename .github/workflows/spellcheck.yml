@@ -39,5 +39,5 @@ jobs:
           done
       - name: Check for failures
         # Fail the job if any of the spell checking failed.
-        if steps.run_spell_check.outcome != 'success'
+        if: steps.run_spell_check.outcome != 'success'
         run: exit 1
