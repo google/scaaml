@@ -31,12 +31,11 @@ jobs:
           # Spell check all files and remember if some failed.
           EXIT_CODE=0
           # Loop over all files changed since master.
-          git diff --name-only origin/master..${{ github.event.after }} | while read CHANGED_FILE; do
+          { git diff --name-only origin/master..${{ github.event.after }} | { while read CHANGED_FILE; do
             # Run cspell on CHANGED_FILE, do not fail if the file is ignored.
             cspell --config ./cspell.json --no-must-find-files "$CHANGED_FILE" || EXIT_CODE=$?
             echo $EXIT_CODE
-          done
+          done ; exit $EXIT_CODE ; } ; } ; EXIT_CODE=$?
           # Debug exit code
           echo $EXIT_CODE
-          # Fail if some check failed.
           exit $EXIT_CODE
