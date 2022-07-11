@@ -23,21 +23,18 @@ jobs:
       - name: Install cspell
         run: npm install --location=global cspell
       - name: Run spell checking
-        id: run_spell_check
-        # Check all files and output all typos, failure is checked in the last step.
-        continue-on-error: true
         run: |
           # Add a problem matcher.
           echo ::add-matcher::./.github/cspell_matcher.json
           # Set internal field separator (filenames can have space in them).
           IFS=$'\n'
+          # Spell check all files and remember if some failed.
+          EXIT_CODE=0
           # Loop over all files changed since master.
           git diff --name-only origin/master..${{ github.event.after }} | while read CHANGED_FILE; do
             echo "$CHANGED_FILE"
             # Run cspell on CHANGED_FILE, do not fail if the file is ignored.
-            cspell --config ./cspell.json --no-must-find-files "$CHANGED_FILE"
+            cspell --config ./cspell.json --no-must-find-files "$CHANGED_FILE" || EXIT_CODE=$?
           done
-      - name: Check for failures
-        # Fail the job if any of the spell checking failed.
-        if: steps.run_spell_check.outcome != 'success'
-        run: exit 1
+          # Fail if some check failed.
+          exit $EXIT_CODE
