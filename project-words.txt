@@ -20,7 +20,6 @@ chipwhisperer
 clkgen
 cmap
 colorbar
-comparaison
 cprint
 crossentropy
 cwscope

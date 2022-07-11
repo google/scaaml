@@ -65,7 +65,7 @@ def plot_trace(trace,
     plt.show()
 
 
-def plot_comparaison(traces, labels, title):
+def plot_comparison(traces, labels, title):
     "Color coded comparison"
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
