@@ -17,7 +17,6 @@ burszteindc
 burzteindc
 bytelist
 chipwhisperer
-chipwispher
 clkgen
 cmap
 colorbar
