@@ -27,7 +27,7 @@ def block(x,
           strides=1,
           conv_shortcut=False,
           activation="relu"):
-    """Residual block with preactivation
+    """Residual block with pre-activation
     From: https://arxiv.org/pdf/1603.05027.pdf
 
     Args:
@@ -165,7 +165,7 @@ def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=
 
 
 def get_model(input_shape, attack_point, config):
-    """Return an instanciated model based of the config provided.
+    """Return an instantiated model based of the config provided.
 
     Args:
         config (dict): scald config.

@@ -97,7 +97,7 @@ class Shard():
         # check there are no unexpected values
         for k in attack_points:
             if k not in self.attack_points_info:
-                raise ValueError("Attack poiint", k, "not specified")
+                raise ValueError("Attack point", k, "not specified")
 
         for k in measurements:
             if k not in self.measurements_info:
@@ -136,8 +136,8 @@ class Shard():
             # convert
             feature[mname] = float_feature(measurement)
 
-        tffeats = tf.train.Features(feature=feature)
-        record = tf.train.Example(features=tffeats)
+        tf_features = tf.train.Features(feature=feature)
+        record = tf.train.Example(features=tf_features)
         return record.SerializeToString()
 
     def _from_tfrecord(self, tfrecord):
@@ -156,12 +156,12 @@ class Shard():
 
         # attack points
         for k, info in self.attack_points_info.items():
-            flen = info["len"]
-            features[k] = tf.io.FixedLenFeature([flen], tf.int64)
+            feature_length = info["len"]
+            features[k] = tf.io.FixedLenFeature([feature_length], tf.int64)
 
         # measurements
         for k, info in self.measurements_info.items():
-            flen = info["len"]
-            features[k] = tf.io.FixedLenFeature([flen], tf.float32)
+            feature_length = info["len"]
+            features[k] = tf.io.FixedLenFeature([feature_length], tf.float32)
 
         return features

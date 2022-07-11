@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Resumeable iterator for key-text pairs with autosaves.
+"""Resumable iterator for key-text pairs with autosaves.
 
 Autosaves after shard length iterations.
 
@@ -103,7 +103,7 @@ class ResumeKTI:
                  kt_filename: str = "key_text_pairs.txt",
                  progress_filename: str = "progress_pairs.txt",
                  allow_pickle: bool = False) -> None:
-        """Create a resumeable key-text iterable.
+        """Create a resumable key-text iterable.
 
         Args:
             kt_filename: File to load shard_length, keys, texts.

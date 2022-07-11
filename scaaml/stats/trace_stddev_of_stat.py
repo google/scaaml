@@ -61,10 +61,10 @@ class STDDEVofAVGofTraces(STDDEVofSTATofTraces):
     """Computes standard deviation of averages of traces.
 
     Example use:
-      stddev_avgs = STDDEVofAVGofTraces()
+      stddev_averages = STDDEVofAVGofTraces()
       for e in ExampleIterator(ds_path):
-          stddev_avgs.update(e['trace1'])
-      print(stddev_avgs.result())
+          stddev_averages.update(e['trace1'])
+      print(stddev_averages.result())
     """
 
     def __init__(self) -> None:

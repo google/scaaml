@@ -65,7 +65,7 @@ class APCounter:
         """Convenience alternative of update, when the attack point is one-hot
         encoded.
         """
-        raise NotImplementedError('TODO(karelkral): Implement update_one_hot')
+        raise NotImplementedError('TODO(issue #89): Implement update_one_hot')
 
     def get_counts(self, byte: Union[None, int] = None) -> np.ndarray:
         """Return the counts. If byte is specified returns a one-dimensional
