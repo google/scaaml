@@ -8,46 +8,29 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  list_files:
-    name: List changed files
+  spellchecking:
     runs-on: ubuntu-22.04
-    outputs:
-      files: ${{ steps.generate-matrix.outputs.files }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
         with:
           # We need all history to list all changed files.
           fetch-depth: 0
-      - name: Generate matrix
-        id: generate-matrix
-        run: |
-          # List all files that changed between master and head of the
-          # current branch. Encode the output as json.
-          FILES="$(git diff --name-only origin/master..${{ github.event.after }} | jq -cnR '[inputs | select(length>0)]')"
-          echo $FILES
-          # Set output variable files to the changed files.
-          echo ::set-output name=files::${FILES}
-  spellchecking:
-    runs-on: ubuntu-22.04
-    needs:
-      - list_files
-    strategy:
-      matrix:
-        file: ${{ fromJSON(needs.list_files.outputs.files) }}
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
       - name: Set up node
         uses: actions/setup-node@v1
         with:
           node-version: "16"
       - name: Install cspell
         run: npm install --location=global cspell
-      - name: Matrix => (${{ matrix.files }})
+      - name: Run spell checking
         run: |
-          echo ${{ matrix.file }}
           # Add a problem matcher.
           echo ::add-matcher::./.github/cspell_matcher.json
-          # Run the spell checking on the concrete changed file.
-          cspell --config ./cspell.json "${{ matrix.file }}"
+          # Set internal field separator (filenames can have space in them).
+          IFS=$'\n'
+          # Loop over all files changed since master.
+          git diff --name-only origin/master..${{ github.event.after }} | while read CHANGED_FILE; do
+            echo "$CHANGED_FILE"
+            # Run cspell on CHANGED_FILE, do not fail if the file is ignored.
+            cspell --config ./cspell.json --no-must-find-files "$CHANGED_FILE"
+          done
