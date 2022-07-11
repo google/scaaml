@@ -22,6 +22,7 @@ version = f"2.0.1r{int(time())}"
 
 setup(
     name="scaaml",
+    python_requires=">=3.7",
     version=version,
     description="Side Channel Attack Assisted with Machine Learning",
     long_description=long_description,
@@ -40,7 +41,6 @@ setup(
         "matplotlib",
         "Pillow",
         "tensorflow>=2.2.0",
-        "future-fstrings",
         "pygments",
         "chipwhisperer",
         "scipy",

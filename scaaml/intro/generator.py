@@ -21,7 +21,7 @@ from tqdm.auto import tqdm
 from glob import glob
 
 
-def create_dataset(filepattern,
+def create_dataset(file_pattern,
                    batch_size=32,
                    attack_point="key",
                    attack_byte=0,
@@ -34,7 +34,7 @@ def create_dataset(filepattern,
     del is_training  # unused
     del batch_size  # unused
 
-    shards = list_shards(filepattern, num_shards)
+    shards = list_shards(file_pattern, num_shards)
     attack_byte = int(attack_byte)
 
     if attack_point not in ["key", "sub_bytes_in", "sub_bytes_out"]:
@@ -86,8 +86,8 @@ def create_dataset(filepattern,
     return (x, y)
 
 
-def list_shards(filepattern, num_shards):
-    return glob(filepattern)[:num_shards]
+def list_shards(file_pattern, num_shards):
+    return glob(file_pattern)[:num_shards]
 
 
 def load_attack_shard(fname,

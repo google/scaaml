@@ -43,7 +43,7 @@ def reshape_into_new_dataset(old_ds: Dataset,
       from_idx: The index of the first shard that is reshaped (shards with
         indices in range(from_idx, to_idx) are reshaped). This holds for
         each split (it is safe to have to_idx larger than the length of
-        shadrs_list for some/all split).
+        shards_list for some/all split).
       to_idx: The index of the first shard that is not reshaped. Zero value
         stands for max(len(old_ds.shards_list[s]) for s in old_ds.shards_list)).
       url: Download URL of the new dataset.

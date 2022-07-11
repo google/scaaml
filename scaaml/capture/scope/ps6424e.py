@@ -48,52 +48,52 @@ class CaptureSettings(object):
     CHANNEL_RANGE = [
         {
             "rangeV": 20E-3,
-            "apivalue": 1,
+            "api_value": 1,
             "rangeStr": "20 mV"
         },
         {
             "rangeV": 50E-3,
-            "apivalue": 2,
+            "api_value": 2,
             "rangeStr": "50 mV"
         },
         {
             "rangeV": 100E-3,
-            "apivalue": 3,
+            "api_value": 3,
             "rangeStr": "100 mV"
         },
         {
             "rangeV": 200E-3,
-            "apivalue": 4,
+            "api_value": 4,
             "rangeStr": "200 mV"
         },
         {
             "rangeV": 500E-3,
-            "apivalue": 5,
+            "api_value": 5,
             "rangeStr": "500 mV"
         },
         {
             "rangeV": 1.0,
-            "apivalue": 6,
+            "api_value": 6,
             "rangeStr": "1 V"
         },
         {
             "rangeV": 2.0,
-            "apivalue": 7,
+            "api_value": 7,
             "rangeStr": "2 V"
         },
         {
             "rangeV": 5.0,
-            "apivalue": 8,
+            "api_value": 8,
             "rangeStr": "5 V"
         },
         {
             "rangeV": 10.0,
-            "apivalue": 9,
+            "api_value": 9,
             "rangeStr": "10 V"
         },
         {
             "rangeV": 20.0,
-            "apivalue": 10,
+            "api_value": 10,
             "rangeStr": "20 V"
         },
     ]
@@ -124,7 +124,7 @@ class CaptureSettings(object):
         for key in self.CHANNEL_RANGE:
             self._ch_range[key["rangeV"]] = key["rangeStr"]
             self._ch_range_list.append(key["rangeV"])
-            self._ch_range_api_value[key["rangeV"]] = key["apivalue"]
+            self._ch_range_api_value[key["rangeV"]] = key["api_value"]
         self._ch_range_list.sort()
 
         self._channel = 0
@@ -286,7 +286,7 @@ class TriggerSettings(CaptureSettings):
     @trigger_direction.setter
     def trigger_direction(self, val):
         if val not in self._trig_dir:
-            raise ValueError("Unupported value")
+            raise ValueError("Unsupported value")
         self._trigger_direction = self._trig_dir[val]
 
     def _dict_repr(self):
@@ -341,12 +341,12 @@ class Pico6424E(ScopeTemplate):
         Args:
           sample_rate (float): Samples per second (in Hz).
 
-        Returns: Timebase (seconds per sample) representated as ctypes.c_uint32
+        Returns: Timebase (seconds per sample) represented as ctypes.c_uint32
           value for use in ps6000aRunBlock.
         """
         # Handle too large sample_rate
         if sample_rate > 5e9:
-            raise ValueError("This scope support at most 5GHz sample_rate.")
+            raise ValueError("This scope supports at most 5GHz sample_rate.")
 
         # From PicoScope API manual:
         # https://www.picotech.com/download/manuals/picoscope-6000-series-a-api-programmers-guide.pdf
@@ -571,7 +571,7 @@ class Pico6424E(ScopeTemplate):
                 picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
             ))
 
-        # TODO(kralka): implement MSO pod trigger
+        # TODO(issue #88): implement MSO pod trigger
 
         # Set simple trigger
         assert_ok(

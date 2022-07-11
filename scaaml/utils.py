@@ -78,7 +78,7 @@ def tf_cap_memory():
 
 
 def convert_shard_to_cw(info):
-    # avoid trashing the HD by desync multi process
+    # avoid trashing the HD by de-synchronizing multi process
     time.sleep(randint(0, 100) / 1000)
     cw_traces = []
     shard = np.load(info["fname"])
@@ -96,15 +96,15 @@ def convert_shard_to_cw(info):
     return cw_traces
 
 
-def convert_to_chipwispher_format(filepattern, num_shards, num_traces_by_shard,
-                                  trace_len):
+def convert_to_chipwhisperer_format(file_pattern, num_shards,
+                                    num_traces_by_shard, trace_len):
 
-    filemames = glob(filepattern)[:num_shards]
-    num_traces = len(filemames) * num_traces_by_shard
+    filenames = glob(file_pattern)[:num_shards]
+    num_traces = len(filenames) * num_traces_by_shard
 
     # creating info for multiprocessing
     chunks = []
-    for fname in filemames:
+    for fname in filenames:
         chunks.append({
             "fname": fname,
             "num_traces_by_shard": num_traces_by_shard,
@@ -123,7 +123,7 @@ def convert_to_chipwispher_format(filepattern, num_shards, num_traces_by_shard,
 
 
 def display_config(config_name, config):
-    """Pretty print a config object in termimal
+    """Pretty print a config object in terminal.
 
     Args:
         config_name (str): name of the config
@@ -142,5 +142,5 @@ def display_config(config_name, config):
 
 def from_categorical(predictions):
     "reverse of categorical"
-    # note: doing it as a list is significanlty fast than a single argmax
+    # note: doing it as a list is significantly faster than a single argmax
     return [np.argmax(p) for p in predictions]
