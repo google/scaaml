@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Build and load tensorFlow dataset Record wraper"""
+"""Build and load tensorFlow dataset Record wrapper"""
 
 import copy
 import math
@@ -40,7 +40,7 @@ import scaaml.io.utils as siutils
 from .shard import Shard
 from .errors import DatasetExistsError
 
-# Prevent importing Literal with older versons.
+# Prevent importing Literal with older versions.
 if sys.version_info >= (3, 8):
     from typing import Literal
 

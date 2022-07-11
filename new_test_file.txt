@@ -1,3 +1,0 @@
-It seeems that errors are only displayed in changed lines.
-
-1 onee
