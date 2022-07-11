@@ -346,7 +346,7 @@ class Pico6424E(ScopeTemplate):
         """
         # Handle too large sample_rate
         if sample_rate > 5e9:
-            raise ValueError("This scope support at most 5GHz sample_rate.")
+            raise ValueError("This scope supports at most 5GHz sample_rate.")
 
         # From PicoScope API manual:
         # https://www.picotech.com/download/manuals/picoscope-6000-series-a-api-programmers-guide.pdf
