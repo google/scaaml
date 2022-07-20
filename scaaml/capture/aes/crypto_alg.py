@@ -81,8 +81,10 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             texts.append(list(text))
         # Does not overwrite existing keys-texts file.
         self._kti = resume_kti.create_resume_kti(
-            keys=np.array(keys_list, dtype=np.uint8),
-            texts=np.array(texts, dtype=np.uint8),
+            parameters={
+                "keys": np.array(keys_list, dtype=np.uint8),
+                "texts": np.array(texts, dtype=np.uint8),
+            },
             shard_length=np.uint64(self._examples_per_shard),
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
@@ -119,7 +121,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
                 # AcqKeyTextPatternScaaml.new_pair raises StopIteration itself.
                 kt_pair = self._ktp.new_pair()
                 # Allow the same iteration as using resume_kti.
-                return list(kt_pair[0]), list(kt_pair[1])
+                return {"keys": list(kt_pair[0]), "texts": list(kt_pair[1])}
 
         self._stabilization_ktp = StabilizationIterator(self._get_new_ktp())
         return self._stabilization_ktp

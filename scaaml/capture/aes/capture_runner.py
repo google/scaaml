@@ -30,7 +30,7 @@ class CaptureRunner(AbstractCaptureRunner):
 
         Args:
           kt_element: Single element received from looping over ResumeKTI
-            instance. A pair of np arrays.
+            instance. A dictionary of np arrays.
 
         Returns: An instance of input of cryptographic algorithm (an object
           holding a key and plaintext).

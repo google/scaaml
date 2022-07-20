@@ -28,8 +28,8 @@ def test_save_and_load(tmp_path):
     # Check that the files do not exist now
     assert not os.path.isfile(tmp_path / KT_FILENAME)
     assert not os.path.isfile(tmp_path / PROGRESS_FILENAME)
-    resume_kti = create_resume_kti(keys=KEYS,
-                                   texts=TEXTS,
+    parameters = {"keys": KEYS, "texts": TEXTS}
+    resume_kti = create_resume_kti(parameters=parameters,
                                    shard_length=SHARD_LENGTH,
                                    kt_filename=tmp_path / KT_FILENAME,
                                    progress_filename=tmp_path /
@@ -41,9 +41,9 @@ def test_save_and_load(tmp_path):
     # Check that the (key, text) pairs have been loaded correctly
     assert len(resume_kti) == len(KEYS)
     i = 0
-    for k, t in resume_kti:
-        assert k == KEYS[i]
-        assert t == TEXTS[i]
+    for current_params in resume_kti:
+        for name, value in current_params.items():
+            assert value == parameters[name][i]
         i += 1
 
     # Check that the shard_length has been loaded correctly
@@ -52,8 +52,8 @@ def test_save_and_load(tmp_path):
 
 def iterate_for(tmp_path, n):
     # Iterates for n iterations, then resumes
-    resume_kti1 = create_resume_kti(keys=KEYS,
-                                    texts=TEXTS,
+    parameters = {"keys": KEYS, "texts": TEXTS}
+    resume_kti1 = create_resume_kti(parameters=parameters,
                                     shard_length=SHARD_LENGTH,
                                     kt_filename=tmp_path / KT_FILENAME,
                                     progress_filename=tmp_path /
@@ -63,9 +63,9 @@ def iterate_for(tmp_path, n):
 
     i = 0
     while i < n:
-        k, t = next(iter1)
-        assert k == KEYS[i]
-        assert t == TEXTS[i]
+        current_params = next(iter1)
+        for name, value in current_params.items():
+            assert value == parameters[name][i]
         i += 1
 
     # Iterate through the rest of shards
@@ -80,9 +80,9 @@ def iterate_for(tmp_path, n):
     else:
         j = n - (n % SHARD_LENGTH)
     while j < len(KEYS):
-        k, t = next(iter2)
-        assert k == KEYS[j]
-        assert t == TEXTS[j]
+        current_params = next(iter2)
+        for name, value in current_params.items():
+            assert value == parameters[name][j]
         j += 1
 
 
@@ -95,16 +95,18 @@ def test_partial_iteration(tmp_path):
 
 def test_does_not_overwrite(tmp_path):
     # Create real saving points.
-    create_resume_kti(keys=KEYS,
-                      texts=TEXTS,
+    parameters = {"keys": KEYS, "texts": TEXTS}
+    create_resume_kti(parameters=parameters,
                       shard_length=SHARD_LENGTH,
                       kt_filename=tmp_path / KT_FILENAME,
                       progress_filename=tmp_path / PROGRESS_FILENAME)
     # Attempt to overwrite
     inc_keys = KEYS + 1
     inc_texts = TEXTS + 1
-    resume_kti = create_resume_kti(keys=inc_keys,
-                                   texts=inc_texts,
+    resume_kti = create_resume_kti(parameters={
+        "keys":inc_keys,
+        "texts": inc_texts
+    },
                                    shard_length=SHARD_LENGTH,
                                    kt_filename=tmp_path / KT_FILENAME,
                                    progress_filename=tmp_path /
@@ -113,9 +115,9 @@ def test_does_not_overwrite(tmp_path):
     # Check that the (key, text) pairs have been loaded correctly
     assert len(resume_kti) == len(KEYS)
     i = 0
-    for k, t in resume_kti:
-        assert k == KEYS[i]
-        assert t == TEXTS[i]
+    for current_params in resume_kti:
+        for name, value in current_params.items():
+            assert value == parameters[name][i]
         i += 1
 
     # Check that the shard_length has been loaded correctly

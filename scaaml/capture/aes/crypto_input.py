@@ -25,8 +25,8 @@ class CryptoInput(AbstractCryptoInput):
         """Initialize the crypto input.
 
         Args:
-          kt_element: An element returned by iteration over ResumeKTI (key,
-            plaintext pair of np.arrays).
+          kt_element: An element returned by iteration over ResumeKTI
+            (dictionary of np.arrays with key, plaintext).
 
         Example use:
            from scaaml.aes_forward import AES
@@ -37,9 +37,8 @@ class CryptoInput(AbstractCryptoInput):
                                                **crypto_input.kwargs())
         """
         super().__init__()
-        key, text = kt_element
-        self._key = bytearray(key)
-        self._plaintext = bytearray(text)
+        self._key = bytearray(kt_element["keys"])
+        self._plaintext = bytearray(kt_element["texts"])
 
     def key_for_new_shard(self) -> bytearray:
         """Return the key parameter of scaaml.io.Dataset.new_shard."""
