@@ -32,8 +32,7 @@ def save_and_load(parameters, path):
     resume_kti = create_resume_kti(parameters=parameters,
                                    shard_length=SHARD_LENGTH,
                                    kt_filename=path / KT_FILENAME,
-                                   progress_filename=path /
-                                   PROGRESS_FILENAME)
+                                   progress_filename=path / PROGRESS_FILENAME)
     # Check that the files exist now
     assert os.path.isfile(path / KT_FILENAME)
     assert os.path.isfile(path / PROGRESS_FILENAME)
