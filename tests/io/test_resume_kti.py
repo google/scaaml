@@ -41,7 +41,7 @@ def save_and_load(parameters, path):
     assert len(resume_kti) == len(next(iter(parameters.items())))
     i = 0
     for current_params in resume_kti:
-        for name, value in current_params._asdict().items():
+        for name, value in current_params._asdict().values():
             assert value == parameters[name][i]
         i += 1
 
@@ -57,7 +57,7 @@ def test_save_and_load_k_t(tmp_path):
 def test_save_and_load_k_t_m(tmp_path):
     parameters = {
         "keys": KEYS,
-        "masks": np.random.randint(KEYS.shape, dtype=np.uint8),
+        "masks": np.random.randint(shape=KEYS.shape, dtype=np.uint8),
         "texts": TEXTS,
     }
     save_and_load(parameters, tmp_path)
