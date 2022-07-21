@@ -80,7 +80,10 @@ def test_stabilize_capture(mock_capture_trace):
     m_crypto_alg = MagicMock()
     k = MagicMock()
     t = MagicMock()
-    m_crypto_alg.get_stabilization_kti.return_value = iter(({"keys": k, "texts": t},))
+    m_crypto_alg.get_stabilization_kti.return_value = iter(({
+        "keys": k,
+        "texts": t,
+    },))
     m_scope = MagicMock()
     m_communication = MagicMock()
     m_control = MagicMock()
