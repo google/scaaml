@@ -38,7 +38,7 @@ def save_and_load(parameters, path):
     assert os.path.isfile(path / PROGRESS_FILENAME)
 
     # Check that the tuples have been loaded correctly
-    assert len(resume_kti) == len(next(iter(parameters.items())))
+    assert len(resume_kti) == len(next(iter(parameters.values())))
     i = 0
     for current_params in resume_kti:
         for name, value in current_params._asdict().values():
@@ -57,7 +57,7 @@ def test_save_and_load_k_t(tmp_path):
 def test_save_and_load_k_t_m(tmp_path):
     parameters = {
         "keys": KEYS,
-        "masks": np.random.randint(shape=KEYS.shape, dtype=np.uint8),
+        "masks": np.random.randint(50, size=KEYS.shape, dtype=np.uint8),
         "texts": TEXTS,
     }
     save_and_load(parameters, tmp_path)

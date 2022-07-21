@@ -185,12 +185,10 @@ class ResumeKTI:
             # Load list of parameter names.
             parameter_names = np.load(kt_tuples, allow_pickle=allow_pickle)
             # Create the namedtuple class. Ignore mypy warning that named
-            # tuples should not be constructed dynamically. Moreover mypy is
-            # able to ignore a single line and linting causes multi-line, thus
-            # temporary variable.
-            element_class = namedtuple("EncryptionParameters",
-                                       list(parameter_names))
-            self._element_class = element_class  # type: ignore
+            # tuples should not be constructed dynamically and that a list or
+            # tuple literal should be used for the names.
+            self._element_class = namedtuple(  # type: ignore
+                "EncryptionParameters", parameter_names)
 
             # Load all parameters.
             self._parameters = {}
