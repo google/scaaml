@@ -75,7 +75,7 @@ def test_save_and_load_k_t_m_different_len(tmp_path):
         "texts":
             TEXTS,
     }
-    with pytest.raises(AssertionError) as len_error:
+    with pytest.raises(ValueError) as len_error:
         save_and_load(parameters, tmp_path)
     assert "There are different number of parameter values." == str(
         len_error.value)
