@@ -30,7 +30,7 @@ class CaptureRunner(AbstractCaptureRunner):
 
         Args:
           kt_element: Single element received from looping over ResumeKTI
-            instance. A pair of np arrays.
+            instance. A dictionary of np arrays.
 
         Returns: An instance of input of cryptographic algorithm (an object
           holding a key and plaintext).
@@ -80,9 +80,10 @@ class CaptureRunner(AbstractCaptureRunner):
         Raises if hardware fails.
 
         Args:
-          crypto_alg: The object used to get attack points.
-          crypto_input: Representation of the input of the cryptographic
-            algorithm.
+          crypto_alg (AbstractSCryptoAlgorithm): The object used to get
+            attack points.
+          crypto_input (CryptoInput): Representation of the input of the
+            cryptographic algorithm.
 
         Returns: Attack points and physical measurement. These are to be used
           directly by scaaml.io.Dataset.write_example. Returns a pair of

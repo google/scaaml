@@ -13,7 +13,7 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, NamedTuple, Tuple
 from tqdm.auto import tqdm
 
 from scaaml.io import Dataset
@@ -59,28 +59,29 @@ class AbstractCaptureRunner(ABC):
         self._dataset = dataset
 
     @abstractmethod
-    def get_crypto_input(self, kt_element) -> AbstractCryptoInput:
+    def get_crypto_input(self, kt_element: NamedTuple) -> AbstractCryptoInput:
         """Process single element from ResumeKTI and return information for
         the crypto algorithm.
 
         Args:
-          kt_element: Single element received from looping over ResumeKTI
-            instance. A pair of np arrays.
+          kt_element (namedtuple): Single element received from looping over
+            ResumeKTI instance. A namedtuple of np arrays.
 
         Returns: An instance of input for cryptographic algorithm (for example
           an object holding a key and plaintext).
         """
 
     @abstractmethod
-    def get_attack_points_and_measurement(self,
-                                          crypto_alg: AbstractSCryptoAlgorithm,
-                                          crypto_input) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(
+            self, crypto_alg: AbstractSCryptoAlgorithm,
+            crypto_input: AbstractCryptoInput) -> Tuple[Dict, Dict]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
         Args:
-          crypto_alg: The object used to get attack points.
-          crypto_input: The input from ResumeKTI (a pair of np arrays).
+          crypto_alg (AbstractSCryptoAlgorithm): The object used to get attack
+            points.
+          crypto_input (AbstractCryptoInput): The input for encryption.
 
         Returns: Attack points and physical measurement. These are to be used
           directly by scaaml.io.Dataset.write_example.

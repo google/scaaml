@@ -11,25 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Resumable iterator for key-text pairs with autosaves.
+"""Resumable iterator for key-text pairs (or more general tuples) with
+autosaves.
 
 Autosaves after shard length iterations.
 
 Typical usage example:
 
-  # Save all key-text pairs ahead before the experiment starts.
+  # Save all encryption parameter tuples ahead before the experiment starts.
   # If kt_filename exists this does nothing.
-  create_resume_kti(keys, texts, shard_length=shard_length,
-                    kt_filename="key_text_pairs.txt",
-                    progress_filename="progress_pairs.txt")
+  create_resume_kti(parameters={"keys": keys, "texts": texts},
+                    shard_length=shard_length,
+                    kt_filename="parameters_tuples.txt",
+                    progress_filename="progress_tuples.txt")
 
-  # Load the savepoint (all the pairs + the index where to continue) at the
+  # Load the savepoint (all the tuples + the index where to continue) at the
   # start or resume of the experiment.
-  resume_kti = ResumeKTI(kt_filename="key_text_pairs.txt",
-                         progress_filename="progress_pairs.txt"
+  resume_kti = ResumeKTI(kt_filename="parameters_tuples.txt",
+                         progress_filename="progress_tuples.txt"
 
   # for key, text in tqdm(resume_kti):  # Loop with a progress-bar.
-  for key, text in resume_kti:
+  for current_parameters in resume_kti:
+      # Note that the names in the dictionary are the same as in the parameters.
+      # Thus if you use "keys" for an array of keys then you get plural even for
+      # the single iterated key.
+      # current_parameters = { "keys": keys[i], "texts": texts[i] }
       # Make sure to capture the trace.
       while True:
           # Try to capture trace.
@@ -38,52 +44,112 @@ Typical usage example:
 
 File format:
 
-  Text-key pairs file is a binary file with numpy scalar and two arrays.  The
-  contents are shard length, keys, texts. The array of keys and texts are
-  interpreted in the way that (keys[i], texts[i]) is a single key-text pair for
-  any i in range(len(keys)), thus both have the same length. This is done in
-  order to allow different data type of key and text (for instance AES256 where
-  key is 256 bits and text is 128 bits).
+  Parameter tuples file is a binary file with numpy scalar and arrays. The
+  contents are shard length, array of strings with parameter names and then
+  arrays of parameters in the same order. The array of parameter values are
+  interpreted in the way that (parameter1[i], parameter2[i], ...) is a single
+  key-text tuple for any i in range(len(parameter1)), thus all have the same
+  length. This is done in order to allow different data type of key and text
+  (for instance AES256 where key is 256 bits and text is 128 bits) and different
+  number of saved parameters (saving masks...).
 
   Progress file is a text file with a single integer -- the number of traces
   captured so far. The number in it is a multiple of the shard length. This file
   is automatically updated after shard length iterations over ResumeKTI.
 """
 
+from collections import namedtuple
+from typing import Dict, List
+
 import numpy as np
 
 
-def _create_resume_kti(keys: np.ndarray,
-                       texts: np.ndarray,
-                       shard_length: np.uint64,
-                       kt_filename: str = "key_text_pairs.txt",
-                       progress_filename: str = "progress_pairs.txt",
-                       allow_pickle: bool = False) -> None:
-    """Saves the key-text pairs for later use. See create_resume_kti convenience
-    function.
+def get_any_value_len(parameters: Dict[str, np.ndarray]) -> int:
+    """Convenience function that returns the len of any value. All lengths
+    should be the same (so that we can iterate).
 
     Args:
-        keys: Numpy array of keys to capture traces with. Non-zero length,
-          length is a multiple of shard_length. Different array for keys and
-          texts are to allow different data types. A key-text pair is always
-          (key[i], text[i]).
-        texts: Numpy array of texts. Same length as keys.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves
-          progress after finishing a shard.
-        kt_filename: File where to save shard_length, keys, texts. If the file
-          exists prints a message, but does not overwrite.
+      parameters (Dict[str, np.ndarray]): Parameters of the encryption (keys,
+        plaintexts, masks...). A dictionary with name and the corresponding
+        parameters represented as an np.array. All values must have the same
+        non-zero length, their length must be a multiple of shard_length.
+
+    Returns: Length of a single value.
+    """
+    return len(next(iter(parameters.values())))
+
+
+def check_lengths(parameters: Dict[str, np.ndarray],
+                  shard_length: np.uint64) -> None:
+    """Check that all parameters have the same non-zero length.
+
+    Args:
+      parameters (Dict[str, np.ndarray]): Parameters of the encryption (keys,
+        plaintexts, masks...). A dictionary with name and the corresponding
+        parameters represented as an np.array. All values must have the same
+        non-zero length, their length must be a multiple of shard_length.
+      shard_length (np.uint64): How many tuples are in a shard. ResumeKTI
+        autosaves progress after finishing a shard.
+
+    Raises: ValueError if some length is not right.
+    """
+    if not parameters:
+        raise ValueError("No parameters.")
+
+    # Get length of a single values array.
+    length = get_any_value_len(parameters)
+    for parameter, values in parameters.items():
+        if len(values) == 0:
+            raise ValueError(f"There are no parameters for {parameter}")
+        if len(values) % shard_length != 0:
+            raise ValueError(f"The number of values of {parameter} is not "
+                             f"divisible by shard_length.")
+        if len(values) != length:
+            raise ValueError("There are different number of parameter values.")
+
+
+def _create_resume_kti(parameters: Dict[str, np.ndarray],
+                       shard_length: np.uint64,
+                       kt_filename: str = "parameters_tuples.txt",
+                       progress_filename: str = "progress_tuples.txt",
+                       allow_pickle: bool = False) -> None:
+    """Saves the parameter tuples for later use. See create_resume_kti
+    convenience function.
+
+    Args:
+        parameters (Dict[str, np.ndarray]): Parameters of the encryption (keys,
+          plaintexts, masks...). A dictionary with name and the corresponding
+          parameters represented as an np.array. All values must have the same
+          non-zero length, their length must be a multiple of shard_length.
+        shard_length (np.uint64): How many tuples are in a shard. ResumeKTI
+          autosaves progress after finishing a shard.
+        kt_filename: File where to save shard_length and parameters. If the
+          file exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.
         allow_pickle: Parameter for numpy.save.
     """
-    # Check keys and texts lengths.
-    assert len(keys) == len(texts)
-    assert len(keys) >= 1
-    assert len(keys) % shard_length == 0
+    # Check parameter lengths.
+    check_lengths(parameters=parameters, shard_length=shard_length)
+
+    # Save into file.
     try:
         with open(kt_filename, "xb") as kt_file:
+            # Save the shard length.
             np.save(kt_file, shard_length, allow_pickle=allow_pickle)
-            np.save(kt_file, keys, allow_pickle=allow_pickle)
-            np.save(kt_file, texts, allow_pickle=allow_pickle)
+
+            # Saving a dictionary directly would require allow_pickle=True. Save
+            # dictionary.keys as an array of strings and then save the values in
+            # the same order as the dictionary.keys array.
+            parameter_names: List[str] = list(parameters.keys())
+            np.save(kt_file,
+                    np.array(parameter_names),
+                    allow_pickle=allow_pickle)
+
+            # Save their values.
+            for parameter_name in parameter_names:
+                np.save(kt_file,
+                        parameters[parameter_name],
+                        allow_pickle=allow_pickle)
     except FileExistsError:
         print(f"File {kt_filename} already exists, if you want to generate new"
               " keys, remove it first.")
@@ -100,27 +166,39 @@ class ResumeKTI:
     """
 
     def __init__(self,
-                 kt_filename: str = "key_text_pairs.txt",
-                 progress_filename: str = "progress_pairs.txt",
+                 kt_filename: str = "parameters_tuples.txt",
+                 progress_filename: str = "progress_tuples.txt",
                  allow_pickle: bool = False) -> None:
         """Create a resumable key-text iterable.
 
         Args:
-            kt_filename: File to load shard_length, keys, texts.
+            kt_filename: File to load shard_length and parameters.
             progress_filename: The file with the number of traces captured so
               far.  Gets updated by iterating shard length times or manually
               calling _save_progress.
             allow_pickle: Parameter for numpy.load.
         """
-        # Load shard length, keys, and texts.
-        with open(kt_filename, "rb") as kt_pairs:
-            self._shard_length = np.load(kt_pairs, allow_pickle=allow_pickle)
-            self._keys = np.load(kt_pairs, allow_pickle=allow_pickle)
-            self._texts = np.load(kt_pairs, allow_pickle=allow_pickle)
-        # Check length of keys and texts.
-        assert len(self._keys) == len(self._texts)
-        assert len(self._keys) >= 1
-        assert len(self._keys) % self._shard_length == 0
+        with open(kt_filename, "rb") as kt_tuples:
+            # Load shard length.
+            self._shard_length = np.load(kt_tuples, allow_pickle=allow_pickle)
+
+            # Load list of parameter names.
+            parameter_names = np.load(kt_tuples, allow_pickle=allow_pickle)
+            # Create the namedtuple class. Ignore mypy warning that named
+            # tuples should not be constructed dynamically and that a list or
+            # tuple literal should be used for the names.
+            self._element_class = namedtuple(  # type: ignore
+                "EncryptionParameters", parameter_names)
+
+            # Load all parameters.
+            self._parameters = {}
+            for parameter_name in parameter_names:
+                self._parameters[parameter_name] = np.load(
+                    kt_tuples, allow_pickle=allow_pickle)
+
+        # Check length of parameters.
+        check_lengths(parameters=self._parameters,
+                      shard_length=self._shard_length)
 
         # Load previous progress.
         self._progress_filename = progress_filename
@@ -129,7 +207,7 @@ class ResumeKTI:
             i = int(progress_file.read())
             self._index = i - (i % self._shard_length)
         # Check validity of the progress.
-        assert 0 <= self._index <= len(self._keys)
+        assert 0 <= self._index <= get_any_value_len(self._parameters)
         # How many traces have been captured before creating this object.
         self._initial_index = self._index
 
@@ -160,20 +238,25 @@ class ResumeKTI:
         calls without a _save_progress call), thus updates content of
         self._progress_filename file.
 
-        Returns:
-            Key-text pair.
+        Returns: Encryption parameters as a namedtuple.
         """
         if self._index % self._shard_length == 0:
             self._save_progress()
-        if self._index >= len(self._keys):
+        if self._index >= get_any_value_len(self._parameters):
             raise StopIteration
         self._index += 1
-        return self._keys[self._index - 1], self._texts[self._index - 1]
 
-    def __len__(self):
-        """How many pairs are there in total (including the initial_index
-        skipped pairs)."""
-        return len(self._keys)
+        # Construct the namedtuple to return.
+        element_class_parameters = {
+            parameter_name: parameter_values[self._index - 1]
+            for parameter_name, parameter_values in self._parameters.items()
+        }
+        return self._element_class(**element_class_parameters)
+
+    def __len__(self) -> int:
+        """How many tuples are there in total (including the initial_index
+        skipped tuples)."""
+        return get_any_value_len(self._parameters)
 
     @property
     def initial_index(self) -> int:
@@ -187,32 +270,29 @@ class ResumeKTI:
         return self._initial_index
 
 
-def create_resume_kti(keys: np.ndarray,
-                      texts: np.ndarray,
+def create_resume_kti(parameters: Dict[str, np.ndarray],
                       shard_length: np.uint64,
-                      kt_filename: str = "key_text_pairs.txt",
-                      progress_filename: str = "progress_pairs.txt",
+                      kt_filename: str = "parameters_tuples.txt",
+                      progress_filename: str = "progress_tuples.txt",
                       allow_pickle: bool = False) -> ResumeKTI:
-    """Saves the key-text pairs and returns a ResumeKTI object for immediate
+    """Saves the parameter tuples and returns a ResumeKTI object for immediate
     use.
 
     Args:
-        keys: Numpy array of keys to capture traces with. Non-zero length,
-          length is a multiple of shard_length. Different array for keys and
-          texts are to allow different data types. A key-text pair is always
-          (key[i], text[i]).
-        texts: Numpy array of texts. Same length as keys.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves
-          progress after finishing a shard.
-        kt_filename: File where to save shard_length, keys, texts. If the file
-          exists prints a message, but does not overwrite.
+        parameters (Dict[str, np.ndarray]): Parameters of the encryption (keys,
+          plaintexts, masks...). A dictionary with name and the corresponding
+          parameters represented as an np.array. All values must have the same
+          non-zero length, their length must be a multiple of shard_length.
+        shard_length (np.uint64): How many tuples are in a shard. ResumeKTI
+          autosaves progress after finishing a shard.
+        kt_filename: File where to save shard_length and parameters. If the
+          file exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.
         allow_pickle: Parameter for numpy.save.
 
     Returns: ResumeKTI object just created.
     """
-    _create_resume_kti(keys=keys,
-                       texts=texts,
+    _create_resume_kti(parameters=parameters,
                        shard_length=shard_length,
                        kt_filename=kt_filename,
                        progress_filename=progress_filename,

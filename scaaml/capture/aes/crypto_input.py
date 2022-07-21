@@ -25,21 +25,20 @@ class CryptoInput(AbstractCryptoInput):
         """Initialize the crypto input.
 
         Args:
-          kt_element: An element returned by iteration over ResumeKTI (key,
-            plaintext pair of np.arrays).
+          kt_element (namedtuple): An element returned by iteration over
+            ResumeKTI (namedtuple of np.arrays with key, plaintext).
 
         Example use:
            from scaaml.aes_forward import AES
 
-           crypto_input = CryptoInput(key=key, plaintext=plaintext)
-           ap_name = 'sub_bytes_in'
+           crypto_input = CryptoInput(kt_element)
+           ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())
         """
         super().__init__()
-        key, text = kt_element
-        self._key = bytearray(key)
-        self._plaintext = bytearray(text)
+        self._key = bytearray(kt_element.keys)
+        self._plaintext = bytearray(kt_element.texts)
 
     def key_for_new_shard(self) -> bytearray:
         """Return the key parameter of scaaml.io.Dataset.new_shard."""
@@ -51,19 +50,19 @@ class CryptoInput(AbstractCryptoInput):
         Example use:
            from scaaml.aes_forward import AES
 
-           crypto_input = CryptoInput(key=key, plaintext=plaintext)
-           ap_name = 'sub_bytes_in'
+           crypto_input = CryptoInput(kt_element)
+           ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())
         """
         return {
-            'key': self._key,
-            'plaintext': self._plaintext,
+            "key": self._key,
+            "plaintext": self._plaintext,
         }
 
     def __str__(self) -> str:
         """String representation for debugging purposes."""
-        return f'key: {self._key} plaintext: {self._plaintext}'
+        return f"key: {self._key} plaintext: {self._plaintext}"
 
     @property
     def key(self) -> bytearray:

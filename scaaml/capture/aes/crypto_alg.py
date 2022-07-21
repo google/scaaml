@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
+from collections import namedtuple
 from typing import Iterator, Optional
 import numpy as np
 
@@ -35,8 +36,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
                  plaintexts: int = 256,
                  repetitions: int = 1,
                  examples_per_shard: int = 64,
-                 full_kt_filename: str = "key_text_pairs.txt",
-                 full_progress_filename: str = "progress_pairs.txt") -> None:
+                 full_kt_filename: str = "parameters_tuples.txt",
+                 full_progress_filename: str = "progress_tuples.txt") -> None:
         """Generates a set of key-text pairs and saves those. Does not overwrite
         existing files.
 
@@ -81,8 +82,10 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             texts.append(list(text))
         # Does not overwrite existing keys-texts file.
         self._kti = resume_kti.create_resume_kti(
-            keys=np.array(keys_list, dtype=np.uint8),
-            texts=np.array(texts, dtype=np.uint8),
+            parameters={
+                "keys": np.array(keys_list, dtype=np.uint8),
+                "texts": np.array(texts, dtype=np.uint8),
+            },
             shard_length=np.uint64(self._examples_per_shard),
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
@@ -111,6 +114,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
             def __init__(self, ktp):
                 self._ktp = ktp
+                self._element_class = namedtuple("EncryptionParameters",
+                                                 ["keys", "texts"])
 
             def __iter__(self):
                 return self
@@ -119,7 +124,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
                 # AcqKeyTextPatternScaaml.new_pair raises StopIteration itself.
                 kt_pair = self._ktp.new_pair()
                 # Allow the same iteration as using resume_kti.
-                return list(kt_pair[0]), list(kt_pair[1])
+                return self._element_class(keys=list(kt_pair[0]),
+                                           texts=list(kt_pair[1]))
 
         self._stabilization_ktp = StabilizationIterator(self._get_new_ktp())
         return self._stabilization_ktp

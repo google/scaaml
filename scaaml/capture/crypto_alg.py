@@ -32,8 +32,8 @@ class AbstractSCryptoAlgorithm(ABC):
                  plaintexts: int,
                  repetitions: int,
                  examples_per_shard: int,
-                 full_kt_filename: str = "key_text_pairs.txt",
-                 full_progress_filename: str = "progress_pairs.txt") -> None:
+                 full_kt_filename: str = "parameters_tuples.txt",
+                 full_progress_filename: str = "progress_tuples.txt") -> None:
         """Generates a set of key-text pairs and saves those. Does not overwrite
         existing files.
 
