@@ -38,7 +38,7 @@ def test_capture_trace(mock_capture_trace):
     plaintext = np.array([255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 15, 1, 2, 3, 1, 5],
                          dtype=np.uint8)
     mock_capture_trace.return_value.textin = bytearray(plaintext)
-    crypto_input = CryptoInput((key, plaintext))
+    crypto_input = CryptoInput({"keys": key, "texts": plaintext})
     capture_runner.capture_trace(crypto_input=crypto_input)
     mock_capture_trace.assert_called_once_with(scope=m_scope.scope,
                                                target=m_communication.target,
@@ -50,7 +50,7 @@ def test_capture_trace(mock_capture_trace):
 def test_get_attack_points_and_measurement(mock_capture_trace):
     key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     plaintext = [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    crypto_input = CryptoInput((key, plaintext))
+    crypto_input = CryptoInput({"keys": key, "texts": plaintext})
     trace = MagicMock()
     trace.textin = bytearray(plaintext)
     mock_capture_trace.side_effect = [None, False, trace]
@@ -80,7 +80,7 @@ def test_stabilize_capture(mock_capture_trace):
     m_crypto_alg = MagicMock()
     k = MagicMock()
     t = MagicMock()
-    m_crypto_alg.get_stabilization_kti.return_value = iter(((k, t),))
+    m_crypto_alg.get_stabilization_kti.return_value = iter(({"keys": k, "texts": t},))
     m_scope = MagicMock()
     m_communication = MagicMock()
     m_control = MagicMock()
@@ -125,8 +125,10 @@ def test_capture_dataset(mock_am):
     m_crypto_alg.examples_per_shard = examples_per_shard
     m_crypto_alg.plaintexts = plaintexts
     m_crypto_alg.repetitions = repetitions
-    m_crypto_alg.kti.__iter__ = lambda _: iter(
-        [(x % 256, x % 256) for x in range(keys * plaintexts * repetitions)])
+    m_crypto_alg.kti.__iter__ = lambda _: iter([{
+        "keys": x % 256,
+        "texts": x % 256,
+    } for x in range(keys * plaintexts * repetitions)])
     m_crypto_alg.kti.__len__ = lambda _: keys * plaintexts * repetitions
     m_crypto_alg.kti.initial_index = 0
 
