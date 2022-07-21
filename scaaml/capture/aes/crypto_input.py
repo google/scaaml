@@ -32,7 +32,7 @@ class CryptoInput(AbstractCryptoInput):
            from scaaml.aes_forward import AES
 
            crypto_input = CryptoInput(key=key, plaintext=plaintext)
-           ap_name = 'sub_bytes_in'
+           ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())
         """
@@ -51,18 +51,18 @@ class CryptoInput(AbstractCryptoInput):
            from scaaml.aes_forward import AES
 
            crypto_input = CryptoInput(key=key, plaintext=plaintext)
-           ap_name = 'sub_bytes_in'
+           ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())
         """
         return {
-            'key': self._key,
-            'plaintext': self._plaintext,
+            "key": self._key,
+            "plaintext": self._plaintext,
         }
 
     def __str__(self) -> str:
         """String representation for debugging purposes."""
-        return f'key: {self._key} plaintext: {self._plaintext}'
+        return f"key: {self._key} plaintext: {self._plaintext}"
 
     @property
     def key(self) -> bytearray:
