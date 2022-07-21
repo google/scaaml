@@ -13,7 +13,6 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from typing import Dict, List, NamedTuple, Tuple
 from tqdm.auto import tqdm
 

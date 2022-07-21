@@ -13,8 +13,7 @@
 # limitations under the License.
 """The class that represents input of the AES cryptographic algorithm."""
 
-from collections import namedtuple
-from typing import Dict, NamedTuple
+from typing import Dict
 
 from scaaml.capture.crypto_input import AbstractCryptoInput
 
@@ -22,7 +21,7 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 class CryptoInput(AbstractCryptoInput):
     """Single instance of cryptographic input for AES."""
 
-    def __init__(self, kt_element: NamedTuple) -> None:
+    def __init__(self, kt_element) -> None:
         """Initialize the crypto input.
 
         Args:

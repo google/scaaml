@@ -59,7 +59,7 @@ File format:
 """
 
 from collections import namedtuple
-from typing import Dict, List, NamedTuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -184,9 +184,11 @@ class ResumeKTI:
 
             # Load list of parameter names.
             parameter_names = np.load(kt_tuples, allow_pickle=allow_pickle)
-            # Create the namedtuple class.
-            self._element_class = namedtuple("EncryptionParameters",
-                                             parameter_names)
+            # Create the namedtuple class. Ignore mypy warning that namedtuples
+            # should not be constructed dynamically.
+            self._element_class = namedtuple(
+                "EncryptionParameters",
+                parameter_names.tolist())  # type: ignore
 
             # Load all parameters.
             self._parameters = {}
@@ -229,7 +231,7 @@ class ResumeKTI:
     def __iter__(self):
         return self
 
-    def __next__(self) -> NamedTuple:
+    def __next__(self):
         """Next with auto-save.
 
         Auto-save when a new shard is starting (after each shard length + 1
