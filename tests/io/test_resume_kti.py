@@ -41,7 +41,7 @@ def save_and_load(parameters, path):
     assert len(resume_kti) == len(next(iter(parameters.values())))
     i = 0
     for current_params in resume_kti:
-        for name, value in current_params._asdict().values():
+        for name, value in current_params._asdict().items():
             assert value == parameters[name][i]
         i += 1
 
@@ -61,6 +61,18 @@ def test_save_and_load_k_t_m(tmp_path):
         "texts": TEXTS,
     }
     save_and_load(parameters, tmp_path)
+
+
+def test_save_and_load_k_t_m_different_len(tmp_path):
+    parameters = {
+        "keys": KEYS,
+        "masks": np.random.randint(50, size=KEYS.shape[0] + 1, dtype=np.uint8),
+        "texts": TEXTS,
+    }
+    with pytest.raises(AssertionError) as len_error:
+        save_and_load(parameters, tmp_path)
+    assert "There are different number of parameter values." == str(
+        len_error.value)
 
 
 def test_save_and_load_k(tmp_path):
