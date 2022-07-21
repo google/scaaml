@@ -14,6 +14,7 @@
 
 import os
 import numpy as np
+import pytest
 
 from scaaml.io.resume_kti import create_resume_kti, ResumeKTI
 

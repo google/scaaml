@@ -248,8 +248,8 @@ class ResumeKTI:
 
         # Construct the namedtuple to return.
         element_class_parameters = {
-            parameter_name: self._parameters[parameter_name][self._index - 1]
-            for parameter_name in self._parameters  # pylint: disable=C0206
+            parameter_name: parameter_values[self._index - 1]
+            for parameter_name, parameter_values in self._parameters.items()
         }
         return self._element_class(**element_class_parameters)
 
