@@ -26,17 +26,17 @@ SHARD_LENGTH = 2
 
 def save_and_load(parameters, path):
     # Check that the files do not exist now
-    assert not os.path.isfile(tmp_path / KT_FILENAME)
-    assert not os.path.isfile(tmp_path / PROGRESS_FILENAME)
+    assert not os.path.isfile(path / KT_FILENAME)
+    assert not os.path.isfile(path / PROGRESS_FILENAME)
 
     resume_kti = create_resume_kti(parameters=parameters,
                                    shard_length=SHARD_LENGTH,
-                                   kt_filename=tmp_path / KT_FILENAME,
-                                   progress_filename=tmp_path /
+                                   kt_filename=path / KT_FILENAME,
+                                   progress_filename=path /
                                    PROGRESS_FILENAME)
     # Check that the files exist now
-    assert os.path.isfile(tmp_path / KT_FILENAME)
-    assert os.path.isfile(tmp_path / PROGRESS_FILENAME)
+    assert os.path.isfile(path / KT_FILENAME)
+    assert os.path.isfile(path / PROGRESS_FILENAME)
 
     # Check that the tuples have been loaded correctly
     assert len(resume_kti) == len(next(iter(parameters.items())))
@@ -52,7 +52,7 @@ def save_and_load(parameters, path):
 
 def test_save_and_load_k_t(tmp_path):
     parameters = {"keys": KEYS, "texts": TEXTS}
-    save_and_load(parameters, path)
+    save_and_load(parameters, tmp_path)
 
 
 def test_save_and_load_k_t_m(tmp_path):
@@ -61,14 +61,14 @@ def test_save_and_load_k_t_m(tmp_path):
         "masks": np.random.randint(KEYS.shape, dtype=np.uint8),
         "texts": TEXTS,
     }
-    save_and_load(parameters, path)
+    save_and_load(parameters, tmp_path)
 
 
 def test_save_and_load_k(tmp_path):
     parameters = {
         "keys": KEYS,
     }
-    save_and_load(parameters, path)
+    save_and_load(parameters, tmp_path)
 
 
 def iterate_for(tmp_path, n):
