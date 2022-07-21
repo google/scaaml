@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
+from collections import namedtuple
 from typing import Iterator, Optional
 import numpy as np
 
@@ -113,6 +114,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
             def __init__(self, ktp):
                 self._ktp = ktp
+                self._element_class = namedtuple("EncryptionParameters",
+                                                 ["keys", "texts"])
 
             def __iter__(self):
                 return self
@@ -121,7 +124,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
                 # AcqKeyTextPatternScaaml.new_pair raises StopIteration itself.
                 kt_pair = self._ktp.new_pair()
                 # Allow the same iteration as using resume_kti.
-                return {"keys": list(kt_pair[0]), "texts": list(kt_pair[1])}
+                return self._element_class(keys=list(kt_pair[0]),
+                                           texts=list(kt_pair[1]))
 
         self._stabilization_ktp = StabilizationIterator(self._get_new_ktp())
         return self._stabilization_ktp

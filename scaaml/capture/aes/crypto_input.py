@@ -13,7 +13,8 @@
 # limitations under the License.
 """The class that represents input of the AES cryptographic algorithm."""
 
-from typing import Dict
+from collections import namedtuple
+from typing import Dict, NamedTuple
 
 from scaaml.capture.crypto_input import AbstractCryptoInput
 
@@ -21,24 +22,24 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 class CryptoInput(AbstractCryptoInput):
     """Single instance of cryptographic input for AES."""
 
-    def __init__(self, kt_element) -> None:
+    def __init__(self, kt_element: NamedTuple) -> None:
         """Initialize the crypto input.
 
         Args:
-          kt_element: An element returned by iteration over ResumeKTI
-            (dictionary of np.arrays with key, plaintext).
+          kt_element (namedtuple): An element returned by iteration over
+            ResumeKTI (namedtuple of np.arrays with key, plaintext).
 
         Example use:
            from scaaml.aes_forward import AES
 
-           crypto_input = CryptoInput(key=key, plaintext=plaintext)
+           crypto_input = CryptoInput(kt_element)
            ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())
         """
         super().__init__()
-        self._key = bytearray(kt_element["keys"])
-        self._plaintext = bytearray(kt_element["texts"])
+        self._key = bytearray(kt_element.keys)
+        self._plaintext = bytearray(kt_element.texts)
 
     def key_for_new_shard(self) -> bytearray:
         """Return the key parameter of scaaml.io.Dataset.new_shard."""
@@ -50,7 +51,7 @@ class CryptoInput(AbstractCryptoInput):
         Example use:
            from scaaml.aes_forward import AES
 
-           crypto_input = CryptoInput(key=key, plaintext=plaintext)
+           crypto_input = CryptoInput(kt_element)
            ap_name = "sub_bytes_in"
            sub_bytes_in = AES.get_attack_point(name=ap_name,
                                                **crypto_input.kwargs())

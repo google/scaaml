@@ -57,9 +57,9 @@ def test_init(mock_resumekti, mock_create_resume_kti):
     assert crypto_alg.key_len == 16
     stab_kti = crypto_alg.get_stabilization_kti()
     parameters = next(stab_kti)
-    assert crypto_alg.key_len == len(parameters["keys"])
+    assert crypto_alg.key_len == len(parameters.keys)
     assert crypto_alg.plaintext_len == 16
-    assert crypto_alg.plaintext_len == len(parameters["texts"])
+    assert crypto_alg.plaintext_len == len(parameters.texts)
     assert crypto_alg.firmware_sha256 == firmware_sha256
     assert crypto_alg.implementation == implementation
     assert crypto_alg.algorithm == algorithm

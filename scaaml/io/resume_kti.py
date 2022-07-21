@@ -58,7 +58,8 @@ File format:
   is automatically updated after shard length iterations over ResumeKTI.
 """
 
-from typing import Dict, List
+from collections import namedtuple
+from typing import Dict, List, NamedTuple
 
 import numpy as np
 
@@ -183,6 +184,9 @@ class ResumeKTI:
 
             # Load list of parameter names.
             parameter_names = np.load(kt_pairs, allow_pickle=allow_pickle)
+            # Create the namedtuple class.
+            self._element_class = namedtuple("EncryptionParameters",
+                                             parameter_names)
 
             # Load all parameters.
             self._parameters = {}
@@ -225,27 +229,28 @@ class ResumeKTI:
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> NamedTuple:
         """Next with auto-save.
 
         Auto-save when a new shard is starting (after each shard length + 1
         calls without a _save_progress call), thus updates content of
         self._progress_filename file.
 
-        Returns:
-            Key-text pair.
+        Returns: Encryption parameters as a namedtuple.
         """
         if self._index % self._shard_length == 0:
             self._save_progress()
         if self._index >= get_any_value_len(self._parameters):
             raise StopIteration
         self._index += 1
-        return {
-            parameter_name: self._parameters[parameter_name][self._index - 1]
-            for parameter_name in self._parameters  # pylint: disable=C0206
-        }
+        return self._element_class(
+            **{
+                parameter_name: self._parameters[parameter_name][self._index -
+                                                                 1]
+                for parameter_name in self._parameters  # pylint: disable=C0206
+            })
 
-    def __len__(self):
+    def __len__(self) -> int:
         """How many pairs are there in total (including the initial_index
         skipped pairs)."""
         return get_any_value_len(self._parameters)

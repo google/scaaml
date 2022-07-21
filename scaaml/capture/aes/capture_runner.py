@@ -73,16 +73,17 @@ class CaptureRunner(AbstractCaptureRunner):
 
         return trace
 
-    def get_attack_points_and_measurement(self,
-                                          crypto_alg: AbstractSCryptoAlgorithm,
-                                          crypto_input) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(
+            self, crypto_alg: AbstractSCryptoAlgorithm,
+            crypto_input: CryptoInput) -> Tuple[Dict, Dict]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
         Args:
-          crypto_alg: The object used to get attack points.
-          crypto_input: Representation of the input of the cryptographic
-            algorithm.
+          crypto_alg (AbstractSCryptoAlgorithm): The object used to get
+            attack points.
+          crypto_input (CryptoInput): Representation of the input of the
+            cryptographic algorithm.
 
         Returns: Attack points and physical measurement. These are to be used
           directly by scaaml.io.Dataset.write_example. Returns a pair of
