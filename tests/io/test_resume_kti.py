@@ -24,11 +24,11 @@ TEXTS = np.array([2, 7, 1, 2, 8, 0, 255, 254, 1, 0])
 SHARD_LENGTH = 2
 
 
-def test_save_and_load(tmp_path):
+def save_and_load(parameters, path):
     # Check that the files do not exist now
     assert not os.path.isfile(tmp_path / KT_FILENAME)
     assert not os.path.isfile(tmp_path / PROGRESS_FILENAME)
-    parameters = {"keys": KEYS, "texts": TEXTS}
+
     resume_kti = create_resume_kti(parameters=parameters,
                                    shard_length=SHARD_LENGTH,
                                    kt_filename=tmp_path / KT_FILENAME,
@@ -38,16 +38,37 @@ def test_save_and_load(tmp_path):
     assert os.path.isfile(tmp_path / KT_FILENAME)
     assert os.path.isfile(tmp_path / PROGRESS_FILENAME)
 
-    # Check that the (key, text) pairs have been loaded correctly
-    assert len(resume_kti) == len(KEYS)
+    # Check that the tuples have been loaded correctly
+    assert len(resume_kti) == len(next(iter(parameters.items())))
     i = 0
     for current_params in resume_kti:
-        for name, value in current_params.items():
+        for name, value in current_params._asdict().items():
             assert value == parameters[name][i]
         i += 1
 
     # Check that the shard_length has been loaded correctly
     assert resume_kti._shard_length == SHARD_LENGTH
+
+
+def test_save_and_load_k_t(tmp_path):
+    parameters = {"keys": KEYS, "texts": TEXTS}
+    save_and_load(parameters, path)
+
+
+def test_save_and_load_k_t_m(tmp_path):
+    parameters = {
+        "keys": KEYS,
+        "masks": np.random.randint(KEYS.shape, dtype=np.uint8),
+        "texts": TEXTS,
+    }
+    save_and_load(parameters, path)
+
+
+def test_save_and_load_k(tmp_path):
+    parameters = {
+        "keys": KEYS,
+    }
+    save_and_load(parameters, path)
 
 
 def iterate_for(tmp_path, n):
@@ -64,7 +85,7 @@ def iterate_for(tmp_path, n):
     i = 0
     while i < n:
         current_params = next(iter1)
-        for name, value in current_params.items():
+        for name, value in current_params._asdict().items():
             assert value == parameters[name][i]
         i += 1
 
@@ -81,7 +102,7 @@ def iterate_for(tmp_path, n):
         j = n - (n % SHARD_LENGTH)
     while j < len(KEYS):
         current_params = next(iter2)
-        for name, value in current_params.items():
+        for name, value in current_params._asdict().items():
             assert value == parameters[name][j]
         j += 1
 
@@ -116,7 +137,7 @@ def test_does_not_overwrite(tmp_path):
     assert len(resume_kti) == len(KEYS)
     i = 0
     for current_params in resume_kti:
-        for name, value in current_params.items():
+        for name, value in current_params._asdict().items():
             assert value == parameters[name][i]
         i += 1
 
