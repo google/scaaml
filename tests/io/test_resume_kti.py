@@ -104,7 +104,7 @@ def test_does_not_overwrite(tmp_path):
     inc_keys = KEYS + 1
     inc_texts = TEXTS + 1
     resume_kti = create_resume_kti(parameters={
-        "keys":inc_keys,
+        "keys": inc_keys,
         "texts": inc_texts
     },
                                    shard_length=SHARD_LENGTH,
