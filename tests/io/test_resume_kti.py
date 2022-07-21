@@ -17,8 +17,8 @@ import numpy as np
 
 from scaaml.io.resume_kti import create_resume_kti, ResumeKTI
 
-KT_FILENAME = 'key_text_pairs.txt'
-PROGRESS_FILENAME = 'progress_pairs.txt'
+KT_FILENAME = 'parameters_tuples.txt'
+PROGRESS_FILENAME = 'progress_tuples.txt'
 KEYS = np.array([3, 1, 4, 1, 5, 9, 0, 254, 255, 0])
 TEXTS = np.array([2, 7, 1, 2, 8, 0, 255, 254, 1, 0])
 SHARD_LENGTH = 2

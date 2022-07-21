@@ -179,9 +179,9 @@ def capture_aes_dataset(
             examples_per_shard=examples_per_shard,
             firmware_sha256=firmware_sha256,
             full_kt_filename=Path(root_path) / dataset.slug /
-            f"{split}_key_text_pairs.txt",
+            f"{split}_parameters_tuples.txt",
             full_progress_filename=Path(root_path) / dataset.slug /
-            f"{split}_progress_pairs.txt")
+            f"{split}_progress_tuples.txt")
         crypto_algorithms.append(new_crypto_alg)
 
     if test_keys:

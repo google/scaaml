@@ -22,13 +22,13 @@ Typical usage example:
   # If kt_filename exists this does nothing.
   create_resume_kti(parameters={"keys": keys, "texts": texts},
                     shard_length=shard_length,
-                    kt_filename="key_text_pairs.txt",
-                    progress_filename="progress_pairs.txt")
+                    kt_filename="parameters_tuples.txt",
+                    progress_filename="progress_tuples.txt")
 
   # Load the savepoint (all the pairs + the index where to continue) at the
   # start or resume of the experiment.
-  resume_kti = ResumeKTI(kt_filename="key_text_pairs.txt",
-                         progress_filename="progress_pairs.txt"
+  resume_kti = ResumeKTI(kt_filename="parameters_tuples.txt",
+                         progress_filename="progress_tuples.txt"
 
   # for key, text in tqdm(resume_kti):  # Loop with a progress-bar.
   for current_parameters in resume_kti:
@@ -87,8 +87,8 @@ def check_lengths(parameters: Dict[str, np.ndarray],
         plaintexts, masks...). A dictionary with name and the corresponding
         parameters represented as an np.array. All values must have the same
         non-zero length, their length must be a multiple of shard_length.
-      shard_length: How many pairs are in a shard. ResumeKTI autosaves
-        progress after finishing a shard.
+      shard_length (np.uint64): How many pairs are in a shard. ResumeKTI
+        autosaves progress after finishing a shard.
 
     Raises: ValueError if some length is not right.
     """
@@ -109,8 +109,8 @@ def check_lengths(parameters: Dict[str, np.ndarray],
 
 def _create_resume_kti(parameters: Dict[str, np.ndarray],
                        shard_length: np.uint64,
-                       kt_filename: str = "key_text_pairs.txt",
-                       progress_filename: str = "progress_pairs.txt",
+                       kt_filename: str = "parameters_tuples.txt",
+                       progress_filename: str = "progress_tuples.txt",
                        allow_pickle: bool = False) -> None:
     """Saves the key-text pairs for later use. See create_resume_kti convenience
     function.
@@ -120,8 +120,8 @@ def _create_resume_kti(parameters: Dict[str, np.ndarray],
           plaintexts, masks...). A dictionary with name and the corresponding
           parameters represented as an np.array. All values must have the same
           non-zero length, their length must be a multiple of shard_length.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves
-          progress after finishing a shard.
+        shard_length (np.uint64): How many pairs are in a shard. ResumeKTI
+          autosaves progress after finishing a shard.
         kt_filename: File where to save shard_length and parameters. If the
           file exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.
@@ -165,8 +165,8 @@ class ResumeKTI:
     """
 
     def __init__(self,
-                 kt_filename: str = "key_text_pairs.txt",
-                 progress_filename: str = "progress_pairs.txt",
+                 kt_filename: str = "parameters_tuples.txt",
+                 progress_filename: str = "progress_tuples.txt",
                  allow_pickle: bool = False) -> None:
         """Create a resumable key-text iterable.
 
@@ -264,8 +264,8 @@ class ResumeKTI:
 
 def create_resume_kti(parameters: Dict[str, np.ndarray],
                       shard_length: np.uint64,
-                      kt_filename: str = "key_text_pairs.txt",
-                      progress_filename: str = "progress_pairs.txt",
+                      kt_filename: str = "parameters_tuples.txt",
+                      progress_filename: str = "progress_tuples.txt",
                       allow_pickle: bool = False) -> ResumeKTI:
     """Saves the key-text pairs and returns a ResumeKTI object for immediate
     use.
@@ -275,8 +275,8 @@ def create_resume_kti(parameters: Dict[str, np.ndarray],
           plaintexts, masks...). A dictionary with name and the corresponding
           parameters represented as an np.array. All values must have the same
           non-zero length, their length must be a multiple of shard_length.
-        shard_length: How many pairs are in a shard. ResumeKTI autosaves
-          progress after finishing a shard.
+        shard_length (np.uint64): How many pairs are in a shard. ResumeKTI
+          autosaves progress after finishing a shard.
         kt_filename: File where to save shard_length and parameters. If the
           file exists prints a message, but does not overwrite.
         progress_filename: The file with the number of traces captured so far.
