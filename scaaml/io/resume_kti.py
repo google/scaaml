@@ -247,12 +247,13 @@ class ResumeKTI:
         if self._index >= get_any_value_len(self._parameters):
             raise StopIteration
         self._index += 1
-        return self._element_class(
-            **{
-                parameter_name: self._parameters[parameter_name][self._index -
-                                                                 1]
-                for parameter_name in self._parameters  # pylint: disable=C0206
-            })
+
+        # Construct the namedtuple to return.
+        element_class_parameters = {
+            parameter_name: self._parameters[parameter_name][self._index - 1]
+            for parameter_name in self._parameters  # pylint: disable=C0206
+        }
+        return self._element_class(**element_class_parameters)
 
     def __len__(self) -> int:
         """How many tuples are there in total (including the initial_index
