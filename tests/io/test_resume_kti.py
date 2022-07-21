@@ -66,9 +66,14 @@ def test_save_and_load_k_t_m(tmp_path):
 
 def test_save_and_load_k_t_m_different_len(tmp_path):
     parameters = {
-        "keys": KEYS,
-        "masks": np.random.randint(50, size=KEYS.shape[0] + 1, dtype=np.uint8),
-        "texts": TEXTS,
+        "keys":
+            KEYS,
+        "masks":
+            np.random.randint(50,
+                              size=KEYS.shape[0] + SHARD_LENGTH,
+                              dtype=np.uint8),
+        "texts":
+            TEXTS,
     }
     with pytest.raises(AssertionError) as len_error:
         save_and_load(parameters, tmp_path)
