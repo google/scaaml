@@ -94,6 +94,7 @@ def test_attack_points(mock_resumekti, mock_create_resume_kti):
     plaintext = bytearray(
         [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     ap = {
+        'plaintext': plaintext,
         'sub_bytes_in': AESSBOX.sub_bytes_in(key=key, plaintext=plaintext),
         'sub_bytes_out': AESSBOX.sub_bytes_out(key=key, plaintext=plaintext),
         'key': key,
@@ -138,6 +139,10 @@ def test_attack_points_info(mock_resumekti, mock_create_resume_kti):
         'key': {
             'len': 16,
             'max_val': max_val,
-        }
+        },
+        'plaintext': {
+            'len': 16,
+            'max_val': max_val,
+        },
     }
     assert crypto_alg.attack_points_info() == api

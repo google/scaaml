@@ -138,3 +138,5 @@ def test_attack_points():
                                         key=key, plaintext=text)
     assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
                                     plaintext=text) == sub_bytes_out
+    assert AESSBOX.get_attack_point('plaintext', key=key,
+                                    plaintext=text) == text

@@ -64,7 +64,11 @@ class AESSBOX:
         "key": {
             "len": 16,
             "max_val": _MAX_VAL,
-        }
+        },
+        "plaintext": {
+            "len": 16,
+            "max_val": _MAX_VAL,
+        },
     }
 
     @staticmethod
@@ -84,6 +88,12 @@ class AESSBOX:
         """Return what goes out of the SBOX."""
         assert len(key) == len(plaintext)
         return bytearray(AESSBOX._SB[x ^ y] for (x, y) in zip(key, plaintext))
+
+    @staticmethod
+    def plaintext(key: bytearray, plaintext: bytearray) -> bytearray:
+        """Return the plaintext. Useful for getting all attack points."""
+        assert len(key) == len(plaintext)
+        return plaintext
 
     @classmethod
     def get_attack_point(cls, name: str, **kwargs: bytearray) -> bytearray:
