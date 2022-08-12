@@ -1173,6 +1173,10 @@ class Dataset():
                                        shard_part=shard["part"])
         shard["path"] = f"{to_split}/{new_name}"
         moved_file = self.path / shard["path"]
+        # Make sure the directory exists (in case the dataset was downloaded
+        # it can happen that empty directory is not created).
+        moved_file.parent.mkdir(exist_ok=True)
+        # Move the shard file.
         shard_file.rename(moved_file)
         # Move the shard object.
         if to_split not in self.shards_list.keys():
