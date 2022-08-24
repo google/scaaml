@@ -17,7 +17,7 @@ import math
 from typing import Dict, List, Optional
 
 import tensorflow as tf
-from .tfdata import int64_feature, float_feature
+from scaaml.io.tfdata import int64_feature, float_feature
 
 
 class Shard():

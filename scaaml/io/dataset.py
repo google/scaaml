@@ -37,8 +37,8 @@ import scaaml
 from scaaml.utils import bytelist_to_hex
 from scaaml.io.spell_check import find_misspellings
 import scaaml.io.utils as siutils
-from .shard import Shard
-from .errors import DatasetExistsError
+from scaaml.io.shard import Shard
+from scaaml.io.errors import DatasetExistsError
 
 # Prevent importing Literal with older versions.
 if sys.version_info >= (3, 8):
