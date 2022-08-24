@@ -24,13 +24,13 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from scaaml.io import Dataset
-from .ap_counter import APCounter
-from .ap_checker import APChecker
-from .example_iterator import ExampleIterator
-from .trace_stddev_of_stat import STDDEVofSTATofTraces
-from .trace_stddev_of_stat import STDDEVofAVGofTraces
-from .trace_stddev_of_stat import STDDEVofMAXofTraces
-from .trace_stddev_of_stat import STDDEVofMINofTraces
+from scaaml.stats.ap_counter import APCounter
+from scaaml.stats.ap_checker import APChecker
+from scaaml.stats.example_iterator import ExampleIterator
+from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofAVGofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofMAXofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofMINofTraces
 
 
 def _class_name(obj: object) -> str:

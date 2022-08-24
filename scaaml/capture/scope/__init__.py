@@ -13,7 +13,7 @@
 # limitations under the License.
 """Oscilloscope manipulation wrappers."""
 
-from .scope_base import AbstractSScope
-from .cw_scope import CWScope
-from .default_cw_scope import DefaultCWScope
-from .picoscope import PicoScope
+from scaaml.capture.scope.scope_base import AbstractSScope
+from scaaml.capture.scope.cw_scope import CWScope
+from scaaml.capture.scope.default_cw_scope import DefaultCWScope
+from scaaml.capture.scope.picoscope import PicoScope
