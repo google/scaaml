@@ -11,9 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Oscilloscope manipulation wrappers."""
+"""Software version of the SCAAML dataset library.
 
-from scaaml.capture.scope.scope_base import AbstractSScope
-from scaaml.capture.scope.cw_scope import CWScope
-from scaaml.capture.scope.default_cw_scope import DefaultCWScope
-from scaaml.capture.scope.picoscope import PicoScope
+Format: MAJOR.MINOR.PATCH (see https://pypi.org/project/semver/ for more
+  possibilities)
+
+Usage:
+  Dataset.from_config (and thus Dataset.get_dataset) are using 'scaaml_version'
+  and raise a ValueError if the dataset has been captured with a higher
+  version of scaaml.
+
+  When a dataset is loaded and Dataset._write_config is called again then the
+  scaaml_version is updated to the current value.
+
+  semver.compare is used to compare two versions of the SCAAML library.
+"""
+__version__ = "0.0.1"
