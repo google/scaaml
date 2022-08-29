@@ -68,6 +68,7 @@ SBOX
 SBREV
 scaaml
 scipy
+setuptools
 simpleserial
 siutils
 sname
