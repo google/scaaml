@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scaaml-dataset"
+authors = [
+    { name="Elie Bursztein", email="scaaml@google.com" },
+]
+description = "Side Channel Attack Assisted with Machine Learning - dataset"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["side channel attack", "machine learning"]
+license = {text = "Apache License 2.0"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Framework :: Jupyter",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "termcolor",
+    "tqdm",
+    "pytest",
+    "numpy",
+    "tabulate",
+    "tensorflow>=2.2.0",
+    "semver",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "scaaml_dataset.__version__"}
+
+[project.optional-dependencies]
+
+[project.scripts]
+
+[project.urls]
+"Homepage" = "https://github.com/google/scaaml"
+"Bug Tracker" = "https://github.com/google/scaaml/issues"
