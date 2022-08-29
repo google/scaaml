@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "scaaml-dataset"
 authors = [
     { name="Elie Bursztein", email="scaaml@google.com" },
+    { name="Luca Invernizzi", email="scaaml@google.com" },
+    { name="Karel Král", email="scaaml@google.com" },
+    { name="Jean-Michel Picod", email="scaaml@google.com" },
 ]
 description = "Side Channel Attack Assisted with Machine Learning - dataset"
 readme = "README.md"
