@@ -20,6 +20,7 @@ import subprocess
 import sys
 from time import time
 
+
 # Keep compatibility with python3 setup.py develop and install also the packages
 # that are being split.
 def install_sub_packages():
@@ -32,12 +33,14 @@ def install_sub_packages():
         package_path = repository_path / "packages" / package_name
         # This is the recommended way:
         # https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--editable", str(package_path)],
-            check=True)
+        subprocess.run([
+            sys.executable, "-m", "pip", "install", "--editable",
+            str(package_path)
+        ],
+                       check=True)
+
 
 install_sub_packages()
-
 
 with open("README.md", encoding="utf-8") as readme_file:
     long_description = readme_file.read()
