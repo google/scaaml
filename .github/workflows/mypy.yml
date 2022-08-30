@@ -23,7 +23,6 @@ jobs:
       - name: Installing package
         run:
           pip install .
-          # Install sub-packages
           pip install packages/scaaml_dataset
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json

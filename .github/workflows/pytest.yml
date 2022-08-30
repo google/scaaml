@@ -28,7 +28,6 @@ jobs:
       - name: Installing package
         run:
           pip install .
-          # Install sub-packages
           pip install packages/scaaml_dataset
           pip install picosdk
       - name: Running unit tests
