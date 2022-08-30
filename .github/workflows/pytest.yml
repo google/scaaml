@@ -25,8 +25,6 @@ jobs:
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
           sudo apt-get update
           sudo apt-get install libps6000a
-          # Install packages from the package split
-          pip install packages/scaaml_dataset
       - name: Installing package
         run:
           pip install -r requirements.txt
