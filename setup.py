@@ -12,9 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Setup script."""
+import os
+from pathlib import Path
 from setuptools import find_packages
 from setuptools import setup
+import subprocess
+import sys
 from time import time
+
+# Keep compatibility with python3 setup.py develop and install also the packages
+# that are being split.
+def install_subpackages():
+    # List of sub-packages that are being split.
+    subpackages = ["scaaml_dataset"]
+    # Path to the scaaml directory.
+    repository_path = Path(os.path.realpath(__file__)).parent
+    # Install individual sub-packages.
+    for package_name in subpackages:
+        package_path = repository_path / "packages" / package_name
+        # This is the recommended way:
+        # https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--editable", str(package_path)],
+            check=True)
+
+install_subpackages()
+
 
 with open("README.md", encoding="utf-8") as readme_file:
     long_description = readme_file.read()
