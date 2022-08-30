@@ -32,7 +32,7 @@ jobs:
           pip install picosdk
       - name: Running unit tests
         run: |
-          pytest
+          python3 -m pytest
       - name: Run scaaml_dataset tests
         run: |
-          pytest packages/scaaml_dataset/tests
+          python3 -m pytest packages/scaaml_dataset/tests
