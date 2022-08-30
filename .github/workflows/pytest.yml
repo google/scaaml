@@ -32,3 +32,9 @@ jobs:
       - name: Running unit tests
         run: |
           pytest
+      - name: Install scaaml_dataset
+        run: |
+          pip install packages/scaaml_dataset
+      - name: Run scaaml_dataset tests
+        run: |
+          pytest packages/scaaml_dataset/tests
