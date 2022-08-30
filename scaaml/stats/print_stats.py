@@ -23,8 +23,7 @@ from typing import Dict, List, Set
 from tabulate import tabulate
 from tqdm import tqdm
 
-from scaaml_dataset.io import ExampleIterator
-
+from scaaml.dataset.io import ExampleIterator
 from scaaml.io import Dataset
 from scaaml.stats.ap_counter import APCounter
 from scaaml.stats.ap_checker import APChecker

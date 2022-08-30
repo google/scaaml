@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 
 from scaaml.io import Dataset
-from scaaml_dataset.io import ExampleIterator
+from scaaml.dataset.io import ExampleIterator
 
 
 @patch.object(Dataset, "from_config")
