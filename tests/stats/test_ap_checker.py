@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from scaaml.stats import APChecker
+from scaaml.legacy.stats import APChecker
 
 
 @patch.object(APChecker, '_run_check')

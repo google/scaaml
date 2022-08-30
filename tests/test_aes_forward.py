@@ -15,8 +15,8 @@
 
 import tensorflow as tf
 
-from scaaml.aes import ap_preds_to_key_preds
-from scaaml.aes_forward import AESSBOX
+from scaaml.legacy.aes import ap_preds_to_key_preds
+from scaaml.legacy.aes_forward import AESSBOX
 
 
 def test_bs_in():

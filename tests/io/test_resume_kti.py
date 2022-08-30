@@ -16,7 +16,7 @@ import os
 import numpy as np
 import pytest
 
-from scaaml.io.resume_kti import create_resume_kti, ResumeKTI
+from scaaml.legacy.io.resume_kti import create_resume_kti, ResumeKTI
 
 KT_FILENAME = 'parameters_tuples.txt'
 PROGRESS_FILENAME = 'progress_tuples.txt'

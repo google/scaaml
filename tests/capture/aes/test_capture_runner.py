@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
 
-from scaaml.capture.aes.capture_runner import CaptureRunner
-from scaaml.capture.aes.crypto_input import CryptoInput
+from scaaml.legacy.capture.aes.capture_runner import CaptureRunner
+from scaaml.legacy.capture.aes.crypto_input import CryptoInput
 
 KeyTextPair = namedtuple("KeyTextPair", ["keys", "texts"])
 

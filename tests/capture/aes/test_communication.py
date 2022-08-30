@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
 
-from scaaml.capture.aes.communication import CWCommunication
+from scaaml.legacy.capture.aes.communication import CWCommunication
 
 
 @patch.object(cw, 'target')

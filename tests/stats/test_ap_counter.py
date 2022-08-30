@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from scaaml.stats import APCounter
+from scaaml.legacy.stats import APCounter
 
 
 def test_init():

@@ -14,7 +14,7 @@
 
 from unittest.mock import MagicMock
 
-from scaaml.capture.aes.control import CWControl
+from scaaml.legacy.capture.aes.control import CWControl
 
 
 def test_control():

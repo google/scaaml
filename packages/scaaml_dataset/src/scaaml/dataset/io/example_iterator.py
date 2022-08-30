@@ -15,13 +15,13 @@
 
 from typing import Iterator, List, Optional
 
-from scaaml.io import Dataset
+from scaaml.legacy.io import Dataset
 
 
 class ExampleIterator:
     """Iterate through examples in a dataset. Examples are returned as if
-    iterating using scaaml.io.Dataset.inspect(...).as_numpy_iterator(), that
-    is a dictionary of attack points and traces.
+    iterating using scaaml.legacy.io.Dataset.inspect(...).as_numpy_iterator(),
+    that is a dictionary of attack points and traces.
 
     Example use:
       for example in ExampleIterator(dataset_path="ds_folder",
@@ -40,7 +40,7 @@ class ExampleIterator:
           dataset_path (str): Path to the dataset.
           split (Optional[str]): If None or empty string, then all splits are
             iterated.  Otherwise only one split is iterated (one of
-            scaaml.io.Dataset.SPLITS).
+            scaaml.legacy.io.Dataset.SPLITS).
           group (Optional[int]): If None, then all groups are iterated.
             Otherwise only shards belonging to this group.
           part (Optional[int]): If None, then all parts are iterated. Otherwise

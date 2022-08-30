@@ -22,12 +22,12 @@ from unittest.mock import patch
 
 import numpy as np
 
-import scaaml
-from scaaml.io import Dataset
-from scaaml.io.shard import Shard
-from scaaml.io import utils as siutils
-from scaaml.io.errors import DatasetExistsError
-from scaaml.io.reshape import reshape_into_new_dataset
+import scaaml.legacy
+from scaaml.legacy.io import Dataset
+from scaaml.legacy.io.shard import Shard
+from scaaml.legacy.io import utils as siutils
+from scaaml.legacy.io.errors import DatasetExistsError
+from scaaml.legacy.io.reshape import reshape_into_new_dataset
 
 
 def dataset_constructor_kwargs(root_path, **kwargs):

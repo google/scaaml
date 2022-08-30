@@ -17,10 +17,10 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from scaaml.stats import STDDEVofSTATofTraces
-from scaaml.stats import STDDEVofAVGofTraces
-from scaaml.stats import STDDEVofMAXofTraces
-from scaaml.stats import STDDEVofMINofTraces
+from scaaml.legacy.stats import STDDEVofSTATofTraces
+from scaaml.legacy.stats import STDDEVofAVGofTraces
+from scaaml.legacy.stats import STDDEVofMAXofTraces
+from scaaml.legacy.stats import STDDEVofMINofTraces
 
 
 def test_stddev_of_stat():

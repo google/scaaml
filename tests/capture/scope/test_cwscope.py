@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
 
-from scaaml.capture.scope import CWScope
+from scaaml.legacy.capture.scope import CWScope
 
 
 @patch.object(cw, "scope")

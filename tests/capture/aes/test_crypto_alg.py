@@ -14,9 +14,9 @@
 
 from unittest.mock import MagicMock, patch
 
-from scaaml.aes_forward import AESSBOX
-from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
-from scaaml.io import resume_kti
+from scaaml.legacy.aes_forward import AESSBOX
+from scaaml.legacy.capture.aes.crypto_alg import SCryptoAlgorithm
+from scaaml.legacy.io import resume_kti
 
 
 @patch.object(resume_kti, 'create_resume_kti')

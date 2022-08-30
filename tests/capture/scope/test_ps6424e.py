@@ -16,7 +16,7 @@
 from decimal import Decimal
 import pytest
 
-from scaaml.capture.scope.ps6424e import Pico6424E
+from scaaml.legacy.capture.scope.ps6424e import Pico6424E
 
 
 def test_get_timebase_too_large():

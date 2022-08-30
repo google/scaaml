@@ -17,9 +17,9 @@ from typing import Dict, List
 
 import pytest
 
-from scaaml.io import Dataset
-from scaaml.io import DatasetFiller
-from scaaml.io.dataset_filler import _DatasetFillerContext
+from scaaml.legacy.io import Dataset
+from scaaml.legacy.io import DatasetFiller
+from scaaml.legacy.io.dataset_filler import _DatasetFillerContext
 
 
 def test_context_manager():

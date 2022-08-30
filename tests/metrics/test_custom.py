@@ -14,10 +14,10 @@
 
 import numpy as np
 
-from scaaml.metrics import MeanConfidence
-from scaaml.metrics import MaxRank, MeanRank
-from scaaml.metrics.custom import confidence
-from scaaml.metrics.custom import rank
+from scaaml.legacy.metrics import MeanConfidence
+from scaaml.legacy.metrics import MaxRank, MeanRank
+from scaaml.legacy.metrics.custom import confidence
+from scaaml.legacy.metrics.custom import rank
 
 
 def rank_slow_1d(y_true, y_pred) -> float:

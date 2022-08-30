@@ -15,7 +15,7 @@
 
 import pytest
 
-from scaaml.io.spell_check import find_misspellings, spell_check_word
+from scaaml.legacy.io.spell_check import find_misspellings, spell_check_word
 
 
 def test_find_misspellings_bad():

@@ -14,7 +14,7 @@
 
 from collections import defaultdict
 
-from scaaml.io.utils import ddict
+from scaaml.legacy.io.utils import ddict
 
 
 def test_ddict_list_adding():
