@@ -22,13 +22,13 @@ from time import time
 
 # Keep compatibility with python3 setup.py develop and install also the packages
 # that are being split.
-def install_subpackages():
+def install_sub_packages():
     # List of sub-packages that are being split.
-    subpackages = ["scaaml_dataset"]
+    sub_packages = ["scaaml_dataset"]
     # Path to the scaaml directory.
     repository_path = Path(os.path.realpath(__file__)).parent
     # Install individual sub-packages.
-    for package_name in subpackages:
+    for package_name in sub_packages:
         package_path = repository_path / "packages" / package_name
         # This is the recommended way:
         # https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program
@@ -36,7 +36,7 @@ def install_subpackages():
             [sys.executable, "-m", "pip", "install", "--editable", str(package_path)],
             check=True)
 
-install_subpackages()
+install_sub_packages()
 
 
 with open("README.md", encoding="utf-8") as readme_file:
