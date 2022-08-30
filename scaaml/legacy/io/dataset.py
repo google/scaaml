@@ -303,6 +303,7 @@ class Dataset():
         self.shard_chip_id = chip_id
 
         # shard name
+        assert self.shard_key is not None  # shard_key has been set
         fname = Dataset._shard_name(self.shard_group, self.shard_key,
                                     self.shard_part)
         self.shard_relative_path = f"{split}/{fname}"
