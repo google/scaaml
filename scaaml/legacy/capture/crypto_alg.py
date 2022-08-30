@@ -40,7 +40,8 @@ class AbstractSCryptoAlgorithm(ABC):
         Args:
           firmware_sha256: SHA256 hash of the binary used on the chip.
           crypto_implementation: The class that provides attack points info and
-            attack points values (for instance scaaml.legacy.aes_forward.AESSBOX).
+            attack points values (for instance
+            scaaml.legacy.aes_forward.AESSBOX).
           purpose: Type of the dataset. Used in scaaml.legacy.io.Dataset.
           implementation: Name of the implementation that was used.
           algorithm: Algorithm name.

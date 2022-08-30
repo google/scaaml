@@ -25,7 +25,8 @@ class _DatasetFillerContext:
     group_number.
 
     Args:
-      dataset (scaaml.legacy.io.Dataset): The dataset object to add examples into.
+      dataset (scaaml.legacy.io.Dataset): The dataset object to add examples
+        into.
       examples_per_shard (int): Number of examples in a shard.
       plaintexts_per_key (int): Number of plaintexts used with a concrete key.
       repetitions (int): Number of examples belonging to the same key,
@@ -134,7 +135,8 @@ class DatasetFiller:
     group_number.
 
     Args:
-      dataset (scaaml.legacy.io.Dataset): The dataset object to add examples into.
+      dataset (scaaml.legacy.io.Dataset): The dataset object to add examples
+        into.
       plaintexts_per_key (int): Number of plaintexts used with a concrete key.
       repetitions (int): Number of examples belonging to the same key,
         plaintext pair.

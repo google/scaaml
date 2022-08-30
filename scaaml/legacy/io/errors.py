@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Implement an error to indicate that a scaaml.legacy.io.Dataset already exists.
+"""Implement an error to indicate that a scaaml.legacy.io.Dataset already
+exists.
 
-Creating scaaml.legacy.io.Dataset should not overwrite existing files. When it could
-the constructor needs to raise an error, which should also contain the dataset
-directory.
+Creating scaaml.legacy.io.Dataset should not overwrite existing files. When it
+could the constructor needs to raise an error, which should also contain the
+dataset directory.
 """
 
 from pathlib import Path
