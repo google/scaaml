@@ -23,10 +23,11 @@ from typing import Dict, List, Set
 from tabulate import tabulate
 from tqdm import tqdm
 
+from scaaml_dataset.io import ExampleIterator
+
 from scaaml.io import Dataset
 from scaaml.stats.ap_counter import APCounter
 from scaaml.stats.ap_checker import APChecker
-from scaaml_dataset.io import ExampleIterator
 from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofAVGofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofMAXofTraces
