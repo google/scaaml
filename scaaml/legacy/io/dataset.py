@@ -929,7 +929,7 @@ class Dataset():
             "attack_points_info": self.attack_points_info,
             "min_values": self.min_values,
             "max_values": self.max_values,
-            # See scaaml.__version__ docstring for more information.
+            # See scaaml.legacy.__version__ docstring for more information.
             "scaaml_version": scaaml.legacy.__version__,
         }
         loaded = Dataset._from_loaded_json(
@@ -1017,7 +1017,7 @@ class Dataset():
             if semver.compare(config["scaaml_version"],
                               scaaml.legacy.__version__) > 0:
                 raise ValueError(f"SCAAML module is outdated, scaaml_version: "
-                                 f"{scaaml.__version__}, but dataset was "
+                                 f"{scaaml.legacy.__version__}, but dataset was "
                                  f"created using: {config['scaaml_version']}")
         return Dataset(
             root_path=str(dpath),

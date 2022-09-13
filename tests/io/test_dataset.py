@@ -139,9 +139,9 @@ def test_mutable_defaults(tmp_path):
 def test_version_old_software(tmp_path):
     """Newer version of scaaml was used to capture the dataset."""
     # Create the dataset
-    scaaml.__version__ = "2.0.0"
+    scaaml.legacy.__version__ = "2.0.0"
     ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
-    scaaml.__version__ = "1.2.3"
+    scaaml.legacy.__version__ = "1.2.3"
     # Reload the dataset raises
     with pytest.raises(ValueError) as value_error:
         ds = Dataset.from_config(ds.path)
@@ -151,10 +151,10 @@ def test_version_old_software(tmp_path):
 def test_version_newer_software(tmp_path):
     """Older version of scaaml was used to capture the dataset."""
     # Create the dataset
-    scaaml.__version__ = "1.2.3"
+    scaaml.legacy.__version__ = "1.2.3"
     ds = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=tmp_path))
     # Increment library version
-    scaaml.__version__ = "1.3.3"
+    scaaml.legacy.__version__ = "1.3.3"
     # Reload the dataset
     ds = Dataset.from_config(ds.path)
 
