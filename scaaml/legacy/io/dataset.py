@@ -1016,9 +1016,10 @@ class Dataset():
         if "scaaml_version" in config.keys():
             if semver.compare(config["scaaml_version"],
                               scaaml.legacy.__version__) > 0:
-                raise ValueError(f"SCAAML module is outdated, scaaml_version: "
-                                 f"{scaaml.legacy.__version__}, but dataset was "
-                                 f"created using: {config['scaaml_version']}")
+                raise ValueError(
+                    f"SCAAML module is outdated, scaaml_version: "
+                    f"{scaaml.legacy.__version__}, but dataset was "
+                    f"created using: {config['scaaml_version']}")
         return Dataset(
             root_path=str(dpath),
             shortname=config["shortname"],
