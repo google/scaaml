@@ -72,7 +72,7 @@ setup(
         "scipy",
         "semver",
     ],
-    package_data={"": ["*.pickle"]},
+    package_data={"": ["*.pickle", "py.typed"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
