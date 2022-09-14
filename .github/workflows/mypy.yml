@@ -26,10 +26,9 @@ jobs:
           # of scaaml also installs all packages. However the same does not
           # hold the other way around (the packages are supposed to be
           # standalone in the future).
-          pip install .
-          pip install packages/scaaml_dataset
+          pip install -r requirements.txt
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json
       - name: Running mypy
         run: |
-          mypy --no-color-output --install-types --non-interactive --ignore-missing-imports scaaml
+          python3 -m mypy --no-color-output --install-types --non-interactive --ignore-missing-imports scaaml
