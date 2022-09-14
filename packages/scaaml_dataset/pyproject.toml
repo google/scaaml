@@ -49,3 +49,6 @@ version = {attr = "scaaml.dataset.__version__"}
 [project.urls]
 "Homepage" = "https://github.com/google/scaaml"
 "Bug Tracker" = "https://github.com/google/scaaml/issues"
+
+[tool.setuptools.package-data]
+scaaml-dataset = ["py.typed"]
