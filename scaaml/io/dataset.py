@@ -416,6 +416,7 @@ class Dataset():
         FIXME: restrict shards to specific part if they exists.
 
         """
+        del kwargs  # unused
 
         if parts:
             raise NotImplementedError("Implement part filtering")
