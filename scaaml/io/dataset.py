@@ -377,7 +377,8 @@ class Dataset():
                      prefetch: int = 4,
                      file_parallelism: Optional[int] = os.cpu_count(),
                      parallelism: Optional[int] = os.cpu_count(),
-                     shuffle: int = 1000) -> Union[tf.data.Dataset, Dict, Dict]:
+                     shuffle: int = 1000,
+                     **kwargs) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
         Args:
@@ -410,10 +411,12 @@ class Dataset():
             processing.
           shuffle (int): How many examples should be shuffled across shards
             (note that shards are shuffled by default).
+          kwargs: Convenience parameter if we pass more than expected.
 
         FIXME: restrict shards to specific part if they exists.
 
         """
+        del kwargs  # unused
 
         if parts:
             raise NotImplementedError("Implement part filtering")
