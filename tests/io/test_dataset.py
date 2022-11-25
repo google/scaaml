@@ -1383,6 +1383,7 @@ def test_shard_info_from_name_identity():
     for t in tests:
         assert Dataset._shard_info_from_name(Dataset._shard_name(**t)) == t
 
+
 @patch.object(tf.io, "parse_single_example")
 @patch.object(tf.data.Dataset, "interleave")
 @patch.object(Dataset, "from_config")
@@ -1394,13 +1395,21 @@ def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
     tf.random.set_seed(13)
 
     mock_from_config.return_value.measurements_info = {
-        "trace1": { "type": "power", "len": 1024 },
+        "trace1": {
+            "type": "power",
+            "len": 1024,
+        },
     }
     mock_from_config.return_value.attack_points_info = {
-        "key": { "len": 16, "max_val": 256 },
+        "key": {
+            "len": 16,
+            "max_val": 256,
+        },
     }
     mock_from_config.return_value.shards_list = {
-        Dataset.TRAIN_SPLIT: [{"path": "file1"}],
+        Dataset.TRAIN_SPLIT: [{
+            "path": "file1",
+        }],
     }
     mock_from_config.return_value.keys_per_split = {
         Dataset.TRAIN_SPLIT: 42,
@@ -1408,12 +1417,13 @@ def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
 
     mock_interleave.return_value = tf.data.Dataset.range(10).map(
         lambda i: {
-            "trace1": tf.random.uniform(minval=0, maxval=1, shape=(1024,),
-                                        dtype=tf.float32),
-            "key": tf.random.uniform(minval=0, maxval=256, shape=(16,),
-                                     dtype=tf.int64),
-        }
-    )
+            "trace1":
+                tf.random.uniform(
+                    minval=0, maxval=1, shape=(1024,), dtype=tf.float32),
+            "key":
+                tf.random.uniform(
+                    minval=0, maxval=256, shape=(16,), dtype=tf.int64),
+        })
 
     mock_parse_single_example.side_effect = lambda tfrec, tffeatures: tfrec
 
@@ -1421,8 +1431,16 @@ def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
         dataset_path="/tmp",
         split=Dataset.TRAIN_SPLIT,
         attack_points=[
-            { "name": "key", "index": 1, "type": "byte" },
-            { "name": "key", "index": 3, "type": "byte" },
+            {
+                "name": "key",
+                "index": 1,
+                "type": "byte",
+            },
+            {
+                "name": "key",
+                "index": 3,
+                "type": "byte",
+            },
         ],
         traces="trace1",
     )
