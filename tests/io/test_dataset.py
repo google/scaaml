@@ -21,6 +21,7 @@ import pytest
 from unittest.mock import patch
 
 import numpy as np
+import tensorflow as tf
 
 import scaaml
 from scaaml.io import Dataset
@@ -1381,3 +1382,87 @@ def test_shard_info_from_name_identity():
     ]
     for t in tests:
         assert Dataset._shard_info_from_name(Dataset._shard_name(**t)) == t
+
+
+@patch.object(tf.io, "parse_single_example")
+@patch.object(tf.data.Dataset, "interleave")
+@patch.object(Dataset, "from_config")
+def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
+                                            mock_parse_single_example):
+    """Test multiple attack points with the same name have content."""
+    # deterministic test
+    rng = np.random.default_rng(42)
+    tf.random.set_seed(13)
+
+    mock_from_config.return_value.measurements_info = {
+        "trace1": {
+            "type": "power",
+            "len": 1024,
+        },
+    }
+    mock_from_config.return_value.attack_points_info = {
+        "key": {
+            "len": 16,
+            "max_val": 256,
+        },
+    }
+    mock_from_config.return_value.shards_list = {
+        Dataset.TRAIN_SPLIT: [{
+            "path": "file1",
+        }],
+    }
+    mock_from_config.return_value.keys_per_split = {
+        Dataset.TRAIN_SPLIT: 42,
+    }
+
+    mock_interleave.return_value = tf.data.Dataset.range(10).map(
+        lambda i: {
+            "trace1":
+                tf.random.uniform(
+                    minval=0, maxval=1, shape=(1024,), dtype=tf.float32),
+            "key":
+                tf.random.uniform(
+                    minval=0, maxval=256, shape=(16,), dtype=tf.int64),
+        })
+
+    mock_parse_single_example.side_effect = lambda tfrec, tffeatures: tfrec
+
+    test_ds, inputs, outputs = Dataset.as_tfdataset(
+        dataset_path="/tmp",
+        split=Dataset.TRAIN_SPLIT,
+        attack_points=[
+            {
+                "name": "key",
+                "index": 1,
+                "type": "byte",
+            },
+            {
+                "name": "key",
+                "index": 3,
+                "type": "byte",
+            },
+        ],
+        traces="trace1",
+    )
+
+    assert outputs == {
+        "key_1": {
+            "ap": "key",
+            "byte": 1,  # This would be changed to 3 due to state sharing
+            "len": 16,
+            "max_val": 256,
+            "type": "byte",
+        },
+        "key_3": {
+            "ap": "key",
+            "byte": 3,
+            "len": 16,
+            "max_val": 256,
+            "type": "byte",
+        },
+    }
+
+    for batch in test_ds.take(1):
+        example_id = 0
+        assert not np.allclose(batch[1]["key_1"][example_id],
+                               batch[1]["key_3"][example_id])

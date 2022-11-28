@@ -447,7 +447,7 @@ class Dataset():
         # inputs construction
         inputs = {}  # model inputs
         for name in traces:
-            ipt = dataset.measurements_info[name]
+            ipt = copy.deepcopy(dataset.measurements_info[name])
             inputs[name] = ipt
 
             inputs[name]["min"] = tf.constant(dataset.min_values[name])
@@ -464,7 +464,8 @@ class Dataset():
             full_name = f"{ap_name}_{ap_index}"
 
             # Add attack point info (len, max_val).
-            outputs[full_name] = dataset.attack_points_info[ap_name]
+            outputs[full_name] = copy.deepcopy(
+                dataset.attack_points_info[ap_name])
             # Set the attack point name (keep backwards compatibility).
             outputs[full_name]["ap"] = ap_name
             # Set the byte/bit index (keep backwards compatibility).
