@@ -30,7 +30,9 @@ Typical usage example:
   resume_kti = ResumeKTI(kt_filename="parameters_tuples.txt",
                          progress_filename="progress_tuples.txt"
 
-  # for key, text in tqdm(resume_kti):  # Loop with a progress-bar.
+  # Loop with a progress-bar (progress bar has always the same length, but when
+  # restarted the progress is not lost).
+  # for key, text in tqdm(resume_kti, initial=resume_kti.initial_index):
   for current_parameters in resume_kti:
       # Note that the names in the dictionary are the same as in the parameters.
       # Thus if you use "keys" for an array of keys then you get plural even for
