@@ -31,7 +31,7 @@ class ExampleIterator:
 
     def __init__(self,
                  dataset_path: str,
-                 split: Optional[str] = None,
+                 split: Optional[Dataset.SPLIT_T] = None,
                  group: Optional[int] = None,
                  part: Optional[int] = None) -> None:
         """Example iterator.
@@ -47,7 +47,13 @@ class ExampleIterator:
             only shards belonging to this part.
         """
         self._dataset_path = dataset_path
-        splits: List[str] = [split] if split else list(Dataset.SPLITS)
+
+        splits: List[Dataset.SPLIT_T] = []
+        if split:
+            splits = [split]
+        else:
+            splits = list(Dataset.SPLITS)
+
         self._shards_list = []
         dataset = Dataset.from_config(dataset_path=dataset_path, verbose=False)
         for current_split in splits:

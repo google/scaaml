@@ -141,7 +141,7 @@ class AbstractCaptureRunner(ABC):
                 dataset_filler.write_example(
                     attack_points=attack_points,
                     measurement=measurement,
-                    current_key=crypto_input.key_for_new_shard(),
+                    current_key=list(crypto_input.key_for_new_shard()),
                     split_name=crypto_alg.purpose,
                     chip_id=self._control.chip_id,
                 )

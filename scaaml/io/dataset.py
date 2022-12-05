@@ -162,7 +162,8 @@ class Dataset():
 
         # current shard tracking
         self.shard_key: Optional[str] = None
-        self.prev_shard_key = None  # track key change for counting
+        # track key change for counting
+        self.prev_shard_key: Optional[str] = None
         self.shard_path: Optional[str] = None
         self.shard_split: Optional[str] = None
         self.shard_part: Optional[int] = None
@@ -224,7 +225,7 @@ class Dataset():
         try:
             return Dataset(*args, **kwargs)
         except DatasetExistsError as err:
-            return Dataset.from_config(dataset_path=err.dataset_path)
+            return Dataset.from_config(dataset_path=str(err.dataset_path))
 
     @staticmethod
     def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
@@ -320,6 +321,8 @@ class Dataset():
 
     def close_shard(self):
         # close the shard
+        assert self.curr_shard is not None
+        assert self.shard_path is not None
         stats = self.curr_shard.close()
         if stats["examples"] != self.examples_per_shard:
             cprint(

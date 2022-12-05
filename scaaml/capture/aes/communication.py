@@ -34,7 +34,7 @@ class CWCommunication(AbstractSCommunication):
         # communicated using single USB endpoint). Since CW 5.5 firmware
         # release it uses a separate USB UART.
         self._target = cw.target(self._scope, cw.targets.SimpleSerial)
-        self._target.protver = self._protver
+        self._target.protver = self._protver  # type: ignore
         self._scope = None
         return self
 
@@ -46,6 +46,7 @@ class CWCommunication(AbstractSCommunication):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+        assert self._target is not None
         self._target.dis()
         self._target = None
 

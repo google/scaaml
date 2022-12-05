@@ -41,8 +41,9 @@ class Shard():
         self.min_values = {}
         self.max_values = {}
         for k in measurements_info.keys():
+            # By convention minimum of an empty set is infinity.
             self.min_values[k] = math.inf
-            self.max_values[k] = 0
+            self.max_values[k] = -math.inf
 
         # build and cache tffeature format
         self.features = self._build_tffeature()

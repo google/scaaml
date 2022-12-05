@@ -13,10 +13,12 @@
 # limitations under the License.
 """Model."""
 
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict
+
 from tabulate import tabulate
 from tensorflow.keras.models import load_model
-from pathlib import Path
-from collections import defaultdict
 from tensorflow.keras.backend import clear_session
 
 from scaaml.utils import get_model_stub
@@ -33,8 +35,8 @@ def get_models_by_attack_point(config):
 
     """
 
-    models = defaultdict(list)
-    status = {}
+    models: defaultdict = defaultdict(list)
+    status: Dict = {}
     for attack_point in config["attack_points"]:
         status[attack_point] = "complete"
         for attack_byte in range(16):

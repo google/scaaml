@@ -15,6 +15,7 @@
 control."""
 
 import chipwhisperer as cw
+from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
 
@@ -35,7 +36,12 @@ class DefaultCWScope(AbstractSScope):
         assert self._scope is None  # Do not allow nested with.
 
         # Open cw scope with default settings.
-        self._scope = cw.scope()
+
+        scope = cw.scope()
+        assert not isinstance(scope, CWNano)
+        self._scope = scope
+
+        assert self._scope is not None
         self._scope.default_setup()
         return self
 

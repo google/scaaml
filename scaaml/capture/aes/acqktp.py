@@ -14,6 +14,8 @@
 """Generating uniformly distributed keys."""
 
 import random
+from typing import Iterable, Optional
+
 import numpy as np
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
@@ -42,7 +44,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
         self._nbkeys = 3072
 
         self._dataset = self.DATASET_TRAINING
-        self._input_generator = None
+        self._input_generator: Optional[Iterable] = None
         self._input_shape = (self._key_len, self._text_len)
 
         self._key = bytearray(
@@ -201,7 +203,8 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
         return self.new_pair()
 
     def new_pair(self):
-        self._key, self._textin = next(self._input_generator)
+        assert self._input_generator is not None
+        self._key, self._textin = next(self._input_generator)  # type: ignore
         if self._dataset == self.DATASET_TRAINING:
             if self._pt_per_key % 256:
                 raise ValueError("plaintext_per_key must be a multiple of 256")
