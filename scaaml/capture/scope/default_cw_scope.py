@@ -14,8 +14,6 @@
 """Context manager chipwhisperer scope that has default setting and is used to
 control."""
 
-from typing import Optional, Union
-
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.cwnano import CWNano
 

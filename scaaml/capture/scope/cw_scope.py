@@ -13,13 +13,10 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-from typing import Optional, Union
-
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
-from scaaml.capture.scope.ps6424e import Pico6424E
 
 
 class CWScope(AbstractSScope):
