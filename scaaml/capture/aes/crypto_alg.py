@@ -21,7 +21,6 @@ from scaaml.capture.aes.acqktp import AcqKeyTextPatternScaaml as ktp_scaaml
 from scaaml.io import Dataset
 from scaaml.io import resume_kti
 
-
 EncryptionParameters = namedtuple("EncryptionParameters", ["keys", "texts"])
 
 

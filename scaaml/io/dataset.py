@@ -162,7 +162,8 @@ class Dataset():
 
         # current shard tracking
         self.shard_key: Optional[str] = None
-        self.prev_shard_key: Optional[str] = None  # track key change for counting
+        self.prev_shard_key: Optional[
+            str] = None  # track key change for counting
         self.shard_path: Optional[str] = None
         self.shard_split: Optional[str] = None
         self.shard_part: Optional[int] = None

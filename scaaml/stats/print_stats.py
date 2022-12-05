@@ -45,7 +45,7 @@ class PrintStats:
     Example use:
 
     # On an existing dataset:
-    print_stats = PrintStats.from_config(dataset_path='/mnt/path/to/dataset')
+    print_stats = PrintStats.from_config(dataset_path="/mnt/path/to/dataset")
 
     # During capture:
     print_stats = PrintStats(measurements_info, attack_points_info)
@@ -102,10 +102,10 @@ class PrintStats:
         print_stats = PrintStats(measurements_info=dataset.measurements_info,
                                  attack_points_info=dataset.attack_points_info)
         all_splits = set(dataset.shards_list.keys())
-        all_groups = set(shard['group']
+        all_groups = set(shard["group"]
                          for split in Dataset.SPLITS
                          for shard in dataset.shards_list[split])
-        all_parts = set(shard['part']
+        all_parts = set(shard["part"]
                         for split in Dataset.SPLITS
                         for shard in dataset.shards_list[split])
         prod = list(product(all_splits, all_groups, all_parts))
@@ -148,9 +148,9 @@ class PrintStats:
 
     def _print_attack_point_warnings(self):
         """Print warnings for attack points."""
-        print('Attack point check warnings:')
+        print("Attack point check warnings:")
         for split in Dataset.SPLITS:
-            print('')
+            print("")
             print(split)
             for ap_name in self._attack_point_info:
                 for ap_count in self._split_ap_counters[split][ap_name]:
@@ -161,10 +161,10 @@ class PrintStats:
     def _print_trace_statistics(self):
         """Print table of statistics. Rows are statistics, columns are splits.
         """
-        print('Trace statistics:')
+        print("Trace statistics:")
         for trace_name in self._measurements_info:
-            print('')
-            table: List[List[str]] = [[f'{trace_name} stats', *Dataset.SPLITS]]
+            print("")
+            table: List[List[str]] = [[f"{trace_name} stats", *Dataset.SPLITS]]
             # Fill the statistic names.
             for trace_stat in self._all_trace_stats():
                 trace_stat_name = _class_name(trace_stat)
@@ -178,19 +178,19 @@ class PrintStats:
                     # Check that we are filling the right row.
                     assert _class_name(trace_stat) == table[j + 1][0]
                     table[j + 1][i + 1] = str(trace_stat.result())
-        print(tabulate(table, headers='firstrow'))
+        print(tabulate(table, headers="firstrow"))
 
     def _print_trace_statistics_per_group(self):
         """Print a table of results for each statistics. Rows are groups,
         columns are splits."""
-        print('Trace statistics per group:')
+        print("Trace statistics per group:")
         for trace_name in self._measurements_info:
             for i, trace_stat in enumerate(self._all_trace_stats()):
-                print('')
-                print(f'{trace_name} {_class_name(trace_stat)}:')
-                table: List[List[str]] = [['group', *Dataset.SPLITS]]
+                print("")
+                print(f"{trace_name} {_class_name(trace_stat)}:")
+                table: List[List[str]] = [["group", *Dataset.SPLITS]]
                 for group in self._all_groups:
-                    table.append([str(group), *['NA' for _ in Dataset.SPLITS]])
+                    table.append([str(group), *["NA" for _ in Dataset.SPLITS]])
                     for j, split in enumerate(Dataset.SPLITS):
                         if group in self._split_trace_group_stats[split][
                                 trace_name]:
@@ -200,14 +200,14 @@ class PrintStats:
                             assert _class_name(curr_trace_stat) == _class_name(
                                 trace_stat)
                             table[-1][j + 1] = str(curr_trace_stat.result())
-                print(tabulate(table, headers='firstrow'))
+                print(tabulate(table, headers="firstrow"))
 
     @staticmethod
     def _print_separator():
         """Print separator between two blocks of warnings / statistics."""
-        print('')
-        print('-------------------------------------------')
-        print('')
+        print("")
+        print("-------------------------------------------")
+        print("")
 
     def print(self) -> None:
         """Print warnings from attack point checkers and statistics about

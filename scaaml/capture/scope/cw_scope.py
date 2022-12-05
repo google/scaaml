@@ -17,7 +17,7 @@ from typing import Optional, Union
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.OpenADC import OpenADC
-from chipwhisperer.capture.scopes.CWNano import CWNano
+from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
 
@@ -70,11 +70,11 @@ class CWScope(AbstractSScope):
         """
         assert self._scope is None  # Do not allow nested with.
         self._scope = cw.scope()
-        assert type(self._scope) == OpenADC
+        assert isinstance(self._scope, OpenADC)
         self._scope.gain.db = self._gain
         max_samples = self._scope.adc.oa.hwInfo.maxSamples()  # type: ignore
         if (self._samples > max_samples and
-            self._scope.adc.oa.hwInfo.is_cw1200()):  # type: ignore
+                self._scope.adc.oa.hwInfo.is_cw1200()):  # type: ignore
             self._scope.adc.stream_mode = True
         self._scope.adc.samples = self._samples
         self._scope.adc.offset = self._offset

@@ -18,7 +18,7 @@ from typing import Optional, Union
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.OpenADC import OpenADC
-from chipwhisperer.capture.scopes.CWNano import CWNano
+from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
 

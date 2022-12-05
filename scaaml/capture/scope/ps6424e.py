@@ -7,7 +7,7 @@ import ctypes
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import traceback
-from typing import Dict, List, OrderedDict, Union
+from typing import Dict, List, OrderedDict
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -22,9 +22,9 @@ from scaaml.capture.scope.scope_template import ScopeTemplate
 @dataclass
 class ChannelRange:
     """API values for channel range."""
-    rangeV: float
+    range_v: float
     api_value: int
-    rangeStr: str
+    range_str: str
 
 
 def assert_ok(status):
@@ -56,54 +56,54 @@ class CaptureSettings(object):
     }
     CHANNEL_RANGE: List[ChannelRange] = [
         ChannelRange(
-            rangeV=20E-3,
+            range_v=20E-3,
             api_value=1,
-            rangeStr="20 mV",
+            range_str="20 mV",
         ),
         ChannelRange(
-            rangeV=50E-3,
+            range_v=50E-3,
             api_value=2,
-            rangeStr="50 mV",
+            range_str="50 mV",
         ),
         ChannelRange(
-            rangeV=100E-3,
+            range_v=100E-3,
             api_value=3,
-            rangeStr="100 mV",
+            range_str="100 mV",
         ),
         ChannelRange(
-            rangeV=200E-3,
+            range_v=200E-3,
             api_value=4,
-            rangeStr="200 mV",
+            range_str="200 mV",
         ),
         ChannelRange(
-            rangeV=500E-3,
+            range_v=500E-3,
             api_value=5,
-            rangeStr="500 mV",
+            range_str="500 mV",
         ),
         ChannelRange(
-            rangeV=1.0,
+            range_v=1.0,
             api_value=6,
-            rangeStr="1 V",
+            range_str="1 V",
         ),
         ChannelRange(
-            rangeV=2.0,
+            range_v=2.0,
             api_value=7,
-            rangeStr="2 V",
+            range_str="2 V",
         ),
         ChannelRange(
-            rangeV=5.0,
+            range_v=5.0,
             api_value=8,
-            rangeStr="5 V",
+            range_str="5 V",
         ),
         ChannelRange(
-            rangeV=10.0,
+            range_v=10.0,
             api_value=9,
-            rangeStr="10 V",
+            range_str="10 V",
         ),
         ChannelRange(
-            rangeV=20.0,
+            range_v=20.0,
             api_value=10,
-            rangeStr="20 V",
+            range_str="20 V",
         ),
     ]
 
@@ -131,10 +131,10 @@ class CaptureSettings(object):
         self._ch_range_list: List[float] = []
         self._ch_range_api_value: Dict[float, int] = {}
         for key in self.CHANNEL_RANGE:
-            self._ch_range[key.rangeV] = key.rangeStr
-            self._ch_range_list.append(key.rangeV)
+            self._ch_range[key.range_v] = key.range_str
+            self._ch_range_list.append(key.range_v)
 
-            self._ch_range_api_value[key.rangeV] = key.api_value
+            self._ch_range_api_value[key.range_v] = key.api_value
 
         self._ch_range_list.sort()
 

@@ -35,7 +35,7 @@ class CWCommunication(AbstractSCommunication):
         # communicated using single USB endpoint). Since CW 5.5 firmware
         # release it uses a separate USB UART.
         self._target = cw.target(self._scope, cw.targets.SimpleSerial)
-        assert type(self._target) == SimpleSerial
+        assert isinstance(self._target, SimpleSerial)
         self._target.protver = self._protver
         self._scope = None
         return self
