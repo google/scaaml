@@ -17,7 +17,6 @@ control."""
 from typing import Optional, Union
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes.OpenADC import OpenADC
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
@@ -29,7 +28,7 @@ class DefaultCWScope(AbstractSScope):
     def __init__(self):
         """Create scope context."""
         super().__init__(samples=0, offset=0)
-        self._scope: Optional[Union[OpenADC, CWNano]] = None
+        self._scope = None
 
     def __enter__(self):
         """Create scope context.
@@ -39,7 +38,11 @@ class DefaultCWScope(AbstractSScope):
         assert self._scope is None  # Do not allow nested with.
 
         # Open cw scope with default settings.
-        self._scope = cw.scope()
+
+        scope = cw.scope()
+        assert not isinstance(scope, CWNano)
+        self._scope = scope
+
         assert self._scope is not None
         self._scope.default_setup()
         return self

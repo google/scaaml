@@ -16,10 +16,10 @@
 from typing import Optional, Union
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes.OpenADC import OpenADC
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
+from scaaml.capture.scope.ps6424e import Pico6424E
 
 
 class CWScope(AbstractSScope):
@@ -61,7 +61,7 @@ class CWScope(AbstractSScope):
         self._triggers = "tio4"
         self._freq_ctr_src = "clkgen"
         self._presamples = 0
-        self._scope: Optional[Union[OpenADC, CWNano]] = None
+        self._scope = None
 
     def __enter__(self):
         """Create scope context.
@@ -69,8 +69,11 @@ class CWScope(AbstractSScope):
         Returns: self
         """
         assert self._scope is None  # Do not allow nested with.
-        self._scope = cw.scope()
-        assert isinstance(self._scope, OpenADC)
+
+        scope = cw.scope()
+        assert not isinstance(scope, CWNano)
+        self._scope = scope
+
         self._scope.gain.db = self._gain
         max_samples = self._scope.adc.oa.hwInfo.maxSamples()  # type: ignore
         if (self._samples > max_samples and
