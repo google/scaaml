@@ -64,10 +64,8 @@ def create_dataset(file_pattern,
             y_list.append(y_shard)
             pb.update()
         pb.close()
-        # Disable pylint warnings due to
-        # https://github.com/PyCQA/pylint/issues/3613
         x: Tensor = tf.concat(x_list, axis=0)
-        y: Tensor = tf.concat(y_list, axis=0)  # pylint: disable=E1120,E1123
+        y: Tensor = tf.concat(y_list, axis=0)
 
     cprint("[Generator]", "yellow")
     cprint(f"|-attack point:{attack_point}", "blue")
