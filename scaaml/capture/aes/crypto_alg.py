@@ -22,6 +22,9 @@ from scaaml.io import Dataset
 from scaaml.io import resume_kti
 
 
+EncryptionParameters = namedtuple("EncryptionParameters", ["keys", "texts"])
+
+
 class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     """Attack points and maybe some basic information about it (e.g. key
     length, etc.)."""
@@ -114,8 +117,6 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
             def __init__(self, ktp):
                 self._ktp = ktp
-                self._element_class = namedtuple("EncryptionParameters",
-                                                 ["keys", "texts"])
 
             def __iter__(self):
                 return self
@@ -124,8 +125,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
                 # AcqKeyTextPatternScaaml.new_pair raises StopIteration itself.
                 kt_pair = self._ktp.new_pair()
                 # Allow the same iteration as using resume_kti.
-                return self._element_class(keys=list(kt_pair[0]),
-                                           texts=list(kt_pair[1]))
+                return EncryptionParameters(keys=list(kt_pair[0]),
+                                            texts=list(kt_pair[1]))
 
         self._stabilization_ktp = StabilizationIterator(self._get_new_ktp())
         return self._stabilization_ktp

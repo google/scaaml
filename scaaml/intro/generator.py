@@ -13,9 +13,11 @@
 # limitations under the License.
 """Dataset creation and loading."""
 
+from typing import List
+
+import numpy as np
 import tensorflow as tf
 from tensorflow import Tensor
-import numpy as np
 from tensorflow.keras.utils import to_categorical
 from termcolor import cprint
 from tqdm.auto import tqdm

@@ -13,6 +13,7 @@
 # limitations under the License.
 """The target in cw."""
 import chipwhisperer as cw
+from chipwhisperer.capture.targets.SimpleSerial import SimpleSerial
 
 from scaaml.capture.communication import AbstractSCommunication
 
@@ -34,6 +35,7 @@ class CWCommunication(AbstractSCommunication):
         # communicated using single USB endpoint). Since CW 5.5 firmware
         # release it uses a separate USB UART.
         self._target = cw.target(self._scope, cw.targets.SimpleSerial)
+        assert type(self._target) == SimpleSerial
         self._target.protver = self._protver
         self._scope = None
         return self
@@ -46,6 +48,7 @@ class CWCommunication(AbstractSCommunication):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
+        assert self._target is not None
         self._target.dis()
         self._target = None
 

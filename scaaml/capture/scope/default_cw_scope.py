@@ -14,7 +14,11 @@
 """Context manager chipwhisperer scope that has default setting and is used to
 control."""
 
+from typing import Optional, Union
+
 import chipwhisperer as cw
+from chipwhisperer.capture.scopes.OpenADC import OpenADC
+from chipwhisperer.capture.scopes.CWNano import CWNano
 
 from scaaml.capture.scope import AbstractSScope
 
@@ -25,7 +29,7 @@ class DefaultCWScope(AbstractSScope):
     def __init__(self):
         """Create scope context."""
         super().__init__(samples=0, offset=0)
-        self._scope = None
+        self._scope: Optional[Union[OpenADC, CWNano]] = None
 
     def __enter__(self):
         """Create scope context.
@@ -36,6 +40,7 @@ class DefaultCWScope(AbstractSScope):
 
         # Open cw scope with default settings.
         self._scope = cw.scope()
+        assert self._scope is not None
         self._scope.default_setup()
         return self
 

@@ -204,7 +204,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
     def new_pair(self):
         assert self._input_generator is not None
-        self._key, self._textin = next(self._input_generator)
+        self._key, self._textin = next(self._input_generator)  # type: ignore
         if self._dataset == self.DATASET_TRAINING:
             if self._pt_per_key % 256:
                 raise ValueError("plaintext_per_key must be a multiple of 256")

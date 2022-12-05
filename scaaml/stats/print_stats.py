@@ -164,11 +164,11 @@ class PrintStats:
         print('Trace statistics:')
         for trace_name in self._measurements_info:
             print('')
-            table = [[f'{trace_name} stats', *Dataset.SPLITS]]
+            table: List[List[str]] = [[f'{trace_name} stats', *Dataset.SPLITS]]
             # Fill the statistic names.
             for trace_stat in self._all_trace_stats():
                 trace_stat_name = _class_name(trace_stat)
-                table.append([trace_stat_name, *[0 for _ in Dataset.SPLITS]])
+                table.append([trace_stat_name, *["0" for _ in Dataset.SPLITS]])
             # Fill the values.
             for i, split in enumerate(Dataset.SPLITS):
                 # Check that we are filling the right column.
@@ -177,7 +177,7 @@ class PrintStats:
                         self._split_trace_stats[split][trace_name]):
                     # Check that we are filling the right row.
                     assert _class_name(trace_stat) == table[j + 1][0]
-                    table[j + 1][i + 1] = trace_stat.result()
+                    table[j + 1][i + 1] = str(trace_stat.result())
         print(tabulate(table, headers='firstrow'))
 
     def _print_trace_statistics_per_group(self):
@@ -188,7 +188,7 @@ class PrintStats:
             for i, trace_stat in enumerate(self._all_trace_stats()):
                 print('')
                 print(f'{trace_name} {_class_name(trace_stat)}:')
-                table = [['group', *Dataset.SPLITS]]
+                table: List[List[str]] = [['group', *Dataset.SPLITS]]
                 for group in self._all_groups:
                     table.append([str(group), *['NA' for _ in Dataset.SPLITS]])
                     for j, split in enumerate(Dataset.SPLITS):
@@ -199,7 +199,7 @@ class PrintStats:
                             # Check that we are filling the right table.
                             assert _class_name(curr_trace_stat) == _class_name(
                                 trace_stat)
-                            table[-1][j + 1] = curr_trace_stat.result()
+                            table[-1][j + 1] = str(curr_trace_stat.result())
                 print(tabulate(table, headers='firstrow'))
 
     @staticmethod
