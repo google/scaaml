@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import ctypes
 from decimal import Decimal, ROUND_HALF_DOWN
 import traceback
-from typing import OrderedDict
+from typing import List, OrderedDict
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -246,11 +246,11 @@ class TriggerSettings(CaptureSettings):
             self._trig_dir[name] = val
             self._rev_trig_dir[val] = name
 
-        self._channel = 1
-        self._range = 5.0
+        self._channel: int = 1
+        self._range: float = 5.0
         self._coupling = self._couplings["DC"]
         self._trigger_direction = self._trig_dir["Rising"]
-        self._trigger_level = 2  # V
+        self._trigger_level: float = 2.0  # V
 
     @property
     def ps_api_trigger_direction(self):
@@ -328,7 +328,7 @@ class Pico6424E(ScopeTemplate):
 
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
-        self._buffers = [[], []]
+        self._buffers: List[List] = [[], []]
 
         # Part of cw API
         self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103

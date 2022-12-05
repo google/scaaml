@@ -14,6 +14,7 @@
 """Dataset creation and loading."""
 
 import tensorflow as tf
+from tensorflow import Tensor
 import numpy as np
 from tensorflow.keras.utils import to_categorical
 from termcolor import cprint
@@ -41,8 +42,8 @@ def create_dataset(file_pattern,
         raise ValueError(
             "invalid attack point. avail: key, sub_bytes_in, sub_bytes_out")
 
-    x = []
-    y = []
+    x_list: List = []
+    y_list: List = []
     pb = tqdm(total=num_shards, desc="loading shards")
     with tf.device("/cpu:0"):
         for idx, shard_fname in enumerate(shards):
@@ -57,14 +58,14 @@ def create_dataset(file_pattern,
             # else:
             #     x = tf.concat([x, x_shard], axis=0)
             #     y = tf.concat([y, y_shard], axis=0)
-            x.append(x_shard)
-            y.append(y_shard)
+            x_list.append(x_shard)
+            y_list.append(y_shard)
             pb.update()
         pb.close()
         # Disable pylint warnings due to
         # https://github.com/PyCQA/pylint/issues/3613
-        x = tf.concat(x, axis=0)  # pylint: disable=E1120,E1123
-        y = tf.concat(y, axis=0)  # pylint: disable=E1120,E1123
+        x: Tensor = tf.concat(x_list, axis=0)  # pylint: disable=E1120,E1123
+        y: Tensor = tf.concat(y_list, axis=0)  # pylint: disable=E1120,E1123
 
     cprint("[Generator]", "yellow")
     cprint(f"|-attack point:{attack_point}", "blue")

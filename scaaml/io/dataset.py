@@ -224,7 +224,7 @@ class Dataset():
         try:
             return Dataset(*args, **kwargs)
         except DatasetExistsError as err:
-            return Dataset.from_config(dataset_path=err.dataset_path)
+            return Dataset.from_config(dataset_path=str(err.dataset_path))
 
     @staticmethod
     def _shard_name(shard_group: int, shard_key: str, shard_part: int) -> str:
