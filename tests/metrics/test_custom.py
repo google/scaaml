@@ -20,7 +20,7 @@ from scaaml.metrics.custom import confidence
 from scaaml.metrics.custom import rank
 
 
-def rank_slow_1d(y_true, y_pred) -> float:
+def rank_slow_1d(y_true, y_pred, optimistic) -> float:
     """Slow, but correct implementation for single prediction."""
     assert len(y_true) == len(y_pred)
     correct_class = 0
@@ -29,15 +29,45 @@ def rank_slow_1d(y_true, y_pred) -> float:
             correct_class = i
     result = 0
     for pred in y_pred:
-        if pred >= y_pred[correct_class]:
-            result += 1
+        if optimistic:
+            # Break ties in favor of target
+            if pred > y_pred[correct_class]:
+                result += 1
+        else:
+            # Break ties in favor of other classes
+            if pred >= y_pred[correct_class]:
+                result += 1
     return float(result - 1)
 
 
-def rank_slow(y_true, y_pred):
+def rank_slow(y_true, y_pred, optimistic=False):
     """Slow, but correct implementation for a batch of predictions."""
-    return np.array(
-        [rank_slow_1d(y_true[i], y_pred[i]) for i in range(len(y_true))])
+    return np.array([
+        rank_slow_1d(y_true[i], y_pred[i], optimistic)
+        for i in range(len(y_true))
+    ])
+
+
+def test_rank_random_ties_optimistic():
+    # Make the test deterministic.
+    np.random.seed(42)
+    byte_values = 256
+    batch_size = 1_000
+
+    def r_y_true():
+        y_true = np.zeros(byte_values)
+        y_true[np.random.randint(byte_values)] = 1.
+        return y_true
+
+    y_true = [r_y_true() for _ in range(batch_size)]
+    y_pred = [
+        np.around(np.random.random(byte_values), 1) for _ in range(batch_size)
+    ]
+
+    r = rank(y_true, y_pred, optimistic=True)
+
+    assert r.shape == (batch_size,)
+    assert (r.numpy() == rank_slow(y_true, y_pred, optimistic=True)).all()
 
 
 def test_rank_random_ties():

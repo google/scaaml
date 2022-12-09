@@ -26,7 +26,7 @@ from tensorflow import keras
 
 
 @tf.function
-def rank(y_true, y_pred):
+def rank(y_true, y_pred, optimistic: bool = False):
     """Calculates the rank of the correct class (counted from 0). If the
     prediction is correct, the rank is equal to zero. If the correct class is
     the least probable according to y_pred, than the rank is equal to number
@@ -49,6 +49,8 @@ def rank(y_true, y_pred):
     Args:
       y_true (batch of one-hot): One-hot ground truth values.
       y_pred (batch of probabilities): The prediction values.
+      optimistic (bool): If True then ties are decided in favor of target.
+        Defaults to False.
 
     Returns:
       Rank values.
@@ -71,8 +73,12 @@ def rank(y_true, y_pred):
 
     # Boolean array where y_pred >= predicted_pr (True values denote the
     # classes that are assigned at least as high probability as the correct
-    # class).
-    preferred = tf.math.greater_equal(y_pred, predicted_pr)
+    # class). If we are optimistic we count only y_pred > predicted_pr (break
+    # ties in favor of the target).
+    if optimistic:
+        preferred = tf.math.greater(y_pred, predicted_pr)
+    else:
+        preferred = tf.math.greater_equal(y_pred, predicted_pr)
     # preferred is of shape (None, N)
 
     # A scalar, summing a 1. for each True and 0. for each False.
