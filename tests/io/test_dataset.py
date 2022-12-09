@@ -946,6 +946,7 @@ def test_inspect(mock_shard_read, mock_shard_init, mock_read_text):
         shard_filename,
         attack_points_info=config["attack_points_info"],
         measurements_info=config["measurements_info"],
+        measurement_dtype=tf.float32,
         compression=config["compression"])
     mock_shard_read.assert_called_once_with(num=num_example)
     assert x == mock_shard_read.return_value
@@ -1414,6 +1415,7 @@ def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
     mock_from_config.return_value.keys_per_split = {
         Dataset.TRAIN_SPLIT: 42,
     }
+    mock_from_config.return_value.measurement_dtype = tf.float32
 
     mock_interleave.return_value = tf.data.Dataset.range(10).map(
         lambda i: {
