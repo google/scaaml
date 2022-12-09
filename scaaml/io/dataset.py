@@ -1021,9 +1021,6 @@ class Dataset():
         for k in ["firmware_url", "paper_url"]:
             if k not in fixed_dict:
                 fixed_dict[k] = ""
-        # Fill measurement_dtype
-        measurement_dtype = dtype_name_to_dtype(
-            fixed_dict.get("measurement_dtype", "float32"))
         return fixed_dict
 
     def _write_config(self):
