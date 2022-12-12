@@ -136,7 +136,7 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
     additional_attack_points = [
         {
             "info": {
-                "max_val": 150+42-1,
+                "max_val": 150 + 42 - 1,
                 "full_name": "added_3",
                 "index": 3,
                 "ap": "added",
@@ -185,8 +185,10 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
                         assert original == traversed
 
                     # Check additional attack point
-                    additional_attack_point_value = tf.argmax(example_outputs["added_3"][i])
-                    expected_value = example["attack_points"]["ap_one"][0] + example["attack_points"]["ap_two"][4]
+                    additional_attack_point_value = tf.argmax(
+                        example_outputs["added_3"][i])
+                    expected_value = example["attack_points"]["ap_one"][
+                        0] + example["attack_points"]["ap_two"][4]
                     assert additional_attack_point_value == expected_value
 
             # Assert that the trace piece was found only once (if not then with

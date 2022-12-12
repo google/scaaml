@@ -539,7 +539,7 @@ class Dataset():
                     v = tf.one_hot(rec[data["ap"]][data["byte"]], max_val)
                 y[name] = v
 
-            # Add additional attack poitns
+            # Add additional attack points
             if additional_attack_points:
                 for attack_point in additional_attack_points:
                     y[attack_point["info"]["full_name"]] = tf.one_hot(
