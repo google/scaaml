@@ -16,8 +16,9 @@
 import math
 from typing import Dict, List, Optional
 
+import numpy as np
 import tensorflow as tf
-from scaaml.io.tfdata import int64_feature, float_feature
+from scaaml.io.tfdata import bytes_feature, int64_feature, float_feature
 
 
 class Shard():
@@ -27,10 +28,12 @@ class Shard():
                  path: str,
                  attack_points_info: Dict,
                  measurements_info: Dict,
+                 measurement_dtype: tf.dtypes.DType,
                  compression: str = "GZIP") -> None:
         self.path = path
         self.attack_points_info = attack_points_info
         self.measurements_info = measurements_info
+        self.measurement_dtype = measurement_dtype
         self.compression = compression
 
         # Writer if needed
@@ -135,7 +138,15 @@ class Shard():
                                          float(tf.reduce_max(measurement)))
 
             # convert
-            feature[mname] = float_feature(measurement)
+            if self.measurement_dtype == tf.float32:
+                feature[mname] = float_feature(measurement)
+            elif self.measurement_dtype == tf.float16:
+                measurement = measurement.astype(dtype=np.float16)
+                feature[mname] = bytes_feature(
+                    [tf.io.serialize_tensor(measurement).numpy()])
+            else:
+                raise ValueError(
+                    f"Wrong measurement_dtype: {self.measurement_dtype}")
 
         tf_features = tf.train.Features(feature=feature)
         record = tf.train.Example(features=tf_features)
@@ -149,7 +160,12 @@ class Shard():
         Returns:
             reloaded example as dictionary
         """
-        return tf.io.parse_single_example(tfrecord, self._build_tffeature())
+        rec = tf.io.parse_single_example(tfrecord, self._build_tffeature())
+        if self.measurement_dtype == tf.float16:
+            for name, ipt in self.measurements_info.items():
+                rec[name] = tf.io.parse_tensor(rec[name], tf.float16)
+                rec[name] = tf.ensure_shape(rec[name], shape=(ipt["len"],))
+        return rec
 
     def _build_tffeature(self):
         "build tf feature dictionary based of meta data"
@@ -161,8 +177,16 @@ class Shard():
             features[k] = tf.io.FixedLenFeature([feature_length], tf.int64)
 
         # measurements
-        for k, info in self.measurements_info.items():
-            feature_length = info["len"]
-            features[k] = tf.io.FixedLenFeature([feature_length], tf.float32)
+        if self.measurement_dtype == tf.float16:
+            for k in self.measurements_info:
+                features[k] = tf.io.FixedLenFeature((), tf.string)
+        elif self.measurement_dtype == tf.float32:
+            for k, info in self.measurements_info.items():
+                feature_length = info["len"]
+                features[k] = tf.io.FixedLenFeature([feature_length],
+                                                    tf.float32)
+        else:
+            raise ValueError(
+                f"Wrong measurement_dtype: {self.measurement_dtype}")
 
         return features

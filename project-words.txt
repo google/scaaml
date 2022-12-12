@@ -26,6 +26,7 @@ cwnano
 ddict
 dpath
 dtype
+dtypes
 figsize
 firstrow
 howpublished

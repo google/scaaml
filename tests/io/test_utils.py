@@ -13,8 +13,12 @@
 # limitations under the License.
 
 from collections import defaultdict
+import pytest
+
+import tensorflow as tf
 
 from scaaml.io.utils import ddict
+from scaaml.io.utils import dtype_name_to_dtype, dtype_dtype_to_name
 
 
 def test_ddict_list_adding():
@@ -120,3 +124,20 @@ def test_ddict_doc():
     assert isinstance(E, defaultdict)
     assert isinstance(E['not here'], defaultdict)
     assert isinstance(E['not here']['really'], int)
+
+
+def test_dtype_to_name():
+    assert tf.float32 == dtype_name_to_dtype("float32")
+    assert tf.float16 == dtype_name_to_dtype("float16")
+    with pytest.raises(ValueError) as value_error:
+        dtype = dtype_name_to_dtype("int64")
+    assert "Either float16 or float32 expected, got" in str(value_error.value)
+
+
+def test_name_to_dtype():
+    assert "float32" == dtype_dtype_to_name(tf.float32)
+    assert "float16" == dtype_dtype_to_name(tf.float16)
+    with pytest.raises(ValueError) as value_error:
+        dtype = dtype_dtype_to_name(tf.int64)
+    assert "Either tf.float16 or tf.float32 expected, got" in str(
+        value_error.value)

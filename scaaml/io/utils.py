@@ -17,6 +17,8 @@ from collections import defaultdict
 import hashlib
 from typing import Dict, Optional
 
+import tensorflow as tf
+
 
 def ddict(value: Optional[Dict], levels: int, type_var):
     """Returns nested defaultdict of defaultdict (nesting level based on
@@ -73,3 +75,23 @@ def sha256sum(filename):
         for n in iter(lambda: f.readinto(mv), 0):
             h.update(mv[:n])
     return h.hexdigest()
+
+
+def dtype_name_to_dtype(name: str) -> tf.dtypes.DType:
+    """Turn saved string dtype into tf.dtype.
+    """
+    if name == "float16":
+        return tf.float16
+    if name == "float32":
+        return tf.float32
+    raise ValueError(f"Either float16 or float32 expected, got {name}")
+
+
+def dtype_dtype_to_name(dtype: tf.dtypes.DType) -> str:
+    """Turn saved string dtype into tf.dtype.
+    """
+    if dtype == tf.float16:
+        return "float16"
+    if dtype == tf.float32:
+        return "float32"
+    raise ValueError(f"Either tf.float16 or tf.float32 expected, got {dtype}")

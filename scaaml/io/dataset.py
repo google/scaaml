@@ -37,6 +37,7 @@ import scaaml
 from scaaml.utils import bytelist_to_hex
 from scaaml.io.spell_check import find_misspellings
 import scaaml.io.utils as siutils
+from scaaml.io.utils import dtype_name_to_dtype, dtype_dtype_to_name
 from scaaml.io.shard import Shard
 from scaaml.io.errors import DatasetExistsError
 
@@ -90,6 +91,7 @@ class Dataset():
         max_values: Optional[Dict[str, float]] = None,
         from_config: bool = False,
         verbose: bool = True,
+        measurement_dtype: tf.dtypes.DType = tf.float32,
     ) -> None:
         """Class for saving and loading a database.
 
@@ -103,6 +105,8 @@ class Dataset():
             True set self.path = root_path, self.root_path to be the parent of
             self.path. In this case it does not necessarily hold that
             self.path.name == self.slug (the directory could have been renamed).
+          measurement_dtype (tf.dtypes.DType): Data type of traces in shards.
+            Can be either tf.float32 ro tf.float16.
           verbose: If True, print the dataset path.
 
         Raises:
@@ -133,6 +137,7 @@ class Dataset():
         self.capture_info = capture_info or {}
         self.measurements_info = measurements_info
         self.attack_points_info = attack_points_info
+        self.measurement_dtype = measurement_dtype
 
         if not self.firmware_sha256:
             raise ValueError("Firmware hash is required")
@@ -313,6 +318,7 @@ class Dataset():
         self.curr_shard = Shard(self.shard_path,
                                 attack_points_info=self.attack_points_info,
                                 measurements_info=self.measurements_info,
+                                measurement_dtype=self.measurement_dtype,
                                 compression=self.compression)
 
     def write_example(self, attack_points: Dict, measurement: Dict):
@@ -438,13 +444,29 @@ class Dataset():
         # TF_FEATURES construction: must contains all features and be global
         tf_features = {}  # what is decoded
         for name, ipt in dataset.measurements_info.items():
-            tf_features[name] = tf.io.FixedLenFeature([ipt["len"]], tf.float32)
+            if dataset.measurement_dtype == tf.float32:
+                tf_features[name] = tf.io.FixedLenFeature([ipt["len"]],
+                                                          tf.float32)
+            elif dataset.measurement_dtype == tf.float16:
+                tf_features[name] = tf.io.FixedLenFeature((), tf.string)
+            else:
+                raise ValueError(
+                    f"Wrong measurement_dtype: {dataset.measurement_dtype}")
         for name, ap in dataset.attack_points_info.items():
             tf_features[name] = tf.io.FixedLenFeature([ap["len"]], tf.int64)
 
         # decoding function
         def from_tfrecord(tfrecord):
             rec = tf.io.parse_single_example(tfrecord, tf_features)
+            # Decoding needed for float16
+            if dataset.measurement_dtype == tf.float16:
+                for name, ipt in dataset.measurements_info.items():
+                    rec[name] = tf.io.parse_tensor(rec[name],
+                                                   out_type=tf.float16)
+                    rec[name] = tf.ensure_shape(rec[name], shape=(ipt["len"],))
+            elif dataset.measurement_dtype != tf.float32:
+                raise ValueError(
+                    f"Wrong measurement_dtype: {dataset.measurement_dtype}")
             return rec
 
         # inputs construction
@@ -492,15 +514,14 @@ class Dataset():
                 if trace_len:
                     trace = trace[:trace_len]
 
-                # rescale
-                # trace = 2 * ((trace - data["min"]) / (data["delta"])) - 1
-
-                # reshape
-                # trace = tf.reshape(trace, (reshaped_trace_len, step_size))
+                # Make sure the shape is ok.
+                trace = tf.ensure_shape(trace, (trace_len,))
+                # Cast to float32 before feeding to neural network.
+                trace = tf.cast(trace, dtype=tf.float32)
 
                 # assign
                 x[name] = trace
-                inputs[name]["shape"] = trace.shape  # (trace_len - trace_start)
+                inputs[name]["shape"] = trace.shape
             # Encoding the output for each ap/byte
             y = {}
             for name, data in outputs.items():
@@ -617,6 +638,11 @@ class Dataset():
         """
         conf_path = Dataset._get_config_path(dataset_path)
         config = Dataset._load_config(conf_path)
+
+        # Find out measurement_dtype, default to float32
+        measurement_dtype = dtype_name_to_dtype(
+            config.get("measurement_dtype", "float32"))
+
         shard_path = Path(
             dataset_path) / config["shards_list"][split][shard_id]["path"]
         if verbose:
@@ -624,7 +650,8 @@ class Dataset():
         s = Shard(str(shard_path),
                   attack_points_info=config["attack_points_info"],
                   measurements_info=config["measurements_info"],
-                  compression=config["compression"])
+                  compression=config["compression"],
+                  measurement_dtype=measurement_dtype)
         data = s.read(num=num_example)
         if verbose:
             print(data)
@@ -937,6 +964,7 @@ class Dataset():
             "max_values": self.max_values,
             # See scaaml.__version__ docstring for more information.
             "scaaml_version": scaaml.__version__,
+            "measurement_dtype": dtype_dtype_to_name(self.measurement_dtype),
         }
         loaded = Dataset._from_loaded_json(
             json.loads(json.dumps(representation)))
@@ -1051,6 +1079,8 @@ class Dataset():
             max_values=config["max_values"],
             from_config=True,
             verbose=verbose,
+            measurement_dtype=dtype_name_to_dtype(
+                config.get("measurement_dtype", "float32")),
         )
 
     @staticmethod
