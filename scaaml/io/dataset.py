@@ -593,6 +593,8 @@ class Dataset():
         if additional_attack_points:
             for attack_point in additional_attack_points:
                 info = attack_point["info"]
+                # This holds, mypy fails without this assert.
+                assert isinstance(info, Dict)
                 outputs[info["full_name"]] = info
 
         # # batching with repeat
