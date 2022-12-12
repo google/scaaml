@@ -387,6 +387,7 @@ class Dataset():
                      file_parallelism: Optional[int] = os.cpu_count(),
                      parallelism: Optional[int] = os.cpu_count(),
                      shuffle: int = 1000,
+                     additional_attack_points: Optional[List[Dict]] = None,
                      **kwargs) -> Union[tf.data.Dataset, Dict, Dict]:
         """"Dataset as tfdataset
 
@@ -420,6 +421,10 @@ class Dataset():
             processing.
           shuffle (int): How many examples should be shuffled across shards
             (note that shards are shuffled by default).
+          additional_attack_points (Optional[List[Dict]]): Additional attack
+            points. Each attack point has two entries:
+              info which contains max_val, full_name, name, index, ap
+              func which is a callable which gets rec and returns int value.
           kwargs: Convenience parameter if we pass more than expected.
 
         FIXME: restrict shards to specific part if they exists.
@@ -534,6 +539,14 @@ class Dataset():
                     v = tf.one_hot(rec[data["ap"]][data["byte"]], max_val)
                 y[name] = v
 
+            # Add additional attack points
+            if additional_attack_points:
+                for attack_point in additional_attack_points:
+                    y[attack_point["info"]["full_name"]] = tf.one_hot(
+                        attack_point["func"](rec),
+                        attack_point["info"]["max_val"],
+                    )
+
             return (x, y)
 
         # collect and truncate shard list of a given split
@@ -575,6 +588,14 @@ class Dataset():
         # # randomize only if > 0 -- no shuffle in test/validation
         if shuffle:
             ds = ds.shuffle(shuffle)
+
+        # Additional attack points to outputs
+        if additional_attack_points:
+            for attack_point in additional_attack_points:
+                info = attack_point["info"]
+                # This holds, mypy fails without this assert.
+                assert isinstance(info, Dict)
+                outputs[info["full_name"]] = info
 
         # # batching with repeat
         ds = ds.repeat()
