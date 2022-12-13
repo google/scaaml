@@ -418,9 +418,9 @@ class Dataset():
           prefetch (int): Prefetch this many batches.
           file_parallelism (Optional[int]): IO parallelism.
           parallelism (Optional[int]): Parallelism of trace decoding and
-            processing.
-          shuffle (int): How many examples should be shuffled across shards
-            (note that shards are shuffled by default).
+            processing (ignored if shuffle is zero).
+          shuffle (int): How many examples should be shuffled across shards.
+            When set to 0 the iteration is deterministic.
           additional_attack_points (Optional[List[Dict]]): Additional attack
             points. Each attack point has two entries:
               info which contains max_val, full_name, name, index, ap
@@ -560,11 +560,11 @@ class Dataset():
         # print(shards_paths)
         # dataset creation
         # with tf.device("/cpu:0"):
-        # shuffle the shard order
         ds = tf.data.Dataset.from_tensor_slices(shards_paths)
         ds = ds.repeat()
-        # shuffle shard order
-        ds = ds.shuffle(num_shards)
+        # Randomize only if > 0 -- no shuffle in test/validation
+        if shuffle:
+            ds = ds.shuffle(num_shards)
 
         # This is the tricky part, we are using the interleave function to
         # do the sampling as requested by the user. This is not the
@@ -573,19 +573,27 @@ class Dataset():
         # we are favoring for once those factors over readability
         # deterministic=False is not an error, it is what allows us to
         # create random batch
+        #
+        # If shuffle is equal to zero we produce deterministic order of
+        # examples. By setting cycle_length to one (and num_parallel_calls to
+        # default) we also avoid non-obvious interleaving patterns when there
+        # are only a few shards. Deterministic defaults in order to avoid a
+        # warning (deterministic = False does nothing when there is no thread
+        # pool created by num_parallel_calls).
         ds = ds.interleave(
             lambda x: tf.data.TFRecordDataset(
                 x, compression_type=dataset.compression),  # noqa
-            cycle_length=file_parallelism,
+            cycle_length=file_parallelism if shuffle else 1,
             block_length=1,
-            num_parallel_calls=file_parallelism,
-            deterministic=False)
+            num_parallel_calls=file_parallelism if shuffle else None,
+            deterministic=False if shuffle else None,
+        )
         # decode to records
         ds = ds.map(from_tfrecord, num_parallel_calls=parallelism)
         # process them
         ds = ds.map(process_record, num_parallel_calls=parallelism)
 
-        # # randomize only if > 0 -- no shuffle in test/validation
+        # Randomize only if > 0 -- no shuffle in test/validation
         if shuffle:
             ds = ds.shuffle(shuffle)
 

@@ -66,7 +66,7 @@ def save_dataset(root_dir, all_examples, measurements_info, attack_points_info,
     return ds_path
 
 
-def dataset_e2e(dtype, root_dir, trace_start, trace_len):
+def dataset_e2e(dtype, root_dir, trace_start, trace_len, shuffle: int = 100):
     """Test saving a shard and loading the data from it."""
     examples_per_shard = 4
     measurements_info = {
@@ -141,8 +141,11 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
         trace_start=trace_start,
         trace_len=trace_len,
         batch_size=batch_size,
-        shuffle=0,  # Will shuffle a bit anyway
+        shuffle=shuffle,
     )
+
+    # Checking for the deterministic case shuffle = 0
+    parsed_id = 0
 
     for batch in tf_dataset.take(3):
         assert batch[0]["trace1"].shape[0] == batch_size
@@ -153,7 +156,7 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
             # Find the trace (piece)
             found_n_times = 0
 
-            for example in all_examples:
+            for example_id, example in enumerate(all_examples):
 
                 # always float32
                 assert example_inputs["trace1"].dtype == tf.float32
@@ -171,9 +174,16 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
                             example_outputs[f"{ap['name']}_{ap['index']}"][i])
                         assert original == traversed
 
+                    if shuffle == 0:
+                        # Check that we iterate deterministically
+                        assert example_id == parsed_id
+
             # Assert that the trace piece was found only once (if not then with
             # hight probability it would be a bug)
             assert found_n_times == 1
+
+            # Which parsed example we iterate over
+            parsed_id += 1
 
 
 def test_dataset_e2e_float32_full(tmp_path):
@@ -214,3 +224,14 @@ def test_dataset_e2e_float16_full_partial(tmp_path):
                 root_dir=root_dir,
                 trace_start=50,
                 trace_len=100)
+
+
+def test_no_shuffle(tmp_path):
+    root_dir = tmp_path / "testingdataset"
+    root_dir.mkdir()
+
+    dataset_e2e(dtype="float16",
+                root_dir=root_dir,
+                trace_start=50,
+                trace_len=100,
+                shuffle=0)
