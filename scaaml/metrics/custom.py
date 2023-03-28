@@ -34,6 +34,10 @@ def rank(y_true, y_pred, optimistic: bool = False):
 
     When there is a tie in y_pred (two or more classes are assigned the same
     probability) then the correct class is assumed to be the least probable.
+    Formally rank of a target class is the number of classes that have same or
+    higher probability - 1. If the parameter 'optimistic' is True then number
+    of classes with strictly higher probability is returned. When all
+    probabilities are different the parameter 'optimistic' plays no role.
 
     You can provide logits of classes as `y_pred`, since argmax of logits and
     probabilities are same.
@@ -85,7 +89,10 @@ def rank(y_true, y_pred, optimistic: bool = False):
     ranks = tf.reduce_sum(tf.cast(preferred, "float32"), axis=-1)
     # ranks is of shape (None,)
     # Do not count the correct class itself (rank is counted from 0).
-    return ranks - 1
+    if optimistic:
+        return ranks
+    else:
+        return ranks - 1
 
 
 @tf.function
