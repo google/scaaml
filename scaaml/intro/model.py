@@ -125,7 +125,7 @@ def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=
         mdl_cfg["blocks_stack3"], mdl_cfg["blocks_stack4"]
     ]
 
-    inputs = layers.Input(shape=(input_shape))
+    inputs = layers.Input(shape=input_shape)
     x = inputs
 
     # stem
