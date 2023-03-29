@@ -447,7 +447,7 @@ class Pico6424E(ScopeTemplate):
         """Prepare the scope for capturing."""
         # Check if this scope is connected.
         if self.connectStatus is False:
-            raise Exception(
+            raise ConnectionError(
                 f"Scope {self._name} is not connected. Connect it first.")
 
         # Run the capture block
