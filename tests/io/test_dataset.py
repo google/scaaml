@@ -117,7 +117,7 @@ def test_mutable_defaults(tmp_path):
     path_a.mkdir(parents=True, exist_ok=True)
     ds1 = Dataset.get_dataset(**dataset_constructor_kwargs(root_path=path_a))
     key = np.random.randint(0, 255, 16)
-    trace1 = np.zeros(1024, dtype=np.float)
+    trace1 = np.zeros(1024, dtype=np.float64)
     trace1[2] = 0.8  # max_val is written before deleting ds
     trace1[1] = -0.3  # max_val is written before deleting ds
     chip_id = 1
@@ -674,7 +674,7 @@ def test_min_max_values_ok(tmp_path):
         assert min_value <= max_value
         ds = Dataset(**dataset_constructor_kwargs(root_path=root_path))
         mid_point = min_value + (max_value - min_value) / 2
-        trace = np.full(1024, mid_point, dtype=np.float)
+        trace = np.full(1024, mid_point, dtype=np.float64)
         trace[0] = min_value
         trace[1] = max_value
         key = np.zeros(16, dtype=np.uint8)
@@ -698,9 +698,9 @@ def test_resume_capture(tmp_path):
     ds = Dataset.get_dataset(**kwargs)
     key = np.random.randint(0, 255, 16)
     key2 = np.random.randint(0, 255, 16)
-    trace1 = np.zeros(1024, dtype=np.float)
+    trace1 = np.zeros(1024, dtype=np.float64)
     trace1[2] = 0.8  # max_val is written before deleting ds
-    trace2 = np.zeros(1024, dtype=np.float)
+    trace2 = np.zeros(1024, dtype=np.float64)
     chip_id = 1
     ds.new_shard(key=key,
                  part=0,

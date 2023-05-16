@@ -1033,15 +1033,16 @@ class Dataset():
         find_misspellings(fixed_dict.keys())  # Check for misspellings of keys.
         # Fix type of keys_per_group
         fixed_dict["keys_per_group"] = {
-            split:
-            {int(group): n_examples for group, n_examples in keys_info.items()}
-            for split, keys_info in loaded_dict["keys_per_group"].items()
+            split: {
+                int(group): n_examples
+                for group, n_examples in keys_info.items()
+            } for split, keys_info in loaded_dict["keys_per_group"].items()
         }
         # Fix type of examples_per_group
         fixed_dict["examples_per_group"] = {
-            split:
-            {int(group): n_examples for group, n_examples in ex_info.items()}
-            for split, ex_info in loaded_dict["examples_per_group"].items()
+            split: {
+                int(group): n_examples for group, n_examples in ex_info.items()
+            } for split, ex_info in loaded_dict["examples_per_group"].items()
         }
         # Fix missing keys
         if "licence" not in fixed_dict:
