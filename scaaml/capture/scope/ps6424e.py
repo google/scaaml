@@ -356,7 +356,7 @@ class Pico6424E(ScopeTemplate):
         self._max_adc = ctypes.c_int16()  # To get mV values
 
         # TODO DO NOT SUBMIT
-        self._ntraces: int = 0
+        self._n_traces: int = 0
 
     @staticmethod
     def _get_timebase(sample_rate: float):
@@ -526,8 +526,8 @@ class Pico6424E(ScopeTemplate):
         # Print the trace and trigger
         plt_trace = np.array(self._buffers[0][:], dtype=np.float32)
         plt_trigger = np.array(self._buffers[1][:])
-        self._ntraces += 1
-        if self._ntraces % 10 == 0:
+        self._n_traces += 1
+        if self._n_traces % 10 == 0:
             from scaaml.plot import plot_trace_and_trigger  # does not pass pylint, good, will not be submitted
             plot_trace_and_trigger(
                 trace=plt_trace,
