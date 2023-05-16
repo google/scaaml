@@ -9,5 +9,5 @@
     }
   ],
   "dictionaries": ["project-words", "en_US", "en-gb", "python"],
-  "ignorePaths": ["node_modules", "/project-words.txt", "/tests", "/.github"]
+  "ignorePaths": ["node_modules", "/project-words.txt", "/tests", "/.github", ".pylintrc"]
 }
