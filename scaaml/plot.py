@@ -86,6 +86,14 @@ def plot_comparison(traces, labels, title):
     plt.show()
 
 
+def plot_trace_and_trigger(trace, trigger, fig_filename="capture.pdf"):
+    """Plot trace and trigger."""
+    plt.clf()
+    plt.plot(trace, color="blue")
+    plt.plot(trigger, color="red")
+    plt.savefig(fig_filename)
+
+
 def plot_traces(traces, labels=None, title=None, xlabel=None, ylabel=None):
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
