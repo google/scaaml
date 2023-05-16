@@ -579,7 +579,8 @@ class Pico6424E(ScopeTemplate):
             logicThresholdLevel = (ctypes.c_int16 * pins)(0)
             logicThresholdLevel[0] = 1000
             logicThresholdLevelLength = len(logicThresholdLevel)
-            hysteresis = enums.PICO_DIGITAL_PORT_HYSTERESIS["PICO_VERY_HIGH_400MV"]
+            hysteresis = enums.PICO_DIGITAL_PORT_HYSTERESIS[
+                "PICO_VERY_HIGH_400MV"]
             assert_ok(
                 ps.ps6000aSetDigitalPortOn(
                     self.ps_handle,  # handle
@@ -597,7 +598,8 @@ class Pico6424E(ScopeTemplate):
                     channel_info.ps_api_coupling,  # coupling
                     channel_info.ps_api_range,  # range
                     0,  # analogue offset
-                    picoEnum.PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
+                    picoEnum.
+                    PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
                 ))
 
 
