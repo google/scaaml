@@ -602,7 +602,6 @@ class Pico6424E(ScopeTemplate):
                     PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
                 ))
 
-
     def _set_digital_trigger(self, trigger_channel: TriggerSettings) -> None:
         """Set a trigger on a digital channel.
 
