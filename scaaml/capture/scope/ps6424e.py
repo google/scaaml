@@ -17,6 +17,7 @@ from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.plot import plot_trace_and_trigger  # DO NOT SUBMIT
 
 
 @dataclass
@@ -528,7 +529,6 @@ class Pico6424E(ScopeTemplate):
         plt_trigger = np.array(self._buffers[1][:])
         self._n_traces += 1
         if self._n_traces % 10 == 0:
-            from scaaml.plot import plot_trace_and_trigger  # does not pass pylint, good, will not be submitted
             plot_trace_and_trigger(
                 trace=plt_trace,
                 trigger=plt_trigger,
@@ -576,17 +576,17 @@ class Pico6424E(ScopeTemplate):
             pins = 8
             # A list of threshold voltages (one for each port pin), used to
             # distinguish 0 and 1 states. Range -32_767 (-5V) to 32_767 (5V).
-            logicThresholdLevel = (ctypes.c_int16 * pins)(0)
-            logicThresholdLevel[0] = 1000
-            logicThresholdLevelLength = len(logicThresholdLevel)
-            hysteresis = enums.PICO_DIGITAL_PORT_HYSTERESIS[
+            logic_threshold_level = (ctypes.c_int16 * pins)(0)
+            logic_threshold_level[0] = 1000
+            logic_threshold_level_length = len(logic_threshold_level)
+            hysteresis = picoEnum.PICO_DIGITAL_PORT_HYSTERESIS[
                 "PICO_VERY_HIGH_400MV"]
             assert_ok(
                 ps.ps6000aSetDigitalPortOn(
                     self.ps_handle,  # handle
                     channel_info.ps_api_channel,  # port
-                    ctypes.byref(logicThresholdLevel),
-                    logicThresholdLevelLength,
+                    ctypes.byref(logic_threshold_level),
+                    logic_threshold_level_length,
                     hysteresis,
                 ))
         else:
