@@ -37,7 +37,12 @@ def rank_slow_1d(y_true, y_pred, optimistic) -> float:
             # Break ties in favor of other classes
             if pred >= y_pred[correct_class]:
                 result += 1
-    return float(result - 1)
+    # When all probabilities are different we should return the same result
+    # (a number between 0 and #classes - 1).
+    if optimistic:
+        return float(result)
+    else:
+        return float(result - 1)
 
 
 def rank_slow(y_true, y_pred, optimistic=False):
@@ -194,3 +199,33 @@ def test_confidence_random():
 
     assert c.shape == (batch_size,)
     assert np.allclose(c.numpy(), expected)
+
+
+def test_optimistic_with_all_different():
+    # Make the test deterministic
+    np.random.seed(42)
+    byte_values = 256
+    batch_size = 1_000
+
+    y_pred = []
+    y_true = []
+    # Only different probabilities
+    for _ in range(batch_size):
+        predictions = np.random.random(byte_values)
+        _, counts = np.unique(predictions, return_counts=True)
+        if (counts == 1).all():
+            # All are unique
+            y_pred.append(predictions)
+            target = np.zeros(byte_values)
+            target[np.random.randint(0, byte_values)] = 1
+            y_true.append(target)
+    # We should have enough samples
+    assert len(y_pred) >= batch_size / 2
+
+    optimistic = rank(y_true, y_pred, optimistic=True)
+    pesimistic = rank(y_true, y_pred, optimistic=False)
+
+    # Get rid of Tensor to have .all method.
+    optimistic = np.array(optimistic)
+    pesimistic = np.array(pesimistic)
+    assert (optimistic == pesimistic).all()

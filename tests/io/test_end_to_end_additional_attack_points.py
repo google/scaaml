@@ -89,17 +89,19 @@ def dataset_e2e(dtype, root_dir, trace_start, trace_len):
     rng = np.random.default_rng(13)  # Make tests deterministic
     all_examples = [{
         "measurement": {
-            measurement_name: rng.standard_normal(
-                size=(measurements_info[measurement_name]["len"],
-                     )).astype(np.float32 if dtype == "float32" else np.float16)
+            measurement_name:
+                rng.standard_normal(
+                    size=(measurements_info[measurement_name]["len"],)
+                ).astype(np.float32 if dtype == "float32" else np.float16)
             for measurement_name in measurements_info
         },
         "attack_points": {
-            attack_point_name: rng.integers(
-                low=0,
-                high=attack_points_info[attack_point_name]["max_val"],
-                size=(attack_points_info[attack_point_name]["len"],),
-            )
+            attack_point_name:
+                rng.integers(
+                    low=0,
+                    high=attack_points_info[attack_point_name]["max_val"],
+                    size=(attack_points_info[attack_point_name]["len"],),
+                )
             for attack_point_name in attack_points_info
         },
     }

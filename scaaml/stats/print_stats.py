@@ -63,9 +63,8 @@ class PrintStats:
         self._attack_point_info = attack_points_info
         self._split_ap_counters = {
             split: {
-                ap_name: [
-                    APCounter(attack_point_info=ap_info),
-                ] for ap_name, ap_info in attack_points_info.items()
+                ap_name: [APCounter(attack_point_info=ap_info),]
+                for ap_name, ap_info in attack_points_info.items()
             } for split in Dataset.SPLITS
         }
 
