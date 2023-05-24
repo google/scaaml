@@ -38,7 +38,8 @@ def assert_ok(status):
         raise IOError from error
 
 
-# Workaround until https://github.com/picotech/picosdk-python-wrappers/pull/43 is merged
+# Workaround until PR #43 in
+# https://github.com/picotech/picosdk-python-wrappers/ is merged
 PICO_PORT_DIGITAL_CHANNEL = make_enum([  # pylint: disable=invalid-name
     "PICO_PORT_DIGITAL_CHANNEL0",
     "PICO_PORT_DIGITAL_CHANNEL1",
@@ -660,7 +661,7 @@ class Pico6424E(ScopeTemplate):
                 self.ps_handle,  # handle
                 ctypes.byref(conditions),  # * conditions
                 len(conditions),  # n_conditions
-                0x00000003,  # action PICO_CLEAR_ALL = 0x00000001  PICO_ADD = 0x00000002
+                3,  # action PICO_CLEAR_ALL = 1  PICO_ADD = 2
             ))
 
         # Set trigger digital port properties
