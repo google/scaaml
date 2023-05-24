@@ -19,7 +19,6 @@ from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
-from scaaml.plot import plot_trace_and_trigger  # DO NOT SUBMIT
 
 
 @dataclass
@@ -603,6 +602,7 @@ class Pico6424E(ScopeTemplate):
             channel.
         """
         if channel_info.is_digital:
+            assert isinstance(channel_info, TriggerSettings)
             # Turn on a digital port.
             # Logic level needs to be set individually for each digital
             # channel/pin in the port.
@@ -665,12 +665,18 @@ class Pico6424E(ScopeTemplate):
 
         # Set trigger digital port properties
         digital_channels: int = 8
-        # PICO_DIGITAL_DONT_CARE: channel has no effect on trigger
-        # PICO_DIGITAL_DIRECTION_LOW: channel must be low to trigger
-        # PICO_DIGITAL_DIRECTION_HIGH: channel must be high to trigger
-        # PICO_DIGITAL_DIRECTION_RISING: channel must transition from low to high to trigger
-        # PICO_DIGITAL_DIRECTION_FALLING: channel must transition from high to low to trigger
-        # PICO_DIGITAL_DIRECTION_RISING_OR_FALLING: any transition on channel causes a trigger
+        # PICO_DIGITAL_DONT_CARE:
+        #    channel has no effect on trigger
+        # PICO_DIGITAL_DIRECTION_LOW:
+        #    channel must be low to trigger
+        # PICO_DIGITAL_DIRECTION_HIGH:
+        #    channel must be high to trigger
+        # PICO_DIGITAL_DIRECTION_RISING:
+        #    channel must transition from low to high to trigger
+        # PICO_DIGITAL_DIRECTION_FALLING:
+        #    channel must transition from high to low to trigger
+        # PICO_DIGITAL_DIRECTION_RISING_OR_FALLING:
+        #    any transition on channel causes a trigger
         directions = (picoStruct.DIGITAL_CHANNEL_DIRECTIONS *
                       digital_channels)()
         for i in range(digital_channels):
