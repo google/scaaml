@@ -206,8 +206,8 @@ class ResumeKTI:
         self._progress_filename = progress_filename
         with open(self._progress_filename, encoding="utf-8") as progress_file:
             # Ensure self._index is a multiple of self._shard_length.
-            i = int(progress_file.read())
-            self._index = i - (i % self._shard_length)
+            i: int = int(progress_file.read())
+            self._index = int(i - (i % self._shard_length))
         # Check validity of the progress.
         assert 0 <= self._index <= get_any_value_len(self._parameters)
         # How many traces have been captured before creating this object.
@@ -228,6 +228,7 @@ class ResumeKTI:
             # self._shard_length which is at most self._index.
             i = self._index - (self._index % self._shard_length
                               )  # End of last shard.
+            i = int(i)  # Modulo by np.uint64 produces np.float64
             progress_file.write(str(i))
 
     def __iter__(self):

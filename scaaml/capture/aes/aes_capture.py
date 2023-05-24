@@ -13,7 +13,7 @@
 # limitations under the License.
 """Capture script for easier manipulation."""
 from scaaml.aes_forward import AESSBOX
-from scaaml.capture.scope import CWScope
+from scaaml.capture.scope import CWScope, PicoScope
 from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 
 
@@ -43,9 +43,9 @@ def capture_aes_scald_stm32f4_mbedtls(
 
     # Parameters for the scope
     gain: int = 45
-    samples: int = 7000
+    samples: int = 7_000
     offset: int = 0
-    clock: int = 7372800
+    clock: int = 7_372_800
     sample_rate: str = "clkgen_x4"
     capture_info = {
         "gain": gain,

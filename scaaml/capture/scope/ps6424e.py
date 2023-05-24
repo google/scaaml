@@ -7,12 +7,14 @@ import ctypes
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import traceback
-from typing import Dict, List, OrderedDict
+from typing import Dict, List, Optional, OrderedDict
 
 from chipwhisperer.common.utils import util
 import numpy as np
+from picosdk.constants import make_enum
 from picosdk.ps6000a import ps6000a as ps
 from picosdk.PicoDeviceEnums import picoEnum
+from picosdk.PicoDeviceStructs import picoStruct
 from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
@@ -33,11 +35,24 @@ def assert_ok(status):
     IOError."""
     try:
         assert_pico_ok(status)
-    except PicoSDKCtypesError as e:
-        raise IOError from e
+    except PicoSDKCtypesError as error:
+        raise IOError from error
 
 
-class CaptureSettings(object):
+# Workaround until https://github.com/picotech/picosdk-python-wrappers/pull/43 is merged
+PICO_PORT_DIGITAL_CHANNEL = make_enum([    # pylint: disable=invalid-name
+    "PICO_PORT_DIGITAL_CHANNEL0",
+    "PICO_PORT_DIGITAL_CHANNEL1",
+    "PICO_PORT_DIGITAL_CHANNEL2",
+    "PICO_PORT_DIGITAL_CHANNEL3",
+    "PICO_PORT_DIGITAL_CHANNEL4",
+    "PICO_PORT_DIGITAL_CHANNEL5",
+    "PICO_PORT_DIGITAL_CHANNEL6",
+    "PICO_PORT_DIGITAL_CHANNEL7",
+])
+
+
+class CaptureSettings:
     """Channel settings."""
     _name = "Capture Setting"
 
@@ -54,7 +69,6 @@ class CaptureSettings(object):
         "PORT0": picoEnum.PICO_CHANNEL["PICO_PORT0"],
         "PORT1": picoEnum.PICO_CHANNEL["PICO_PORT1"],
         "External": 4,
-        "MaxChannels": 4,
         "TriggerAux": 5
     }
     CHANNEL_RANGE: List[ChannelRange] = [
@@ -126,9 +140,8 @@ class CaptureSettings(object):
         self._ch_list = {}
         self._rev_ch_list = {}
         for channel_name, channel_id in self.CHANNELS.items():
-            if channel_id < self.CHANNELS["MaxChannels"]:
-                self._ch_list[channel_name] = channel_id
-                self._rev_ch_list[channel_id] = channel_name
+            self._ch_list[channel_name] = channel_id
+            self._rev_ch_list[channel_id] = channel_name
         # ranges
         self._ch_range: Dict[float, str] = {}
         self._ch_range_list: List[float] = []
@@ -142,6 +155,7 @@ class CaptureSettings(object):
         self._ch_range_list.sort()
 
         self._channel = 0
+        self._port_pin: Optional[int] = None
         self._probe_attenuation = 1
         self._coupling = self._couplings["AC"]
         self._range: float = 5.0
@@ -158,8 +172,31 @@ class CaptureSettings(object):
     @channel.setter
     def channel(self, val):
         if val not in self._ch_list:
-            raise ValueError("Unknown channel")
+            raise ValueError(f"Unknown channel {val} not in {self._ch_list}")
         self._channel = self._ch_list[val]
+
+        if self.is_digital:
+            if self._port_pin is None:
+                # Provide a sensible default if there is no value.
+                self._port_pin = 0
+        else:
+            # Analog channels do not have a pin.
+            self._port_pin = None
+
+    @property
+    def port_pin(self) -> Optional[int]:
+        """Number of pin of the digital port."""
+        return self._port_pin
+
+    @port_pin.setter
+    def port_pin(self, val: Optional[int]) -> None:
+        # If the channel is digital port is not None.
+        if self.is_digital:
+            assert val is not None
+        # If the channel is analog port is None.
+        if not self.is_digital:
+            assert val is None
+        self._port_pin = val
 
     @property
     def probe_attenuation(self):
@@ -168,7 +205,8 @@ class CaptureSettings(object):
     @probe_attenuation.setter
     def probe_attenuation(self, val):
         if val not in self.ATTENUATION:
-            raise ValueError("Unsupported value")
+            raise ValueError(f"Unsupported value {val} not in "
+                             f"{self.ATTENUATION}")
         self._probe_attenuation = self.ATTENUATION[val]
 
     @property
@@ -259,7 +297,8 @@ class TriggerSettings(CaptureSettings):
             self._trig_dir[name] = val
             self._rev_trig_dir[val] = name
 
-        self._channel: int = 1
+        self._channel: int = picoEnum.PICO_CHANNEL["PICO_PORT0"]
+        self._port_pin: Optional[int] = 0
         self._range: float = 5.0
         self._coupling = self._couplings["DC"]
         self._trigger_direction = self._trig_dir["Rising"]
@@ -355,9 +394,6 @@ class Pico6424E(ScopeTemplate):
         # Part of cw API
         self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103
         self._max_adc = ctypes.c_int16()  # To get mV values
-
-        # TODO DO NOT SUBMIT
-        self._n_traces: int = 0
 
     @staticmethod
     def _get_timebase(sample_rate: float):
@@ -518,22 +554,13 @@ class Pico6424E(ScopeTemplate):
             self._trace_buffer,
             self.trace.ps_api_range,  # range
             self._max_adc)[:max_samples.value]
-        self._buffers[1] = adc2mV(
-            self._trigger_buffer,
-            self.trigger.ps_api_range,  # range
-            self._max_adc)[:max_samples.value]
-
-        # TODO DO NOT SUBMIT
-        # Print the trace and trigger
-        plt_trace = np.array(self._buffers[0][:], dtype=np.float32)
-        plt_trigger = np.array(self._buffers[1][:])
-        self._n_traces += 1
-        if self._n_traces % 10 == 0:
-            plot_trace_and_trigger(
-                trace=plt_trace,
-                trigger=plt_trigger,
-                fig_filename="capture.pdf",
-            )
+        if self.trigger.is_digital:
+            self._buffers[1] = self._trigger_buffer[:max_samples.value]
+        else:
+            self._buffers[1] = adc2mV(
+                self._trigger_buffer,
+                self.trigger.ps_api_range,  # range
+                self._max_adc)[:max_samples.value]
 
         # print("Overflow: {}".format(overflow.value))
         # print("Samples: {}".format(len(self._trace_buffer)))
@@ -558,9 +585,15 @@ class Pico6424E(ScopeTemplate):
 
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
-        assert not self.trigger.is_digital  # not implemented
-        # TODO can we do dtype=bool and save as trace?
+        # Digital trigger.
+        if self.trigger.is_digital:
+            bits = np.array(self._buffers[1][:], dtype=np.int16)
+            return np.array(bits & (2 ** self.trigger.port_pin),
+                            dtype=np.float32)
+
+        # Analog trigger.
         return np.array(self._buffers[1][:], dtype=np.float32)
+
 
     def _set_channel_on(self, channel_info: CaptureSettings) -> None:
         """Turn on a single channel.
@@ -577,8 +610,14 @@ class Pico6424E(ScopeTemplate):
             # A list of threshold voltages (one for each port pin), used to
             # distinguish 0 and 1 states. Range -32_767 (-5V) to 32_767 (5V).
             logic_threshold_level = (ctypes.c_int16 * pins)(0)
-            logic_threshold_level[0] = 1000
+            for i in range(pins):
+                logic_threshold_level[i] = int((32_767 / 5) * channel_info.trigger_level)
             logic_threshold_level_length = len(logic_threshold_level)
+            # Possible values:
+            # PICO_VERY_HIGH_400MV
+            # PICO_HIGH_200MV
+            # PICO_NORMAL_100MV
+            # PICO_LOW_50MV
             hysteresis = picoEnum.PICO_DIGITAL_PORT_HYSTERESIS[
                 "PICO_VERY_HIGH_400MV"]
             assert_ok(
@@ -602,12 +641,55 @@ class Pico6424E(ScopeTemplate):
                     PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
                 ))
 
-    def _set_digital_trigger(self, trigger_channel: TriggerSettings) -> None:
+    def _set_digital_trigger(self) -> None:
         """Set a trigger on a digital channel.
-
-        Args:
-          trigger_channel (TriggerSettings): The port to set trigger on.
         """
+        # Make sure we are using a digital trigger
+        assert self.trigger.is_digital
+
+        # Set Pico channel conditions
+        conditions = (picoStruct.PICO_CONDITION * 1)()
+        conditions[0] = picoStruct.PICO_CONDITION(
+            self.trigger.ps_api_channel,  # PICO_CHANNEL source
+            picoEnum.PICO_TRIGGER_STATE["PICO_CONDITION_TRUE"],  # PICO_TRIGGER_STATE condition
+        )
+        assert_ok(ps.ps6000aSetTriggerChannelConditions(
+            self.ps_handle,  # handle
+            ctypes.byref(conditions),  # * conditions
+            len(conditions),  # nconditions
+            0x00000003,  # action PICO_CLEAR_ALL = 0x00000001  PICO_ADD = 0x00000002
+        ))
+
+        # Set trigger digital port properties
+        digital_channels: int = 8
+        # PICO_DIGITAL_DONT_CARE: channel has no effect on trigger
+        # PICO_DIGITAL_DIRECTION_LOW: channel must be low to trigger
+        # PICO_DIGITAL_DIRECTION_HIGH: channel must be high to trigger
+        # PICO_DIGITAL_DIRECTION_RISING: channel must transition from low to high to trigger
+        # PICO_DIGITAL_DIRECTION_FALLING: channel must transition from high to low to trigger
+        # PICO_DIGITAL_DIRECTION_RISING_OR_FALLING: any transition on channel causes a trigger
+        directions = (picoStruct.DIGITAL_CHANNEL_DIRECTIONS * digital_channels)()
+        for i in range(digital_channels):
+            if i == self.trigger.port_pin:
+                directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
+                    PICO_PORT_DIGITAL_CHANNEL[f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
+                    picoEnum.PICO_DIGITAL_DIRECTION["PICO_DIGITAL_DIRECTION_RISING"],  # direction
+                )
+            else:
+                directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
+                    PICO_PORT_DIGITAL_CHANNEL[f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
+                    picoEnum.PICO_DIGITAL_DIRECTION["PICO_DIGITAL_DONT_CARE"],  # direction
+                )
+
+        assert_ok(
+            ps.ps6000aSetTriggerDigitalPortProperties(
+                self.ps_handle,  # handle
+                self.trigger.ps_api_channel,  # port
+                ctypes.byref(directions),  # directions
+                len(directions),  # ndirections
+            )
+        )
+
 
     def _set_channels(self):
         """Setup channels, buffers, and trigger."""
@@ -641,7 +723,7 @@ class Pico6424E(ScopeTemplate):
         # Set a trigger.
         if self.trigger.is_digital:
             # Set a digital trigger.
-            self._set_digital_trigger(trigger_channel=self.trigger)
+            self._set_digital_trigger()
         else:
             # Set simple trigger
             assert_ok(
