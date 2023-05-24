@@ -13,7 +13,7 @@
 # limitations under the License.
 """Capture script for easier manipulation."""
 from scaaml.aes_forward import AESSBOX
-from scaaml.capture.scope import CWScope, PicoScope
+from scaaml.capture.scope import CWScope
 from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 
 
