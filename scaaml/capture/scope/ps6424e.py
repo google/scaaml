@@ -40,7 +40,7 @@ def assert_ok(status):
 
 
 # Workaround until https://github.com/picotech/picosdk-python-wrappers/pull/43 is merged
-PICO_PORT_DIGITAL_CHANNEL = make_enum([    # pylint: disable=invalid-name
+PICO_PORT_DIGITAL_CHANNEL = make_enum([  # pylint: disable=invalid-name
     "PICO_PORT_DIGITAL_CHANNEL0",
     "PICO_PORT_DIGITAL_CHANNEL1",
     "PICO_PORT_DIGITAL_CHANNEL2",
@@ -588,12 +588,12 @@ class Pico6424E(ScopeTemplate):
         # Digital trigger.
         if self.trigger.is_digital:
             bits = np.array(self._buffers[1][:], dtype=np.int16)
-            return np.array(bits & (2 ** self.trigger.port_pin),
-                            dtype=np.float32)
+            port_pin = self.trigger.port_pin
+            assert port_pin is not None
+            return np.array(bits & (2**port_pin), dtype=np.float32)
 
         # Analog trigger.
         return np.array(self._buffers[1][:], dtype=np.float32)
-
 
     def _set_channel_on(self, channel_info: CaptureSettings) -> None:
         """Turn on a single channel.
@@ -611,7 +611,8 @@ class Pico6424E(ScopeTemplate):
             # distinguish 0 and 1 states. Range -32_767 (-5V) to 32_767 (5V).
             logic_threshold_level = (ctypes.c_int16 * pins)(0)
             for i in range(pins):
-                logic_threshold_level[i] = int((32_767 / 5) * channel_info.trigger_level)
+                logic_threshold_level[i] = int(
+                    (32_767 / 5) * channel_info.trigger_level)
             logic_threshold_level_length = len(logic_threshold_level)
             # Possible values:
             # PICO_VERY_HIGH_400MV
@@ -651,14 +652,16 @@ class Pico6424E(ScopeTemplate):
         conditions = (picoStruct.PICO_CONDITION * 1)()
         conditions[0] = picoStruct.PICO_CONDITION(
             self.trigger.ps_api_channel,  # PICO_CHANNEL source
-            picoEnum.PICO_TRIGGER_STATE["PICO_CONDITION_TRUE"],  # PICO_TRIGGER_STATE condition
+            picoEnum.PICO_TRIGGER_STATE[
+                "PICO_CONDITION_TRUE"],  # PICO_TRIGGER_STATE condition
         )
-        assert_ok(ps.ps6000aSetTriggerChannelConditions(
-            self.ps_handle,  # handle
-            ctypes.byref(conditions),  # * conditions
-            len(conditions),  # nconditions
-            0x00000003,  # action PICO_CLEAR_ALL = 0x00000001  PICO_ADD = 0x00000002
-        ))
+        assert_ok(
+            ps.ps6000aSetTriggerChannelConditions(
+                self.ps_handle,  # handle
+                ctypes.byref(conditions),  # * conditions
+                len(conditions),  # n_conditions
+                0x00000003,  # action PICO_CLEAR_ALL = 0x00000001  PICO_ADD = 0x00000002
+            ))
 
         # Set trigger digital port properties
         digital_channels: int = 8
@@ -668,17 +671,22 @@ class Pico6424E(ScopeTemplate):
         # PICO_DIGITAL_DIRECTION_RISING: channel must transition from low to high to trigger
         # PICO_DIGITAL_DIRECTION_FALLING: channel must transition from high to low to trigger
         # PICO_DIGITAL_DIRECTION_RISING_OR_FALLING: any transition on channel causes a trigger
-        directions = (picoStruct.DIGITAL_CHANNEL_DIRECTIONS * digital_channels)()
+        directions = (picoStruct.DIGITAL_CHANNEL_DIRECTIONS *
+                      digital_channels)()
         for i in range(digital_channels):
             if i == self.trigger.port_pin:
                 directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
-                    PICO_PORT_DIGITAL_CHANNEL[f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
-                    picoEnum.PICO_DIGITAL_DIRECTION["PICO_DIGITAL_DIRECTION_RISING"],  # direction
+                    PICO_PORT_DIGITAL_CHANNEL[
+                        f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
+                    picoEnum.PICO_DIGITAL_DIRECTION[
+                        "PICO_DIGITAL_DIRECTION_RISING"],  # direction
                 )
             else:
                 directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
-                    PICO_PORT_DIGITAL_CHANNEL[f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
-                    picoEnum.PICO_DIGITAL_DIRECTION["PICO_DIGITAL_DONT_CARE"],  # direction
+                    PICO_PORT_DIGITAL_CHANNEL[
+                        f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
+                    picoEnum.PICO_DIGITAL_DIRECTION[
+                        "PICO_DIGITAL_DONT_CARE"],  # direction
                 )
 
         assert_ok(
@@ -686,10 +694,8 @@ class Pico6424E(ScopeTemplate):
                 self.ps_handle,  # handle
                 self.trigger.ps_api_channel,  # port
                 ctypes.byref(directions),  # directions
-                len(directions),  # ndirections
-            )
-        )
-
+                len(directions),  # n_directions
+            ))
 
     def _set_channels(self):
         """Setup channels, buffers, and trigger."""
