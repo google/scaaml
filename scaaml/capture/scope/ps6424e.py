@@ -357,8 +357,7 @@ class TriggerSettings(CaptureSettings):
 
     @property
     def is_digital(self) -> bool:
-        """Return True iff this channel is a digital channel (PORT0 or PORT1).
-        """
+        """Return if this channel is a digital channel (PORT0 or PORT1)."""
         return self.ps_api_channel in [
             picoEnum.PICO_CHANNEL["PICO_PORT0"],
             picoEnum.PICO_CHANNEL["PICO_PORT1"],
