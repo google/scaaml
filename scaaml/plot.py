@@ -86,7 +86,7 @@ def plot_comparison(traces, labels, title):
     plt.show()
 
 
-def plot_trace_and_trigger(trace, trigger, fig_filename="capture.pdf"):
+def plot_trace_and_trigger(trace, trigger, fig_filename="capture.png"):
     """Plot trace and trigger."""
     plt.clf()
     plt.plot(trace, color="blue")
