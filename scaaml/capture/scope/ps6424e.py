@@ -593,7 +593,7 @@ class Pico6424E(ScopeTemplate):
             bits = np.array(self._buffers[1][:], dtype=np.int16)
             port_pin = self.trigger.port_pin
             assert port_pin is not None
-            return np.array(bits & (2**port_pin), dtype=np.float32)
+            return np.array(bits & (1 << port_pin), dtype=np.float32)
 
         # Analog trigger.
         return np.array(self._buffers[1][:], dtype=np.float32)
