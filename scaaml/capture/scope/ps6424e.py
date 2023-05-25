@@ -684,20 +684,16 @@ class Pico6424E(ScopeTemplate):
         directions = (picoStruct.DIGITAL_CHANNEL_DIRECTIONS *
                       digital_channels)()
         for i in range(digital_channels):
+            # Ignore all pins except for the trigger pin.
+            trigger_direction: str = "PICO_DIGITAL_DONT_CARE"
             if i == self.trigger.port_pin:
-                directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
-                    PICO_PORT_DIGITAL_CHANNEL[
-                        f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
-                    picoEnum.PICO_DIGITAL_DIRECTION[
-                        "PICO_DIGITAL_DIRECTION_RISING"],  # direction
-                )
-            else:
-                directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
-                    PICO_PORT_DIGITAL_CHANNEL[
-                        f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
-                    picoEnum.PICO_DIGITAL_DIRECTION[
-                        "PICO_DIGITAL_DONT_CARE"],  # direction
-                )
+                trigger_direction = "PICO_DIGITAL_DIRECTION_RISING"
+
+            directions[i] = picoStruct.DIGITAL_CHANNEL_DIRECTIONS(
+                PICO_PORT_DIGITAL_CHANNEL[
+                    f"PICO_PORT_DIGITAL_CHANNEL{i}"],  # channel
+                picoEnum.PICO_DIGITAL_DIRECTION[trigger_direction],
+            )
 
         assert_ok(
             ps.ps6000aSetTriggerDigitalPortProperties(
