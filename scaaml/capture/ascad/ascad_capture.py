@@ -46,6 +46,8 @@ def capture_ascad_default_parameters(
     samples: int = 160_000
     sample_rate: float = 2.5e9  # Hz
     offset: int = 0
+    # 0.5V for a differential probe
+    # 0.1V for the BNC connector on the board
     trace_probe_range: float = 0.5  # V
     trigger_range: float = 5.0  # V
     trigger_level: float = 1.9  # V

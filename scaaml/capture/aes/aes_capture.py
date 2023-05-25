@@ -43,9 +43,9 @@ def capture_aes_scald_stm32f4_mbedtls(
 
     # Parameters for the scope
     gain: int = 45
-    samples: int = 7000
+    samples: int = 7_000
     offset: int = 0
-    clock: int = 7372800
+    clock: int = 7_372_800
     sample_rate: str = "clkgen_x4"
     capture_info = {
         "gain": gain,
