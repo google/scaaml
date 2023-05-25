@@ -191,11 +191,15 @@ class CaptureSettings:
     @port_pin.setter
     def port_pin(self, val: Optional[int]) -> None:
         # If the channel is digital port is not None.
-        if self.is_digital:
-            assert val is not None
+        if self.is_digital and val is None:
+            raise ValueError(f"Using digital port {self.channel} cannot set "
+                             f"the pin to None.")
+
         # If the channel is analog port is None.
-        if not self.is_digital:
-            assert val is None
+        if not self.is_digital and val is not None:
+            raise ValueError(f"Using analog channel {self.channel} pin must "
+                             f"be None, not {val}.")
+
         self._port_pin = val
 
     @property
