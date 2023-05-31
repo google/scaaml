@@ -44,15 +44,12 @@ class PicoScope(AbstractSScope):
         BW_LIMIT_T: TypeAlias = str
 
     def __init__(self, samples: int, sample_rate: float, offset: int,
-                 trace_channel: PicoScope.CHANNEL_T, trace_probe_range: float,
-                 trace_coupling: PicoScope.COUPLING_T,
-                 trace_attenuation: PicoScope.ATTENUATION_T,
-                 trace_bw_limit: PicoScope.BW_LIMIT_T,
-                 trace_ignore_overflow: bool,
-                 trigger_channel: PicoScope.CHANNEL_T,
-                 trigger_hysteresis: Optional[str], trigger_pin: Optional[int],
-                 trigger_range: float, trigger_level: float,
-                 trigger_coupling: PicoScope.COUPLING_T, **_):
+                 trace_channel: CHANNEL_T, trace_probe_range: float,
+                 trace_coupling: COUPLING_T, trace_attenuation: ATTENUATION_T,
+                 trace_bw_limit: BW_LIMIT_T, trace_ignore_overflow: bool,
+                 trigger_channel: CHANNEL_T, trigger_hysteresis: Optional[str],
+                 trigger_pin: Optional[int], trigger_range: float,
+                 trigger_level: float, trigger_coupling: COUPLING_T, **_):
         """Create scope context.
 
         Args:
