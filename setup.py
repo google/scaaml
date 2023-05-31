@@ -22,7 +22,7 @@ version = f"2.0.1r{int(time())}"
 
 setup(
     name="scaaml",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     version=version,
     description="Side Channel Attack Assisted with Machine Learning",
     long_description=long_description,
