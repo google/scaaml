@@ -363,6 +363,12 @@ class TriggerSettings(CaptureSettings):
             "trigger_direction": self.trigger_direction,
             "hysteresis": self.hysteresis,
         })
+
+        # Remove specific for analog / digital trigger.
+        if self.is_digital:
+            del config["trigger_range"]
+            del config["trigger_coupling"]
+
         return config
 
     @property
