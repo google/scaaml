@@ -540,9 +540,8 @@ class Pico6424E(ScopeTemplate):
 
         Raises: IOError if unknown failure.
 
-        Returns: True if timeout happened, False otherwise. If
-          self.ignore_overflow is False also return True when there was an
-          overflow in the signal.
+        Returns: True if the trace needs to be recaptured due to timeout or
+          trace overflow (if ignore_overflow is set to False). False otherwise.
         """
         del poll_done  # unused
 

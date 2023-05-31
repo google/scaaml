@@ -80,10 +80,10 @@ class PicoScope(AbstractSScope):
           trigger_pin (Optional[int]): Only when using MSO port as
             trigger_channel. Which pin to trigger on.
           trigger_range (float): Should be in [0.02, 0.05, 0.1, 0.2, 0.5,
-            1.0, 2.0, 5.0, 10.0, 20.0, 50.0] (in V).
+            1.0, 2.0, 5.0, 10.0, 20.0, 50.0] (in V). Analog trigger only.
           trigger_level (float): When to trigger (in V).
           trigger_coupling (str): Which coupling to use, one of AC, DC, DC50
-            (DC with 50 Ohm).
+            (DC with 50 Ohm). Analog trigger only.
           _: PicoScope is expected to be initialized using capture_info
             dictionary, this parameter allows to have additional information
             there and initialize as PicoScope(**capture_info).
