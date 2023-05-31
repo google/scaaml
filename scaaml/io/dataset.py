@@ -19,10 +19,9 @@ import json
 import os
 from collections import defaultdict
 import shutil
-import sys
 from time import time
 from typing_extensions import TypeAlias
-from typing import Dict, List, Optional, Union, Set, Tuple
+from typing import Dict, List, Literal, Optional, Union, Set, Tuple
 from pathlib import Path
 import pprint
 
@@ -41,20 +40,11 @@ from scaaml.io.utils import dtype_name_to_dtype, dtype_dtype_to_name
 from scaaml.io.shard import Shard
 from scaaml.io.errors import DatasetExistsError
 
-# Prevent importing Literal with older versions.
-if sys.version_info >= (3, 8):
-    from typing import Literal
-
 
 class Dataset():
     """Dataset class."""
     # Valid split values (used also as directory names).
-    # Define split type, keep compatibility (Literal was introduced in
-    # Python3.8).
-    if sys.version_info >= (3, 8):
-        SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
-    else:
-        SPLIT_T: TypeAlias = str
+    SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
     TRAIN_SPLIT: SPLIT_T = "train"
     TEST_SPLIT: SPLIT_T = "test"
     HOLDOUT_SPLIT: SPLIT_T = "holdout"

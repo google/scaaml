@@ -13,35 +13,21 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-from typing import Optional
+from typing import Literal, Optional
 from typing_extensions import TypeAlias
-import sys
 
 from scaaml.capture.scope import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
-# Prevent importing Literal with older versions.
-if sys.version_info >= (3, 8):
-    from typing import Literal
-
 
 class PicoScope(AbstractSScope):
     """Scope context manager."""
-
-    # Define PicoScope types, keep compatibility (Literal was introduced in
-    # Python3.8).
-    if sys.version_info >= (3, 8):
-        CHANNEL_T: TypeAlias = Literal["A", "B", "C", "D", "E", "F", "G", "H",
-                                       "PORT0", "PORT1"]
-        COUPLING_T: TypeAlias = Literal["AC", "DC", "DC50"]
-        ATTENUATION_T: TypeAlias = Literal["1:1", "1:10"]
-        BW_LIMIT_T: TypeAlias = Literal["PICO_BW_FULL", "PICO_BW_20MHZ",
-                                        "PICO_BW_200MHZ"]
-    else:
-        CHANNEL_T: TypeAlias = str
-        COUPLING_T: TypeAlias = str
-        ATTENUATION_T: TypeAlias = str
-        BW_LIMIT_T: TypeAlias = str
+    CHANNEL_T: TypeAlias = Literal["A", "B", "C", "D", "E", "F", "G", "H",
+                                   "PORT0", "PORT1"]
+    COUPLING_T: TypeAlias = Literal["AC", "DC", "DC50"]
+    ATTENUATION_T: TypeAlias = Literal["1:1", "1:10"]
+    BW_LIMIT_T: TypeAlias = Literal["PICO_BW_FULL", "PICO_BW_20MHZ",
+                                    "PICO_BW_200MHZ"]
 
     def __init__(self, samples: int, sample_rate: float, offset: int,
                  trace_channel: CHANNEL_T, trace_probe_range: float,
