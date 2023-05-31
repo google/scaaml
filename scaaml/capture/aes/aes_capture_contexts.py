@@ -101,8 +101,9 @@ def capture_aes_dataset(
         capturing train and holdout with the same chip, or we are capturing
         an unsupported split).
     """
-    # If we are capturing train also capture the test split.
-    test_keys = train_keys // 8  # 1/8 = 0.125
+    # If we are capturing train also capture the test split. We want the SBOX
+    # input to be balanced, thus we need at least 256 test_keys.
+    test_keys = max(train_keys // 8, 256)  # 1/8 = 0.125
     test_plaintexts = train_plaintexts
 
     if measurements_info is None:
@@ -229,6 +230,7 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
         generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
+
     # Capture using PicoScope.
     if scope_class == PicoScope:
         with PicoScope(**capture_info) as picoscope:

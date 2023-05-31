@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import ctypes
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
+import time
 import traceback
 from typing import Dict, List, Optional, OrderedDict
 
@@ -159,6 +160,7 @@ class CaptureSettings:
         self._probe_attenuation = 1
         self._coupling = self._couplings["AC"]
         self._range: float = 5.0
+        self.bw_limit: str = "PICO_BW_FULL"
 
     @property
     def ps_api_channel(self):
@@ -207,7 +209,7 @@ class CaptureSettings:
         return self.REV_ATTENUATION[self._probe_attenuation]
 
     @probe_attenuation.setter
-    def probe_attenuation(self, val):
+    def probe_attenuation(self, val: str) -> None:
         if val not in self.ATTENUATION:
             raise ValueError(f"Unsupported value {val} not in "
                              f"{self.ATTENUATION}")
@@ -251,11 +253,14 @@ class CaptureSettings:
                          f"is {self._ch_range_list[-1]}")
 
     def _dict_repr(self):
+        """Human readable representation as a key value dictionary."""
         ret = OrderedDict()
         ret["channel"] = self.channel
         ret["range"] = self.range
         ret["probe_attenuation"] = self.probe_attenuation
         ret["coupling"] = self.coupling
+        ret["port_pin"] = self._port_pin
+        ret["bandwidth_limit"] = self.bw_limit
         return ret
 
     def dict_repr(self):
@@ -307,6 +312,11 @@ class TriggerSettings(CaptureSettings):
         self._coupling = self._couplings["DC"]
         self._trigger_direction = self._trig_dir["Rising"]
         self._trigger_level: float = 2.0  # V
+        # PICO_VERY_HIGH_400MV
+        # PICO_HIGH_200MV
+        # PICO_NORMAL_100MV
+        # PICO_LOW_50MV
+        self.hysteresis: Optional[str] = "PICO_NORMAL_100MV"
 
     @property
     def ps_api_trigger_direction(self):
@@ -346,14 +356,20 @@ class TriggerSettings(CaptureSettings):
         self._trigger_direction = self._trig_dir[val]
 
     def _dict_repr(self):
-        ret = OrderedDict()
-        ret["channel"] = self.channel
-        ret["range"] = self.range
-        ret["probe_attenuation"] = self.probe_attenuation
-        ret["coupling"] = self.coupling
-        ret["trigger_level"] = self.trigger_level
-        ret["trigger_direction"] = self.trigger_direction
-        return ret
+        """Human readable representation as a key value dictionary."""
+        config = super().dict_repr()
+        config.update({
+            "trigger_level": self.trigger_level,
+            "trigger_direction": self.trigger_direction,
+            "hysteresis": self.hysteresis,
+        })
+
+        # Remove specific for analog / digital trigger.
+        if self.is_digital:
+            del config["trigger_range"]
+            del config["trigger_coupling"]
+
+        return config
 
     @property
     def is_digital(self) -> bool:
@@ -397,6 +413,9 @@ class Pico6424E(ScopeTemplate):
         # Part of cw API
         self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103
         self._max_adc = ctypes.c_int16()  # To get mV values
+
+        # Ignore signal overflow during capture.
+        self.ignore_overflow: bool = False
 
     @staticmethod
     def _get_timebase(sample_rate: float):
@@ -527,15 +546,24 @@ class Pico6424E(ScopeTemplate):
 
         Raises: IOError if unknown failure.
 
-        Returns: True if timeout happened, False otherwise.
+        Returns: True if the trace needs to be recaptured due to timeout or
+          trace overflow (if ignore_overflow is set to False). False otherwise.
         """
         del poll_done  # unused
 
         # Wait until the result is ready
         ready = ctypes.c_int16(0)
         check = ctypes.c_int16(0)
+        start_waiting = time.time()  # s from start of the epoch
         while ready.value == check.value:
             ps.ps6000aIsReady(self.ps_handle, ctypes.byref(ready))
+            # Check for timeout
+            time_now = time.time()
+            if time_now - start_waiting > 100:  # [s]
+                # Stop current capture
+                assert_ok(ps.ps6000aStop(self.ps_handle))
+                # Indicate timeout
+                return True
 
         # Retrieve the values
         overflow = ctypes.c_int16()
@@ -568,7 +596,10 @@ class Pico6424E(ScopeTemplate):
         # print("Overflow: {}".format(overflow.value))
         # print("Samples: {}".format(len(self._trace_buffer)))
         # print("Max samples: {}".format(max_samples.value))
-        return (overflow.value >> self.trace.ps_api_channel) & 1 == 1
+        if self.ignore_overflow:
+            return False
+        else:
+            return (overflow.value >> self.trace.ps_api_channel) & 1 == 1
 
     def get_last_trace(self, as_int: bool = False) -> np.ndarray:
         """Return a copy of the last trace.
@@ -618,20 +649,16 @@ class Pico6424E(ScopeTemplate):
                 logic_threshold_level[i] = int(
                     (32_767 / 5) * channel_info.trigger_level)
             logic_threshold_level_length = len(logic_threshold_level)
-            # Possible values:
-            # PICO_VERY_HIGH_400MV
-            # PICO_HIGH_200MV
-            # PICO_NORMAL_100MV
-            # PICO_LOW_50MV
-            hysteresis = picoEnum.PICO_DIGITAL_PORT_HYSTERESIS[
-                "PICO_VERY_HIGH_400MV"]
+            # Hysteresis of the digital channel.
+            ps_api_hysteresis = picoEnum.PICO_DIGITAL_PORT_HYSTERESIS[
+                channel_info.hysteresis]
             assert_ok(
                 ps.ps6000aSetDigitalPortOn(
                     self.ps_handle,  # handle
                     channel_info.ps_api_channel,  # port
                     ctypes.byref(logic_threshold_level),
                     logic_threshold_level_length,
-                    hysteresis,
+                    ps_api_hysteresis,
                 ))
         else:
             # Turn on an analog channel.
@@ -642,8 +669,8 @@ class Pico6424E(ScopeTemplate):
                     channel_info.ps_api_coupling,  # coupling
                     channel_info.ps_api_range,  # range
                     0,  # analogue offset
-                    picoEnum.
-                    PICO_BANDWIDTH_LIMITER["PICO_BW_FULL"],  # bandwidth
+                    picoEnum.PICO_BANDWIDTH_LIMITER[
+                        channel_info.bw_limit],  # bandwidth
                 ))
 
     def _set_digital_trigger(self) -> None:
@@ -821,12 +848,14 @@ class Pico6424E(ScopeTemplate):
         self._set_channels()
 
     def _dict_repr(self):
+        """Human readable representation as a key value dictionary."""
         ret = OrderedDict()
         ret["trace"] = self.trace.dict_repr()
         ret["trigger"] = self.trigger.dict_repr()
         ret["sample_rate"] = self.sample_rate
         ret["sample_length"] = self.sample_length
         ret["sample_offset"] = self.sample_offset
+        ret["ignore_overflow"] = self.ignore_overflow
         return ret
 
     def __repr__(self) -> str:
