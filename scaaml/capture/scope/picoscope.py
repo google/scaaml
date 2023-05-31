@@ -44,12 +44,15 @@ class PicoScope(AbstractSScope):
         BW_LIMIT_T: TypeAlias = str
 
     def __init__(self, samples: int, sample_rate: float, offset: int,
-                 trace_channel: CHANNEL_T, trace_probe_range: float,
-                 trace_coupling: COUPLING_T, trace_attenuation: ATTENUATION_T,
-                 trace_bw_limit: BW_LIMIT_T, trace_ignore_overflow: bool,
-                 trigger_channel: CHANNEL_T, trigger_hysteresis: Optional[str],
-                 trigger_pin: Optional[int], trigger_range: float,
-                 trigger_level: float, trigger_coupling: COUPLING_T, **_):
+                 trace_channel: PicoScope.CHANNEL_T, trace_probe_range: float,
+                 trace_coupling: PicoScope.COUPLING_T,
+                 trace_attenuation: PicoScope.ATTENUATION_T,
+                 trace_bw_limit: PicoScope.BW_LIMIT_T,
+                 trace_ignore_overflow: bool,
+                 trigger_channel: PicoScope.CHANNEL_T,
+                 trigger_hysteresis: Optional[str], trigger_pin: Optional[int],
+                 trigger_range: float, trigger_level: float,
+                 trigger_coupling: PicoScope.COUPLING_T, **_):
         """Create scope context.
 
         Args:
@@ -92,20 +95,20 @@ class PicoScope(AbstractSScope):
         self._sample_rate = sample_rate
 
         # Trace settings
-        self._trace_channel: CHANNEL_T = trace_channel
+        self._trace_channel: PicoScope.CHANNEL_T = trace_channel
         self._trace_probe_range: float = trace_probe_range
-        self._trace_coupling: COUPLING_T = trace_coupling
-        self._trace_attenuation: ATTENUATION_T = trace_attenuation
-        self._trace_bw_limit: BW_LIMIT_T = trace_bw_limit
+        self._trace_coupling: PicoScope.COUPLING_T = trace_coupling
+        self._trace_attenuation: PicoScope.ATTENUATION_T = trace_attenuation
+        self._trace_bw_limit: PicoScope.BW_LIMIT_T = trace_bw_limit
         self._ignore_overflow: bool = trace_ignore_overflow
 
         # Trigger settings
-        self._trigger_channel: CHANNEL_T = trigger_channel
+        self._trigger_channel: PicoScope.CHANNEL_T = trigger_channel
         self._trigger_pin: Optional[int] = trigger_pin
         self._trigger_hysteresis: Optional[str] = trigger_hysteresis
         self._trigger_range: float = trigger_range
         self._trigger_level: float = trigger_level
-        self._trigger_coupling: COUPLING_T = trigger_coupling
+        self._trigger_coupling: PicoScope.COUPLING_T = trigger_coupling
 
         # Scope object
         self._scope = None
