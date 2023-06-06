@@ -15,6 +15,7 @@
 """
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import pyvisa
 
@@ -55,7 +56,7 @@ class LeCroyCommunication(ABC):
         """
 
     @abstractmethod
-    def get_waveform(self) -> LecroyWaveform:
+    def get_waveform(self, channel: str) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
 
@@ -91,50 +92,62 @@ class LeCroyCommunicationLXI(LeCroyCommunication):
             ip_address=ip_address,
             timeout=timeout,
         )
-        self._resource_manager = None
-        self._scope = None
+        self._resource_manager: Optional[pyvisa.ResourceManager] = None
+        self._scope: Optional[pyvisa.resources.MessageBasedResource] = None
 
     @make_custom_exception
     def connect(self):
         self._resource_manager = pyvisa.ResourceManager("@py")
-        self._scope = self._resource_manager.open_resource(
+        assert self._resource_manager is not None
+
+        scope_resource = self._resource_manager.open_resource(
             f"TCPIP::{self._ip_address}::INSTR",
             resource_pyclass=pyvisa.resources.MessageBasedResource,
         )
+        assert isinstance(scope_resource, pyvisa.resources.MessageBasedResource)
+        self._scope = scope_resource
+
+        assert self._scope is not None
         self._scope.timeout = self._timeout * 1_000  # Convert second to ms
         self._scope.clear()
 
     @make_custom_exception
     def close(self) -> None:
+        assert self._scope is not None
         self._scope.before_close()
         self._scope.close()
+        assert self._resource_manager is not None
         self._resource_manager.close()
 
     @make_custom_exception
     def write(self, message: str) -> None:
         """Write a message to the oscilloscope.
         """
+        assert self._scope is not None
         self._scope.write(message)
 
     @make_custom_exception
     def query(self, message: str) -> str:
         """Query the oscilloscope.
         """
+        assert self._scope is not None
         return self._scope.query(message).strip()
 
     @make_custom_exception
     def get_waveform(self, channel: str = "1") -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
+        assert self._scope is not None
         return self._scope.query_binary_values(
             f"C{channel}:WAVEFORM?",
             datatype="B",
             container=LecroyWaveform,
-        )
+        )  # type: ignore
 
     @make_custom_exception
     def query_binary_values(self, message: str, datatype="B", container=None):
         """Query binary data."""
+        assert self._scope is not None
         return self._scope.query_binary_values(
             message,
             datatype=datatype,

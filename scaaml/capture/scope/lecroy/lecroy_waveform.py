@@ -95,7 +95,7 @@ class LecroyWaveform:
                                   self._ofs)
         self._ofs += 16
         if all(int(v) == 0 for v in vals):
-            return None
+            return datetime.datetime.fromtimestamp(0)
         return datetime.datetime(
             vals[5],  # year
             vals[4],  # month

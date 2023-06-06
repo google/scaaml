@@ -15,13 +15,17 @@
 
 import base64
 import time
+from typing import Optional
 import xml.etree.ElementTree as ET
 
+from chipwhisperer.common.utils import util
 import numpy as np
 
 from scaaml.capture.scope import AbstractSScope
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationError
+from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationLXI
+from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
 class LeCroy(AbstractSScope):
@@ -48,7 +52,7 @@ class LeCroy(AbstractSScope):
         self._timeout = timeout
 
         # Scope object
-        self._scope = None
+        self._scope: Optional[LeCroyScope] = None
 
     def __enter__(self):
         """Create scope context.
@@ -66,6 +70,7 @@ class LeCroy(AbstractSScope):
             channel=self._channel,
             timeout=self._timeout,
         )
+        assert self._scope is not None
         self._scope.con()
         return self
 
@@ -87,7 +92,7 @@ class LeCroy(AbstractSScope):
         self._scope = None
 
 
-class LeCroyScope:
+class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(self, samples: int, offset: int, ip_address: str, channel: str,
@@ -111,9 +116,9 @@ class LeCroyScope:
         self._last_trace = None
 
         # Scope object
-        self._scope_communication = None
+        self._scope_communication: Optional[LeCroyCommunication] = None
 
-    def con(self) -> None:
+    def con(self, sn=None) -> bool:
         """Set the scope for capture."""
         # Connect to the oscilloscope.
         self._scope_communication = LeCroyCommunicationLXI(
@@ -121,21 +126,26 @@ class LeCroyScope:
             timeout=self._timeout,
         )
 
+        assert self._scope_communication is not None
+
         # Scope settings
         self._scope_communication.connect()
         self._scope_communication.write("COMM_HEADER OFF")
         self._scope_communication.write("COMM_FORMAT DEF9,WORD,BIN")
         self._scope_communication.write("TRMD SINGLE")
         self._scope_communication.write("STOP")
+        return True  # Success
 
-    def dis(self) -> None:
+    def dis(self) -> bool:
         """Disconnect from the scope."""
         assert self._scope_communication is not None
         self._scope_communication.close()
         self._scope_communication = None
+        return True  # Success
 
     def arm(self):
         """Prepare the scope for capturing."""
+        assert self._scope_communication is not None
         self._scope_communication.write("ARM")
         arm_result = self._scope_communication.query("TRMD?")
         if arm_result != "SINGLE":
@@ -151,6 +161,8 @@ class LeCroyScope:
         Returns: True if the trace needs to be recaptured due to timeout.
         """
         del poll_done  # unused
+
+        assert self._scope_communication is not None
 
         try:
             # Wait for trigger
@@ -186,6 +198,9 @@ class LeCroyScope:
 
         Returns: np array representing the last captured trace.
         """
+        if self._last_trace is None:
+            raise RuntimeError("No trace has been captured so far.")
+
         if as_int:
             msg = "Returning trace as integers is not implemented."
             raise NotImplementedError(msg)
@@ -195,13 +210,31 @@ class LeCroyScope:
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
         # Get digital trigger:
+        assert self._scope_communication is not None
         trigger = self._scope_communication.query_binary_values(
             "DIGITAL1:WF?",
             datatype="B",
         )
 
         root = ET.fromstring(bytes(trigger).decode("ascii"))
-        decoded = base64.b64decode(root.findall(".//BinaryData")[0].text)
+        # Find the binary data (BinaryData is present)
+        binary_data = root.findall(".//BinaryData")[0].text
+        if binary_data is not None:
+            decoded = base64.b64decode(binary_data)
+        else:
+            # No trigger array
+            return np.array([], dtype=np.uint8)
 
         np_trigger = np.frombuffer(decoded, dtype=np.uint8)
         return np_trigger
+
+    def __str__(self) -> str:
+        """Return string representation of self.
+        """
+        return util.dict_to_str({
+            "samples": self._samples,
+            "offset": self._offset,
+            "ip_address": self._ip_address,
+            "channel": self._channel,
+            "timeout": self._timeout,
+        })
