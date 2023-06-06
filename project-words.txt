@@ -31,6 +31,7 @@ dtype
 dtypes
 figsize
 firstrow
+frombuffer
 howpublished
 HWAES
 imshow
@@ -96,6 +97,7 @@ tinyaes
 tobytes
 tqdm
 trigtime
+TRMD
 vals
 vispy
 WAVEDESC
