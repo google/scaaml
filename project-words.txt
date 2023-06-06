@@ -8,6 +8,7 @@ argsort
 ascad
 astype
 autoreload
+autoscaled
 batchnorm
 batchnormalization
 bibtex
@@ -15,14 +16,15 @@ booktitle
 Bursztein
 burszteindc
 bytelist
+calcsize
 chipwhisperer
 clkgen
 cmap
 colorbar
 cprint
 crossentropy
-cwscope
 cwnano
+cwscope
 ddict
 dpath
 dtype
@@ -39,6 +41,7 @@ keepdims
 keras
 kidx
 kidxs
+lecroy
 logit
 logits
 matplotlib
@@ -62,10 +65,12 @@ pretrained
 probas
 protver
 pyplot
+pyvisa
 rearchitecting
 relu
 resnet
 resumekti
+ristime
 savefig
 SBOX
 SBREV
@@ -75,6 +80,10 @@ simpleserial
 siutils
 sname
 softmax
+sparsed
+sparsing
+subarray
+TCPIP
 Tensorboard
 termcolor
 textin
@@ -86,8 +95,10 @@ tfrecord
 tinyaes
 tobytes
 tqdm
+trigtime
 vals
 vispy
+WAVEDESC
 xlabel
 xticks
 yapf

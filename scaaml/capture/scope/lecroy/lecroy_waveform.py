@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Parse data comming from the LeCroy oscilloscope.
+"""Parse data coming from the LeCroy oscilloscope.
 """
 
 import datetime
@@ -154,7 +154,7 @@ class LecroyWaveform:
         assert self.d["wavedesc_len"] >= 346
 
         # User-text length
-        self.d["usertext_len"] = self.get_int32()
+        self.d["user_text_len"] = self.get_int32()
 
         # NOP
         self.get_int32()  # Reserved
@@ -183,7 +183,7 @@ class LecroyWaveform:
         self.get_int16()  # Reserved
         self.get_int16()  # Reserved
         self.d["wave_array_count"] = self.get_int32()
-        self.d["pnts_per_screen"] = self.get_int32()
+        self.d["points_per_screen"] = self.get_int32()
         self.d["first_valid_pnt"] = self.get_int32()
         self.d["last_valid_pnt"] = self.get_int32()
         self.d["first_point"] = self.get_int32()
@@ -199,12 +199,12 @@ class LecroyWaveform:
         self.d["min_value"] = self.get_float()
         self.d["nominal_bits"] = self.get_int16()
         self.d["nom_subarray_count"] = self.get_int16()
-        self.d["horiz_interval"] = self.get_float()
-        self.d["horiz_offset"] = self.get_double()
+        self.d["horizontal_interval"] = self.get_float()
+        self.d["horizontal_offset"] = self.get_double()
         self.d["pixel_offset"] = self.get_double()
-        self.d["vertunit"] = self.get_string(48)
-        self.d["horunit"] = self.get_string(48)
-        self.d["horiz_uncertainty"] = self.get_float()
+        self.d["vertical_unit"] = self.get_string(48)
+        self.d["horizontal_unit"] = self.get_string(48)
+        self.d["horizontal_uncertainty"] = self.get_float()
         self.d["trigger_time"] = self.get_timestamp()
         self.d["acq_duration"] = self.get_float()
 
@@ -291,7 +291,7 @@ class LecroyWaveform:
         }.get(self.get_int16())
 
         # Vertical coupling
-        self.d["vert_coupling"] = {
+        self.d["vertical_coupling"] = {
             0: "DC_50_Ohms",
             1: "ground",
             2: "DC_1MOhm",
@@ -302,7 +302,7 @@ class LecroyWaveform:
         self.d["probe_att"] = self.get_float()
 
         # Fixed vertical gain
-        self.d["fixed_vert_gain"] = {
+        self.d["fixed_vertical_gain"] = {
             0: "1 uV/div",
             1: "2 uV/div",
             2: "5 uV/div",
@@ -337,7 +337,7 @@ class LecroyWaveform:
         self.d["bandwidth_limit"] = {0: "off", 1: "on"}.get(self.get_int16())
 
         self.d["vertical_vernier"] = self.get_float()
-        self.d["acq_vert_offset"] = self.get_float()
+        self.d["acq_vertical_offset"] = self.get_float()
 
         # Wave source
         self.d["wave_source"] = {
@@ -351,10 +351,10 @@ class LecroyWaveform:
         self._ofs = self.d["wavedesc_len"]
 
         # Block length
-        block_len = self.d["usertext_len"]
+        block_len = self.d["user_text_len"]
         if block_len > 0:
             assert block_len <= 160
-            self.d["usertext"] = self.get_string(block_len)
+            self.d["user_text"] = self.get_string(block_len)
 
         # Unused
         block_len = self.d["trigtime_len"]
