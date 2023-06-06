@@ -42,6 +42,8 @@ setup(
         "Pillow",
         "tensorflow>=2.2.0",
         "pygments",
+        "pyvisa",
+        "pyvisa-py",
         "chipwhisperer",
         "scipy",
         "semver",
