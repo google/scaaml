@@ -32,7 +32,8 @@ class LeCroy(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self, samples: int, offset: int, ip_address: str,
-                 trace_channel: str, timeout: float, **_):
+                 trace_channel: str, communication_timeout: float,
+                 trigger_timeout: float, **_):
         """Create scope context.
 
         Args:
@@ -40,7 +41,10 @@ class LeCroy(AbstractSScope):
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
           trace_channel (str): Channel name (string representation of a number).
-          timeout (float): Timeout communication after `timeout` seconds.
+          communication_timeout (float): Timeout communication after
+            `communication_timeout` seconds.
+          trigger_timeout (float): Number of seconds before the trigger times
+            out (in seconds).
           _: LeCroy is expected to be initialized using capture_info
             dictionary, this parameter allows to have additional information
             there and initialize as LeCroy(**capture_info).
@@ -49,7 +53,8 @@ class LeCroy(AbstractSScope):
 
         self._ip_address = ip_address
         self._trace_channel = trace_channel
-        self._timeout = timeout
+        self._communication_timeout = communication_timeout
+        self._trigger_timeout = trigger_timeout
 
         # Scope object
         self._scope: Optional[LeCroyScope] = None
@@ -66,7 +71,8 @@ class LeCroy(AbstractSScope):
             offset=self._offset,
             ip_address=self._ip_address,
             trace_channel=self._trace_channel,
-            timeout=self._timeout,
+            communication_timeout=self._communication_timeout,
+            trigger_timeout=self._trigger_timeout,
         )
         assert self._scope is not None
         self._scope.con()
@@ -94,7 +100,8 @@ class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(self, samples: int, offset: int, ip_address: str,
-                 trace_channel: str, timeout: float):
+                 trace_channel: str, communication_timeout: float,
+                 trigger_timeout: float):
         """Create scope context.
 
         Args:
@@ -102,13 +109,17 @@ class LeCroyScope(ScopeTemplate):
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
           trace_channel (str): Channel name (string representation of a number).
-          timeout (float): Timeout communication after `timeout` seconds.
+          communication_timeout (float): Timeout communication after
+            `communication_timeout` seconds.
+          trigger_timeout (float): Number of seconds before the trigger times
+            out (in seconds).
         """
         self._samples = samples
         self._offset = offset
         self._ip_address = ip_address
         self._trace_channel = trace_channel
-        self._timeout = timeout
+        self._communication_timeout = communication_timeout
+        self._trigger_timeout = trigger_timeout
 
         # Trace and trigger
         self._last_trace = None
@@ -121,7 +132,7 @@ class LeCroyScope(ScopeTemplate):
         # Connect to the oscilloscope.
         self._scope_communication = LeCroyCommunicationLXI(
             ip_address=self._ip_address,
-            timeout=self._timeout,
+            timeout=self._communication_timeout,
         )
 
         assert self._scope_communication is not None
@@ -164,8 +175,8 @@ class LeCroyScope(ScopeTemplate):
 
         try:
             # Wait for trigger
-            for _ in range(40):
-                time.sleep(0.1)
+            for _ in range(10):
+                time.sleep(self._trigger_timeout / 10)
                 status = self._scope_communication.query("TRMD?")
                 if status == "STOP":
                     break
@@ -235,5 +246,6 @@ class LeCroyScope(ScopeTemplate):
             "offset": self._offset,
             "ip_address": self._ip_address,
             "trace_channel": self._trace_channel,
-            "timeout": self._timeout,
+            "communication_timeout": self._communication_timeout,
+            "trigger_timeout": self._trigger_timeout,
         })
