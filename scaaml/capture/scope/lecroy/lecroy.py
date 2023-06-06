@@ -31,15 +31,15 @@ from scaaml.capture.scope.scope_template import ScopeTemplate
 class LeCroy(AbstractSScope):
     """Scope context manager."""
 
-    def __init__(self, samples: int, offset: int, ip_address: str, channel: str,
-                 timeout: float, **_):
+    def __init__(self, samples: int, offset: int, ip_address: str,
+                 trace_channel: str, timeout: float, **_):
         """Create scope context.
 
         Args:
           samples (int): How many points to sample (length of the capture).
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
-          channel (str): Channel name (string representation of a number).
+          trace_channel (str): Channel name (string representation of a number).
           timeout (float): Timeout communication after `timeout` seconds.
           _: LeCroy is expected to be initialized using capture_info
             dictionary, this parameter allows to have additional information
@@ -48,7 +48,7 @@ class LeCroy(AbstractSScope):
         super().__init__(samples=samples, offset=offset)
 
         self._ip_address = ip_address
-        self._channel = channel
+        self._trace_channel = trace_channel
         self._timeout = timeout
 
         # Scope object
@@ -56,8 +56,6 @@ class LeCroy(AbstractSScope):
 
     def __enter__(self):
         """Create scope context.
-
-        Suppose that the signal is channel A and the trigger is channel B.
 
         Returns: self
         """
@@ -67,7 +65,7 @@ class LeCroy(AbstractSScope):
             samples=self._samples,
             offset=self._offset,
             ip_address=self._ip_address,
-            channel=self._channel,
+            trace_channel=self._trace_channel,
             timeout=self._timeout,
         )
         assert self._scope is not None
@@ -95,21 +93,21 @@ class LeCroy(AbstractSScope):
 class LeCroyScope(ScopeTemplate):
     """Scope."""
 
-    def __init__(self, samples: int, offset: int, ip_address: str, channel: str,
-                 timeout: float):
+    def __init__(self, samples: int, offset: int, ip_address: str,
+                 trace_channel: str, timeout: float):
         """Create scope context.
 
         Args:
           samples (int): How many points to sample (length of the capture).
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
-          channel (str): Channel name (string representation of a number).
+          trace_channel (str): Channel name (string representation of a number).
           timeout (float): Timeout communication after `timeout` seconds.
         """
         self._samples = samples
         self._offset = offset
         self._ip_address = ip_address
-        self._channel = channel
+        self._trace_channel = trace_channel
         self._timeout = timeout
 
         # Trace and trigger
@@ -174,7 +172,8 @@ class LeCroyScope(ScopeTemplate):
             assert self._scope_communication.query("TRMD?") == "STOP"
 
             # Get trace
-            wave = self._scope_communication.get_waveform(channel=self._channel)
+            wave = self._scope_communication.get_waveform(
+                channel=self._trace_channel)
             self._last_trace = wave.get_wave1(
                 first_sample=self._offset,
                 length=self._samples,
@@ -235,6 +234,6 @@ class LeCroyScope(ScopeTemplate):
             "samples": self._samples,
             "offset": self._offset,
             "ip_address": self._ip_address,
-            "channel": self._channel,
+            "trace_channel": self._trace_channel,
             "timeout": self._timeout,
         })
