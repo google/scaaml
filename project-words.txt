@@ -65,6 +65,7 @@ presamples
 pretrained
 probas
 protver
+pyclass
 pyplot
 pyvisa
 rearchitecting
