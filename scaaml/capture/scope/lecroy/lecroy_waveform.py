@@ -156,14 +156,12 @@ class LecroyWaveform:
         # User-text length
         self.d["user_text_len"] = self.get_int32()
 
-        # NOP
         self.get_int32()  # Reserved
 
         self.d["trigtime_len"] = self.get_int32()
 
         self.d["ristime_len"] = self.get_int32()
 
-        # NOP
         self.get_int32()  # Reserved
 
         # Length of wave1
@@ -172,9 +170,7 @@ class LecroyWaveform:
         # Length of wave2
         self.d["wave2_len"] = self.get_int32()
 
-        # NOP
         self.get_int32()  # Reserved
-        # NOP
         self.get_int32()  # Reserved
 
         self.d["instrument_name"] = self.get_string(16)
