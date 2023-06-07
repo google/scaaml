@@ -134,12 +134,12 @@ class LeCroyCommunicationLXI(LeCroyCommunication):
         return self._scope.query(message).strip()
 
     @make_custom_exception
-    def get_waveform(self, channel: str = "1") -> LecroyWaveform:
+    def get_waveform(self, channel: str = "C1") -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
         assert self._scope is not None
         return self._scope.query_binary_values(
-            f"C{channel}:WAVEFORM?",
+            f"{channel}:WAVEFORM?",
             datatype="B",
             container=LecroyWaveform,
         )  # type: ignore

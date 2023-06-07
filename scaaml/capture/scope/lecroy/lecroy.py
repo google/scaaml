@@ -15,7 +15,8 @@
 
 import base64
 import time
-from typing import Optional
+from typing import Literal, Optional
+from typing_extensions import TypeAlias
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -27,20 +28,25 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationLXI
 from scaaml.capture.scope.scope_template import ScopeTemplate
 
+LECROY_CHANNEL_NAME_T: TypeAlias = Literal["C1", "C2", "C3", "C4", "DIGITAL1",
+                                           "DIGITAL2", "DIGITAL3", "DIGITAL4"]
+
 
 class LeCroy(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self, samples: int, offset: int, ip_address: str,
-                 trace_channel: str, communication_timeout: float,
-                 trigger_timeout: float, **_):
+                 trace_channel: LECROY_CHANNEL_NAME_T,
+                 trigger_channel: LECROY_CHANNEL_NAME_T,
+                 communication_timeout: float, trigger_timeout: float, **_):
         """Create scope context.
 
         Args:
           samples (int): How many points to sample (length of the capture).
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
-          trace_channel (str): Channel name (string representation of a number).
+          trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
           communication_timeout (float): Timeout communication after
             `communication_timeout` seconds.
           trigger_timeout (float): Number of seconds before the trigger times
@@ -53,6 +59,7 @@ class LeCroy(AbstractSScope):
 
         self._ip_address = ip_address
         self._trace_channel = trace_channel
+        self._trigger_channel = trigger_channel
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
 
@@ -71,6 +78,7 @@ class LeCroy(AbstractSScope):
             offset=self._offset,
             ip_address=self._ip_address,
             trace_channel=self._trace_channel,
+            trigger_channel=self._trigger_channel,
             communication_timeout=self._communication_timeout,
             trigger_timeout=self._trigger_timeout,
         )
@@ -100,15 +108,17 @@ class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(self, samples: int, offset: int, ip_address: str,
-                 trace_channel: str, communication_timeout: float,
-                 trigger_timeout: float):
+                 trace_channel: LECROY_CHANNEL_NAME_T,
+                 trigger_channel: LECROY_CHANNEL_NAME_T,
+                 communication_timeout: float, trigger_timeout: float):
         """Create scope context.
 
         Args:
           samples (int): How many points to sample (length of the capture).
           offset (int): How many samples to discard.
           ip_address (str): IP address or hostname of the oscilloscope.
-          trace_channel (str): Channel name (string representation of a number).
+          trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
           communication_timeout (float): Timeout communication after
             `communication_timeout` seconds.
           trigger_timeout (float): Number of seconds before the trigger times
@@ -118,6 +128,7 @@ class LeCroyScope(ScopeTemplate):
         self._offset = offset
         self._ip_address = ip_address
         self._trace_channel = trace_channel
+        self._trigger_channel = trigger_channel
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
 
@@ -219,10 +230,20 @@ class LeCroyScope(ScopeTemplate):
 
     def get_last_trigger_trace(self) -> np.ndarray:
         """Return a copy of the last trigger trace."""
-        # Get digital trigger:
         assert self._scope_communication is not None
+
+        if self._trigger_channel.startswith("C"):
+            # Get analog trigger:
+            waveform = self._scope_communication.get_waveform(
+                channel=self._trigger_channel)
+            return waveform.get_wave1(
+                first_sample=self._offset,
+                length=self._samples,
+            )
+
+        # Get digital trigger:
         trigger = self._scope_communication.query_binary_values(
-            "DIGITAL1:WF?",
+            f"{self._trigger_channel}:WF?",
             datatype="B",
         )
 
@@ -246,6 +267,7 @@ class LeCroyScope(ScopeTemplate):
             "offset": self._offset,
             "ip_address": self._ip_address,
             "trace_channel": self._trace_channel,
+            "trigger_channel": self._trigger_channel,
             "communication_timeout": self._communication_timeout,
             "trigger_timeout": self._trigger_timeout,
         })
