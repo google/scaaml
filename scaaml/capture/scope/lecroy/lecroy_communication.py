@@ -84,8 +84,8 @@ def make_custom_exception(func):
     return wrapper
 
 
-class LeCroyCommunicationLXI(LeCroyCommunication):
-    """Use pyvisa to communicate."""
+class LeCroyCommunicationVisa(LeCroyCommunication):
+    """Use pyvisa to communicate using the LXI protocol over TCP."""
 
     def __init__(self, ip_address: str, timeout: float = 5.0):
         super().__init__(

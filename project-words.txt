@@ -45,6 +45,7 @@ kidxs
 lecroy
 logit
 logits
+LXI
 matplotlib
 maxtraces
 mbed
@@ -85,6 +86,7 @@ softmax
 sparsed
 sparsing
 subarray
+TCP
 TCPIP
 Tensorboard
 termcolor

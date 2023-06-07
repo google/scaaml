@@ -25,7 +25,7 @@ import numpy as np
 from scaaml.capture.scope import AbstractSScope
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationError
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
-from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationLXI
+from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.scope_template import ScopeTemplate
 
 LECROY_CHANNEL_NAME_T: TypeAlias = Literal["C1", "C2", "C3", "C4", "DIGITAL1",
@@ -141,7 +141,7 @@ class LeCroyScope(ScopeTemplate):
     def con(self, sn=None) -> bool:
         """Set the scope for capture."""
         # Connect to the oscilloscope.
-        self._scope_communication = LeCroyCommunicationLXI(
+        self._scope_communication = LeCroyCommunicationVisa(
             ip_address=self._ip_address,
             timeout=self._communication_timeout,
         )
