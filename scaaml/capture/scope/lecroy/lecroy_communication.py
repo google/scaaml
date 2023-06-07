@@ -128,7 +128,8 @@ class LeCroyCommunicationLXI(LeCroyCommunication):
 
     @make_custom_exception
     def query(self, message: str) -> str:
-        """Query the oscilloscope.
+        """Query the oscilloscope (write, read, and decode the answer as a
+        string).
         """
         assert self._scope is not None
         return self._scope.query(message).strip()
