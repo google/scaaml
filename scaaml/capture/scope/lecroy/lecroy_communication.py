@@ -97,6 +97,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
 
     @make_custom_exception
     def connect(self):
+        # For portability and ease of setup we enforce the pure Python backend
         self._resource_manager = pyvisa.ResourceManager("@py")
         assert self._resource_manager is not None
 
