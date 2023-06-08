@@ -319,7 +319,7 @@ class WaveDesc:
     points_per_pair: int = 0
     pair_offsets: int = 0
     vertical_gain: float = 1.0  # Default value
-    vertical_offset: float = 0.0  # Default valule
+    vertical_offset: float = 0.0  # Default value
     max_value: float = 0.0
     min_value: float = 0.0
     nominal_bits: int = 0

@@ -97,6 +97,7 @@ tffeature
 tfrec
 tfrecord
 tinyaes
+TMPL
 tobytes
 tqdm
 trigtime
