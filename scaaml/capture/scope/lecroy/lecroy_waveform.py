@@ -14,6 +14,7 @@
 """Parse data coming from the LeCroy oscilloscope.
 """
 
+import dataclasses
 import datetime
 import struct
 
@@ -23,6 +24,15 @@ import numpy as np
 class LecroyWaveform:
     """Parse waveform response.
     """
+
+    # This is a sha256 of the template definition string. Ideally one would
+    # first ask for the template format using the command "TMPL?", parse it,
+    # and then parse the waveform.
+    # https://github.com/google/scaaml/issues/130
+    #
+    # Workaround check that hash of the template has not changed:
+    #   hashlib.sha256(scope.query("TMPL?").encode("utf8")).hexdigest()
+    SUPPORTED_PROTOCOL_TEMPLATE_SHA = "0ad362abcbe5b15ada8410f22f65434240f1206c7ba4b88847d422b0ee55096b"
 
     def __init__(self, raw_data):
         """Initialize the parser. Use the `parse` method with the `get_wave1`.
