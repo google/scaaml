@@ -17,6 +17,7 @@
 import dataclasses
 import datetime
 import struct
+from typing import Union
 
 import numpy as np
 
@@ -32,7 +33,8 @@ class LecroyWaveform:
     #
     # Workaround check that hash of the template has not changed:
     #   hashlib.sha256(scope.query("TMPL?").encode("utf8")).hexdigest()
-    SUPPORTED_PROTOCOL_TEMPLATE_SHA = "0ad362abcbe5b15ada8410f22f65434240f1206c7ba4b88847d422b0ee55096b"
+    SUPPORTED_PROTOCOL_TEMPLATE_SHA = "0ad362abcbe5b15ada8410f22f65434240f" \
+                                      "1206c7ba4b88847d422b0ee55096b"
 
     def __init__(self, raw_data):
         """Initialize the parser. Use the `parse` method with the `get_wave1`.
@@ -45,6 +47,7 @@ class LecroyWaveform:
         self._order = "<"
         self._unit = "b"
         self._ofs = 0
+        self._wave_description = WaveDesc()
         self.parse()
 
     def get_string(self, max_size=16) -> str:
@@ -127,8 +130,8 @@ class LecroyWaveform:
         if length == 0:
             return np.array([], dtype=np.float32)
         wave = np.array(self.get_raw_wave1(), dtype=np.float32)
-        gain = self.d.get("vertical_gain", 1.0)
-        offset = self.d.get("vertical_offset", 0.0)
+        gain = self._wave_description.vertical_gain
+        offset = self._wave_description.vertical_offset
         scaled_wave = wave * gain - offset
         end = scaled_wave.size
         if length > 0:
@@ -137,258 +140,369 @@ class LecroyWaveform:
 
     def __repr__(self):
         """Return human readable representation of self."""
-        return self.d.__repr__()
+        return {
+            **self.d,
+            **dataclasses.asdict(self._wave_description),
+        }.__repr__()
 
     def parse(self):
         """Parse answer from LeCroy.
         """
+        # BEGINNING OF WAVE DESCRIPTION BLOCK
+
         # Header
         header = self.get_string(16)
         assert header == "WAVEDESC"
 
         # Template name
-        self.d["template_name"] = self.get_string(16)
+        self._wave_description.template_name = self.get_string(16)
 
         # Communication type
-        comm_type = self.get_int16()
-        self.d["comm_type"] = {0: "b", 1: "h"}.get(comm_type)
-        self._unit = self.d["comm_type"]
+        self._wave_description.comm_type = WaveDesc.translate(
+            "comm_type", self.get_int16())
+        self._unit = self._wave_description.comm_type
 
         # Byte order
-        comm_order = self.get_int16()
-        self.d["comm_order"] = {0: ">", 1: "<"}.get(comm_order)
-        self._order = self.d["comm_order"]
+        self._wave_description.comm_order = WaveDesc.translate(
+            "comm_order", self.get_int16())
+        self._order = self._wave_description.comm_order
 
         # Wave description length
-        self.d["wavedesc_len"] = self.get_int32()
-        assert self.d["wavedesc_len"] >= 346
+        self._wave_description.wavedesc_len = self.get_int32()
+        assert self._wave_description.wavedesc_len >= 346
 
         # User-text length
-        self.d["user_text_len"] = self.get_int32()
+        self._wave_description.user_text_len = self.get_int32()
 
-        self.get_int32()  # Reserved
-
-        self.d["trigtime_len"] = self.get_int32()
-
-        self.d["ristime_len"] = self.get_int32()
-
-        self.get_int32()  # Reserved
+        _ = self.get_int32()  # reserved
+        self._wave_description.trigtime_len = self.get_int32()
+        self._wave_description.ristime_len = self.get_int32()
+        _ = self.get_int32()  # reserved
 
         # Length of wave1
-        self.d["wave1_len"] = self.get_int32()
+        self._wave_description.wave1_len = self.get_int32()
 
         # Length of wave2
-        self.d["wave2_len"] = self.get_int32()
+        self._wave_description.wave2_len = self.get_int32()
 
-        self.get_int32()  # Reserved
-        self.get_int32()  # Reserved
-
-        self.d["instrument_name"] = self.get_string(16)
-        self.d["instrument_number"] = self.get_int32()
-        self.d["trace_label"] = self.get_string(16)
-        self.get_int16()  # Reserved
-        self.get_int16()  # Reserved
-        self.d["wave_array_count"] = self.get_int32()
-        self.d["points_per_screen"] = self.get_int32()
-        self.d["first_valid_pnt"] = self.get_int32()
-        self.d["last_valid_pnt"] = self.get_int32()
-        self.d["first_point"] = self.get_int32()
-        self.d["sparsing_factor"] = self.get_int32()
-        self.d["segment_index"] = self.get_int32()
-        self.d["subarray_count"] = self.get_int32()
-        self.d["sweeps_per_acq"] = self.get_int32()
-        self.d["points_per_pair"] = self.get_int16()
-        self.d["pair_offsets"] = self.get_int16()
-        self.d["vertical_gain"] = self.get_float()
-        self.d["vertical_offset"] = self.get_float()
-        self.d["max_value"] = self.get_float()
-        self.d["min_value"] = self.get_float()
-        self.d["nominal_bits"] = self.get_int16()
-        self.d["nom_subarray_count"] = self.get_int16()
-        self.d["horizontal_interval"] = self.get_float()
-        self.d["horizontal_offset"] = self.get_double()
-        self.d["pixel_offset"] = self.get_double()
-        self.d["vertical_unit"] = self.get_string(48)
-        self.d["horizontal_unit"] = self.get_string(48)
-        self.d["horizontal_uncertainty"] = self.get_float()
-        self.d["trigger_time"] = self.get_timestamp()
-        self.d["acq_duration"] = self.get_float()
-
-        # Record type
-        self.d["record_type"] = {
-            0: "single_sweep",
-            1: "interleaved",
-            2: "histogram",
-            3: "graph",
-            4: "filter_coefficient",
-            5: "complex",
-            6: "extrema",
-            7: "sequence_obsolete",
-            8: "centered_RIS",
-            9: "peak_detect"
-        }.get(self.get_int16())
-
-        # Processing done
-        self.d["processing_done"] = {
-            0: "no_processing",
-            1: "fir_filter",
-            2: "interpolated",
-            3: "sparsed",
-            4: "autoscaled",
-            5: "no_result",
-            6: "rolling",
-            7: "cumulative"
-        }.get(self.get_int16())
-
-        self.get_int16()  # Reserved
-        self.d["ris_sweeps"] = self.get_int16()
+        _ = self.get_int32()  # reserved
+        _ = self.get_int32()  # reserved
+        self._wave_description.instrument_name = self.get_string(16)
+        self._wave_description.instrument_number = self.get_int32()
+        self._wave_description.trace_label = self.get_string(16)
+        _ = self.get_int16()  # reserved
+        _ = self.get_int16()  # reserved
+        self._wave_description.wave_array_count = self.get_int32()
+        self._wave_description.points_per_screen = self.get_int32()
+        self._wave_description.first_valid_pnt = self.get_int32()
+        self._wave_description.last_valid_pnt = self.get_int32()
+        self._wave_description.first_point = self.get_int32()
+        self._wave_description.sparsing_factor = self.get_int32()
+        self._wave_description.segment_index = self.get_int32()
+        self._wave_description.subarray_count = self.get_int32()
+        self._wave_description.sweeps_per_acq = self.get_int32()
+        self._wave_description.points_per_pair = self.get_int16()
+        self._wave_description.pair_offsets = self.get_int16()
+        self._wave_description.vertical_gain = self.get_float()
+        self._wave_description.vertical_offset = self.get_float()
+        self._wave_description.max_value = self.get_float()
+        self._wave_description.min_value = self.get_float()
+        self._wave_description.nominal_bits = self.get_int16()
+        self._wave_description.nom_subarray_count = self.get_int16()
+        self._wave_description.horizontal_interval = self.get_float()
+        self._wave_description.horizontal_offset = self.get_double()
+        self._wave_description.pixel_offset = self.get_double()
+        self._wave_description.vertical_unit = self.get_string(48)
+        self._wave_description.horizontal_unit = self.get_string(48)
+        self._wave_description.horizontal_uncertainty = self.get_float()
+        self._wave_description.trigger_time = self.get_timestamp()
+        self._wave_description.acq_duration = self.get_float()
+        self._wave_description.record_type = WaveDesc.translate(
+            "record_type", self.get_int16())
+        self._wave_description.processing_done = WaveDesc.translate(
+            "processing_done", self.get_int16())
+        _ = self.get_int16()  # reserved
+        self._wave_description.ris_sweeps = self.get_int16()
 
         # Timebase
-        self.d["timebase"] = {
-            0: "1 ps/div",
-            1: "2 ps/div",
-            2: "5 ps/div",
-            3: "10 ps/div",
-            4: "20 ps/div",
-            5: "50 ps/div",
-            6: "100 ps/div",
-            7: "200 ps/div",
-            8: "500 ps/div",
-            9: "1 ns/div",
-            10: "2 ns/div",
-            11: "5 ns/div",
-            12: "10 ns/div",
-            13: "20 ns/div",
-            14: "50 ns/div",
-            15: "100 ns/div",
-            16: "200 ns/div",
-            17: "500 ns/div",
-            18: "1 us/div",
-            19: "2 us/div",
-            20: "5 us/div",
-            21: "10 us/div",
-            22: "20 us/div",
-            23: "50 us/div",
-            24: "100 us/div",
-            25: "200 us/div",
-            26: "500 us/div",
-            27: "1 ms/div",
-            28: "2 ms/div",
-            29: "5 ms/div",
-            30: "10 ms/div",
-            31: "20 ms/div",
-            32: "50 ms/div",
-            33: "100 ms/div",
-            34: "200 ms/div",
-            35: "500 ms/div",
-            36: "1 s/div",
-            37: "2 s/div",
-            38: "5 s/div",
-            39: "10 s/div",
-            40: "20 s/div",
-            41: "50 s/div",
-            42: "100 s/div",
-            43: "200 s/div",
-            44: "500 s/div",
-            45: "1 ks/div",
-            46: "2 ks/div",
-            47: "5 ks/div",
-            100: "external"
-        }.get(self.get_int16())
+        self._wave_description.timebase = WaveDesc.translate(
+            "timebase", self.get_int16())
 
         # Vertical coupling
-        self.d["vertical_coupling"] = {
-            0: "DC_50_Ohms",
-            1: "ground",
-            2: "DC_1MOhm",
-            3: "ground",
-            4: "AC_1MOhm"
-        }.get(self.get_int16())
+        self._wave_description.vertical_coupling = WaveDesc.translate(
+            "vertical_coupling", self.get_int16())
 
-        self.d["probe_att"] = self.get_float()
+        self._wave_description.probe_att = self.get_float()
 
         # Fixed vertical gain
-        self.d["fixed_vertical_gain"] = {
-            0: "1 uV/div",
-            1: "2 uV/div",
-            2: "5 uV/div",
-            3: "10 uV/div",
-            4: "20 uV/div",
-            5: "50 uV/div",
-            6: "100 uV/div",
-            7: "200 uV/div",
-            8: "500 uV/div",
-            9: "1 mV/div",
-            10: "2 mV/div",
-            11: "5 mV/div",
-            12: "10 mV/div",
-            13: "20 mV/div",
-            14: "50 mV/div",
-            15: "100 mV/div",
-            16: "200 mV/div",
-            17: "500 mV/div",
-            18: "1 V/div",
-            19: "2 V/div",
-            20: "5 V/div",
-            21: "10 V/div",
-            22: "20 V/div",
-            23: "50 V/div",
-            24: "100 V/div",
-            25: "200 V/div",
-            26: "500 V/div",
-            27: "1 kV/div"
-        }.get(self.get_int16())
+        self._wave_description.fixed_vertical_gain = WaveDesc.translate(
+            "fixed_vertical_gain", self.get_int16())
 
         # Bandwidth limit on/off
-        self.d["bandwidth_limit"] = {0: "off", 1: "on"}.get(self.get_int16())
+        self._wave_description.bandwidth_limit = WaveDesc.translate(
+            "bandwidth_limit", self.get_int16())
 
-        self.d["vertical_vernier"] = self.get_float()
-        self.d["acq_vertical_offset"] = self.get_float()
+        self._wave_description.vertical_vernier = self.get_float()
+        self._wave_description.acq_vertical_offset = self.get_float()
 
         # Wave source
-        self.d["wave_source"] = {
-            0: "channel_1",
-            1: "channel_2",
-            2: "channel_3",
-            3: "channel_4",
-            9: "unknown"
-        }.get(self.get_int16())
+        self._wave_description.wave_source = WaveDesc.translate(
+            "wave_source", self.get_int16())
 
-        self._ofs = self.d["wavedesc_len"]
+        # END OF WAVE DESCRIPTION BLOCK
+
+        self._ofs = self._wave_description.wavedesc_len
 
         # Block length
-        block_len = self.d["user_text_len"]
+        block_len = self._wave_description.user_text_len
         if block_len > 0:
             assert block_len <= 160
             self.d["user_text"] = self.get_string(block_len)
 
         # Unused
-        block_len = self.d["trigtime_len"]
+        block_len = self._wave_description.trigtime_len
         if block_len > 0:
             # trigtime array
             self.d["trigtime"] = []
             self._ofs += block_len
 
         # Unused
-        block_len = self.d["ristime_len"]
+        block_len = self._wave_description.ristime_len
         if block_len > 0:
             # random-interleaved-sampling array
             self.d["ristime"] = []
             self._ofs += block_len
 
         # Receive wave1
-        block_len = self.d["wave1_len"]
+        block_len = self._wave_description.wave1_len
         if block_len > 0:
             tmp = []
-            for _ in range(self.d["wave_array_count"]):
+            for _ in range(self._wave_description.wave_array_count):
                 tmp.append(self.get_unit())
             self.d["wave1"] = np.array(tmp)
 
         # Receive wave2
-        block_len = self.d["wave2_len"]
+        block_len = self._wave_description.wave2_len
         if block_len > 0:
             tmp = []
-            for _ in range(self.d["wave_array_count"]):
+            for _ in range(self._wave_description.wave_array_count):
                 tmp.append(self.get_unit())
             self.d["wave2"] = np.array(tmp)
         assert self._ofs == len(self.raw_data)
+
+
+@dataclasses.dataclass
+class WaveDesc:
+    """Wave description fields.
+    """
+    template_name: str = ""
+    comm_type: str = "b"  # Default in LecroyWaveform
+    comm_order: str = "<"  # Default in LecroyWaveform
+    wavedesc_len: int = 0
+    user_text_len: int = 0
+    trigtime_len: int = 0
+    ristime_len: int = 0
+    wave1_len: int = 0
+    wave2_len: int = 0
+    instrument_name: str = ""
+    instrument_number: int = 0
+    trace_label: str = ""
+    wave_array_count: int = 0
+    points_per_screen: int = 0
+    first_valid_pnt: int = 0
+    last_valid_pnt: int = 0
+    first_point: int = 0
+    sparsing_factor: int = 0
+    segment_index: int = 0
+    subarray_count: int = 0
+    sweeps_per_acq: int = 0
+    points_per_pair: int = 0
+    pair_offsets: int = 0
+    vertical_gain: float = 1.0  # Default value
+    vertical_offset: float = 0.0  # Default valule
+    max_value: float = 0.0
+    min_value: float = 0.0
+    nominal_bits: int = 0
+    nom_subarray_count: int = 0
+    horizontal_interval: float = 0.0
+    horizontal_offset: float = 0.0
+    pixel_offset: float = 0.0
+    vertical_unit: str = ""
+    horizontal_unit: str = ""
+    horizontal_uncertainty: float = 0.0
+    trigger_time: datetime.datetime = datetime.datetime.fromtimestamp(0)
+    acq_duration: float = 0.0
+    record_type: str = ""
+    processing_done: str = ""
+    ris_sweeps: int = 0
+    timebase: str = ""
+    vertical_coupling: str = ""
+    probe_att: float = 0.0
+    fixed_vertical_gain: str = ""
+    bandwidth_limit: str = ""
+    vertical_vernier: float = 0.0
+    acq_vertical_offset: float = 0.0
+    wave_source: str = ""
+
+    @staticmethod
+    def translate(attr_name: str, value: Union[int, str]) -> str:
+        """Helper method for setters. Enums have defined values which are a set
+        of integers -- keys of the `translation` dictionary. Human readable
+        value is a string -- values of the `translation` dictionary. This
+        function takes an integer and returns its translation to string. If
+        provided with a string it returns that.
+
+        Raises: ValueError if `value` is a string which is not in
+          `translation.keys()` or if `value` is an integer which is not in
+          `translation.keys()` or neither of those types.
+        """
+        translation = {
+            "comm_type": {
+                0: "b",
+                1: "h",
+            },
+            "comm_order": {
+                0: ">",
+                1: "<",
+            },
+            "record_type": {
+                0: "single_sweep",
+                1: "interleaved",
+                2: "histogram",
+                3: "graph",
+                4: "filter_coefficient",
+                5: "complex",
+                6: "extrema",
+                7: "sequence_obsolete",
+                8: "centered_RIS",
+                9: "peak_detect",
+            },
+            "processing_done": {
+                0: "no_processing",
+                1: "fir_filter",
+                2: "interpolated",
+                3: "sparsed",
+                4: "autoscaled",
+                5: "no_result",
+                6: "rolling",
+                7: "cumulative",
+            },
+            "timebase": {
+                0: "1 ps/div",
+                1: "2 ps/div",
+                2: "5 ps/div",
+                3: "10 ps/div",
+                4: "20 ps/div",
+                5: "50 ps/div",
+                6: "100 ps/div",
+                7: "200 ps/div",
+                8: "500 ps/div",
+                9: "1 ns/div",
+                10: "2 ns/div",
+                11: "5 ns/div",
+                12: "10 ns/div",
+                13: "20 ns/div",
+                14: "50 ns/div",
+                15: "100 ns/div",
+                16: "200 ns/div",
+                17: "500 ns/div",
+                18: "1 us/div",
+                19: "2 us/div",
+                20: "5 us/div",
+                21: "10 us/div",
+                22: "20 us/div",
+                23: "50 us/div",
+                24: "100 us/div",
+                25: "200 us/div",
+                26: "500 us/div",
+                27: "1 ms/div",
+                28: "2 ms/div",
+                29: "5 ms/div",
+                30: "10 ms/div",
+                31: "20 ms/div",
+                32: "50 ms/div",
+                33: "100 ms/div",
+                34: "200 ms/div",
+                35: "500 ms/div",
+                36: "1 s/div",
+                37: "2 s/div",
+                38: "5 s/div",
+                39: "10 s/div",
+                40: "20 s/div",
+                41: "50 s/div",
+                42: "100 s/div",
+                43: "200 s/div",
+                44: "500 s/div",
+                45: "1 ks/div",
+                46: "2 ks/div",
+                47: "5 ks/div",
+                100: "external",
+            },
+            "vertical_coupling": {
+                0: "DC_50_Ohms",
+                1: "ground",
+                2: "DC_1MOhm",
+                3: "ground",
+                4: "AC_1MOhm",
+            },
+            "fixed_vertical_gain": {
+                0: "1 uV/div",
+                1: "2 uV/div",
+                2: "5 uV/div",
+                3: "10 uV/div",
+                4: "20 uV/div",
+                5: "50 uV/div",
+                6: "100 uV/div",
+                7: "200 uV/div",
+                8: "500 uV/div",
+                9: "1 mV/div",
+                10: "2 mV/div",
+                11: "5 mV/div",
+                12: "10 mV/div",
+                13: "20 mV/div",
+                14: "50 mV/div",
+                15: "100 mV/div",
+                16: "200 mV/div",
+                17: "500 mV/div",
+                18: "1 V/div",
+                19: "2 V/div",
+                20: "5 V/div",
+                21: "10 V/div",
+                22: "20 V/div",
+                23: "50 V/div",
+                24: "100 V/div",
+                25: "200 V/div",
+                26: "500 V/div",
+                27: "1 kV/div",
+            },
+            "bandwidth_limit": {
+                0: "off",
+                1: "on",
+            },
+            "wave_source": {
+                0: "channel_1",
+                1: "channel_2",
+                2: "channel_3",
+                3: "channel_4",
+                9: "unknown",
+            },
+        }[attr_name]
+
+        if isinstance(value, str):  # Assigning string value
+            # Make sure it is an allowed value
+            if value not in translation.values():
+                raise ValueError(f"Wrong {attr_name}, {value} not in "
+                                 f"{translation.values()}")
+            return value
+
+        elif isinstance(value, int):  # Assigning int value
+            # Make sure it is a valid enum
+            if value not in translation.keys():
+                raise ValueError(
+                    f"Wrong {attr_name}, {value} not in {translation.keys()}")
+            return translation[value]
+
+        else:
+            raise ValueError(
+                f"{value} is of type {type(value)}, expected either int or str."
+            )
