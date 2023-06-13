@@ -15,7 +15,6 @@
 
 import base64
 import time
-import traceback
 from typing import Literal, Optional
 from typing_extensions import TypeAlias
 import xml.etree.ElementTree as ET
@@ -204,7 +203,6 @@ class LeCroyScope(ScopeTemplate):
 
             return False  # No need to recapture.
         except LeCroyCommunicationError:
-            traceback.print_exc()
             # Reconnect and return True (need to be recaptured).
             self.dis()
             time.sleep(1)
