@@ -113,6 +113,14 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._scope.timeout = self._timeout * 1_000  # Convert second to ms
         self._scope.clear()
 
+        # Check if the hash of the waveform template matches the supported
+        # version:
+        # This is a workaround, see https://github.com/google/scaaml/issues/130
+        template_hash = hashlib.sha256(
+            self._scope.query("TMPL?").encode("utf8")).hexdigest()
+        if template_hash != LecroyWaveform.SUPPORTED_PROTOCOL_TEMPLATE_SHA:
+            raise ValueError("Unsupported waveform template description.")
+
     @make_custom_exception
     def close(self) -> None:
         assert self._scope is not None
@@ -141,14 +149,6 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         """Get a LecroyWaveform object representing a single waveform.
         """
         assert self._scope is not None
-
-        # Check if the hash of the waveform template matches the supported
-        # version:
-        # This is a workaround, see https://github.com/google/scaaml/issues/130
-        template_hash = hashlib.sha256(
-            self._scope.query("TMPL?").encode("utf8")).hexdigest()
-        if template_hash != LecroyWaveform.SUPPORTED_PROTOCOL_TEMPLATE_SHA:
-            raise ValueError("Unsupported waveform template description.")
 
         return self._scope.query_binary_values(
             f"{channel}:WAVEFORM?",
