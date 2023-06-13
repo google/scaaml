@@ -64,7 +64,7 @@ class LeCroy(AbstractSScope):
         self._trigger_timeout = trigger_timeout
 
         # Check that the trace_channel is analog
-        if self._trace_channel[0] != 'C':
+        if self._trace_channel[0] != "C":
             raise ValueError(f"The trace channel should be analog, but is "
                              f"{self._trace_channel} instead")
 
