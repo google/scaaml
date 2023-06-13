@@ -63,6 +63,11 @@ class LeCroy(AbstractSScope):
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
 
+        # Check that the trace_channel is analog
+        if self._trace_channel[0] != 'C':
+            raise ValueError(f"The trace channel should be analog, but is "
+                             f"{self._trace_channel} instead")
+
         # Scope object
         self._scope: Optional[LeCroyScope] = None
 
