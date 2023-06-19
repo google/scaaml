@@ -618,13 +618,17 @@ class Pico6424E(ScopeTemplate):
         return np.array(self._buffers[0][:], dtype=np.float32)
 
     def get_last_trigger_trace(self) -> np.ndarray:
-        """Return a copy of the last trigger trace."""
+        """Return a copy of the last trigger trace.
+
+        Returns: np array representing the trigger trace. If the trigger is
+          digital returns a boolean array, else returns a float32 array.
+        """
         # Digital trigger.
         if self.trigger.is_digital:
             bits = np.array(self._buffers[1][:], dtype=np.int16)
             port_pin = self.trigger.port_pin
             assert port_pin is not None
-            return np.array(bits & (1 << port_pin), dtype=np.float32)
+            return np.array((bits >> port_pin) & 1, dtype=bool)
 
         # Analog trigger.
         return np.array(self._buffers[1][:], dtype=np.float32)
