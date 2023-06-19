@@ -14,6 +14,8 @@
 """Context manager chipwhisperer scope that has default setting and is used to
 control."""
 
+from typing import Optional
+
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
@@ -23,10 +25,18 @@ from scaaml.capture.scope import AbstractSScope
 class DefaultCWScope(AbstractSScope):
     """Scope context manager."""
 
-    def __init__(self):
-        """Create scope context."""
+    def __init__(self, cw_scope_serial_number: Optional[str] = None):
+        """Create scope context.
+
+        Args:
+          cw_scope_serial_number (Optional[str]): Serial number is needed when
+            more scopes are connected at the same time. Default to None
+            (connect to the single scope). Just the number, without the device
+            name and colon character.
+        """
         super().__init__(samples=0, offset=0)
         self._scope = None
+        self._cw_scope_serial_number: Optional[str] = cw_scope_serial_number
 
     def __enter__(self):
         """Create scope context.
@@ -37,7 +47,7 @@ class DefaultCWScope(AbstractSScope):
 
         # Open cw scope with default settings.
 
-        scope = cw.scope()
+        scope = cw.scope(sn=self._cw_scope_serial_number)
         assert not isinstance(scope, CWNano)
         self._scope = scope
 
