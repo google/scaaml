@@ -31,7 +31,6 @@ def capture_ascad_default_parameters(
         examples_per_shard: int = 64,
         measurements_info=None,
         repetitions: int = 1,
-        chip_id: int = 620510,  # STM32F415 Training
         train_keys: int = 4 * 1024,
         train_plaintexts: int = 256,
         holdout_keys: int = 0 * 1024,
@@ -58,6 +57,8 @@ def capture_ascad_default_parameters(
         "sample_rate": sample_rate,
         "offset": offset,
         "trace_probe_range": trace_probe_range,
+        "train_chip_id": 620510,  # STM32F415 Training
+        "holdout_chip_id": 765432,
     }
 
     capture_aes_dataset(
@@ -79,7 +80,6 @@ def capture_ascad_default_parameters(
         measurements_info=measurements_info,
         capture_info=capture_info,
         repetitions=repetitions,
-        chip_id=chip_id,
         train_keys=train_keys,
         train_plaintexts=train_plaintexts,
         holdout_keys=holdout_keys,

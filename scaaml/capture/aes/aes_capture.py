@@ -30,7 +30,6 @@ def capture_aes_scald_stm32f4_mbedtls(
         examples_per_shard: int = 64,
         measurements_info=None,
         repetitions: int = 1,
-        chip_id: int = 164019,
         train_keys: int = 4 * 1024,
         train_plaintexts: int = 256,
         holdout_keys: int = 0 * 1024,
@@ -53,6 +52,8 @@ def capture_aes_scald_stm32f4_mbedtls(
         "offset": offset,
         "clock": clock,
         "sample_rate": sample_rate,
+        "train_chip_id": 164019,
+        "holdout_chip_id": 314159,
     }
 
     capture_aes_dataset(
@@ -74,7 +75,6 @@ def capture_aes_scald_stm32f4_mbedtls(
         measurements_info=measurements_info,
         capture_info=capture_info,
         repetitions=repetitions,
-        chip_id=chip_id,
         train_keys=train_keys,
         train_plaintexts=train_plaintexts,
         holdout_keys=holdout_keys,
