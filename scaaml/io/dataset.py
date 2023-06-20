@@ -702,6 +702,8 @@ class Dataset():
             # parameter.
             pbar = lambda *args, **kwargs: args[0]  # pylint: disable=C3001
 
+        Dataset._check_chip_id(self.shards_list)
+
         Dataset._check_metadata(config=self.get_config_dictionary())
         Dataset._check_sha256sums(shards_list=self.shards_list,
                                   dpath=Path(self.path),
@@ -718,6 +720,31 @@ class Dataset():
             self._check_disjoint_keys(pbar=pbar,
                                       key_ap=key_ap,
                                       deep_check=deep_check)
+
+    @staticmethod
+    def _check_chip_id(shards_list) -> None:
+        """Check that no chip_id is repeated between holdout and other splits.
+
+        Raises: a ValueError if the same chip_id is present in holdout and
+          another split.
+        """
+        if Dataset.HOLDOUT_SPLIT not in shards_list:
+            return
+
+        holdout_chip_ids = set(
+            shard_info["chip_id"]
+            for shard_info in shards_list[Dataset.HOLDOUT_SPLIT])
+
+        for split in (Dataset.TRAIN_SPLIT, Dataset.TEST_SPLIT):
+            # Check if the split is present.
+            if split not in shards_list:
+                continue
+
+            # Check for duplicates between split and holdout.
+            for shard_info in shards_list[split]:
+                if shard_info["chip_id"] in holdout_chip_ids:
+                    raise ValueError(f"Same chip_id in {split} and "
+                                     f"{Dataset.HOLDOUT_SPLIT}")
 
     def _check_disjoint_keys(self, pbar, key_ap: str, deep_check: bool = True):
         """Check that no key in the train split is present in the test split.

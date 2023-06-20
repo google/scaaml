@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Capture script for easier manipulation."""
+from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -32,7 +33,6 @@ def capture_aes_dataset(
         shortname: str,
         description: str,
         capture_info: Dict,
-        chip_id: int,
         crypto_implementation=AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
@@ -58,7 +58,7 @@ def capture_aes_dataset(
       implementation: Name of the implementation that was used.
       shortname: Short name of the dataset being captured.
       description: Short description for the scaaml.io.Dataset.
-      capture_info: Used as parameters of the scope. Should contain:
+      capture_info (Dict): Used as parameters of the scope. Should contain:
         samples (int): Number of data points in a single capture = length of the
           trace.
         offset (int): How many samples are discarded between the trigger event
@@ -70,9 +70,12 @@ def capture_aes_dataset(
           while capture (see cw documentation).
         clock (int): Only when scope_class is CWScope. CLKGEN output frequency
           (in Hz, see cw documentation).
-      chip_id: Identifies the physical chip/board used. It is unique for a
-        single piece of hardware. To identify datasets affected captured
-        using a defective hardware.
+        holdout_chip_id (int): ID of the chip used for holdout split capture.
+        train_chip_id (int): ID of the chip used for train split capture.
+        {train_,holdout_}something: Value dependent on the split being
+          captured. For capture the prefix is stripped name is also present
+          without the prefix. The dictionary cannot have `something` also
+          present without the prefix.
       crypto_implementation: The class that provides attack points info and
         attack points values (for instance scaaml.aes_forward.AESSBOX).
       algorithm: Algorithm name.
@@ -106,6 +109,14 @@ def capture_aes_dataset(
     test_keys = max(train_keys // 8, 256)  # 1/8 = 0.125
     test_plaintexts = train_plaintexts
 
+    if not train_keys and not holdout_keys and not test_keys:
+        raise ValueError(
+            "At least one of [train_keys, holdout_keys, test_keys] should be "
+            "non-zero in order to capture at least one split.")
+
+    if capture_info["train_chip_id"] == capture_info["holdout_chip_id"]:
+        raise ValueError("Cannot have the same chip_id for train and holdout.")
+
     if measurements_info is None:
         measurements_info = {
             "trace1": {
@@ -113,12 +124,6 @@ def capture_aes_dataset(
                 "len": capture_info["samples"],
             },
         }
-
-    # Make sure we do not capture train and holdout in the same go (using the
-    # same chip).
-    if holdout_keys and train_keys:
-        raise ValueError("Holdout should not be captured with the same chip as"
-                         "test or train")
 
     dataset = Dataset.get_dataset(
         root_path=root_path,
@@ -136,22 +141,8 @@ def capture_aes_dataset(
         examples_per_shard=examples_per_shard,
         measurements_info=measurements_info,
         attack_points_info=crypto_implementation.ATTACK_POINTS_INFO,
-        capture_info=capture_info)
-
-    # Check that if we are capturing train or holdout then the other split has
-    # different chip_id.
-    if holdout_keys:  # Capturing holdout, check train and test.
-        if dataset.shards_list[Dataset.TRAIN_SPLIT]:
-            if dataset.shards_list[
-                    Dataset.TRAIN_SPLIT][0]["chip_id"] == chip_id:
-                raise ValueError("Capturing holdout using the same chip as "
-                                 "train.")
-    if train_keys:  # Capturing train and test, check holdout.
-        if dataset.shards_list[Dataset.HOLDOUT_SPLIT]:
-            if dataset.shards_list[
-                    Dataset.HOLDOUT_SPLIT][0]["chip_id"] == chip_id:
-                raise ValueError("Capturing train using the same chip as "
-                                 "holdout.")
+        capture_info=capture_info,
+    )
 
     # Generators of key-plaintext pairs for different splits.
     crypto_algorithms = []
@@ -195,25 +186,61 @@ def capture_aes_dataset(
                        keys=train_keys,
                        plaintexts=train_plaintexts,
                        repetitions=repetitions)
+
+    # Create context managers and capture train and test.
+    if crypto_algorithms:
+        current_capture_info = _get_current_capture_info(capture_info,
+                                                         prefix="train_")
+        _capture(
+            scope_class=scope_class,
+            capture_info=current_capture_info,
+            chip_id=capture_info["train_chip_id"],
+            crypto_algorithms=crypto_algorithms,
+            dataset=dataset,
+        )
+
+    crypto_algorithms = []
     if holdout_keys:
         add_crypto_alg(split=Dataset.HOLDOUT_SPLIT,
                        keys=holdout_keys,
                        plaintexts=holdout_plaintexts,
                        repetitions=repetitions)
 
-    if not crypto_algorithms:
-        raise ValueError(
-            "At least one of [train_keys, holdout_keys] should be non-zero in"
-            "order to capture at least one split.")
+        current_capture_info = _get_current_capture_info(capture_info,
+                                                         prefix="holdout_")
+        # Create context managers and capture dataset.
+        _capture(
+            scope_class=scope_class,
+            capture_info=current_capture_info,
+            chip_id=capture_info["holdout_chip_id"],
+            crypto_algorithms=crypto_algorithms,
+            dataset=dataset,
+        )
 
-    # Create context managers and capture dataset.
-    _capture(
-        scope_class=scope_class,
-        capture_info=capture_info,
-        chip_id=chip_id,
-        crypto_algorithms=crypto_algorithms,
-        dataset=dataset,
-    )
+
+def _get_current_capture_info(capture_info: Dict, prefix: str) -> Dict:
+    """Update capture info for use of capturing train or holdout.
+
+    Args:
+      capture_info (Dict): The old capture info.
+      prefix (str): Prefix that is going to be stripped.
+    """
+    current_capture_info = deepcopy(capture_info)
+    for name, value in capture_info.items():
+        if name.startswith(prefix):
+            short_name = name.removeprefix(prefix)
+
+            # Check that we do not set short_name by mistake
+            if short_name in current_capture_info:
+                msg = f"Cannot have both {name} and {short_name} in " \
+                      f"capture_info. The convention is to have only {name} " \
+                      f"with the {prefix} when it depends on the split " \
+                      f"being captured."
+                raise ValueError(msg)
+
+            # Provide also the short value
+            current_capture_info[short_name] = value
+    return current_capture_info
 
 
 def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
