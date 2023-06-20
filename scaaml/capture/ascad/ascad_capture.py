@@ -80,7 +80,6 @@ def capture_ascad_default_parameters(
         measurements_info=measurements_info,
         capture_info=capture_info,
         repetitions=repetitions,
-        chip_id=chip_id,
         train_keys=train_keys,
         train_plaintexts=train_plaintexts,
         holdout_keys=holdout_keys,
