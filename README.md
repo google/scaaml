@@ -23,6 +23,14 @@ To use SCAAML you need to have a working version of [TensorFlow 2.x](https://www
 2. Install dependencies: `python3 -m pip install --require-hashes -r requirements.txt`
 3. Install the SCAAML package: `python setup.py develop`
 
+### Update dependencies
+
+Make sure to have: `sudo apt install python3 python3-pip python3-venv`.
+
+Install requirements: `pip install --require-hashes -r base-tooling-requirements.txt`
+
+Update: `pip-compile requirements.in --generate-hashes --upgrade` and commit requirements.txt.
+
 ### Dataset and models
 
 Every SCAAML component rely on a datasets and optional models that you will need to download in the component directory. The link to download those are available in the components specific README.md. Simply click on the directory representing the component of your choice, or the link to the component in the list above.
