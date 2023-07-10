@@ -27,7 +27,7 @@ jobs:
           sudo apt-get install libps6000a
       - name: Installing package
         run:
-          pip install -r requirements.txt
+          pip install --require-hashes -r requirements.txt
           pip install picosdk
       - name: Running unit tests
         run: |

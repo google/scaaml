@@ -1,0 +1,16 @@
+Pillow
+chipwhisperer
+colorama
+matplotlib
+numpy
+pandas
+pygments
+pytest
+pyvisa
+pyvisa-py
+scipy
+semver
+tabulate
+tensorflow
+termcolor
+tqdm
