@@ -4,13 +4,16 @@ colorama
 matplotlib
 numpy
 pandas
+pip
 pygments
 pytest
 pyvisa
 pyvisa-py
 scipy
 semver
+setuptools
 tabulate
 tensorflow
 termcolor
 tqdm
+wheel

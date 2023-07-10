@@ -29,7 +29,7 @@ Make sure to have: `sudo apt install python3 python3-pip python3-venv`.
 
 Install requirements: `pip install --require-hashes -r base-tooling-requirements.txt`
 
-Update: `pip-compile requirements.in --generate-hashes --upgrade` and commit requirements.txt.
+Update: `pip-compile --allow-unsafe requirements.in --generate-hashes --upgrade` and commit requirements.txt.
 
 ### Dataset and models
 

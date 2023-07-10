@@ -21,7 +21,6 @@ jobs:
           pip install --require-hashes --no-deps -r requirements.txt
       - name: Install workflow dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
           pip install pytest
           # Install PS drivers
           wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
