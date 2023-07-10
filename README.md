@@ -20,12 +20,16 @@ To use SCAAML you need to have a working version of [TensorFlow 2.x](https://www
 ### SCAAML framework install
 
 1. Clone the repository: `git clone github.com/google/scaaml/`
-2. Install dependencies: `python3 -m pip install --require-hashes -r requirements.txt`
-3. Install the SCAAML package: `python setup.py develop`
+2. Create and activate Python virtual environment:
+      `python3 -m venv myenv`
+      `source myenv/bin/activate`
+3. Install dependencies: `python3 -m pip install --require-hashes -r requirements.txt`
+4. Install the SCAAML package: `python setup.py develop`
 
 ### Update dependencies
 
-Make sure to have: `sudo apt install python3 python3-pip python3-venv`.
+Make sure to have: `sudo apt install python3 python3-pip python3-venv` and
+activated the virtual environment.
 
 Install requirements: `pip install --require-hashes -r base-tooling-requirements.txt`
 
