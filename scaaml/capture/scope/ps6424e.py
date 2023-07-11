@@ -357,7 +357,7 @@ class TriggerSettings(CaptureSettings):
 
     def _dict_repr(self):
         """Human readable representation as a key value dictionary."""
-        config = super().dict_repr()
+        config = super()._dict_repr()
         config.update({
             "trigger_level": self.trigger_level,
             "trigger_direction": self.trigger_direction,
@@ -366,8 +366,9 @@ class TriggerSettings(CaptureSettings):
 
         # Remove specific for analog / digital trigger.
         if self.is_digital:
-            del config["trigger_range"]
-            del config["trigger_coupling"]
+            # Remove safely when keys not present
+            config.pop("trigger_range", None)
+            config.pop("trigger_coupling", None)
 
         return config
 
