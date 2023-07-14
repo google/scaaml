@@ -140,7 +140,7 @@ def balanced_generator(length: int, bunches: int = 1, elements: int = 256):
             seed=None,  # random
         )
 
-        # yeild each row
+        # yield each row
         for value in bunch:
             yield value
 
