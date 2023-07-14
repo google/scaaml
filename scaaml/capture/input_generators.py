@@ -44,7 +44,6 @@ def single_bunch(length: int,
     Args:
       length (int): Length of each of the resulting arrays.
       elements (int): Each array contains numbers in `range(elements)`.
-        This is also the number of returned np.ndarrays.
       seed (Optional[int]): Seed for the random generator. Passed to
         numpy.random.default_rng. For testing purposes only.
 
@@ -89,7 +88,7 @@ def balanced_generator(length: int, bunches: int = 1, elements: int = 256):
 
     Args:
       length (int): Length of each yielded array.
-      bunches (int): How many bunches to return (yeilds `bunches * elements`
+      bunches (int): How many bunches to return (yields `bunches * elements`
         random arrays).
       elements (int): Each array contains numbers in `range(elements)`.
 
@@ -152,7 +151,7 @@ def unrestricted_generator(length: int, bunches: int = 1, elements: int = 256):
 
     Args:
       length (int): Length of each yielded array.
-      bunches (int): How many bunches to return (yeilds `bunches * elements`
+      bunches (int): How many bunches to return (yields `bunches * elements`
         random arrays).
       elements (int): Each array contains numbers in `range(elements)`.
 
