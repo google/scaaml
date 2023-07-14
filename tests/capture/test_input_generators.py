@@ -171,9 +171,12 @@ def test_using_statistical_tests():
     elements = 123
     ap_counter = APCounter({"len": length, "max_val": elements})
 
-    for value in balanced_generator(length=length, bunches=bunches, elements=elements):
+    for value in balanced_generator(length=length,
+                                    bunches=bunches,
+                                    elements=elements):
         ap_counter.update(value)
 
-    checker = APChecker(counts=ap_counter.get_counts(), attack_point_name="value")
+    checker = APChecker(counts=ap_counter.get_counts(),
+                        attack_point_name="value")
     checker.run_all()
     assert not checker._something_failed
