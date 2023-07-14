@@ -66,7 +66,7 @@ def single_bunch(length: int,
 
     transposed_result: List[np.ndarray] = []
 
-    for i in range(length):
+    for _ in range(length):
         # One column (content of result[:, i]).
         column: np.ndarray = np.arange(elements, dtype=np.int64)
 
