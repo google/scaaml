@@ -20,7 +20,7 @@ updates:
           - "*"
     # Only care about our direct dependencies
     allow:
-      dependency-type: "direct"
+      - dependency-type: "direct"
     ignore:
       # Filter out semver patches updates to reduce the frequency of updates
       - dependency-name: "*"
