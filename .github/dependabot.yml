@@ -5,7 +5,23 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "pip"
+    directory: "/"
+    labels:
+      - "dependencies"
+    # Run every Monday
     schedule:
       interval: "weekly"
+      timezone: "Europe/Zurich"
+    # Group PRs to avoid having to rebase/merge too many
+    groups:
+      dependabot:
+        patterns:
+          - *
+    # Only care about our direct dependencies
+    allow:
+      dependency-type: "direct"
+    ignore:
+      # Filter out semver patches updates to reduce the frequency of updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
