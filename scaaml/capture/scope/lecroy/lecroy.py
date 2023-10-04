@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 from chipwhisperer.common.utils import util
 import numpy as np
 
-from scaaml.capture.scope import AbstractSScope
+from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationError
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa

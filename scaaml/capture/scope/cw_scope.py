@@ -16,7 +16,7 @@
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
-from scaaml.capture.scope import AbstractSScope
+from scaaml.capture.scope.scope_base import AbstractSScope
 
 
 class CWScope(AbstractSScope):

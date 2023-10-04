@@ -16,7 +16,7 @@
 from typing import Literal, Optional
 from typing_extensions import TypeAlias
 
-from scaaml.capture.scope import AbstractSScope
+from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
 
