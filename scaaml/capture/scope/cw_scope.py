@@ -13,6 +13,8 @@
 # limitations under the License.
 """Context manager for the scope."""
 
+from typing import Optional
+
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
@@ -23,7 +25,8 @@ class CWScope(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self, gain: int, samples: int, offset: int, clock: int,
-                 sample_rate: str, **_):
+                 sample_rate: str,
+                 cw_scope_serial_number: Optional[str] = None, **_) -> None:
         """Create scope context.
 
         Args:
@@ -32,6 +35,9 @@ class CWScope(AbstractSScope):
           offset: Number of samples to wait before starting recording data.
           clock: CLKGEN output frequency (in Hz).
           sample_rate: Clock source for cw.ClockSettings.adc_src.
+          cw_scope_serial_number (Optional[str]): Serial number of the
+            ChipWhisperer. Can be obtained by calling cw.list_devices() (the
+            key "sn"). Defaults to None -- used when there is only one device.
           _: CWScope is expected to be initialized using the capture_info
             dictionary which may contain extra keys (additional information
             about the capture; the capture_info dictionary is saved in the
@@ -51,6 +57,7 @@ class CWScope(AbstractSScope):
               # Use the scope object.
         """
         super().__init__(samples=samples, offset=offset)
+
         self._gain = gain
         self._clock = clock
         self._sample_rate = sample_rate
@@ -59,6 +66,7 @@ class CWScope(AbstractSScope):
         self._freq_ctr_src = "clkgen"
         self._presamples = 0
         self._scope = None
+        self._sn = cw_scope_serial_number
 
     def __enter__(self):
         """Create scope context.
@@ -67,7 +75,7 @@ class CWScope(AbstractSScope):
         """
         assert self._scope is None  # Do not allow nested with.
 
-        scope = cw.scope()
+        scope = cw.scope(sn=self._sn)
         assert not isinstance(scope, CWNano)
         self._scope = scope
 
