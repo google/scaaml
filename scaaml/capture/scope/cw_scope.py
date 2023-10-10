@@ -24,9 +24,14 @@ from scaaml.capture.scope.scope_base import AbstractSScope
 class CWScope(AbstractSScope):
     """Scope context manager."""
 
-    def __init__(self, gain: int, samples: int, offset: int, clock: int,
+    def __init__(self,
+                 gain: int,
+                 samples: int,
+                 offset: int,
+                 clock: int,
                  sample_rate: str,
-                 cw_scope_serial_number: Optional[str] = None, **_) -> None:
+                 cw_scope_serial_number: Optional[str] = None,
+                 **_) -> None:
         """Create scope context.
 
         Args:
