@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Bursztein"
+    given-names: "Elie"
+  - family-names: "Invernizzi"
+    given-names: "Luca"
+  - family-names: "Král"
+    given-names: "Karel"
+  - family-names: "Moghimi"
+    given-names: "Daniel"
+  - family-names: "Picod"
+    given-names: "Jean-Michel"
+  - family-names: "Zhang"
+    given-names: "Marina"
+  doi: "10.48550/arXiv.2306.07249"
+  title: "Generic Attacks against Cryptographic Hardware through Long-Range Deep Learning"
