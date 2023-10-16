@@ -54,9 +54,17 @@ its codebase, models or datasets please cite:
 }
 ```
 
-Additionally please also cite the talks and publications that are the most relevant
-to your work, so reader can quickly find the right information. Last but not
-least, you are more than welcome to add your publication/talk to the list below by making a pull request 😊.
+To cite the [paper](https://arxiv.org/abs/2306.07249) describing the approach, please cite:
+```bibtex
+@misc{bursztein2023generic,
+      title={Generic Attacks against Cryptographic Hardware through Long-Range Deep Learning}, 
+      author={Elie Bursztein and Luca Invernizzi and Karel Král and Daniel Moghimi and Jean-Michel Picod and Marina Zhang},
+      year={2023},
+      eprint={2306.07249},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR}
+}
+```
 
 ### SCAAML AES tutorial
 
