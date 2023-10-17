@@ -107,6 +107,9 @@ def capture_aes_dataset(
     # If we are capturing train also capture the test split. We want the SBOX
     # input to be balanced, thus we need at least 256 test_keys.
     test_keys = max(train_keys // 8, 256)  # 1/8 = 0.125
+    # Do not capture test when not capturing train.
+    if train_keys == 0:
+        test_keys = 0
     test_plaintexts = train_plaintexts
 
     if not train_keys and not holdout_keys and not test_keys:
