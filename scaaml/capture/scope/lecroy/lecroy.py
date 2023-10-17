@@ -264,7 +264,7 @@ class LeCroyScope(ScopeTemplate):
         np_trigger = np.frombuffer(decoded, dtype=np.uint8)
         return np_trigger
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Return string representation of self.
         """
         return util.dict_to_str({
@@ -276,3 +276,8 @@ class LeCroyScope(ScopeTemplate):
             "communication_timeout": self._communication_timeout,
             "trigger_timeout": self._trigger_timeout,
         })
+
+    def __str__(self) -> str:
+        """Return string representation of self.
+        """
+        return self.__repr__()

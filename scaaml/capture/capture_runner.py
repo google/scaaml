@@ -120,6 +120,14 @@ class AbstractCaptureRunner(ABC):
         Args:
           crypto_alg: The object used to get attack points.
         """
+        # Save oscilloscope settings (e.g., sampling rate).
+        # TODO ideally this should be a representation which is easy to
+        # parse and use to create a new scope instance. However we need to
+        # support ChipWhisperer scopes and our custom scopes at the same
+        # time.
+        self._dataset.capture_info[f"scope_{crypto_alg.purpose}"] = repr(
+            self._scope.scope)
+
         # Context manager properly opens and closes shards.
         with DatasetFiller(
                 dataset=self._dataset,
