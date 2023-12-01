@@ -21,8 +21,6 @@ import socket
 from struct import pack, unpack
 from typing import Optional
 
-import numpy as np
-
 import pyvisa
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
@@ -208,7 +206,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         #   sequence_number: byte
         #   spare: byte = 0 (reserved for future)
         #   block_length: long = length of the command (block to be sent)
-        self._s_leCroyCommandHeader = ">BBBBL"
+        self._lecroy_command_header = ">BBBBL"
         self._socket: Optional[socket.socket] = None
 
     @make_custom_exception
@@ -276,7 +274,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         del datatype  # ignored
         del container  # ignored
 
-        self._logger.debug(f"\"{message}\"")
+        self._logger.debug("\"%s\"", message)
 
         # Send message
         self.write(message)
@@ -295,7 +293,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """
         # Compute header for the current command, header:
         #   operation = DATA | EOI
-        command_header = pack(self._s_leCroyCommandHeader, 129, 1, 1, 0,
+        command_header = pack(self._lecroy_command_header, 129, 1, 1, 0,
                               len(command))
 
         formatted_command = command_header + command.encode("ascii")
@@ -322,7 +320,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
                 header_version,  # unused
                 sequence_number,  # unused
                 spare,  # unused
-                v_nbTotalBytes) = unpack(self._s_leCroyCommandHeader, header)
+                total_bytes) = unpack(self._lecroy_command_header, header)
 
             # Delete unused values
             del header_version
@@ -333,9 +331,9 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
             buffer = b""
 
             # Loop until we get all data
-            while (len(buffer) < v_nbTotalBytes):
+            while len(buffer) < total_bytes:
                 buffer += self._socket.recv(
-                    min(v_nbTotalBytes - len(buffer), 8_192))
+                    min(total_bytes - len(buffer), 8_192))
 
             # Accumulate final response
             response += buffer
