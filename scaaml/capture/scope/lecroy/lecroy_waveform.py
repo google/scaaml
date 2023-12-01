@@ -92,14 +92,14 @@ class LecroyWaveform:
         return struct.unpack_from(f"{self._order:s}d", self.raw_data,
                                   self._ofs - 8)[0]
 
-    def get_unit(self):
+    def get_unit(self, amount=1):
         """Parse a unit from self.raw_data.
         """
-        fmt = f"{self._order}{self._unit}"
+        fmt = f"{self._order}{amount}{self._unit}"
         size = struct.calcsize(fmt)
-        val = struct.unpack_from(fmt, self.raw_data, self._ofs)[0]
+        val = struct.unpack_from(fmt, self.raw_data, self._ofs)
         self._ofs += size
-        return val
+        return val[0] if amount == 1 else val
 
     def get_timestamp(self) -> datetime.datetime:
         """Parse timestamp from self.raw_data.
@@ -276,18 +276,14 @@ class LecroyWaveform:
         # Receive wave1
         block_len = self._wave_description.wave1_len
         if block_len > 0:
-            tmp = []
-            for _ in range(self._wave_description.wave_array_count):
-                tmp.append(self.get_unit())
-            self.d["wave1"] = np.array(tmp)
+            self.d["wave1"] = np.array(
+                self.get_unit(self._wave_description.wave_array_count))
 
         # Receive wave2
         block_len = self._wave_description.wave2_len
         if block_len > 0:
-            tmp = []
-            for _ in range(self._wave_description.wave_array_count):
-                tmp.append(self.get_unit())
-            self.d["wave2"] = np.array(tmp)
+            self.d["wave2"] = np.array(
+                self.get_unit(self._wave_description.wave_array_count))
         assert self._ofs == len(self.raw_data)
 
 
