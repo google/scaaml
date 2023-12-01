@@ -17,7 +17,7 @@
 import dataclasses
 import datetime
 import struct
-from typing import Union
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -92,12 +92,18 @@ class LecroyWaveform:
         return struct.unpack_from(f"{self._order:s}d", self.raw_data,
                                   self._ofs - 8)[0]
 
-    def get_unit(self):
-        """Parse a unit from self.raw_data.
+    def unpack_wave(self, amount: int) -> Tuple[int]:
+        """Parse the whole waveform from self.raw_data. Increments the ofset
+        `self._ofs` by the number of parsed bytes.
+
+        Args:
+          amount (int): Number of units (depending on self._unit).
+
+        Returns: A tuple of `amount` values.
         """
-        fmt = f"{self._order}{self._unit}"
+        fmt = f"{self._order}{amount}{self._unit}"
         size = struct.calcsize(fmt)
-        val = struct.unpack_from(fmt, self.raw_data, self._ofs)[0]
+        val = struct.unpack_from(fmt, self.raw_data, self._ofs)
         self._ofs += size
         return val
 
@@ -276,18 +282,14 @@ class LecroyWaveform:
         # Receive wave1
         block_len = self._wave_description.wave1_len
         if block_len > 0:
-            tmp = []
-            for _ in range(self._wave_description.wave_array_count):
-                tmp.append(self.get_unit())
-            self.d["wave1"] = np.array(tmp)
+            self.d["wave1"] = np.array(
+                self.unpack_wave(self._wave_description.wave_array_count))
 
         # Receive wave2
         block_len = self._wave_description.wave2_len
         if block_len > 0:
-            tmp = []
-            for _ in range(self._wave_description.wave_array_count):
-                tmp.append(self.get_unit())
-            self.d["wave2"] = np.array(tmp)
+            self.d["wave2"] = np.array(
+                self.unpack_wave(self._wave_description.wave_array_count))
         assert self._ofs == len(self.raw_data)
 
 
