@@ -261,13 +261,15 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
     def query_binary_values(self,
                             message: str,
                             datatype="B",
-                            container=None) -> bytearray:
+                            container=None) -> bytes:
         """Query binary data.
 
         Args:
           message (str): Query message.
           datatype (str): Ignored.
           container: A bytearray is always used.
+
+        Returns: a bytes representation of the response.
         """
         assert self._socket is not None
 
@@ -282,14 +284,14 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         # Receive and decode answer
         return self._get_raw_response()
 
-    def _format_command(self, command: str) -> bytearray:
+    def _format_command(self, command: str) -> bytes:
         """Method formatting leCroy command.
 
         Args:
           command (str): The command to be formatted for sending over a
             socket.
 
-        Returns: Bytearray representation to be directly sent over a socket.
+        Returns: bytes representation to be directly sent over a socket.
         """
         # Compute header for the current command, header:
         #   operation = DATA | EOI
@@ -299,11 +301,12 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         formatted_command = command_header + command.encode("ascii")
         return formatted_command
 
-    def _get_raw_response(self) -> bytearray:
+    def _get_raw_response(self) -> bytes:
         """Get raw response from the socket.
 
-        Returns: bytearray representation of the response.
+        Returns: bytes representation of the response.
         """
+        assert self._socket is not None
         response = b""
 
         while True:
