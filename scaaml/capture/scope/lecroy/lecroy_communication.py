@@ -258,7 +258,10 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         return LecroyWaveform(raw_data)
 
     @make_custom_exception
-    def query_binary_values(self, message: str, datatype="B", container=None) -> bytearray:
+    def query_binary_values(self,
+                            message: str,
+                            datatype="B",
+                            container=None) -> bytearray:
         """Query binary data.
 
         Args:
@@ -279,7 +282,6 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         # Receive and decode answer
         return self._get_raw_response()
 
-
     def _format_command(self, command: str) -> bytearray:
         """Method formatting leCroy command.
 
@@ -292,11 +294,10 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         # Compute header for the current command, header:
         #   operation = DATA | EOI
         command_header = pack(self._s_leCroyCommandHeader, 129, 1, 1, 0,
-                               len(command))
+                              len(command))
 
         formatted_command = command_header + command.encode("ascii")
         return formatted_command
-
 
     def _get_raw_response(self) -> bytearray:
         """Get raw response from the socket.
@@ -313,11 +314,12 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
                 header += self._socket.recv(8 - len(header))
 
             # Parse formated response
-            (operation,
-             header_version,  # unused
-             sequence_number,  # unused
-             spare,  # unused
-             v_nbTotalBytes) = unpack(self._s_leCroyCommandHeader, header)
+            (
+                operation,
+                header_version,  # unused
+                sequence_number,  # unused
+                spare,  # unused
+                v_nbTotalBytes) = unpack(self._s_leCroyCommandHeader, header)
 
             # Delete unused values
             del header_version
@@ -329,7 +331,8 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
             # Loop until we get all data
             while (len(buffer) < v_nbTotalBytes):
-                buffer += self._socket.recv(min(v_nbTotalBytes - len(buffer), 8_192))
+                buffer += self._socket.recv(
+                    min(v_nbTotalBytes - len(buffer), 8_192))
 
             # Accumulate final response
             response += buffer
