@@ -15,8 +15,7 @@
 
 import base64
 import time
-from typing import Literal, Optional
-from typing_extensions import TypeAlias
+from typing import Optional
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -26,10 +25,8 @@ from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationError
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
+from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
 from scaaml.capture.scope.scope_template import ScopeTemplate
-
-LECROY_CHANNEL_NAME_T: TypeAlias = Literal["C1", "C2", "C3", "C4", "DIGITAL1",
-                                           "DIGITAL2", "DIGITAL3", "DIGITAL4"]
 
 
 class LeCroy(AbstractSScope):
@@ -156,8 +153,10 @@ class LeCroyScope(ScopeTemplate):
         # Scope settings
         self._scope_communication.connect()
         self._scope_communication.write("COMM_HEADER OFF")
+        # Use full precision of measurements
         self._scope_communication.write("COMM_FORMAT DEF9,WORD,BIN")
         self._scope_communication.write("TRMD SINGLE")
+
         self._scope_communication.write("STOP")
         return True  # Success
 
@@ -250,6 +249,7 @@ class LeCroyScope(ScopeTemplate):
         trigger = self._scope_communication.query_binary_values(
             f"{self._trigger_channel}:WF?",
             datatype="B",
+            container=bytearray,
         )
 
         root = ET.fromstring(bytes(trigger).decode("ascii"))
