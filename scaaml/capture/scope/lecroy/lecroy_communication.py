@@ -17,7 +17,11 @@
 from abc import ABC, abstractmethod
 import hashlib
 import logging
+import socket
+from struct import pack, unpack
 from typing import Optional
+
+import numpy as np
 
 import pyvisa
 
@@ -71,7 +75,9 @@ class LeCroyCommunication(ABC):
                             message: str,
                             datatype="B",
                             container=bytearray) -> bytearray:
-        """Query binary data."""
+        """Query binary data. Beware that the results from socket version might
+        contain headers which are stripped by pyvisa.
+        """
 
     def _check_response_template(self):
         """ Check if the hash of the waveform template matches the supported
@@ -185,3 +191,151 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
             datatype=datatype,
             container=container,
         )
+
+
+class LeCroyCommunicationSocket(LeCroyCommunication):
+    """Use Python socket to communicate using the TCP/IP (VICP).
+    ("Utilities > Utilities Setup > Remote" and choose TCPIP)."""
+
+    def __init__(self, ip_address: str, timeout: float = 5.0):
+        super().__init__(
+            ip_address=ip_address,
+            timeout=timeout,
+        )
+        # Header format (see section "VICP Headers"):
+        #   operation: byte
+        #   header_version: byte
+        #   sequence_number: byte
+        #   spare: byte = 0 (reserved for future)
+        #   block_length: long = length of the command (block to be sent)
+        self._s_leCroyCommandHeader = ">BBBBL"
+        self._socket: Optional[socket.socket] = None
+
+    @make_custom_exception
+    def connect(self):
+        assert self._socket is None
+
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.settimeout(self._timeout)
+
+        # establish connection
+        self._socket.connect((self._ip_address, 1861))
+
+        # Check if the response template is what LecroyWaveform expects
+        self._check_response_template()
+
+    @make_custom_exception
+    def close(self) -> None:
+        assert self._socket is not None
+        self._socket.shutdown(socket.SHUT_RDWR)
+        self._socket.close()
+        self._socket = None
+
+    @make_custom_exception
+    def write(self, message: str) -> None:
+        """Write a message to the oscilloscope.
+        """
+        assert self._socket is not None
+        self._socket.send(self._format_command(message))
+
+    @make_custom_exception
+    def query(self, message: str) -> str:
+        """Query the oscilloscope (write, read, and decode the answer as a
+        string).
+        """
+        return self.query_binary_values(message).decode()
+
+    @make_custom_exception
+    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+        """Get a LecroyWaveform object representing a single waveform.
+
+        Args:
+          channel (LECROY_CHANNEL_NAME_T): The name of queried channel.
+        """
+        raw_data = self.query_binary_values(f"{channel}:WAVEFORM?")
+        assert raw_data[:6] == b"ALL,#9"  # followed by 9 digits for size
+        raw_data = raw_data[15:-1]  # last is linefeed
+        return LecroyWaveform(raw_data)
+
+    @make_custom_exception
+    def query_binary_values(self, message: str, datatype="B", container=None) -> bytearray:
+        """Query binary data.
+
+        Args:
+          message (str): Query message.
+          datatype (str): Ignored.
+          container: A bytearray is always used.
+        """
+        assert self._socket is not None
+
+        del datatype  # ignored
+        del container  # ignored
+
+        self._logger.debug(f"\"{message}\"")
+
+        # Send message
+        self.write(message)
+
+        # Receive and decode answer
+        return self._get_raw_response()
+
+
+    def _format_command(self, command: str) -> bytearray:
+        """Method formatting leCroy command.
+
+        Args:
+          command (str): The command to be formatted for sending over a
+            socket.
+
+        Returns: Bytearray representation to be directly sent over a socket.
+        """
+        # Compute header for the current command, header:
+        #   operation = DATA | EOI
+        command_header = pack(self._s_leCroyCommandHeader, 129, 1, 1, 0,
+                               len(command))
+
+        formatted_command = command_header + command.encode("ascii")
+        return formatted_command
+
+
+    def _get_raw_response(self) -> bytearray:
+        """Get raw response from the socket.
+
+        Returns: bytearray representation of the response.
+        """
+        response = b""
+
+        while True:
+            header = b""
+
+            # Loop until we get a full header (8 bytes)
+            while len(header) < 8:
+                header += self._socket.recv(8 - len(header))
+
+            # Parse formated response
+            (operation,
+             header_version,  # unused
+             sequence_number,  # unused
+             spare,  # unused
+             v_nbTotalBytes) = unpack(self._s_leCroyCommandHeader, header)
+
+            # Delete unused values
+            del header_version
+            del sequence_number
+            del spare
+
+            # Buffer for the current portion of data
+            buffer = b""
+
+            # Loop until we get all data
+            while (len(buffer) < v_nbTotalBytes):
+                buffer += self._socket.recv(min(v_nbTotalBytes - len(buffer), 8_192))
+
+            # Accumulate final response
+            response += buffer
+
+            # Leave the loop when the EOI bit is set
+            if operation % 2:
+                break
+
+        return response
