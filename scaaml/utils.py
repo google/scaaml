@@ -13,15 +13,16 @@
 # limitations under the License.
 """Utils common to various SCAAML components"""
 
-from tqdm.auto import tqdm
-import tensorflow as tf
-import numpy as np
-import chipwhisperer as cw
-from glob import glob
 from multiprocessing import Pool
-import time
 from random import randint
-from termcolor import cprint
+import time
+
+from glob import glob
+from termcolor import cprint, termcolor
+from tqdm.auto import tqdm
+import chipwhisperer as cw
+import numpy as np
+import tensorflow as tf
 
 
 def pretty_hex(val):
@@ -132,10 +133,9 @@ def display_config(config_name, config):
     cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
+        color: termcolor.Color = "yellow"
         if cnt % 2:
             color = "cyan"
-        else:
-            color = "yellow"
         cprint(f"{k}:{v}", color)
         cnt += 1
 
