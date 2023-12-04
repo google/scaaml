@@ -19,14 +19,18 @@ import scaaml
 from scaaml.capture.scope import LeCroy
 
 
-@patch.object(scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
-              "close")
-@patch.object(scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
-              "query")
-@patch.object(scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
-              "write")
-@patch.object(scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
-              "connect")
+@patch.object(
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    "close")
+@patch.object(
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    "query")
+@patch.object(
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    "write")
+@patch.object(
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    "connect")
 def test_get_identity_info(mock_connect, mock_write, mock_query, mock_close):
     model = "WAVEMASTER"
     serial_number = "WM01234"
