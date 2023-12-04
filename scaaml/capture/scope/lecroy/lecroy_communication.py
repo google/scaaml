@@ -342,7 +342,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
             response.extend(buffer)
 
             # Leave the loop when the EOI bit is set
-            if operation % 2:
+            if operation & 1:
                 break
 
         return bytes(response)
