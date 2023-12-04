@@ -15,7 +15,7 @@
 
 import base64
 import time
-from typing import Optional
+from typing import Dict, Optional
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -104,6 +104,21 @@ class LeCroy(AbstractSScope):
             return
         self._scope.dis()
         self._scope = None
+
+    def get_identity_info(self) -> Dict[str, str]:
+        """Get information about the oscilloscope identity.
+
+        Returns: a dictionary containing the model, serial_number, and
+        firmware_level (version).
+        """
+        lecroy, model, serial_number, firmware_level = self._scope.query(
+            "*IDN?").rstrip().split(",")
+        assert lecroy == "LECROY"
+        return {
+            "model": model,
+            "serial_number": serial_number,
+            "firmware_level": firmware_level,
+        }
 
 
 class LeCroyScope(ScopeTemplate):

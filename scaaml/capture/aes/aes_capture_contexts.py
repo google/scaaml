@@ -22,7 +22,7 @@ from scaaml.capture.aes.capture_runner import CaptureRunner
 from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
 from scaaml.capture.aes.communication import CWCommunication
 from scaaml.capture.aes.control import CWControl
-from scaaml.capture.scope import PicoScope, CWScope, DefaultCWScope
+from scaaml.capture.scope import PicoScope, CWScope, DefaultCWScope, LeCroy
 
 
 def capture_aes_dataset(
@@ -258,6 +258,24 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
         generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
+    # Capture using LeCroy.
+    if scope_class == LeCroy:
+        with LeCroy(**capture_info) as lecroy:
+            # Update capture info with oscilloscope details.
+            dataset.capture_info.update(lecroy.get_identity_info())
+            dataset.write_config()
+
+            assert lecroy.scope is not None
+            with DefaultCWScope(capture_info.get("cw_scope_serial_number",
+                                                 None)) as default_cwscope:
+                _control_communication_and_capture(
+                    chip_id=chip_id,
+                    cwscope=default_cwscope,
+                    crypto_algorithms=crypto_algorithms,
+                    scope=lecroy,
+                    dataset=dataset,
+                )
+        return  # Everything is finished.
 
     # Capture using PicoScope.
     if scope_class == PicoScope:

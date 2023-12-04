@@ -1076,6 +1076,10 @@ class Dataset():
                   encoding="utf-8") as f:
             json.dump(self.get_config_dictionary(), f)
 
+    def write_config(self):
+        """Force updating `info.json` file."""
+        self._write_config()
+
     @staticmethod
     def from_config(dataset_path: str, verbose: bool = True):
         """Load a dataset from a config file.
