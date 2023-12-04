@@ -254,8 +254,11 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """
         raw_data = self.query_binary_values(f"{channel}:WAVEFORM?")
         assert raw_data[:6] == b"ALL,#9"  # followed by 9 digits for size
+        len_raw_data = int(raw_data[6:15])  # length without the header
         raw_data = raw_data[15:]
-        raw_data = raw_data.rstrip()  # last is linefeed
+        if len_raw_data + 1 == len(raw_data):
+            raw_data = raw_data[:-1]  # last is linefeed
+        assert len(raw_data) == len_raw_data
         return LecroyWaveform(raw_data)
 
     @make_custom_exception
