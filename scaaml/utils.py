@@ -16,10 +16,9 @@
 from multiprocessing import Pool
 from random import randint
 import time
-from typing import Literal
 
 from glob import glob
-from termcolor import cprint
+from termcolor import cprint, termcolor
 from tqdm.auto import tqdm
 import chipwhisperer as cw
 import numpy as np
@@ -134,7 +133,7 @@ def display_config(config_name, config):
     cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
-        color: Literal["yellow", "cyan"] = "yellow"
+        color: termcolor.Color = "yellow"
         if cnt % 2:
             color = "cyan"
         cprint(f"{k}:{v}", color)
