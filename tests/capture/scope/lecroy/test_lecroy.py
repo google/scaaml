@@ -38,8 +38,6 @@ def test_get_identity_info(mock_scope):
                 trigger_channel="C2",
                 communication_timeout=1.0,
                 trigger_timeout=0.1) as lecroy:
-        print(mock_scope)
-        print(lecroy._scope)
         assert lecroy.get_identity_info() == {
             "model": model,
             "serial_number": serial_number,
