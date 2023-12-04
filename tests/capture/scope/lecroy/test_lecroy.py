@@ -20,11 +20,11 @@ from scaaml.capture.scope import LeCroy
 
 
 @patch("scaaml.capture.scope.lecroy.lecroy.LeCroyScope")
-def test_get_identity_info(mock_scope):
+def test_get_identity_info(mock_s):
     model = "WAVEMASTER"
     serial_number = "WM01234"
     firmware_level = "1.2.3"
-    mock_scope.return_value.query.return_value = ",".join([
+    mock_s.return_value._scope_communication.query.return_value = ",".join([
         "LECROY",
         model,
         serial_number,

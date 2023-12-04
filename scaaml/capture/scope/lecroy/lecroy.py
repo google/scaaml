@@ -111,8 +111,10 @@ class LeCroy(AbstractSScope):
         Returns: a dictionary containing the model, serial_number, and
         firmware_level (version).
         """
-        lecroy, model, serial_number, firmware_level = self._scope.query(
-            "*IDN?").rstrip().split(",")
+        assert self._scope
+        assert self._scope._scope_communication
+        (lecroy, model, serial_number, firmware_level
+        ) = self._scope._scope_communication.query("*IDN?").rstrip().split(",")
         assert lecroy == "LECROY"
         return {
             "model": model,
