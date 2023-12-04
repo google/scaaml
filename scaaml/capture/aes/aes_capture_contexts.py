@@ -262,7 +262,7 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
     if scope_class == LeCroy:
         with LeCroy(**capture_info) as lecroy:
             # Update capture info with oscilloscope details.
-            dataset.capture_info.update(lecroy.get_identity_info())
+            dataset.capture_info.update(lecroy.scope.get_identity_info())
             dataset.write_config()
 
             assert lecroy.scope is not None

@@ -105,23 +105,6 @@ class LeCroy(AbstractSScope):
         self._scope.dis()
         self._scope = None
 
-    def get_identity_info(self) -> Dict[str, str]:
-        """Get information about the oscilloscope identity.
-
-        Returns: a dictionary containing the model, serial_number, and
-        firmware_level (version).
-        """
-        assert self._scope
-        assert self._scope._scope_communication
-        (lecroy, model, serial_number, firmware_level
-        ) = self._scope._scope_communication.query("*IDN?").rstrip().split(",")
-        assert lecroy == "LECROY"
-        return {
-            "model": model,
-            "serial_number": serial_number,
-            "firmware_level": firmware_level,
-        }
-
 
 class LeCroyScope(ScopeTemplate):
     """Scope."""
@@ -298,3 +281,19 @@ class LeCroyScope(ScopeTemplate):
         """Return string representation of self.
         """
         return self.__repr__()
+
+    def get_identity_info(self) -> Dict[str, str]:
+        """Get information about the oscilloscope identity.
+
+        Returns: a dictionary containing the model, serial_number, and
+        firmware_level (version).
+        """
+        assert self._scope_communication
+        answer = self._scope_communication.query("*IDN?").rstrip()
+        lecroy, model, serial_number, firmware_level = answer.split(",")
+        assert lecroy == "LECROY"
+        return {
+            "lecroy_model": model,
+            "lecroy_serial_number": serial_number,
+            "lecroy_firmware_level": firmware_level,
+        }
