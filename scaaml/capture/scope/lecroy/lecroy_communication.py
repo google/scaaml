@@ -208,7 +208,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         #   sequence_number: byte
         #   spare: byte = 0 (reserved for future)
         #   block_length: long = length of the command (block to be sent)
-        self._lecroy_command_header = ">BBBBL"
+        self._lecroy_command_header = ">4BL"
         self._socket: Optional[socket.socket] = None
 
     @make_custom_exception
