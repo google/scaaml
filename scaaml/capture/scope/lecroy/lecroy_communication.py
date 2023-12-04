@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Based on by code kindly shared by Victor Lomné - NinjaLa
+# Based on by code kindly shared by Victor Lomné - NinjaLab
 """Communication with the LeCroy oscilloscope. Either using pyvisa or socket.
 """
 
