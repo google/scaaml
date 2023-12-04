@@ -20,16 +20,16 @@ from scaaml.capture.scope import LeCroy
 
 
 @patch.object(
-    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationVisa,
     "close")
 @patch.object(
-    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationVisa,
     "query")
 @patch.object(
-    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationVisa,
     "write")
 @patch.object(
-    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationSocket,
+    scaaml.capture.scope.lecroy.lecroy_communication.LeCroyCommunicationVisa,
     "connect")
 def test_get_identity_info(mock_connect, mock_write, mock_query, mock_close):
     model = "WAVEMASTER"
