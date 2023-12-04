@@ -125,7 +125,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
     def connect(self):
         # For portability and ease of setup we enforce the pure Python backend
         self._resource_manager = pyvisa.ResourceManager("@py")
-        assert self._resource_manager is not None
+        assert self._resource_manager
 
         scope_resource = self._resource_manager.open_resource(
             f"TCPIP::{self._ip_address}::INSTR",
@@ -134,7 +134,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         assert isinstance(scope_resource, pyvisa.resources.MessageBasedResource)
         self._scope = scope_resource
 
-        assert self._scope is not None
+        assert self._scope
         self._scope.timeout = self._timeout * 1_000  # Convert second to ms
         self._scope.clear()
 
@@ -143,17 +143,17 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
 
     @make_custom_exception
     def close(self) -> None:
-        assert self._scope is not None
+        assert self._scope
         self._scope.before_close()
         self._scope.close()
-        assert self._resource_manager is not None
+        assert self._resource_manager
         self._resource_manager.close()
 
     @make_custom_exception
     def write(self, message: str) -> None:
         """Write a message to the oscilloscope.
         """
-        assert self._scope is not None
+        assert self._scope
         self._logger.debug("write(message=\"%s\")", message)
         self._scope.write(message)
 
@@ -162,7 +162,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         """Query the oscilloscope (write, read, and decode the answer as a
         string).
         """
-        assert self._scope is not None
+        assert self._scope
         self._logger.debug("query(message=\"%s\")", message)
         return self._scope.query(message).strip()
 
@@ -170,7 +170,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
     def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
-        assert self._scope is not None
+        assert self._scope
 
         return self._scope.query_binary_values(
             f"{channel}:WAVEFORM?",
@@ -184,7 +184,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
                             datatype="B",
                             container=bytearray):
         """Query binary data."""
-        assert self._scope is not None
+        assert self._scope
         self._logger.debug("query_binary_values(message=\"%s\")", message)
         return self._scope.query_binary_values(
             message,
@@ -226,7 +226,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
     @make_custom_exception
     def close(self) -> None:
-        assert self._socket is not None
+        assert self._socket
         self._socket.shutdown(socket.SHUT_RDWR)
         self._socket.close()
         self._socket = None
@@ -235,7 +235,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
     def write(self, message: str) -> None:
         """Write a message to the oscilloscope.
         """
-        assert self._socket is not None
+        assert self._socket
         self._socket.send(self._format_command(message))
 
     @make_custom_exception
@@ -271,7 +271,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
         Returns: a bytes representation of the response.
         """
-        assert self._socket is not None
+        assert self._socket
 
         del datatype  # ignored
         del container  # ignored
@@ -306,7 +306,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
         Returns: bytes representation of the response.
         """
-        assert self._socket is not None
+        assert self._socket
         response = b""
 
         while True:
