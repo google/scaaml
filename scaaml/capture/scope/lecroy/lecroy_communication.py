@@ -308,14 +308,14 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         Returns: bytes representation of the response.
         """
         assert self._socket
-        response = b""
+        response = bytearray()
 
         while True:
-            header = b""
+            header = bytearray()
 
             # Loop until we get a full header (8 bytes)
             while len(header) < 8:
-                header += self._socket.recv(8 - len(header))
+                header.extend(self._socket.recv(8 - len(header)))
 
             # Parse formated response
             (
@@ -331,18 +331,18 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
             del spare
 
             # Buffer for the current portion of data
-            buffer = b""
+            buffer = bytearray()
 
             # Loop until we get all data
             while len(buffer) < total_bytes:
-                buffer += self._socket.recv(
-                    min(total_bytes - len(buffer), 8_192))
+                buffer.extend(self._socket.recv(
+                    min(total_bytes - len(buffer), 8_192)))
 
             # Accumulate final response
-            response += buffer
+            response.extend(buffer)
 
             # Leave the loop when the EOI bit is set
             if operation % 2:
                 break
 
-        return response
+        return bytes(response)
