@@ -335,8 +335,8 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
             # Loop until we get all data
             while len(buffer) < total_bytes:
-                buffer.extend(self._socket.recv(
-                    min(total_bytes - len(buffer), 8_192)))
+                buffer.extend(
+                    self._socket.recv(min(total_bytes - len(buffer), 8_192)))
 
             # Accumulate final response
             response.extend(buffer)
