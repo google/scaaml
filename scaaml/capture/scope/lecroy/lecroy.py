@@ -15,7 +15,7 @@
 
 import base64
 import time
-from typing import Optional
+from typing import Dict, Optional
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -27,6 +27,7 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
 from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.io import Dataset
 
 
 class LeCroy(AbstractSScope):
@@ -104,6 +105,16 @@ class LeCroy(AbstractSScope):
             return
         self._scope.dis()
         self._scope = None
+
+    def post_init(self, dataset: Dataset) -> None:
+        """After initialization actions. Saves the scope identity information
+        into the capture_info.
+        """
+        assert self._scope
+
+        # Update capture info with oscilloscope details.
+        dataset.capture_info.update(self._scope.get_identity_info())
+        dataset.write_config()
 
 
 class LeCroyScope(ScopeTemplate):
@@ -281,3 +292,19 @@ class LeCroyScope(ScopeTemplate):
         """Return string representation of self.
         """
         return self.__repr__()
+
+    def get_identity_info(self) -> Dict[str, str]:
+        """Get information about the oscilloscope identity.
+
+        Returns: a dictionary containing the model, serial_number, and
+        firmware_level (version).
+        """
+        assert self._scope_communication
+        answer = self._scope_communication.query("*IDN?").rstrip()
+        brand, model, serial_number, firmware_level = answer.split(",")
+        assert brand == "LECROY"
+        return {
+            "lecroy_model": model,
+            "lecroy_serial_number": serial_number,
+            "lecroy_firmware_level": firmware_level,
+        }

@@ -1468,3 +1468,15 @@ def test_as_tfdataset_same_apname_different(mock_from_config, mock_interleave,
         example_id = 0
         assert not np.allclose(batch[1]["key_1"][example_id],
                                batch[1]["key_3"][example_id])
+
+
+def test_write_config(tmp_path):
+    """Test public method of writing config."""
+    kwargs = dataset_constructor_kwargs(root_path=tmp_path)
+    ds = Dataset.get_dataset(**kwargs)
+
+    ds.capture_info["testing_value"] = 42
+    ds.write_config()
+
+    ds = Dataset.from_config(ds.path)
+    assert ds.capture_info["testing_value"] == 42
