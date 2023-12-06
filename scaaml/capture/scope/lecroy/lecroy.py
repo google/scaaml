@@ -168,6 +168,7 @@ class LeCroy(AbstractSScope):
 
         # Update capture info with oscilloscope details.
         dataset.capture_info.update(self._scope.get_identity_info())
+        dataset.capture_info["scope_answers"] = self._scope.get_scope_answers()
         dataset.write_config()
 
 
