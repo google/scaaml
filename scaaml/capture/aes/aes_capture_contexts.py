@@ -266,8 +266,8 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
             dataset.write_config()
 
             assert lecroy.scope is not None
-            with DefaultCWScope(capture_info.get("cw_scope_serial_number",
-                                                 None)) as default_cwscope:
+            with DefaultCWScope(capture_info.get(
+                    "cw_scope_serial_number")) as default_cwscope:
                 _control_communication_and_capture(
                     chip_id=chip_id,
                     cwscope=default_cwscope,
@@ -281,8 +281,8 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
     if scope_class == PicoScope:
         with PicoScope(**capture_info) as picoscope:
             assert picoscope.scope is not None
-            with DefaultCWScope(capture_info.get("cw_scope_serial_number",
-                                                 None)) as default_cwscope:
+            with DefaultCWScope(capture_info.get(
+                    "cw_scope_serial_number")) as default_cwscope:
                 _control_communication_and_capture(
                     chip_id=chip_id,
                     cwscope=default_cwscope,
