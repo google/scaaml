@@ -215,9 +215,8 @@ class LeCroyScope(ScopeTemplate):
         self._scope_communication: Optional[LeCroyCommunication] = None
 
         # Desired settings of the scope
-        scope_setup_commands = deepcopy(scope_setup_commands)
         # Wrap default commands around the custom ones
-        scope_setup_commands = [
+        commands = [
             { "command": "COMM_HEADER OFF", },
             {  # Use full precision of measurements
                 "command": "COMM_FORMAT DEF9,WORD,BIN",
@@ -226,11 +225,10 @@ class LeCroyScope(ScopeTemplate):
             { "command": "TRMD SINGLE", },  # Trigger mode
             { "command": "AUTO_CALIBRATE OFF", },
             { "command": "OFFSET 0", },  # Center the trace vertically
-        ] + scope_setup_commands + [  # Custom commands
-            {"command": "STOP"}  # Stop any signal acquisition
         ]
-        self._scope_setup_commands: Tuple[Dict[str, Any],
-                                          ...] = tuple(scope_setup_commands)
+        commands.extend(deepcopy(scope_setup_commands))  # Custom commands
+        commands.append({"command": "STOP"})  # Stop any signal acquisition
+        self._scope_setup_commands: Tuple[Dict[str, Any], ...] = tuple(commands)
 
         # Actual settings of the scope
         self._scope_answers: Dict[str, str] = {}
