@@ -16,7 +16,7 @@
 import base64
 from copy import deepcopy
 import time
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -27,7 +27,7 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationSocket
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
-from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
+from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T, LECROY_COMMUNICATION_CLASS_NAME
 from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.io import Dataset
 
@@ -44,9 +44,8 @@ class LeCroy(AbstractSScope):
                  communication_timeout: float,
                  trigger_timeout: float,
                  scope_setup_commands: List[Dict[str, Any]],
-                 communication_class_name: Literal[
-                     "LeCroyCommunicationVisa",
-                     "LeCroyCommunicationSocket"] = "LeCroyCommunicationVisa",
+                 communication_class_name:
+                 LECROY_COMMUNICATION_CLASS_NAME = "LeCroyCommunicationVisa",
                  **_) -> None:
         """Create scope context.
 
@@ -95,9 +94,10 @@ class LeCroy(AbstractSScope):
             For a description of possible commands and queries see
             https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf
 
-          communication_class_name (Literal["LeCroyCommunicationVisa",
-            "LeCroyCommunicationSocket"]): Which class to use for communication
-            with the scope. Defaults to LeCroyCommunicationVisa.
+          communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
+            class to use for communication with the scope. Defaults to
+            LeCroyCommunicationVisa, the other possibility is
+            LeCroyCommunicationSocket.
           _: LeCroy is expected to be initialized using capture_info
             dictionary, this parameter allows to have additional information
             there and initialize as LeCroy(**capture_info).
@@ -176,13 +176,12 @@ class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(
-        self, samples: int, offset: int, ip_address: str,
-        trace_channel: LECROY_CHANNEL_NAME_T,
-        trigger_channel: LECROY_CHANNEL_NAME_T, communication_timeout: float,
-        trigger_timeout: float, scope_setup_commands: List[Dict[str, Any]],
-        communication_class_name: Literal["LeCroyCommunicationVisa",
-                                          "LeCroyCommunicationSocket"]
-    ) -> None:
+            self, samples: int, offset: int, ip_address: str,
+            trace_channel: LECROY_CHANNEL_NAME_T,
+            trigger_channel: LECROY_CHANNEL_NAME_T,
+            communication_timeout: float, trigger_timeout: float,
+            scope_setup_commands: List[Dict[str, Any]],
+            communication_class_name: LECROY_COMMUNICATION_CLASS_NAME) -> None:
         """Create scope context.
 
         Args:
@@ -197,9 +196,8 @@ class LeCroyScope(ScopeTemplate):
             out (in seconds).
           scope_setup_commands (List[Dict[str, Any]]): See docstring of
             `LeCroy`.
-          communication_class_name (Literal["LeCroyCommunicationVisa",
-            "LeCroyCommunicationSocket"]): Which class to use for communication
-            with the scope. Defaults to LeCroyCommunicationVisa.
+          communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
+            class to use for communication with the scope.
         """
         self._samples = samples
         self._offset = offset
