@@ -259,7 +259,7 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     with scope_class(**capture_info) as scope_context:
-        # Save information ackquired from the scope
+        # Save information acquired from the scope
         scope_context.post_init(dataset=dataset)
 
         assert scope_context.scope is not None
