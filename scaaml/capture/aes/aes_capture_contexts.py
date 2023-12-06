@@ -22,7 +22,7 @@ from scaaml.capture.aes.capture_runner import CaptureRunner
 from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
 from scaaml.capture.aes.communication import CWCommunication
 from scaaml.capture.aes.control import CWControl
-from scaaml.capture.scope import PicoScope, CWScope, DefaultCWScope, LeCroy
+from scaaml.capture.scope import DefaultCWScope
 
 
 def capture_aes_dataset(
@@ -258,55 +258,20 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
         generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
-    # Capture using LeCroy.
-    if scope_class == LeCroy:
-        with LeCroy(**capture_info) as lecroy:
-            # Update capture info with oscilloscope details.
-            dataset.capture_info.update(lecroy.scope.get_identity_info())
-            dataset.write_config()
+    with scope_class(**capture_info) as scope_context:
+        # Save information ackquired from the scope
+        scope_context.post_init(dataset=dataset)
 
-            assert lecroy.scope is not None
-            with DefaultCWScope(capture_info.get(
-                    "cw_scope_serial_number")) as default_cwscope:
-                _control_communication_and_capture(
-                    chip_id=chip_id,
-                    cwscope=default_cwscope,
-                    crypto_algorithms=crypto_algorithms,
-                    scope=lecroy,
-                    dataset=dataset,
-                )
-        return  # Everything is finished.
-
-    # Capture using PicoScope.
-    if scope_class == PicoScope:
-        with PicoScope(**capture_info) as picoscope:
-            assert picoscope.scope is not None
-            with DefaultCWScope(capture_info.get(
-                    "cw_scope_serial_number")) as default_cwscope:
-                _control_communication_and_capture(
-                    chip_id=chip_id,
-                    cwscope=default_cwscope,
-                    crypto_algorithms=crypto_algorithms,
-                    scope=picoscope,
-                    dataset=dataset,
-                )
-        return  # Everything is finished.
-
-    # Capture using the built-in scope of ChipWhisperer.
-    if scope_class == CWScope:
-        with CWScope(**capture_info) as scope:
-            assert scope.scope is not None
+        assert scope_context.scope is not None
+        with DefaultCWScope(capture_info.get(
+                "cw_scope_serial_number")) as default_cwscope:
             _control_communication_and_capture(
                 chip_id=chip_id,
-                cwscope=scope,
+                cwscope=default_cwscope,
                 crypto_algorithms=crypto_algorithms,
-                scope=scope,
+                scope=scope_context,
                 dataset=dataset,
             )
-        return  # Everything is finished.
-
-    # Warn on unknown scope_class.
-    raise ValueError(f"Unsupported scope_class: {scope_class}")
 
 
 def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,

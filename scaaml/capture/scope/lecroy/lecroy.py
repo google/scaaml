@@ -27,6 +27,7 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
 from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.io import Dataset
 
 
 class LeCroy(AbstractSScope):
@@ -104,6 +105,16 @@ class LeCroy(AbstractSScope):
             return
         self._scope.dis()
         self._scope = None
+
+    def post_init(self, dataset: Dataset) -> None:
+        """After initialization actions. Saves the scope identity information
+        into the capture_info.
+        """
+        assert self._scope
+
+        # Update capture info with oscilloscope details.
+        dataset.capture_info.update(self._scope.get_identity_info())
+        dataset.write_config()
 
 
 class LeCroyScope(ScopeTemplate):

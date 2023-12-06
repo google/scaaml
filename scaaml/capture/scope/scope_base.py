@@ -19,6 +19,7 @@ from typing import Optional, Union
 from chipwhisperer.capture.scopes import OpenADC
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.io import Dataset
 
 
 class AbstractSScope(ABC):
@@ -57,3 +58,8 @@ class AbstractSScope(ABC):
     def scope(self) -> Optional[Union[OpenADC, ScopeTemplate]]:
         """Scope object for chipwhisperer API."""
         return self._scope
+
+    def post_init(self, dataset: Dataset) -> None:
+        """After initialization actions, e.g., save actual settings to the
+        `capture_info`.
+        """
