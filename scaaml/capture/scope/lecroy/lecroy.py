@@ -290,8 +290,8 @@ class LeCroyScope(ScopeTemplate):
         """
         assert self._scope_communication
         answer = self._scope_communication.query("*IDN?").rstrip()
-        lecroy, model, serial_number, firmware_level = answer.split(",")
-        assert lecroy == "LECROY"
+        brand, model, serial_number, firmware_level = answer.split(",")
+        assert brand == "LECROY"
         return {
             "lecroy_model": model,
             "lecroy_serial_number": serial_number,
