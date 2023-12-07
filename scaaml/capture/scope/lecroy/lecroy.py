@@ -128,6 +128,8 @@ class LeCroy(AbstractSScope):
           capture_area (LECROY_CAPTURE_AREA): Capture the trace area, full
             window, or full screen. Defaults to the trace area.
         """
+        assert self._scope
+
         source_file_path: str = self._scope.call_print_screen(
             capture_area=capture_area)
         self._scope.retrieve_file(source_file_path=source_file_path,
@@ -339,6 +341,8 @@ class LeCroyScope(ScopeTemplate):
 
         Returns: the number of transferred bytes.
         """
+        assert self._scope_communication
+
         # Query to get file data from the scope.
         # Answer format:
         # Beware that the #9 (the nine is base 16).
@@ -387,16 +391,18 @@ class LeCroyScope(ScopeTemplate):
 
         Returns: The file path on the scope.
         """
+        assert self._scope_communication
+
         # Setup where to save the file
-        hardcopy_setup = (
+        self._scope_communication.write(
             f"HARDCOPY_SETUP DEV,PNG,FORMAT,LANDSCAPE,BCKG,BLACK,DEST,FILE,DIR,"
             f"\"D:\",AREA,{capture_area},FILE,\"PRINT-SCREEN.PNG\"")
-        self._scope_communication.write(hardcopy_setup)
-        hardcopy_setup = self._scope_communication.query("HARDCOPY_SETUP?")
+        hardcopy_setup_answer = self._scope_communication.query(
+            "HARDCOPY_SETUP?")
         self._scope_communication.write("SCREEN_DUMP")
 
         # Parse the full DOS path to the print screen file
-        hardcopy_setup = hardcopy_setup.split(",")[8:]
+        hardcopy_setup = hardcopy_setup_answer.split(",")[8:]
         assert hardcopy_setup[0] == "DIR"
         # HARDCOPY_SETUP DEV,<device>,FORMAT,<format>,BCKG,<bckg>,
         # DEST,<destination>,DIR,"<directory>",AREA,<hardcopyarea>
@@ -425,6 +431,8 @@ class LeCroyScope(ScopeTemplate):
         Args:
           file_path (str): The path to the file.
         """
+        assert self._scope_communication
+
         # Delete the file
         self._scope_communication.write(
             f"DELETE_FILE DISK,HDD,FILE,'{file_path}'")
