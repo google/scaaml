@@ -17,5 +17,8 @@
 from typing import Literal
 from typing_extensions import TypeAlias
 
+LECROY_CAPTURE_AREA: TypeAlias = Literal["FULLSCREEN", "GRIDAREAONLY",
+                                         "DSOWINDOW"]
+
 LECROY_CHANNEL_NAME_T: TypeAlias = Literal["C1", "C2", "C3", "C4", "DIGITAL1",
                                            "DIGITAL2", "DIGITAL3", "DIGITAL4"]

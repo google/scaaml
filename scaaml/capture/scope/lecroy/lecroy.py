@@ -14,6 +14,7 @@
 """Context manager for the scope."""
 
 import base64
+from pathlib import Path
 import time
 from typing import Dict, Optional
 import xml.etree.ElementTree as ET
@@ -25,7 +26,7 @@ from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationError
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
-from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
+from scaaml.capture.scope.lecroy.types import LECROY_CAPTURE_AREA, LECROY_CHANNEL_NAME_T
 from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.io import Dataset
 
@@ -115,6 +116,23 @@ class LeCroy(AbstractSScope):
         # Update capture info with oscilloscope details.
         dataset.capture_info.update(self._scope.get_identity_info())
         dataset.write_config()
+
+    def print_screen(
+            self,
+            file_path: Path,
+            capture_area: LECROY_CAPTURE_AREA = "GRIDAREAONLY") -> None:
+        """Take a print screen and transfer it to this computer.
+
+        Args:
+          file_path (Path): Where to save the print screen file.
+          capture_area (LECROY_CAPTURE_AREA): Capture the trace area, full
+            window, or full screen. Defaults to the trace area.
+        """
+        source_file_path: str = self._scope.call_print_screen(
+            capture_area=capture_area)
+        self._scope.retrieve_file(source_file_path=source_file_path,
+                                  destination_file_path=file_path)
+        self._scope.delete_file(file_path=source_file_path)
 
 
 class LeCroyScope(ScopeTemplate):
@@ -308,3 +326,105 @@ class LeCroyScope(ScopeTemplate):
             "lecroy_serial_number": serial_number,
             "lecroy_firmware_level": firmware_level,
         }
+
+    def retrieve_file(self, source_file_path: str,
+                      destination_file_path: Path) -> int:
+        r"""Transfer a file and return how many bytes were transfered.
+
+        Args:
+          source_file_path (str): The file path path on the oscilloscope, e.g.,
+            'D:\PRINT-SCREEN--00001.PNG'.
+          destination_file_path (Path): The path to the file being saved. Parent
+            directories must exist.
+
+        Returns: the number of transferred bytes.
+        """
+        # Query to get file data from the scope.
+        # Answer format:
+        # Beware that the #9 (the nine is base 16).
+        # TRFL #9nnnnnnnnn<data><crc>
+        # Where the TRFL is omitted due to setting "COMM_HEADER OFF"
+        # nnnnnnnnn is the file size (bytes in ASCII for decimal
+        #   representation) in bytes
+        # crc is the 32-bit CRC plus 8-byte CRC trailer
+        ans = self._scope_communication.query_binary_values(
+            f"TRANSFER_FILE? DISK,HDD,FILE,'{source_file_path}'")
+
+        # With socket we need to strip the header (if there is no header we are
+        # using pyvisa).
+        strip_header = True
+        # Check for start: either "TRFL #9" or "#9"
+        if ans[:2] == b"#9":
+            # Just number of bytes and CRC
+            ans = ans[2:]
+        elif ans[:7] == b"TRFL #9":
+            # With hader, number of bytes, and CRC
+            ans = ans[7:]
+        else:
+            # pyvisa automatically strips this header
+            strip_header = False
+            file_size = len(ans)
+
+        if strip_header:
+            # Decode file_size from bytes of ASCII
+            file_size = int(ans[:9].decode("ascii"))
+            ans = ans[9:]  # drop the file_size
+
+            # TODO check CRC
+
+        # Write the file
+        with open(destination_file_path, "wb") as output_file:
+            output_file.write(ans[:file_size])
+
+        return file_size
+
+    def call_print_screen(self, capture_area: LECROY_CAPTURE_AREA) -> str:
+        """Set the HARDCOPY_SETUP variable and call SCREEN_DUMP.
+
+        Args:
+          capture_area (LECROY_CAPTURE_AREA): Capture the whole screen
+            (resp., window) or just the grid with trace.
+
+        Returns: The file path on the scope.
+        """
+        # Setup where to save the file
+        hardcopy_setup = (
+            f"HARDCOPY_SETUP DEV,PNG,FORMAT,LANDSCAPE,BCKG,BLACK,DEST,FILE,DIR,"
+            f"\"D:\",AREA,{capture_area},FILE,\"PRINT-SCREEN.PNG\"")
+        self._scope_communication.write(hardcopy_setup)
+        hardcopy_setup = self._scope_communication.query("HARDCOPY_SETUP?")
+        self._scope_communication.write("SCREEN_DUMP")
+
+        # Parse the full DOS path to the print screen file
+        hardcopy_setup = hardcopy_setup.split(",")[8:]
+        assert hardcopy_setup[0] == "DIR"
+        # HARDCOPY_SETUP DEV,<device>,FORMAT,<format>,BCKG,<bckg>,
+        # DEST,<destination>,DIR,"<directory>",AREA,<hardcopyarea>
+        # [,FILE,"<filename>",PRINTER,"<printername>",PORT,<portname>]
+        # <device>:= {BMP, JPEG, PNG, TIFF}
+        # <format>:= {PORTRAIT, LANDSCAPE}
+        # <bckg>:= {BLACK, WHITE}
+        # <destination>:= {PRINTER, CLIPBOARD, EMAIL, FILE, REMOTE}
+        # <area>:= {GRIDAREAONLY, DSOWINDOW, FULLSCREEN}
+        # <directory>:= legal DOS path, for FILE mode only
+        # <filename>:= filename string, no extension, for FILE mode only
+        # <printername>:= valid printer name, for PRINTER mode only
+        # <portname>:= {GPIB, NET}
+        dir_i = hardcopy_setup.index("DIR")
+        # FILE is there twice (FILE,DIR and FILE,"<FILENAME>")
+        file_i = hardcopy_setup.index("FILE")
+        directory = hardcopy_setup[dir_i + 1].strip("\"'")
+        file = hardcopy_setup[file_i + 1].strip("\"'")
+        file_name = directory + "\\" + file
+
+        return file_name
+
+    def delete_file(self, file_path: str) -> None:
+        """Delete a given file on the scope.
+
+        Args:
+          file_path (str): The path to the file.
+        """
+        # Delete the file
+        self._scope_communication.write(
+            f"DELETE_FILE DISK,HDD,FILE,'{file_path}'")
