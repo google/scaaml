@@ -17,6 +17,9 @@
 from typing import Literal
 from typing_extensions import TypeAlias
 
+LECROY_COMMUNICATION_CLASS_NAME: TypeAlias = Literal[
+    "LeCroyCommunicationVisa", "LeCroyCommunicationSocket"]
+
 LECROY_CAPTURE_AREA: TypeAlias = Literal["FULLSCREEN", "GRIDAREAONLY",
                                          "DSOWINDOW"]
 
