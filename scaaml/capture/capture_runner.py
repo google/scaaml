@@ -107,6 +107,12 @@ class AbstractCaptureRunner(ABC):
             _, _ = self.get_attack_points_and_measurement(
                 crypto_alg=crypto_alg, crypto_input=crypto_input)
 
+        # Save an image of a trace
+        # TODO(#183) Plot the measured trace
+        if hasattr(self._scope, "print_screen"):
+            # Use native print_screen
+            self._scope.print_screen(self._dataset.path / "print_screen.png")
+
     def capture(self):
         """Start (or resume) and finish the capture."""
         self._stabilize_capture(crypto_alg=self._crypto_algorithms[0])
