@@ -13,4 +13,4 @@
 # limitations under the License.
 """Attack point generators"""
 
-from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
+from scaaml.capture.input_generators.input_generators import balanced_generator, single_bunch, unrestricted_generator
