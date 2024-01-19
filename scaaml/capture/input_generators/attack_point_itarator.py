@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-An Itarator that itarates through attack points and can be used with config files.
+An Iterator that iterates through attack points 
+and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
@@ -21,7 +22,7 @@ from typing import List
 
 
 class AttackPointIterator:
-
+    """Attack point iterator class that iterates with different configs."""
     def __init__(self, configuration) -> None:
         """Initialize a new iterator."""
         self._attack_point_iterator_internal: AttackPointIteratorInternalBase
@@ -36,11 +37,11 @@ class AttackPointIterator:
     def __len__(self) -> int:
         """Return the number of iterated elements.
         """
-        return self._attack_point_iterator_internal.__len__()
+        return len(self._attack_point_iterator_internal)
 
     def __iter__(self):
         """Start iterating."""
-        return self._attack_point_iterator_internal.__iter__()
+        return iter(self._attack_point_iterator_internal)
 
     def __next__(self) -> namedtuple:
         """Next iterated element."""
@@ -48,6 +49,7 @@ class AttackPointIterator:
 
 
 class AttackPointIteratorInternalBase(ABC):
+    "Attack point iterator abstract class."
     @abstractmethod
     def __len__(self) -> int:
         """Return the number of iterated elements.
@@ -63,9 +65,10 @@ class AttackPointIteratorInternalBase(ABC):
 
 
 class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
+    """Attack point iterator class that iterates over a constent."""
     def __init__(self, name: str, values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
-        self.Valuestuple = namedtuple(typename=name, field_names="value")
+        self._Valuestuple = namedtuple(typename=name, field_names="value")
         self._values = values
         self._index = 0
 
@@ -77,7 +80,7 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __next__(self) -> namedtuple:
         if self._index < self.__len__():
-            tuple = self.Valuestuple(self._values[self._index])
+            tuple = self._Valuestuple(self._values[self._index])
             self._index += 1
             return tuple
         else:
