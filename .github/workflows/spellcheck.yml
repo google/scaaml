@@ -28,8 +28,8 @@ jobs:
           echo ::add-matcher::./.github/cspell_matcher.json
           # Set internal field separator (filenames can have space in them).
           IFS=$'\n'
-          # Find out which files were changed since master.
-          git diff --name-only origin/master..${{ github.event.after }} | { # Open sub-shell
+          # Find out which files were changed since main.
+          git diff --name-only origin/main..${{ github.event.after }} | { # Open sub-shell
             # Spell check all files and remember if some failed.
             EXIT_CODE=0
             # Loop over the changed files.
