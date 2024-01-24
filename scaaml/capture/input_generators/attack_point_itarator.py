@@ -23,6 +23,7 @@ from typing import List
 
 class AttackPointIterator:
     """Attack point iterator class that iterates with different configs."""
+
     def __init__(self, configuration) -> None:
         """Initialize a new iterator."""
         self._attack_point_iterator_internal: AttackPointIteratorInternalBase
@@ -50,6 +51,7 @@ class AttackPointIterator:
 
 class AttackPointIteratorInternalBase(ABC):
     "Attack point iterator abstract class."
+
     @abstractmethod
     def __len__(self) -> int:
         """Return the number of iterated elements.
@@ -65,10 +67,11 @@ class AttackPointIteratorInternalBase(ABC):
 
 
 class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
-    """Attack point iterator class that iterates over a constent."""
+    """Attack point iterator class that iterates over a constant."""
+
     def __init__(self, name: str, values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
-        self._Valuestuple = namedtuple(typename=name, field_names="value")
+        self._ValuesTuple = namedtuple(typename=name, field_names="value")
         self._values = values
         self._index = 0
 
@@ -80,7 +83,7 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __next__(self) -> namedtuple:
         if self._index < self.__len__():
-            tuple = self._Valuestuple(self._values[self._index])
+            tuple = self._ValuesTuple(self._values[self._index])
             self._index += 1
             return tuple
         else:
