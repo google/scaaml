@@ -29,7 +29,7 @@ def test_attack_point_iterator_constants():
     }
     output = []
     for constant in AttackPointIterator(input):
-        output.append(constant.value)
+        output.append(constant['value'])
     assert output == [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                       [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
 

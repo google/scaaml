@@ -44,9 +44,9 @@ class AttackPointIterator:
         """Start iterating."""
         return iter(self._attack_point_iterator_internal)
 
-    def __next__(self) -> namedtuple:
+    def __next__(self):
         """Next iterated element."""
-        return self._attack_point_iterator_internal.__next__()
+        return next(self._attack_point_iterator_internal)
 
 
 class AttackPointIteratorInternalBase(ABC):
@@ -62,7 +62,7 @@ class AttackPointIteratorInternalBase(ABC):
         """Start iterating."""
 
     @abstractmethod
-    def __next__(self) -> namedtuple:
+    def __next__(self):
         """Next iterated element."""
 
 
@@ -71,7 +71,10 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __init__(self, name: str, values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
-        self._ValuesTuple = namedtuple(typename=name, field_names="value")
+        self._values_dict = {
+            'name': name,
+            'value': [],
+        }
         self._values = values
         self._index = 0
 
@@ -81,10 +84,10 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
     def __iter__(self):
         return self
 
-    def __next__(self) -> namedtuple:
+    def __next__(self):
         if self._index < self.__len__():
-            tuple = self._ValuesTuple(self._values[self._index])
+            self._values_dict['value'] = self._values[self._index]
             self._index += 1
-            return tuple
+            return self._values_dict
         else:
             raise StopIteration
