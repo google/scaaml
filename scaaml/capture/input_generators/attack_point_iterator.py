@@ -17,7 +17,6 @@ and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from typing import List
 
 
@@ -28,10 +27,11 @@ class AttackPointIterator:
         """Initialize a new iterator."""
         self._attack_point_iterator_internal: AttackPointIteratorInternalBase
         if configuration["operation"] == "constants":
-            self._attack_point_iterator_internal = AttackPointIteratorInternalConstants(
+            constant_iterator = AttackPointIteratorInternalConstants(
                 name=configuration["name"],
                 values=configuration["values"],
             )
+            self._attack_point_iterator_internal = constant_iterator
         else:
             raise ValueError(f"{configuration['operation']} is not supported")
 
@@ -71,10 +71,7 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __init__(self, name: str, values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
-        self._values_dict = {
-            'name': name,
-            'value': [],
-        }
+        self._name = name
         self._values = values
         self._index = 0
 
@@ -86,8 +83,9 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __next__(self):
         if self._index < self.__len__():
-            self._values_dict['value'] = self._values[self._index]
             self._index += 1
-            return self._values_dict
+            return {
+                self._name: self._values[self._index - 1]
+            }
         else:
             raise StopIteration
