@@ -8,13 +8,7 @@ from scaaml.capture.input_generators import AttackPointIterator
 def test_attack_point_itarattor_no_legal_operation():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-    input = {
-        "operation":
-            "NONE",
-        "name":
-            "key",
-        "values": values
-    }
+    input = {"operation": "NONE", "name": "key", "values": values}
     with pytest.raises(ValueError):
         AttackPointIterator(input)
 
@@ -22,13 +16,7 @@ def test_attack_point_itarattor_no_legal_operation():
 def test_attack_point_iterator_constants():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-    input = {
-        "operation":
-            "constants",
-        "name":
-            "key",
-        "values": values
-    }
+    input = {"operation": "constants", "name": "key", "values": values}
     output = []
     for constant in AttackPointIterator(input):
         output.append(constant[input["name"]])
@@ -38,13 +26,7 @@ def test_attack_point_iterator_constants():
 def test_single_key_in_iterator_constants():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-    input = {
-        "operation":
-            "constants",
-        "name":
-            "key",
-        "values": values
-    }
+    input = {"operation": "constants", "name": "key", "values": values}
     for constant in AttackPointIterator(input):
         assert list(constant.keys()) == ["key"]
 

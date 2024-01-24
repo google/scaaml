@@ -84,8 +84,6 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
     def __next__(self):
         if self._index < self.__len__():
             self._index += 1
-            return {
-                self._name: self._values[self._index - 1]
-            }
+            return {self._name: self._values[self._index - 1]}
         else:
             raise StopIteration
