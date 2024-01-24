@@ -17,7 +17,7 @@ and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List
 
 
 class AttackPointIterator:
@@ -44,10 +44,6 @@ class AttackPointIterator:
         """Start iterating."""
         return iter(self._attack_point_iterator_internal)
 
-    def __next__(self):
-        """Next iterated element."""
-        return next(self._attack_point_iterator_internal)
-
 
 class AttackPointIteratorInternalBase(ABC):
     "Attack point iterator abstract class."
@@ -62,7 +58,7 @@ class AttackPointIteratorInternalBase(ABC):
         """Start iterating."""
 
     @abstractmethod
-    def __next__(self):
+    def __next__(self) -> Dict[str, List[int]]:
         """Next iterated element."""
 
 
@@ -79,9 +75,10 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
         return len(self._values)
 
     def __iter__(self):
+        self._index = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> Dict[str, List[int]]:
         if self._index < self.__len__():
             self._index += 1
             return {self._name: self._values[self._index - 1]}
