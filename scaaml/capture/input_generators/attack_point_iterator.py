@@ -71,4 +71,3 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __iter__(self):
         return iter({self._name: value} for value in self._values)
-
