@@ -57,10 +57,6 @@ class AttackPointIteratorInternalBase(ABC):
     def __iter__(self):
         """Start iterating."""
 
-    @abstractmethod
-    def __next__(self) -> Dict[str, List[int]]:
-        """Next iterated element."""
-
 
 class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
     """Attack point iterator class that iterates over a constant."""
@@ -69,18 +65,10 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
         """Initialize the constants to iterate."""
         self._name = name
         self._values = values
-        self._index = 0
 
     def __len__(self) -> int:
         return len(self._values)
 
     def __iter__(self):
-        self._index = 0
-        return self
+        return iter({self._name: value} for value in self._values)
 
-    def __next__(self) -> Dict[str, List[int]]:
-        if self._index < self.__len__():
-            self._index += 1
-            return {self._name: self._values[self._index - 1]}
-        else:
-            raise StopIteration

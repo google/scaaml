@@ -8,9 +8,7 @@ from scaaml.capture.input_generators import AttackPointIterator
 
 def attack_point_iterator_constants(values):
     input = {"operation": "constants", "name": "key", "values": values}
-    output = []
-    for constant in AttackPointIterator(input):
-        output.append(constant[input["name"]])
+    output = [obj['key'] for obj in list(iter(AttackPointIterator(input)))]
     assert output == values
 
 
@@ -51,21 +49,7 @@ def test_attack_point_iterator_constant_lengths():
 
 def repeated_iteration(config):
     rep_iterator = AttackPointIterator(config)
-    expected_elements = len(rep_iterator)
-
-    first_iteration_elements = 0
-    first_iteration = AttackPointIterator(config)
-    for r, f in zip(rep_iterator, first_iteration):
-        assert r == f
-        first_iteration_elements += 1
-    assert first_iteration_elements == expected_elements
-
-    second_iteration_elements = 0
-    second_iteration = AttackPointIterator(config)
-    for r, s in zip(rep_iterator, first_iteration):
-        assert r == s
-        second_iteration_elements += 1
-    assert second_iteration_elements == expected_elements
+    assert list(iter(rep_iterator)) == list(iter(rep_iterator))
 
 
 def test_repeated_iteration_constants():
