@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Attack point generators"""
+"""Attack point generators and iterator."""
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, single_bunch, unrestricted_generator
+from scaaml.capture.input_generators.attack_point_iterator import AttackPointIterator
