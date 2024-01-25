@@ -17,7 +17,7 @@ and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import List
 
 
 class AttackPointIterator:
