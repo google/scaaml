@@ -17,7 +17,9 @@ and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List
+
+from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 
 
 class AttackPointIterator:
@@ -27,11 +29,19 @@ class AttackPointIterator:
         """Initialize a new iterator."""
         self._attack_point_iterator_internal: AttackPointIteratorInternalBase
         if configuration["operation"] == "constants":
-            constant_iterator = AttackPointIteratorInternalConstants(
+            constant_iter = AttackPointIteratorInternalConstants(
                 name=configuration["name"],
                 values=configuration["values"],
             )
-            self._attack_point_iterator_internal = constant_iterator
+            self._attack_point_iterator_internal = constant_iter
+        elif configuration["operation"] == "balanced_generator":
+            balanced_iter = AttackPointIteratorInternalBalancedGenerator(
+                name=configuration["name"], kwargs=configuration["kwargs"])
+            self._attack_point_iterator_internal = balanced_iter
+        elif configuration["operation"] == "unrestricted_generator":
+            unrestric_iter = AttackPointIteratorInternalUnrestrictedGenerator(
+                name=configuration["name"], kwargs=configuration["kwargs"])
+            self._attack_point_iterator_internal = unrestric_iter
         else:
             raise ValueError(f"{configuration['operation']} is not supported")
 
@@ -71,3 +81,49 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
     def __iter__(self):
         return iter({self._name: value} for value in self._values)
+
+
+class AttackPointIteratorInternalBalancedGenerator(
+        AttackPointIteratorInternalBase):
+    """Attack point terator class that iterates over the balanced generator."""
+
+    def __init__(self, name: str, kwargs: Dict) -> None:
+        """Initialize the balanced kwags to iterate."""
+        self._name = name
+        self._kwargs = kwargs
+        self._len = self._kwargs["length"] * self._kwargs[
+            "bunches"] if "bunches" in self._kwargs else self._kwargs["length"]
+
+    def __len__(self) -> int:
+        return self._len
+
+    def __iter__(self):
+        return iter({self._name: value} for value in balanced_generator(
+            length=self._kwargs["length"],
+            bunches=self._kwargs["bunches"] if "bunches" in self._kwargs else 1,
+            elements=self._kwargs["elements"] if "elements" in
+            self._kwargs else 256))
+
+
+class AttackPointIteratorInternalUnrestrictedGenerator(
+        AttackPointIteratorInternalBase):
+    """
+    Attack point terator class that iterates over the unrestricted generator.
+    """
+
+    def __init__(self, name: str, kwargs: Dict) -> None:
+        """Initialize the unrestricted kwags to iterate."""
+        self._name = name
+        self._kwargs = kwargs
+        self._len = self._kwargs["length"] * self._kwargs[
+            "bunches"] if "bunches" in self._kwargs else self._kwargs["length"]
+
+    def __len__(self) -> int:
+        return self._len
+
+    def __iter__(self):
+        return iter({self._name: value} for value in unrestricted_generator(
+            length=self._kwargs["length"],
+            bunches=self._kwargs["bunches"] if "bunches" in self._kwargs else 1,
+            elements=self._kwargs["elements"] if "elements" in
+            self._kwargs else 256))
