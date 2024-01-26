@@ -96,7 +96,7 @@ class AttackPointIteratorInternalBalancedGenerator(
                  bunches: int = 1,
                  elements: int = 256) -> None:
         """Initialize the balanced kwargs to iterate."""
-        self._operation = operation
+        assert "balanced_generator" == operation
         self._name = name
         self._length = length
         self._bunches = bunches
@@ -126,7 +126,7 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
                  elements: int = 256,
                  bunches: int = 1) -> None:
         """Initialize the unrestricted kwargs to iterate."""
-        self._operation = operation
+        assert "unrestricted_generator" == operation
         self._name = name
         self._length = length
         self._elements = elements
