@@ -60,15 +60,8 @@ def test_repeated_iteration_constants():
 
 
 def test_attack_point_iterator_balanced_generator():
-    config = {
-        "operation": "balanced_generator",
-        "name": "key",
-        "kwargs": {
-            "length": 16
-        }
-    }
+    config = {"operation": "balanced_generator", "name": "key", "length": 16}
     output = list(iter(AttackPointIterator(config)))
-    print(output)
     assert len(output) == 256
 
 
@@ -76,68 +69,50 @@ def test_attack_point_iterator_balanced_generator_all_kwargs():
     config = {
         "operation": "balanced_generator",
         "name": "key",
-        "kwargs": {
-            "length": 16,
-            "bunches": 2,
-            "elements": 3
-        }
+        "length": 16,
+        "bunches": 2,
+        "elements": 3
     }
     output = list(iter(AttackPointIterator(config)))
-    assert len(
-        output) == config["kwargs"]["bunches"] * config["kwargs"]["elements"]
+    assert len(output) == config["bunches"] * config["elements"]
 
 
 def test_attack_point_iterator_unrestricted_generator():
     config = {
         "operation": "unrestricted_generator",
         "name": "key",
-        "kwargs": {
-            "length": 16
-        }
+        "length": 16
     }
     output = list(iter(AttackPointIterator(config)))
     assert len(output) == 256
 
 
-def test_attack_point_iterator_balanced_generator_all_kwargs():
+def test_attack_point_iterator_balanced_generator_all_args():
     config = {
         "operation": "unrestricted_generator",
         "name": "key",
-        "kwargs": {
-            "length": 16,
-            "bunches": 2,
-            "elements": 3
-        }
+        "length": 16,
+        "bunches": 2,
+        "elements": 3
     }
     output = list(iter(AttackPointIterator(config)))
-    assert len(
-        output) == config["kwargs"]["bunches"] * config["kwargs"]["elements"]
+    assert len(output) == config["bunches"] * config["elements"]
 
 
 def test_attack_point_iterator_balanced_generator_len():
-    config = {
-        "operation": "balanced_generator",
-        "name": "key",
-        "kwargs": {
-            "length": 16
-        }
-    }
+    config = {"operation": "balanced_generator", "name": "key", "length": 16}
     output = AttackPointIterator(config)
     assert len(output) == 256
 
 
-def test_attack_point_iterator_balanced_generator_all_kwargs_len():
+def test_attack_point_iterator_balanced_generator_all_args_len():
     config = {
         "operation": "balanced_generator",
         "name": "key",
-        "kwargs": {
-            "length": 16,
-            "bunches": 2,
-            "elements": 3
-        }
+        "length": 16,
+        "bunches": 2,
+        "elements": 3
     }
     output = list(iter(AttackPointIterator(config)))
-    print(output)
-    assert len(
-        output) == config["kwargs"]["bunches"] * config["kwargs"]["elements"]
+    assert len(output) == config["bunches"] * config["elements"]
     assert len(output) == len(AttackPointIterator(config))
