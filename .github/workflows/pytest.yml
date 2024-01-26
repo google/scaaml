@@ -6,6 +6,8 @@ on:
       - 'pytest.ini'
   pull_request:
     types: [opened, synchronize, reopened]
+env:
+  MIN_COVERAGE_REQUIRED: 70
 jobs:
   unittesting:
     runs-on: ubuntu-22.04
@@ -36,4 +38,4 @@ jobs:
           coverage run --omit="tests/**/*.py" -m pytest
       - name: Report code coverage
         run: |
-          coverage report -i -m
+          coverage report -i -m --fail-under=$MIN_COVERAGE_REQUIRED
