@@ -39,9 +39,9 @@ class AttackPointIterator:
                 name=configuration["name"], kwargs=configuration["kwargs"])
             self._attack_point_iterator_internal = balanced_iter
         elif configuration["operation"] == "unrestricted_generator":
-            unrestric_iter = AttackPointIteratorInternalUnrestrictedGenerator(
+            unrestrict_iter = AttackPointIteratorInternalUnrestrictedGenerator(
                 name=configuration["name"], kwargs=configuration["kwargs"])
-            self._attack_point_iterator_internal = unrestric_iter
+            self._attack_point_iterator_internal = unrestrict_iter
         else:
             raise ValueError(f"{configuration['operation']} is not supported")
 
@@ -85,10 +85,12 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
 
 class AttackPointIteratorInternalBalancedGenerator(
         AttackPointIteratorInternalBase):
-    """Attack point terator class that iterates over the balanced generator."""
+    """
+    Attack point iterator class that iterates over the balanced generator.
+    """
 
     def __init__(self, name: str, kwargs: Dict) -> None:
-        """Initialize the balanced kwags to iterate."""
+        """Initialize the balanced kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
         self._len = self._kwargs["length"] * self._kwargs[
@@ -108,11 +110,11 @@ class AttackPointIteratorInternalBalancedGenerator(
 class AttackPointIteratorInternalUnrestrictedGenerator(
         AttackPointIteratorInternalBase):
     """
-    Attack point terator class that iterates over the unrestricted generator.
+    Attack point iterator class that iterates over the unrestricted generator.
     """
 
     def __init__(self, name: str, kwargs: Dict) -> None:
-        """Initialize the unrestricted kwags to iterate."""
+        """Initialize the unrestricted kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
         self._len = self._kwargs["length"] * self._kwargs[
