@@ -6,8 +6,6 @@ on:
       - 'pytest.ini'
   pull_request:
     types: [opened, synchronize, reopened]
-env:
-  MIN_COVERAGE_REQUIRED: 70
 jobs:
   unittesting:
     runs-on: ubuntu-22.04
@@ -23,8 +21,7 @@ jobs:
           pip install --require-hashes --no-deps -r requirements.txt
       - name: Install workflow dependencies
         run: |
-          pip install pytest
-          pip install coverage
+          pip install pytest coverage coveralls
           # Install PS drivers
           wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
@@ -36,6 +33,7 @@ jobs:
       - name: Running unit tests
         run: |
           coverage run --omit="tests/**/*.py" -m pytest
-      - name: Report code coverage
-        run: |
-          coverage report -i -m --fail-under=$MIN_COVERAGE_REQUIRED
+      - name: Upload results
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
