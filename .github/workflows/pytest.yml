@@ -34,5 +34,6 @@ jobs:
         run: |
           coverage run --omit="tests/**/*.py" -m pytest
       - name: Upload results
-        run: |
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} coveralls --service=github
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
