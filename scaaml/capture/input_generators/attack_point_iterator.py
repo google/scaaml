@@ -90,12 +90,13 @@ class AttackPointIteratorInternalBalancedGenerator(
     """
 
     def __init__(self,
+                 operation: str,
                  name: str,
                  length: int,
                  bunches: int = 1,
-                 elements: int = 256,
-                 **unused) -> None:
+                 elements: int = 256) -> None:
         """Initialize the balanced kwargs to iterate."""
+        self._operation = operation
         self._name = name
         self._length = length
         self._bunches = bunches
@@ -119,12 +120,13 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
     """
 
     def __init__(self,
+                 operation: str,
                  name: str,
                  length: int,
                  elements: int = 256,
-                 bunches: int = 1,
-                 **unused) -> None:
+                 bunches: int = 1) -> None:
         """Initialize the unrestricted kwargs to iterate."""
+        self._operation = operation
         self._name = name
         self._length = length
         self._elements = elements
