@@ -113,6 +113,7 @@ def test_attack_point_iterator_balanced_generator_all_kwargs():
     assert len(
         output) == config["kwargs"]["bunches"] * config["kwargs"]["elements"]
 
+
 def test_attack_point_iterator_balanced_generator_len():
     config = {
         "operation": "balanced_generator",

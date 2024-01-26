@@ -93,9 +93,8 @@ class AttackPointIteratorInternalBalancedGenerator(
         """Initialize the balanced kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
-        self._len = (
-            self._kwargs.get("bunches", 1) * self._kwargs.get("elements", 256)
-            )
+        self._len = (self._kwargs.get("bunches", 1) *
+                     self._kwargs.get("elements", 256))
 
     def __len__(self) -> int:
         return self._len
@@ -117,9 +116,8 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
         """Initialize the unrestricted kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
-        self._len = (
-            self._kwargs.get("bunches", 1) * self._kwargs.get("elements", 256)
-            )
+        self._len = (self._kwargs.get("bunches", 1) *
+                     self._kwargs.get("elements", 256))
 
     def __len__(self) -> int:
         return self._len
