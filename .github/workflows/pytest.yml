@@ -26,7 +26,7 @@ jobs:
         run: |
           pip install pytest
           pip install coverage
-          pip install coverall
+          pip install coveralls
           # Install PS drivers
           wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
