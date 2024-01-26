@@ -33,7 +33,7 @@ jobs:
           pip install picosdk
       - name: Running unit tests
         run: |
-          coverage run -m pytest
+          coverage run --omit="tests/**/*.py" -m pytest
       - name: Report code coverage
         run: |
           coverage report -i -m
