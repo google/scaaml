@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize, reopened]
 env:
   MIN_COVERAGE_REQUIRED: 70
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   unittesting:
     runs-on: ubuntu-22.04
@@ -25,6 +26,7 @@ jobs:
         run: |
           pip install pytest
           pip install coverage
+          pip install coverall
           # Install PS drivers
           wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
@@ -39,3 +41,6 @@ jobs:
       - name: Report code coverage
         run: |
           coverage report -i -m --fail-under=$MIN_COVERAGE_REQUIRED
+      - name: Upload results
+        run: |
+          coveralls --service=github
