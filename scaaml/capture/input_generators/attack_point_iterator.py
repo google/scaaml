@@ -93,8 +93,9 @@ class AttackPointIteratorInternalBalancedGenerator(
         """Initialize the balanced kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
-        self._len = self._kwargs["length"] * self._kwargs[
-            "bunches"] if "bunches" in self._kwargs else self._kwargs["length"]
+        self._len = (
+            self._kwargs.get("bunches", 1) * self._kwargs.get("elements", 256)
+            )
 
     def __len__(self) -> int:
         return self._len
@@ -102,9 +103,8 @@ class AttackPointIteratorInternalBalancedGenerator(
     def __iter__(self):
         return iter({self._name: value} for value in balanced_generator(
             length=self._kwargs["length"],
-            bunches=self._kwargs["bunches"] if "bunches" in self._kwargs else 1,
-            elements=self._kwargs["elements"] if "elements" in
-            self._kwargs else 256))
+            bunches=self._kwargs.get("bunches", 1),
+            elements=self._kwargs.get("elements", 256)))
 
 
 class AttackPointIteratorInternalUnrestrictedGenerator(
@@ -117,8 +117,9 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
         """Initialize the unrestricted kwargs to iterate."""
         self._name = name
         self._kwargs = kwargs
-        self._len = self._kwargs["length"] * self._kwargs[
-            "bunches"] if "bunches" in self._kwargs else self._kwargs["length"]
+        self._len = (
+            self._kwargs.get("bunches", 1) * self._kwargs.get("elements", 256)
+            )
 
     def __len__(self) -> int:
         return self._len
@@ -126,6 +127,5 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
     def __iter__(self):
         return iter({self._name: value} for value in unrestricted_generator(
             length=self._kwargs["length"],
-            bunches=self._kwargs["bunches"] if "bunches" in self._kwargs else 1,
-            elements=self._kwargs["elements"] if "elements" in
-            self._kwargs else 256))
+            bunches=self._kwargs.get("bunches", 1),
+            elements=self._kwargs.get("elements", 256)))
