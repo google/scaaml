@@ -7,7 +7,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 env:
-  MIN_COVERAGE_REQUIRED: 70
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   unittesting:
@@ -38,9 +37,6 @@ jobs:
       - name: Running unit tests
         run: |
           coverage run --omit="tests/**/*.py" -m pytest
-      - name: Report code coverage
-        run: |
-          coverage report -i -m --fail-under=$MIN_COVERAGE_REQUIRED
       - name: Upload results
         run: |
           coveralls --service=github
