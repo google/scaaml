@@ -39,9 +39,9 @@ class AttackPointIterator:
                 name=configuration["name"], kwargs=configuration["kwargs"])
             self._attack_point_iterator_internal = balanced_iter
         elif configuration["operation"] == "unrestricted_generator":
-            unrestrict_iter = AttackPointIteratorInternalUnrestrictedGenerator(
+            unrestricted = AttackPointIteratorInternalUnrestrictedGenerator(
                 name=configuration["name"], kwargs=configuration["kwargs"])
-            self._attack_point_iterator_internal = unrestrict_iter
+            self._attack_point_iterator_internal = unrestricted
         else:
             raise ValueError(f"{configuration['operation']} is not supported")
 
