@@ -6,6 +6,10 @@ on:
       - 'pytest.ini'
   pull_request:
     types: [opened, synchronize, reopened]
+  pull_request:
+    branches:
+      - main
+    types: [closed]
 jobs:
   unittesting:
     runs-on: ubuntu-22.04
