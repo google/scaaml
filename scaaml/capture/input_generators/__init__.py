@@ -14,4 +14,4 @@
 """Attack point generators and iterator."""
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, single_bunch, unrestricted_generator
-from scaaml.capture.input_generators.attack_point_iterator import AttackPointIterator
+from scaaml.capture.input_generators.attack_point_iterator import build_attack_points_iterator

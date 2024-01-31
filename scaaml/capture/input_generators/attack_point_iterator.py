@@ -17,62 +17,67 @@ and can be used with config files.
 """
 
 from abc import ABC, abstractmethod
-from typing import List
+import collections
+import copy
+from typing import Dict, List
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 
 
-class AttackPointIterator:
-    """Attack point iterator class that iterates with different configs."""
-
-    def __init__(self, configuration) -> None:
-        """Initialize a new iterator."""
-        self._attack_point_iterator_internal: AttackPointIteratorInternalBase
-        if configuration["operation"] == "constants":
-            constant_iter = AttackPointIteratorInternalConstants(
-                name=configuration["name"],
-                values=configuration["values"],
-            )
-            self._attack_point_iterator_internal = constant_iter
-        elif configuration["operation"] == "balanced_generator":
-            balanced_iter = AttackPointIteratorInternalBalancedGenerator(
-                **configuration)
-            self._attack_point_iterator_internal = balanced_iter
-        elif configuration["operation"] == "unrestricted_generator":
-            unrestricted = AttackPointIteratorInternalUnrestrictedGenerator(
-                **configuration)
-            self._attack_point_iterator_internal = unrestricted
-        else:
-            raise ValueError(f"{configuration['operation']} is not supported")
-
-    def __len__(self) -> int:
-        """Return the number of iterated elements.
-        """
-        return len(self._attack_point_iterator_internal)
-
-    def __iter__(self):
-        """Start iterating."""
-        return iter(self._attack_point_iterator_internal)
-
-
-class AttackPointIteratorInternalBase(ABC):
+class AttackPointIterator(ABC):
     "Attack point iterator abstract class."
 
     @abstractmethod
     def __len__(self) -> int:
-        """Return the number of iterated elements.
-        """
+        """Return the number of iterated elements."""
 
     @abstractmethod
     def __iter__(self):
         """Start iterating."""
 
+    @abstractmethod
+    def get_generated_keys(self) -> List[str]:
+        """
+        Returns an exhaustive list of names this iterator 
+        and its children will create.
+        """
 
-class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
+
+def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
+    configuration = copy.deepcopy(configuration)
+    iterator = _build_attack_points_iterator(configuration)
+
+    # Check that all names are unique
+    names_list = collections.Counter(iterator.get_generated_keys())
+    duplicates = [name for name, count in names_list.items() if count > 1]
+    if duplicates:
+        raise ValueError(f"Duplicated attack point names {duplicates}")
+
+    return iterator
+
+
+def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
+    supported_operations = {
+        "constants": AttackPointIteratorConstants,
+        "balanced_generator": AttackPointIteratorBalancedGenerator,
+        "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
+    }
+    operation = configuration["operation"]
+    iterator_cls = supported_operations.get(operation)
+
+    if iterator_cls is None:
+        raise ValueError(f"Operation {operation} not supported")
+
+    return iterator_cls(**configuration)
+
+
+class AttackPointIteratorConstants(AttackPointIterator):
     """Attack point iterator class that iterates over a constant."""
 
-    def __init__(self, name: str, values: List[List[int]]) -> None:
+    def __init__(self, operation: str, name: str,
+                 values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
+        assert "constants" == operation
         self._name = name
         self._values = values
 
@@ -82,9 +87,11 @@ class AttackPointIteratorInternalConstants(AttackPointIteratorInternalBase):
     def __iter__(self):
         return iter({self._name: value} for value in self._values)
 
+    def get_generated_keys(self) -> List[str]:
+        return [self._name]
 
-class AttackPointIteratorInternalBalancedGenerator(
-        AttackPointIteratorInternalBase):
+
+class AttackPointIteratorBalancedGenerator(AttackPointIterator):
     """
     Attack point iterator class that iterates over the balanced generator.
     """
@@ -112,9 +119,11 @@ class AttackPointIteratorInternalBalancedGenerator(
                                                     bunches=self._bunches,
                                                     elements=self._elements))
 
+    def get_generated_keys(self) -> List[str]:
+        return [self._name]
 
-class AttackPointIteratorInternalUnrestrictedGenerator(
-        AttackPointIteratorInternalBase):
+
+class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
     """
     Attack point iterator class that iterates over the unrestricted generator.
     """
@@ -140,3 +149,6 @@ class AttackPointIteratorInternalUnrestrictedGenerator(
         return iter({self._name: value} for value in unrestricted_generator(
             length=self._length, bunches=self._bunches,
             elements=self._elements))
+
+    def get_generated_keys(self) -> List[str]:
+        return [self._name]
