@@ -61,7 +61,6 @@ def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
         "constants": AttackPointIteratorConstants,
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
-        # ...
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
