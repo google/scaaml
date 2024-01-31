@@ -3,12 +3,14 @@
 import numpy as np
 import pytest
 
-from scaaml.capture.input_generators import AttackPointIterator
+from scaaml.capture.input_generators import build_attack_points_iterator
 
 
 def attack_point_iterator_constants(values):
     input = {"operation": "constants", "name": "key", "values": values}
-    output = [obj['key'] for obj in list(iter(AttackPointIterator(input)))]
+    output = [
+        obj['key'] for obj in list(iter(build_attack_points_iterator(input)))
+    ]
     assert output == values
 
 
@@ -17,7 +19,7 @@ def test_attack_point_iterator_no_legal_operation():
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     input = {"operation": "NONE", "name": "key", "values": values}
     with pytest.raises(ValueError):
-        AttackPointIterator(input)
+        build_attack_points_iterator(input)
 
 
 def test_attack_point_iterator_constants():
@@ -30,15 +32,15 @@ def test_single_key_in_iterator_constants():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     input = {"operation": "constants", "name": "key", "values": values}
-    for constant in AttackPointIterator(input):
+    for constant in build_attack_points_iterator(input):
         assert list(constant.keys()) == ["key"]
 
 
 def test_attack_point_iterator_constants_no_values():
     input = {"operation": "constants", "name": "key"}
     output = []
-    with pytest.raises(KeyError):
-        AttackPointIterator(input)
+    with pytest.raises(TypeError):
+        build_attack_points_iterator(input)
 
 
 def test_attack_point_iterator_constant_lengths():
@@ -48,7 +50,7 @@ def test_attack_point_iterator_constant_lengths():
 
 
 def repeated_iteration(config):
-    rep_iterator = AttackPointIterator(config)
+    rep_iterator = build_attack_points_iterator(config)
     assert list(iter(rep_iterator)) == list(iter(rep_iterator))
 
 
@@ -61,7 +63,7 @@ def test_repeated_iteration_constants():
 
 def test_attack_point_iterator_balanced_generator():
     config = {"operation": "balanced_generator", "name": "key", "length": 16}
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == 256
 
 
@@ -73,7 +75,7 @@ def test_attack_point_iterator_balanced_generator_all_kwargs():
         "bunches": 2,
         "elements": 3
     }
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == config["bunches"] * config["elements"]
 
 
@@ -83,7 +85,7 @@ def test_attack_point_iterator_unrestricted_generator():
         "name": "key",
         "length": 16
     }
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == 256
 
 
@@ -95,13 +97,13 @@ def test_attack_point_iterator_balanced_generator_all_args():
         "bunches": 2,
         "elements": 3
     }
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == config["bunches"] * config["elements"]
 
 
 def test_attack_point_iterator_balanced_generator_len():
     config = {"operation": "balanced_generator", "name": "key", "length": 16}
-    output = AttackPointIterator(config)
+    output = build_attack_points_iterator(config)
     assert len(output) == 256
 
 
@@ -113,9 +115,9 @@ def test_attack_point_iterator_balanced_generator_all_args_len():
         "bunches": 2,
         "elements": 3
     }
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == config["bunches"] * config["elements"]
-    assert len(output) == len(AttackPointIterator(config))
+    assert len(output) == len(build_attack_points_iterator(config))
 
 
 def test_attack_point_iterator_unrestricted_generator_all_args_len():
@@ -126,6 +128,6 @@ def test_attack_point_iterator_unrestricted_generator_all_args_len():
         "bunches": 2,
         "elements": 3
     }
-    output = list(iter(AttackPointIterator(config)))
+    output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == config["bunches"] * config["elements"]
-    assert len(output) == len(AttackPointIterator(config))
+    assert len(output) == len(build_attack_points_iterator(config))
