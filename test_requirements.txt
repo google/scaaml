@@ -3,4 +3,3 @@ pytest-cov
 flake8
 twine
 perfCounters
-psutil
