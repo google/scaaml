@@ -32,12 +32,14 @@ jobs:
           pip install picosdk
 
   unittesting:
+    runs-on: ubuntu-22.04
     needs: setup
     steps:
       - name: Running unit tests
         run: python -m pytest
 
   coverage:
+    runs-on: ubuntu-22.04
     needs: setup
     steps:
       - name: Install workflow dependencies

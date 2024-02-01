@@ -42,5 +42,6 @@ def disable_autograph_in_coverage() -> None:
     """
     if not os.getenv("DISABLE_AUTOGRAPH"):
         return
-    config.CONVERSION_RULES = (config.DoNotConvert("scaaml"),) + config.CONVERSION_RULES
+    config.CONVERSION_RULES = (
+        config.DoNotConvert("scaaml"),) + config.CONVERSION_RULES
     tf.config.run_functions_eagerly(True)
