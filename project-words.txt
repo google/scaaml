@@ -80,6 +80,7 @@ presamples
 pretrained
 probas
 protver
+psutil
 pyclass
 pyplot
 pyvisa
