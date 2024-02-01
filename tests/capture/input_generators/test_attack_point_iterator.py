@@ -1,5 +1,6 @@
 """Test attack point iterator."""
 
+import psutil
 import numpy as np
 import pytest
 
@@ -161,3 +162,40 @@ def test_attack_point_iterator_repeat_len():
     output = len(build_attack_points_iterator(config))
     assert output == config["repetitions"] * len(
         config["configuration"]["values"])
+
+
+def test_repeat_memory():
+    config = {
+        "operation": "repeat",
+        "repetitions": 1_000_000_000_000,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [[1], [2], [3]]
+        }
+    }
+
+    max_growth_factor = 2
+    python_process = psutil.Process()
+    memory_before_iterator = python_process.memory_info().rss
+
+    long_iterable = build_attack_points_iterator(config)
+    long_iterator = iter(long_iterable)
+    assert next(long_iterator) == {"key": [1]}
+    assert python_process.memory_info(
+    ).rss <= max_growth_factor * memory_before_iterator
+    assert next(long_iterator) == {"key": [2]}
+    assert next(long_iterator) == {"key": [3]}
+    assert python_process.memory_info(
+    ).rss <= max_growth_factor * memory_before_iterator
+    assert next(long_iterator) == {"key": [1]}
+    assert next(long_iterator) == {"key": [2]}
+    assert next(long_iterator) == {"key": [3]}
+    assert next(long_iterator) == {"key": [1]}
+    assert python_process.memory_info(
+    ).rss <= max_growth_factor * memory_before_iterator
+
+    assert len(long_iterable) == len(
+        config["configuration"]["values"]) * config["repetitions"]
+    assert python_process.memory_info(
+    ).rss <= max_growth_factor * memory_before_iterator
