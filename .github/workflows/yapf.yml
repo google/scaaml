@@ -24,4 +24,4 @@ jobs:
           echo ::add-matcher::./.github/python_matcher.json
       - name: Test code formatting with yapf
         run:
-          yapf --style=google --recursive --diff .
+          yapf --recursive --diff .
