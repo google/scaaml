@@ -45,9 +45,9 @@ jobs:
       - name: Install workflow dependencies
         run: pip install pytest coverage coveralls
       - name: Running unit tests
-         run: coverage run --omit="tests/**/*.py" -m pytest
-         env:
-           DISABLE_AUTOGRAPH: 1
+        run: coverage run --omit="tests/**/*.py" -m pytest
+        env:
+          DISABLE_AUTOGRAPH: 1
       - name: Upload results
         run: coveralls --service=github
         env:
