@@ -165,6 +165,20 @@ def test_max_rank_doc():
     assert r.result().numpy().dtype == np.int32
 
 
+def test_max_rank_reset():
+    r = MaxRank()
+    r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
+    assert r.result().numpy() == 1
+    assert r.result().numpy().dtype == np.int32
+
+    r.reset_state()
+    assert r.result().numpy() == 0
+    assert r.result().numpy().dtype == np.int32
+    r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
+    assert r.result().numpy() == 1
+    assert r.result().numpy().dtype == np.int32
+
+
 def test_confidence_doc():
     y_true = [[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]]
     y_pred = [[0.1, 0.9, 0.8], [0.05, 0.95, 0.], [0.5, 0.5, 0.]]
