@@ -110,6 +110,7 @@ class LeCroy(AbstractSScope):
         self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
+        # pylint:disable=C0301
         self._communication_class_name: LECROY_COMMUNICATION_CLASS_NAME = communication_class_name
 
         self._scope_setup_commands = deepcopy(scope_setup_commands)
