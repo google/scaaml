@@ -7,7 +7,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  unittesting:
+  setup:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -17,11 +17,11 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       - name: Installing package
-        run:
+        run: |
           pip install --require-hashes --no-deps -r requirements.txt
+          pip install -r test_requirements.txt
       - name: Install workflow dependencies
         run: |
-          pip install pytest coverage coveralls
           # Install PS drivers
           wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
           sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
@@ -30,9 +30,22 @@ jobs:
       - name: Installing picosdk package
         run:
           pip install picosdk
+
+  unittesting:
+    needs: setup
+    steps:
       - name: Running unit tests
-        run: |
-          coverage run --omit="tests/**/*.py" -m pytest
+        run: python -m pytest
+
+  coverage:
+    needs: setup
+    steps:
+      - name: Install workflow dependencies
+        run: pip install pytest coverage coveralls
+      - name: Running unit tests
+         run: coverage run --omit="tests/**/*.py" -m pytest
+         env:
+           DISABLE_AUTOGRAPH: 1
       - name: Upload results
         run: coveralls --service=github
         env:

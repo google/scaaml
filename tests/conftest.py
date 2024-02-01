@@ -13,8 +13,12 @@
 # limitations under the License.
 """Configure tests."""
 
-import pytest
+import os
 from pathlib import Path
+import pytest
+
+from tensorflow.python.autograph.core import config
+import tensorflow as tf
 
 TEST_ROOT_DIR = Path(__file__).parent
 TEST_DATA_ROOT = TEST_ROOT_DIR / "data"
@@ -26,3 +30,17 @@ def scald_shards_path():
         str(TEST_DATA_ROOT / "scald/tinyaes.npz"),
         str(TEST_DATA_ROOT / "scald/mbed.npz")
     ]
+
+
+@pytest.fixture(autouse=True)
+def disable_autograph_in_coverage() -> None:
+    """TensorFlow is doing magic with Python AST that excludes functions such
+    as scaaml.metrics.custom.rank from being marked as covered by unittests.
+    Modifiable by the environment variable `DISABLE_AUTOGRAPH`.
+
+    https://github.com/tensorflow/tensorflow/issues/33759
+    """
+    if not os.getenv("DISABLE_AUTOGRAPH"):
+        return
+    config.CONVERSION_RULES = (config.DoNotConvert("scaaml"),) + config.CONVERSION_RULES
+    tf.config.run_functions_eagerly(True)
