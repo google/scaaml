@@ -19,7 +19,7 @@ import re
 import tabulate
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional, Tuple
 
 METADATA_FILES = ["METADATA", "PKG-INFO"]
 
@@ -42,9 +42,9 @@ LICENSE_CATEGORIES = {
 }
 
 
-def GetDependencies() -> list[str]:
+def GetDependencies() -> List[str]:
     """Extracts dependencies from setup.py"""
-    dependencies: list[str] = []
+    dependencies: List[str] = []
 
     # pylint set_up fails, setup is the name in setuptools, pylint has an
     # exempt on setUp.
@@ -57,7 +57,7 @@ def GetDependencies() -> list[str]:
     return dependencies
 
 
-def GetPackageLicenses(package_name) -> tuple[Optional[str], Optional[str]]:
+def GetPackageLicenses(package_name) -> Tuple[Optional[str], Optional[str]]:
     """Extract the licensing metadata from a Python package."""
     packages = pkg_resources.require(package_name)
     package = packages[0]
@@ -97,14 +97,14 @@ class PackageInfo:
         return iter((self.package, self.licence, self.category, self.homepage))
 
     @classmethod
-    def get_headers(cls) -> tuple[str, ...]:
+    def get_headers(cls) -> Tuple[str, ...]:
         # Order must match the one in __iter__
         return ("Package", "License", "Category", "Homepage")
 
 
 def GenerateDependencyLicensesFile():
     """Generates the DEPENDENCY_LICENSES file."""
-    license_data: list[PackageInfo] = []
+    license_data: List[PackageInfo] = []
     for package_name in GetDependencies():
         package_license, homepage = GetPackageLicenses(package_name)
         assert package_license
