@@ -61,6 +61,7 @@ def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
         "constants": AttackPointIteratorConstants,
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
+        "repeat": AttackPointIteratorRepeat,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -152,3 +153,30 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
 
     def get_generated_keys(self) -> List[str]:
         return [self._name]
+
+
+class AttackPointIteratorRepeat(AttackPointIterator):
+    """
+    Attack point iterator class that iterates 
+    over a configuration a repeated amount of times.
+    """
+
+    def __init__(self, operation: str, repetitions: int,
+                 configuration: Dict) -> None:
+        """Initialize the repeated iterate."""
+        assert "repeat" == operation
+        self._repetitions = repetitions
+        self._configuration_iterator = build_attack_points_iterator(
+            configuration)
+        self._len = repetitions * len(self._configuration_iterator)
+
+    def __len__(self) -> int:
+        return self._len
+
+    def __iter__(self):
+        return iter(
+            list(iter(self._configuration_iterator))
+            for repetitions in range(self._repetitions))
+
+    def get_generated_keys(self) -> List[str]:
+        return self._configuration_iterator.get_generated_keys()

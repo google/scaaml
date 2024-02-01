@@ -131,3 +131,44 @@ def test_attack_point_iterator_unrestricted_generator_all_args_len():
     output = list(iter(build_attack_points_iterator(config)))
     assert len(output) == config["bunches"] * config["elements"]
     assert len(output) == len(build_attack_points_iterator(config))
+
+
+def test_attack_point_iterator_repeat():
+    config = {
+        "operation": "repeat",
+        "repetitions": 2,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = list(iter(build_attack_points_iterator(config)))
+    assert output == [[{
+        'key': 1
+    }, {
+        'key': 2
+    }, {
+        'key': 3
+    }], [{
+        'key': 1
+    }, {
+        'key': 2
+    }, {
+        'key': 3
+    }]]
+
+
+def test_attack_point_iterator_repeat_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 2,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == config["repetitions"] * len(
+        config["configuration"]["values"])
