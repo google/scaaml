@@ -174,9 +174,8 @@ class AttackPointIteratorRepeat(AttackPointIterator):
         return self._len
 
     def __iter__(self):
-        return iter(
-            list(iter(self._configuration_iterator))
-            for repetitions in range(self._repetitions))
+        return iter(value for repetition in range(self._repetitions)
+                    for value in self._configuration_iterator)
 
     def get_generated_keys(self) -> List[str]:
         return self._configuration_iterator.get_generated_keys()

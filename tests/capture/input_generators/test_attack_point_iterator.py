@@ -144,19 +144,8 @@ def test_attack_point_iterator_repeat():
         }
     }
     output = list(iter(build_attack_points_iterator(config)))
-    assert output == [[{
-        'key': 1
-    }, {
-        'key': 2
-    }, {
-        'key': 3
-    }], [{
-        'key': 1
-    }, {
-        'key': 2
-    }, {
-        'key': 3
-    }]]
+    assert output == list(
+        iter(build_attack_points_iterator(config["configuration"]))) * 2
 
 
 def test_attack_point_iterator_repeat_len():
