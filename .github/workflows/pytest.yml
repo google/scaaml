@@ -7,8 +7,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  setup:
+  unittesting:
     runs-on: ubuntu-22.04
+    needs: setup
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -30,11 +31,6 @@ jobs:
       - name: Installing picosdk package
         run:
           pip install picosdk
-
-  unittesting:
-    runs-on: ubuntu-22.04
-    needs: setup
-    steps:
       - name: Running unit tests
         run: python -m pytest
 
@@ -42,6 +38,26 @@ jobs:
     runs-on: ubuntu-22.04
     needs: setup
     steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Installing package
+        run: |
+          pip install --require-hashes --no-deps -r requirements.txt
+          pip install -r test_requirements.txt
+      - name: Install workflow dependencies
+        run: |
+          # Install PS drivers
+          wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
+          sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
+          sudo apt-get update
+          sudo apt-get install libps6000a
+      - name: Installing picosdk package
+        run:
+          pip install picosdk
       - name: Install workflow dependencies
         run: pip install pytest coverage coveralls
       - name: Running unit tests
