@@ -24,6 +24,7 @@ from struct import pack, unpack
 from typing import Optional
 
 import pyvisa
+from pyvisa.util import BINARY_DATATYPES
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
@@ -73,7 +74,7 @@ class LeCroyCommunication(ABC):
     @abstractmethod
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
+                            datatype: BINARY_DATATYPES = "B",
                             container=bytearray) -> bytearray:
         """Query binary data. Beware that the results from socket version might
         contain headers which are stripped by pyvisa.
@@ -167,7 +168,9 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         return self._scope.query(message).strip()
 
     @make_custom_exception
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(
+            self, channel: LECROY_CHANNEL_NAME_T
+    ) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
         assert self._scope
@@ -181,7 +184,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
     @make_custom_exception
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
+                            datatype: BINARY_DATATYPES = "B",
                             container=bytearray):  # pragma: no cover
         """Query binary data."""
         assert self._scope
@@ -264,7 +267,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
     @make_custom_exception
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
+                            datatype: BINARY_DATATYPES = "B",
                             container=None) -> bytes:  # pragma: no cover
         """Query binary data.
 
