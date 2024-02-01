@@ -9,7 +9,6 @@ on:
 jobs:
   unittesting:
     runs-on: ubuntu-22.04
-    needs: setup
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -36,7 +35,6 @@ jobs:
 
   coverage:
     runs-on: ubuntu-22.04
-    needs: setup
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
