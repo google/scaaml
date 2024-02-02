@@ -1,3 +1,16 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Test attack point iterator."""
 
 import numpy as np
@@ -9,7 +22,7 @@ from scaaml.capture.input_generators import build_attack_points_iterator
 def attack_point_iterator_constants(values):
     input = {"operation": "constants", "name": "key", "values": values}
     output = [
-        obj['key'] for obj in list(iter(build_attack_points_iterator(input)))
+        obj["key"] for obj in list(iter(build_attack_points_iterator(input)))
     ]
     assert output == values
 
@@ -38,7 +51,6 @@ def test_single_key_in_iterator_constants():
 
 def test_attack_point_iterator_constants_no_values():
     input = {"operation": "constants", "name": "key"}
-    output = []
     with pytest.raises(TypeError):
         build_attack_points_iterator(input)
 
@@ -76,6 +88,8 @@ def test_attack_point_iterator_balanced_generator_all_kwargs():
         "elements": 3
     }
     output = list(iter(build_attack_points_iterator(config)))
+    assert isinstance(config["bunches"], int)
+    assert isinstance(config["elements"], int)
     assert len(output) == config["bunches"] * config["elements"]
 
 

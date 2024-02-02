@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ class PicoScope(AbstractSScope):
         # Scope object
         self._scope = None
 
-    def __enter__(self):
+    def __enter__(self):  # pragma: no cover
         """Create scope context.
 
         Suppose that the signal is channel A and the trigger is channel B.
@@ -135,7 +135,7 @@ class PicoScope(AbstractSScope):
 
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_value, exc_tb) -> None:  # pragma: no cover
         """Safely close all resources.
 
         Args:

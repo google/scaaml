@@ -19,7 +19,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install 'yapf>=0.30.0'
-      - name: Test code formatting with yapf
-        run: |
+      - name: Register matcher
+        run:
           echo ::add-matcher::./.github/python_matcher.json
-          yapf --style=google --recursive --diff .
+      - name: Test code formatting with yapf
+        run:
+          yapf --recursive --diff .

@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ from chipwhisperer.capture.scopes.cwnano import CWNano
 from scaaml.capture.scope.scope_base import AbstractSScope
 
 
-class DefaultCWScope(AbstractSScope):
+class DefaultCWScope(AbstractSScope):  # pragma: no cover
     """Scope context manager."""
 
     def __init__(self, cw_scope_serial_number: Optional[str] = None):
