@@ -149,6 +149,19 @@ def test_attack_point_iterator_repeat():
         iter(build_attack_points_iterator(
             config["configuration"]))) * config["repetitions"]
 
+def test_attack_point_iterator_repeat_infinite_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 0,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == 2**128 * len(
+        config["configuration"]["values"])
 
 def test_attack_point_iterator_repeat_len():
     config = {

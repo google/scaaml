@@ -168,13 +168,15 @@ class AttackPointIteratorRepeat(AttackPointIterator):
         """Initialize the repeated iterate if repetitions is not present
           or set to below 0 it will do an infinite loop."""
         assert "repeat" == operation
-        if repetitions > 0:
-            self._repetitions = repetitions
-        else:
-            self._repetitions = 2**128
         self._configuration_iterator = build_attack_points_iterator(
             configuration)
-        self._len = repetitions * len(self._configuration_iterator)
+        if repetitions > 0:
+            self._repetitions = repetitions
+            self._len = repetitions * len(self._configuration_iterator)
+        else:
+            self._repetitions = 2**128
+            self._len = 2**128 * len(self._configuration_iterator)
+        
 
     def __len__(self) -> int:
         return self._len
