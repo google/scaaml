@@ -1,0 +1,15 @@
+{
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "vsintellicode.features.python.deepLearning": "disabled",
+    "python.analysis.autoFormatStrings": false,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.languageServer": "Pylance",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "editor.defaultFormatter": "eeyore.yapf",
+    "mypy-type-checker.args": [
+        "--check-untyped-defs",
+        "--install-types",
+        "--ignore-missing-imports"
+    ]
+}

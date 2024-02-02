@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2020-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ TEST_DATA_ROOT = TEST_ROOT_DIR / "data"
 def scald_shards_path():
     return [
         str(TEST_DATA_ROOT / "scald/tinyaes.npz"),
-        str(TEST_DATA_ROOT / "scald/mbed.npz")
+        str(TEST_DATA_ROOT / "scald/mbed.npz"),
     ]
 
 
@@ -41,7 +41,7 @@ def disable_autograph_in_coverage() -> None:
     https://github.com/tensorflow/tensorflow/issues/33759
     """
     if not os.getenv("DISABLE_AUTOGRAPH"):
-        return
+        return  # pragma: no cover
     config.CONVERSION_RULES = (
         config.DoNotConvert("scaaml"),) + config.CONVERSION_RULES
     tf.config.run_functions_eagerly(True)

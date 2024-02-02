@@ -63,7 +63,7 @@ jobs:
       - name: Install workflow dependencies
         run: pip install pytest coverage coveralls
       - name: Running unit tests
-        run: coverage run --omit="tests/**/*.py" -m pytest
+        run: coverage run
         env:
           DISABLE_AUTOGRAPH: 1
       - name: Upload results

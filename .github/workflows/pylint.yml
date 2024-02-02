@@ -7,6 +7,18 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
+  copyright_header:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Check licence headers
+        run: ./tools/check_copyright.sh
+
   pylint:
     runs-on: ubuntu-22.04
     strategy:
