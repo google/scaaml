@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ class CWScope(AbstractSScope):
           exc_value: None if no exception, otherwise the exception value.
           exc_tb: None if no exception, otherwise the traceback.
         """
-        if self._scope is None:
+        if self._scope is None:  # pragma: no cover
             return
         self._scope.dis()
         self._scope = None

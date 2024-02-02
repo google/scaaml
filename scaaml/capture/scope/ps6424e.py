@@ -30,7 +30,7 @@ class ChannelRange:
     range_str: str
 
 
-def assert_ok(status):
+def assert_ok(status):  # pragma: no cover
     """Check assert_pico_ok and if it raises change PicoSDKCtypesError to
     IOError."""
     try:
@@ -460,7 +460,7 @@ class Pico6424E(ScopeTemplate):
             if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
 
-    def con(self, sn=None) -> bool:
+    def con(self, sn=None) -> bool:  # pragma: no cover
         del sn  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.
@@ -499,7 +499,7 @@ class Pico6424E(ScopeTemplate):
             self.dis()
             return False
 
-    def dis(self):
+    def dis(self):  # pragma: no cover
         if self.ps_handle.value > 0:
             # Check that the scope is connected
             assert self.connectStatus
@@ -516,7 +516,7 @@ class Pico6424E(ScopeTemplate):
         # ScopeTemplate expects True to be returned.
         return True
 
-    def arm(self):
+    def arm(self):  # pragma: no cover
         """Prepare the scope for capturing."""
         # Check if this scope is connected.
         if self.connectStatus is False:
@@ -538,7 +538,7 @@ class Pico6424E(ScopeTemplate):
                 None,  # pParameter
             ))
 
-    def capture(self, poll_done: bool = False) -> bool:
+    def capture(self, poll_done: bool = False) -> bool:  # pragma: no cover
         """Capture one trace and return True if timeout has happened
         (possible capture failure).
 
@@ -634,7 +634,8 @@ class Pico6424E(ScopeTemplate):
         # Analog trigger.
         return np.array(self._buffers[1][:], dtype=np.float32)
 
-    def _set_channel_on(self, channel_info: CaptureSettings) -> None:
+    def _set_channel_on(
+            self, channel_info: CaptureSettings) -> None:  # pragma: no cover
         """Turn on a single channel.
 
         Args:
@@ -678,7 +679,7 @@ class Pico6424E(ScopeTemplate):
                         channel_info.bw_limit],  # bandwidth
                 ))
 
-    def _set_digital_trigger(self) -> None:
+    def _set_digital_trigger(self) -> None:  # pragma: no cover
         """Set a trigger on a digital channel.
         """
         # Make sure we are using a digital trigger
@@ -735,7 +736,7 @@ class Pico6424E(ScopeTemplate):
                 len(directions),  # n_directions
             ))
 
-    def _set_channels(self):
+    def _set_channels(self):  # pragma: no cover
         """Setup channels, buffers, and trigger."""
         if self.ps_handle.value <= 0:
             # No opened PicoScope handle

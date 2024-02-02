@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2023-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -106,11 +106,12 @@ class LeCroy(AbstractSScope):
         super().__init__(samples=samples, offset=offset)
 
         self._ip_address = ip_address
-        self._trace_channel = trace_channel
-        self._trigger_channel = trigger_channel
+        self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
+        self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
-        self._communication_class_name = communication_class_name
+        # pylint:disable=C0301
+        self._communication_class_name: LECROY_COMMUNICATION_CLASS_NAME = communication_class_name
 
         self._scope_setup_commands = deepcopy(scope_setup_commands)
 
@@ -222,8 +223,8 @@ class LeCroyScope(ScopeTemplate):
         self._samples = samples
         self._offset = offset
         self._ip_address = ip_address
-        self._trace_channel = trace_channel
-        self._trigger_channel = trigger_channel
+        self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
+        self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
         self._communication_class_name = communication_class_name
@@ -471,7 +472,7 @@ class LeCroyScope(ScopeTemplate):
 
     def retrieve_file(self, source_file_path: str,
                       destination_file_path: Path) -> int:
-        r"""Transfer a file and return how many bytes were transfered.
+        r"""Transfer a file and return how many bytes were transferred.
 
         Args:
           source_file_path (str): The file path path on the oscilloscope, e.g.,
@@ -502,7 +503,7 @@ class LeCroyScope(ScopeTemplate):
             # Just number of bytes and CRC
             ans = ans[2:]
         elif ans[:7] == b"TRFL #9":
-            # With hader, number of bytes, and CRC
+            # With header, number of bytes, and CRC
             ans = ans[7:]
         else:
             # pyvisa automatically strips this header

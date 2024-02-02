@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2023-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ from struct import pack, unpack
 from typing import Optional
 
 import pyvisa
+from pyvisa.util import BINARY_DATATYPES
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
@@ -73,7 +74,7 @@ class LeCroyCommunication(ABC):
     @abstractmethod
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
+                            datatype: BINARY_DATATYPES = "B",
                             container=bytearray) -> bytearray:
         """Query binary data. Beware that the results from socket version might
         contain headers which are stripped by pyvisa.
@@ -122,7 +123,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._scope: Optional[pyvisa.resources.MessageBasedResource] = None
 
     @make_custom_exception
-    def connect(self):
+    def connect(self):  # pragma: no cover
         # For portability and ease of setup we enforce the pure Python backend
         self._resource_manager = pyvisa.ResourceManager("@py")
         assert self._resource_manager
@@ -142,7 +143,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._check_response_template()
 
     @make_custom_exception
-    def close(self) -> None:
+    def close(self) -> None:  # pragma: no cover
         assert self._scope
         self._scope.before_close()
         self._scope.close()
@@ -150,7 +151,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._resource_manager.close()
 
     @make_custom_exception
-    def write(self, message: str) -> None:
+    def write(self, message: str) -> None:  # pragma: no cover
         """Write a message to the oscilloscope.
         """
         assert self._scope
@@ -158,7 +159,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._scope.write(message)
 
     @make_custom_exception
-    def query(self, message: str) -> str:
+    def query(self, message: str) -> str:  # pragma: no cover
         """Query the oscilloscope (write, read, and decode the answer as a
         string).
         """
@@ -167,7 +168,9 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         return self._scope.query(message).strip()
 
     @make_custom_exception
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(
+            self, channel: LECROY_CHANNEL_NAME_T
+    ) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
         assert self._scope
@@ -181,8 +184,8 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
     @make_custom_exception
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
-                            container=bytearray):
+                            datatype: BINARY_DATATYPES = "B",
+                            container=bytearray):  # pragma: no cover
         """Query binary data."""
         assert self._scope
         self._logger.debug("query_binary_values(message=\"%s\")", message)
@@ -212,7 +215,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         self._socket: Optional[socket.socket] = None
 
     @make_custom_exception
-    def connect(self):
+    def connect(self):  # pragma: no cover
         assert self._socket is None
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -225,14 +228,14 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         self._check_response_template()
 
     @make_custom_exception
-    def close(self) -> None:
+    def close(self) -> None:  # pragma: no cover
         assert self._socket
         self._socket.shutdown(socket.SHUT_RDWR)
         self._socket.close()
         self._socket = None
 
     @make_custom_exception
-    def write(self, message: str) -> None:
+    def write(self, message: str) -> None:  # pragma: no cover
         """Write a message to the oscilloscope.
         """
         assert self._socket
@@ -264,8 +267,8 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
     @make_custom_exception
     def query_binary_values(self,
                             message: str,
-                            datatype="B",
-                            container=None) -> bytes:
+                            datatype: BINARY_DATATYPES = "B",
+                            container=None) -> bytes:  # pragma: no cover
         """Query binary data.
 
         Args:
@@ -305,7 +308,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         formatted_command = command_header + command.encode("ascii")
         return formatted_command
 
-    def _get_raw_response(self) -> bytes:
+    def _get_raw_response(self) -> bytes:  # pragma: no cover
         """Get raw response from the socket.
 
         Returns: bytes representation of the response.
@@ -320,7 +323,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
             while len(header) < 8:
                 header.extend(self._socket.recv(8 - len(header)))
 
-            # Parse formated response
+            # Parse formatted response
             (
                 operation,
                 header_version,  # unused
