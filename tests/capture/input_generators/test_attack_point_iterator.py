@@ -146,8 +146,7 @@ def test_attack_point_iterator_repeat():
     }
     output = list(iter(build_attack_points_iterator(config)))
     assert output == list(
-        iter(build_attack_points_iterator(config["configuration"]))) * 2
-
+        iter(build_attack_points_iterator(config["configuration"]))) * config["repetitions"]
 
 def test_attack_point_iterator_repeat_len():
     config = {

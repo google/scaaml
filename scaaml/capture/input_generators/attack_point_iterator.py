@@ -19,6 +19,7 @@ and can be used with config files.
 from abc import ABC, abstractmethod
 import collections
 import copy
+import itertools
 from typing import Dict, List
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
@@ -158,14 +159,17 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
 class AttackPointIteratorRepeat(AttackPointIterator):
     """
     Attack point iterator class that iterates 
-    over a configuration a repeated amount of times.
+    over a configuration a repeat amount of times.
     """
 
-    def __init__(self, operation: str, repetitions: int,
-                 configuration: Dict) -> None:
-        """Initialize the repeated iterate."""
+    def __init__(self, operation: str, configuration: Dict, repetitions: int = 0) -> None:
+        """Initialize the repeated iterate if repetitions is not present
+          or set to below 0 it will do an infinite loop."""
         assert "repeat" == operation
-        self._repetitions = repetitions
+        if repetitions > 0:
+            self._repetitions = repetitions
+        else:
+            self._repetitions = 2**128
         self._configuration_iterator = build_attack_points_iterator(
             configuration)
         self._len = repetitions * len(self._configuration_iterator)
