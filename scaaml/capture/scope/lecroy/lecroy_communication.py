@@ -323,7 +323,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
             while len(header) < 8:
                 header.extend(self._socket.recv(8 - len(header)))
 
-            # Parse formated response
+            # Parse formatted response
             (
                 operation,
                 header_version,  # unused
