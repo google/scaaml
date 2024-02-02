@@ -57,7 +57,8 @@ def GetDependencies() -> List[str]:
     return dependencies
 
 
-def GetPackageLicenses(package_name: str) -> Tuple[Optional[str], Optional[str]]:
+def GetPackageLicenses(
+        package_name: str) -> Tuple[Optional[str], Optional[str]]:
     """Extract the licensing metadata from a Python package."""
     packages = pkg_resources.require(package_name)
     package = packages[0]
@@ -83,6 +84,7 @@ def GetPackageLicenses(package_name: str) -> Tuple[Optional[str], Optional[str]]
 
 
 HeaderType: TypeAlias = Tuple[str, str, str, str]
+
 
 @dataclass(frozen=True)
 class PackageInfo:
