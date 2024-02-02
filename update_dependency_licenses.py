@@ -19,7 +19,7 @@ import re
 import tabulate
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple, TypeAlias
 
 METADATA_FILES = ["METADATA", "PKG-INFO"]
 
@@ -48,7 +48,7 @@ def GetDependencies() -> List[str]:
 
     # pylint set_up fails, setup is the name in setuptools, pylint has an
     # exempt on setUp.
-    def setup(**kwargs):  # pylint: disable=C0103
+    def setup(**kwargs: Dict[str, Any]) -> None:  # pylint: disable=C0103
         dependencies.extend(kwargs["install_requires"])
 
     setuptools.setup = setup
@@ -57,7 +57,7 @@ def GetDependencies() -> List[str]:
     return dependencies
 
 
-def GetPackageLicenses(package_name) -> Tuple[Optional[str], Optional[str]]:
+def GetPackageLicenses(package_name: str) -> Tuple[Optional[str], Optional[str]]:
     """Extract the licensing metadata from a Python package."""
     packages = pkg_resources.require(package_name)
     package = packages[0]
@@ -82,6 +82,8 @@ def GetPackageLicenses(package_name) -> Tuple[Optional[str], Optional[str]]:
     return None, None
 
 
+HeaderType: TypeAlias = Tuple[str, str, str, str]
+
 @dataclass(frozen=True)
 class PackageInfo:
     """Represents the package metadata we are extracting."""
@@ -93,16 +95,16 @@ class PackageInfo:
     def __lt__(self, other: "PackageInfo") -> bool:
         return self.licence < other.licence
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter((self.package, self.licence, self.category, self.homepage))
 
-    @classmethod
-    def get_headers(cls) -> Tuple[str, ...]:
-        # Order must match the one in __iter__
+    @staticmethod
+    def get_headers() -> HeaderType:
+        # Order and count must match the one in __iter__
         return ("Package", "License", "Category", "Homepage")
 
 
-def GenerateDependencyLicensesFile():
+def GenerateDependencyLicensesFile() -> None:
     """Generates the DEPENDENCY_LICENSES file."""
     license_data: List[PackageInfo] = []
     for package_name in GetDependencies():
@@ -123,7 +125,7 @@ def GenerateDependencyLicensesFile():
         f.write(table)
 
 
-def Main():
+def Main() -> None:
     GenerateDependencyLicensesFile()
 
 
