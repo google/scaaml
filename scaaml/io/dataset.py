@@ -1099,7 +1099,8 @@ class Dataset():
         # Check that the library version (version of this software) is not
         # lower than what was used to capture the dataset.
         if "scaaml_version" in config.keys():
-            if semver.compare(config["scaaml_version"], scaaml.__version__) > 0:
+            if semver.Version.parse(config["scaaml_version"]).compare(
+                    scaaml.__version__) > 0:
                 raise ValueError(f"SCAAML module is outdated, scaaml_version: "
                                  f"{scaaml.__version__}, but dataset was "
                                  f"created using: {config['scaaml_version']}")
