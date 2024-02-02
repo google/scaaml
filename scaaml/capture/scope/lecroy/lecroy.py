@@ -472,7 +472,7 @@ class LeCroyScope(ScopeTemplate):
 
     def retrieve_file(self, source_file_path: str,
                       destination_file_path: Path) -> int:
-        r"""Transfer a file and return how many bytes were transfered.
+        r"""Transfer a file and return how many bytes were transferred.
 
         Args:
           source_file_path (str): The file path path on the oscilloscope, e.g.,
@@ -503,7 +503,7 @@ class LeCroyScope(ScopeTemplate):
             # Just number of bytes and CRC
             ans = ans[2:]
         elif ans[:7] == b"TRFL #9":
-            # With hader, number of bytes, and CRC
+            # With header, number of bytes, and CRC
             ans = ans[7:]
         else:
             # pyvisa automatically strips this header
