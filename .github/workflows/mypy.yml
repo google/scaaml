@@ -21,6 +21,7 @@ jobs:
           python3 -m pip install --require-hashes --no-deps -r requirements.txt
       - name: Install workflow dependencies
         run: |
+          python3 -m pip install -U pip
           python3 -m pip install mypy
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json
