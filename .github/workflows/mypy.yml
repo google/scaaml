@@ -26,4 +26,4 @@ jobs:
         run: echo ::add-matcher::./.github/python_matcher.json
       - name: Running mypy
         run: |
-          mypy --check-untyped-defs --no-color-output --install-types --non-interactive --ignore-missing-imports scaaml
+          mypy --check-untyped-defs --no-color-output --install-types --non-interactive scaaml
