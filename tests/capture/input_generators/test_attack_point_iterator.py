@@ -163,19 +163,6 @@ def test_attack_point_iterator_repeat():
         iter(build_attack_points_iterator(
             config["configuration"]))) * config["repetitions"]
 
-def test_attack_point_iterator_repeat_infinite_len():
-    config = {
-        "operation": "repeat",
-        "repetitions": 0,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "values": [1, 2, 3]
-        }
-    }
-    output = len(build_attack_points_iterator(config))
-    assert output == 2**128 * len(
-        config["configuration"]["values"])
 
 def test_attack_point_iterator_repeat_len():
     config = {
@@ -190,6 +177,48 @@ def test_attack_point_iterator_repeat_len():
     output = len(build_attack_points_iterator(config))
     assert output == config["repetitions"] * len(
         config["configuration"]["values"])
+
+
+def test_attack_point_iterator_repeat_zero_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 0,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == 0
+
+
+def test_attack_point_iterator_repeat_zero():
+    config = {
+        "operation": "repeat",
+        "repetitions": 0,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = list(build_attack_points_iterator(config))
+    assert output == []
+
+
+def test_attack_point_iterator_repeat_infinite_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": -1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    with pytest.raises(AttributeError):
+        len(build_attack_points_iterator(config))
 
 
 def test_repeat_memory():
