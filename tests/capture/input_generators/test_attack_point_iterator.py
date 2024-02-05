@@ -17,7 +17,7 @@ import psutil
 import numpy as np
 import pytest
 
-from scaaml.capture.input_generators import build_attack_points_iterator
+from scaaml.capture.input_generators import build_attack_points_iterator, LengthIsInfiniteException
 
 
 def attack_point_iterator_constants(values):
@@ -148,49 +148,17 @@ def test_attack_point_iterator_unrestricted_generator_all_args_len():
     assert len(output) == len(build_attack_points_iterator(config))
 
 
-def test_attack_point_iterator_repeat():
+def test_attack_point_iterator_repeat_default_value():
     config = {
         "operation": "repeat",
-        "repetitions": 2,
         "configuration": {
             "operation": "constants",
             "name": "key",
             "values": [1, 2, 3]
         }
     }
-    output = list(iter(build_attack_points_iterator(config)))
-    assert output == list(
-        iter(build_attack_points_iterator(
-            config["configuration"]))) * config["repetitions"]
-
-
-def test_attack_point_iterator_repeat_len():
-    config = {
-        "operation": "repeat",
-        "repetitions": 2,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "values": [1, 2, 3]
-        }
-    }
-    output = len(build_attack_points_iterator(config))
-    assert output == config["repetitions"] * len(
-        config["configuration"]["values"])
-
-
-def test_attack_point_iterator_repeat_zero_len():
-    config = {
-        "operation": "repeat",
-        "repetitions": 0,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "values": [1, 2, 3]
-        }
-    }
-    output = len(build_attack_points_iterator(config))
-    assert output == 0
+    output = build_attack_points_iterator(config)
+    assert output._repetitions == -1
 
 
 def test_attack_point_iterator_repeat_zero():
@@ -207,6 +175,138 @@ def test_attack_point_iterator_repeat_zero():
     assert output == []
 
 
+def test_attack_point_iterator_repeat_zero_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 0,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == 0
+
+
+def test_attack_point_iterator_repeat_one():
+    config = {
+        "operation": "repeat",
+        "repetitions": 1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = list(iter(build_attack_points_iterator(config)))
+    assert output == list(
+        iter(build_attack_points_iterator(config["configuration"])))
+
+
+def test_attack_point_iterator_repeat_one_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == len(config["configuration"]["values"])
+
+
+def test_attack_point_iterator_repeat_two():
+    config = {
+        "operation": "repeat",
+        "repetitions": 2,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = list(iter(build_attack_points_iterator(config)))
+    assert output == list(
+        iter(build_attack_points_iterator(
+            config["configuration"]))) * config["repetitions"]
+
+
+def test_attack_point_iterator_repeat_two_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 2,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == config["repetitions"] * len(
+        config["configuration"]["values"])
+
+
+def test_attack_point_iterator_repeat_three_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": 3,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2, 3]
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == config["repetitions"] * len(
+        config["configuration"]["values"])
+
+
+def test_attack_point_iterator_repeat_infinite():
+    config = {
+        "operation": "repeat",
+        "repetitions": -1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1]
+        }
+    }
+    output = []
+    i = 0
+    for value in build_attack_points_iterator(config):
+        output.append(value)
+        i += 1
+        if i > 5:
+            break
+
+    assert output == list(
+        iter(build_attack_points_iterator(config["configuration"]))) * i
+
+
+def test_attack_point_iterator_repeat_infinite_no_values():
+    config = {
+        "operation": "repeat",
+        "repetitions": -1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": []
+        }
+    }
+    output = []
+    i = 0
+    for value in build_attack_points_iterator(config):
+        output.append(value)
+        i += 1
+        if i > 5:
+            break
+
+    assert output == []
+
+
 def test_attack_point_iterator_repeat_infinite_len():
     config = {
         "operation": "repeat",
@@ -217,7 +317,7 @@ def test_attack_point_iterator_repeat_infinite_len():
             "values": [1, 2, 3]
         }
     }
-    with pytest.raises(AttributeError):
+    with pytest.raises(LengthIsInfiniteException):
         len(build_attack_points_iterator(config))
 
 

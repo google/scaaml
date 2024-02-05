@@ -44,6 +44,11 @@ class AttackPointIterator(ABC):
         """
 
 
+class LengthIsInfiniteException(Exception):
+    """This exception get's called when a number is infinite
+      and wants to be represented by __len__ function."""
+
+
 def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
     configuration = copy.deepcopy(configuration)
     iterator = _build_attack_points_iterator(configuration)
@@ -165,24 +170,25 @@ class AttackPointIteratorRepeat(AttackPointIterator):
     def __init__(self,
                  operation: str,
                  configuration: Dict,
-                 repetitions: int = 0) -> None:
+                 repetitions: int = -1) -> None:
         """Initialize the repeated iterate if repetitions is not present
-          or set to 0 it will not repeat and if it set 
-          to a negative number it will do an infinite loop."""
+          or set to an negative number it will do an infinite loop 
+          if it is 0 it will not repeat at all."""
         assert "repeat" == operation
         self._configuration_iterator = build_attack_points_iterator(
             configuration)
-        if repetitions > 0:
+        if repetitions >= 0:
             self._repetitions = repetitions
             self._len = repetitions * len(self._configuration_iterator)
-        elif repetitions == 0:
-            self._repetitions = repetitions
-            self._len = 0
+
         else:
             # iterates infinitely through the configuration iterator
             self._repetitions = -1
+            self._len = repetitions
 
     def __len__(self) -> int:
+        if self._len < 0:
+            raise LengthIsInfiniteException("The length is infinite!")
         return self._len
 
     def __iter__(self):
