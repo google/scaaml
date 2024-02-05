@@ -18,12 +18,12 @@ jobs:
           cache: 'pip'
       - name: Installing package
         run:
-          pip install --require-hashes --no-deps -r requirements.txt
+          python3 -m pip install --require-hashes --no-deps -r requirements.txt
       - name: Install workflow dependencies
         run: |
-          pip install mypy
+          python3 -m pip install mypy
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json
       - name: Running mypy
         run: |
-          mypy --check-untyped-defs --no-color-output --install-types --non-interactive scaaml
+          python3 -m mypy --check-untyped-defs --no-color-output --install-types --non-interactive scaaml
