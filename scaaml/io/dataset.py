@@ -695,19 +695,13 @@ class Dataset():
         """
         if key_ap not in self.attack_points_info:
             raise ValueError(f"{key_ap} is not an attack point.")
-        if show_progressbar:
-            pbar = tqdm
-        else:
-            # Redefine tqdm to the identity function returning the first unnamed
-            # parameter.
-            pbar = lambda *args, **kwargs: args[0]  # pylint: disable=C3001
 
         Dataset._check_chip_id(self.shards_list)
 
         Dataset._check_metadata(config=self.get_config_dictionary())
         Dataset._check_sha256sums(shards_list=self.shards_list,
                                   dpath=Path(self.path),
-                                  pbar=pbar)
+                                  show_progressbar=show_progressbar)
         # Check shard metadata
         for shard_list in self.shards_list.values():
             for shard_info in shard_list:
@@ -717,7 +711,7 @@ class Dataset():
         has_test: bool = Dataset.TEST_SPLIT in self.examples_per_split
         has_train: bool = Dataset.TRAIN_SPLIT in self.examples_per_split
         if has_test and has_train:
-            self._check_disjoint_keys(pbar=pbar,
+            self._check_disjoint_keys(show_progressbar=show_progressbar,
                                       key_ap=key_ap,
                                       deep_check=deep_check)
 
@@ -746,12 +740,14 @@ class Dataset():
                     raise ValueError(f"Same chip_id in {split} and "
                                      f"{Dataset.HOLDOUT_SPLIT}")
 
-    def _check_disjoint_keys(self, pbar, key_ap: str, deep_check: bool = True):
+    def _check_disjoint_keys(self,
+                             show_progressbar: bool,
+                             key_ap: str,
+                             deep_check: bool = True) -> None:
         """Check that no key in the train split is present in the test split.
 
         Args:
-          pbar: Either tqdm.tqdm or an identity function (in order not to
-            print).
+          show_progressbar (bool): Show progress for the checks.
           key_ap: The attack point that is checked for when checking
             disjointness of splits.
           deep_check: When checking that keys in test and train splits are
@@ -773,31 +769,32 @@ class Dataset():
                 seen_keys=seen_keys,
                 dpath=self.path,
                 train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
-                pbar=pbar,
+                show_progressbar=show_progressbar,
                 examples_per_shard=self.examples_per_shard,
                 key_ap=key_ap)
         else:
             Dataset._shallow_check(
                 seen_keys=seen_keys,
                 train_shards=self.shards_list[Dataset.TRAIN_SPLIT],
-                pbar=pbar)
+                show_progressbar=show_progressbar)
 
     @staticmethod
-    def _check_sha256sums(shards_list, dpath: Path, pbar):
+    def _check_sha256sums(shards_list, dpath: Path,
+                          show_progressbar: bool) -> None:
         """Check the metadata of this dataset.
 
         Args:
           shards_list: Dictionary with information about each shard.
             Use get_config_dictionary()["shards_list"]
           dpath: Root path of the dataset.
-          pbar: Either tqdm.tqdm or an identity function (in order not to
-            print).
+          show_progressbar (bool): Show progressbar for the checks.
 
         Raises: ValueError if some hash does not match.
         """
         for split, shard_list in shards_list.items():
-            for shard_info in pbar(shard_list,
-                                   desc=f"Checking sha for {split}"):
+            for shard_info in tqdm(shard_list,
+                                   desc=f"Checking sha for {split}",
+                                   disable=not show_progressbar):
                 shard_path = dpath / shard_info["path"]
                 sha_hash = siutils.sha256sum(shard_path)
                 if sha_hash != shard_info["sha256"]:
@@ -922,7 +919,7 @@ class Dataset():
                 raise ValueError("sum example don't match top_examples")
 
     @staticmethod
-    def _shallow_check(seen_keys, train_shards, pbar):
+    def _shallow_check(seen_keys, train_shards, show_progressbar: bool):
         """Check just what is in self.shards_list info (do not parse all
         shards).
 
@@ -930,10 +927,11 @@ class Dataset():
           seen_keys: Set of all keys that are present in the test split.
           train_shards: Description of train shards
             (self.shards_list[Dataset.TRAIN_SPLIT]).
-          pbar: Either tqdm.tqdm or an identity function (in order not to
-            print).
+          show_progressbar (bool): Print tqdm progressbar.
         """
-        for shard in pbar(train_shards, desc="Checking test key uniqueness"):
+        for shard in tqdm(train_shards,
+                          desc="Checking test key uniqueness",
+                          disable=not show_progressbar):
             k = shard["key"].lower()
             list_k = [int(k[2 * i:2 * i + 2], 16) for i in range(len(k) // 2)]
             cur_key = np.array(list_k, dtype=np.uint8).tobytes()
@@ -942,7 +940,7 @@ class Dataset():
                     f"Duplicate key: {k} in test split, in {shard}")
 
     @staticmethod
-    def _deep_check(seen_keys, dpath, train_shards, pbar,
+    def _deep_check(seen_keys, dpath, train_shards, show_progressbar: bool,
                     examples_per_shard: int, key_ap: str):
         """Check all keys from all shards (parse all shards in the train split).
 
@@ -951,14 +949,14 @@ class Dataset():
           dpath: Root path of this dataset.
           train_shards: Description of train shards
             (self.shards_list[Dataset.TRAIN_SPLIT]).
-          pbar: Either tqdm.tqdm or an identity function (in order not to
-            print).
+          show_progressbar (bool): Show progressbar.
           examples_per_shard: Number of examples in each shard.
           key_ap: The attack point that is checked for when checking
             disjointness of splits.
         """
-        for i in pbar(range(len(train_shards)),
-                      desc="Checking test key uniqueness"):
+        for i in tqdm(range(len(train_shards)),
+                      desc="Checking test key uniqueness",
+                      disable=not show_progressbar):
             for example in Dataset.inspect(dataset_path=dpath,
                                            split=Dataset.TRAIN_SPLIT,
                                            shard_id=i,
