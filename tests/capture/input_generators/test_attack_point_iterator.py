@@ -13,6 +13,7 @@
 # limitations under the License.
 """Test attack point iterator."""
 
+import itertools
 import psutil
 import numpy as np
 import pytest
@@ -275,15 +276,37 @@ def test_attack_point_iterator_repeat_infinite():
         }
     }
     output = []
-    i = 0
-    for value in build_attack_points_iterator(config):
-        output.append(value)
-        i += 1
-        if i > 5:
+    stop_count = 0
+    for count, value in enumerate(build_attack_points_iterator(config)):
+        if count > 5:
+            stop_count = count
             break
+        output.append(value)
 
     assert output == list(
-        iter(build_attack_points_iterator(config["configuration"]))) * i
+        iter(build_attack_points_iterator(
+            config["configuration"]))) * stop_count
+
+
+def test_attack_point_iterator_repeat_infinite_minus_two():
+    config = {
+        "operation": "repeat",
+        "repetitions": -2,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": [1, 2]
+        }
+    }
+    count = 0
+    for value1, value2 in zip(
+            build_attack_points_iterator(config),
+            itertools.cycle(
+                build_attack_points_iterator(config["configuration"]))):
+        if count > 4:
+            break
+        count += 1
+        assert value1 == value2
 
 
 def test_attack_point_iterator_repeat_infinite_no_values():
@@ -297,14 +320,26 @@ def test_attack_point_iterator_repeat_infinite_no_values():
         }
     }
     output = []
-    i = 0
-    for value in build_attack_points_iterator(config):
-        output.append(value)
-        i += 1
-        if i > 5:
+    for count, value in enumerate(build_attack_points_iterator(config)):
+        if count > 5:
             break
+        output.append(value)
 
     assert output == []
+
+
+def test_attack_point_iterator_repeat_infinite_no_values_len():
+    config = {
+        "operation": "repeat",
+        "repetitions": -1,
+        "configuration": {
+            "operation": "constants",
+            "name": "key",
+            "values": []
+        }
+    }
+    output = len(build_attack_points_iterator(config))
+    assert output == 0
 
 
 def test_attack_point_iterator_repeat_infinite_len():

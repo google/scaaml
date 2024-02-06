@@ -132,7 +132,8 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
 
 class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
     """
-    Attack point iterator class that iterates over the unrestricted generator.
+    This exception is raised when the `__len__` function is called
+    on an infinite iterator.
     """
 
     def __init__(self,
@@ -172,18 +173,31 @@ class AttackPointIteratorRepeat(AttackPointIterator):
                  configuration: Dict,
                  repetitions: int = -1) -> None:
         """Initialize the repeated iterate if repetitions is not present
-          or set to an negative number it will do an infinite loop 
-          if it is 0 it will not repeat at all."""
+          or set to a negative number it will do an infinite loop 
+          if it is 0 it will not repeat at all.
+          
+          Args:
+            operation (str): The operation of the iterator
+                this gets asserted at the start.
+            configuration (Dict): The config for the iterated object
+                that will get repeated.
+            repetitions (int): This parameter decides how often the
+                iterator gets repeated. If it is a negative number it
+                will iterate infinitely. If it is 0 then it will not
+                iterate at all. If it is a positive number it will
+                iterate that many times.
+            """
         assert "repeat" == operation
         self._configuration_iterator = build_attack_points_iterator(
             configuration)
         if repetitions >= 0:
             self._repetitions = repetitions
             self._len = repetitions * len(self._configuration_iterator)
-
+        elif len(self._configuration_iterator) == 0:
+            self._repetitions = 0
+            self._len = 0
         else:
-            # iterates infinitely through the configuration iterator
-            self._repetitions = -1
+            self._repetitions = repetitions
             self._len = repetitions
 
     def __len__(self) -> int:
@@ -192,7 +206,7 @@ class AttackPointIteratorRepeat(AttackPointIterator):
         return self._len
 
     def __iter__(self):
-        if self._repetitions == -1:
+        if self._repetitions < 0:
             return iter(itertools.cycle(self._configuration_iterator))
         return iter(value for _ in range(self._repetitions)
                     for value in self._configuration_iterator)
