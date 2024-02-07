@@ -132,8 +132,7 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
 
 class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
     """
-    This exception is raised when the `__len__` function is called
-    on an infinite iterator.
+    Attack point iterator class that iterates over the unrestricted generator.
     """
 
     def __init__(self,
@@ -178,14 +177,17 @@ class AttackPointIteratorRepeat(AttackPointIterator):
           
           Args:
             operation (str): The operation of the iterator
-                this gets asserted at the start.
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
             configuration (Dict): The config for the iterated object
                 that will get repeated.
-            repetitions (int): This parameter decides how often the
+            repetitions (int): This parameter decides how many times the
                 iterator gets repeated. If it is a negative number it
-                will iterate infinitely. If it is 0 then it will not
-                iterate at all. If it is a positive number it will
-                iterate that many times.
+                will repeat infinitely and if you call __len__ it will
+                raise an LengthIsInfiniteException. If it is 0 then it will not
+                repeat at all. If it is a positive number it will
+                repeat that many times.
             """
         assert "repeat" == operation
         self._configuration_iterator = build_attack_points_iterator(
