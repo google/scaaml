@@ -45,8 +45,8 @@ class AttackPointIterator(ABC):
 
 
 class LengthIsInfiniteException(Exception):
-    """This exception get's called when a number is infinite
-      and wants to be represented by __len__ function."""
+    """This exception is raised when the `__len__` function is 
+    called on an infinite iterator."""
 
 
 def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:

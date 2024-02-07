@@ -275,17 +275,15 @@ def test_attack_point_iterator_repeat_infinite():
             "values": [1]
         }
     }
-    output = []
-    stop_count = 0
-    for count, value in enumerate(build_attack_points_iterator(config)):
-        if count > 5:
-            stop_count = count
+    count = 0
+    for value1, value2 in zip(
+            build_attack_points_iterator(config),
+            itertools.cycle(
+                build_attack_points_iterator(config["configuration"]))):
+        if count > 4:
             break
-        output.append(value)
-
-    assert output == list(
-        iter(build_attack_points_iterator(
-            config["configuration"]))) * stop_count
+        count += 1
+        assert value1 == value2
 
 
 def test_attack_point_iterator_repeat_infinite_minus_two():
