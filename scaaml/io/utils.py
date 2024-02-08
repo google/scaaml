@@ -53,7 +53,7 @@ def ddict(value: Optional[DefaultDict[str, Callable[[], T]]], levels: int,
       >>> f = ddict(value=None, levels=1, type_var=list)
     """
 
-    def empty_dd(levels: int, type_var: Callable[[], T]) -> defaultdict[str, T]:
+    def empty_dd(levels: int, type_var: Callable[[], T]) -> DefaultDict[str, T]:
         """Returns the right level of defaultdict."""
         if levels == 1:
             return defaultdict(type_var)
