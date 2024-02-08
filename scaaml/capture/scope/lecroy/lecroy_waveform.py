@@ -101,7 +101,7 @@ class LecroyWaveform:
         return cast(float, vals[0])
 
     def unpack_wave(self, amount: int) -> Tuple[int]:
-        """Parse the whole waveform from self.raw_data. Increments the ofset
+        """Parse the whole waveform from self.raw_data. Increments the offset
         `self._ofs` by the number of parsed bytes.
 
         Args:

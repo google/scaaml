@@ -22,6 +22,8 @@ import tensorflow as tf
 T = TypeVar("T")
 
 
+# TODO: disabling mypy as the ddict() function needs more love for typing
+# mypy: ignore-errors
 def ddict(value: Optional[DefaultDict[str, Callable[[], T]]], levels: int,
           type_var: Callable[[], T]) -> DefaultDict[str, T]:
     """Returns nested defaultdict of defaultdict (nesting level based on
@@ -61,7 +63,7 @@ def ddict(value: Optional[DefaultDict[str, Callable[[], T]]], levels: int,
 
     assert levels >= 0
     if levels == 0:
-        return value or defaultdict(type_var)
+        return value
     result = empty_dd(levels, type_var)
     if value is not None:
         for k in value:
