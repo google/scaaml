@@ -13,9 +13,11 @@
 # limitations under the License.
 """Exceptions for attack point iterators."""
 
+
 class LengthIsInfiniteException(Exception):
     """This exception is raised when the `__len__` function is
     called on an infinite iterator."""
+
 
 class ListNotPrescribedLengthException(Exception):
     """This exception is raised when one of the List of values doesn't

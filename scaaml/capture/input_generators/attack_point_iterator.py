@@ -86,7 +86,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
         for value in self._values:
             if len(value) != length:
                 raise ListNotPrescribedLengthException(
-                    f"The predescribed length is {length} and "\
+                    f"The prescribed length is {length} and "\
                     f"the length of {value} is {len(value)}."
                 )
 
