@@ -14,7 +14,7 @@
 """Context manager for the scope."""
 
 from types import TracebackType
-from typing import Any, Optional, Self
+from typing import Any, Optional, Self, Type
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
@@ -102,7 +102,7 @@ class CWScope(AbstractSScope[OpenADC]):
         self._scope.adc.presamples = self._presamples
         return self
 
-    def __exit__(self, exc_type: Optional[type[BaseException]],
+    def __exit__(self, exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.

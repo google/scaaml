@@ -14,9 +14,10 @@
 """Runs checks and reports failures. A failed test does not mean an error in
 the dataset, interpretation is problem specific."""
 
-from typing import Callable, Tuple
+from typing import Callable
 
 import numpy as np
+import numpy.typing as npt
 from pprint import pprint
 
 
@@ -35,7 +36,7 @@ class APChecker:
                            attack_point_name='km')
     """
 
-    def __init__(self, counts: np.ndarray[Tuple[int, int], np.dtype[np.int64]],
+    def __init__(self, counts: npt.NDArray[np.int64],
                  attack_point_name: str) -> None:
         self._counts = counts.copy()
         self._attack_point_name = attack_point_name

@@ -15,7 +15,7 @@
 number."""
 
 from types import TracebackType
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 
 from scaaml.io.dataset import Dataset
 
@@ -177,7 +177,7 @@ class DatasetFiller:
         """Initialize _DatasetFillerContext."""
         return self._dataset_filler_context
 
-    def __exit__(self, exc_type: Optional[type[BaseException]],
+    def __exit__(self, exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> None:
         """Make sure to close the last shard.

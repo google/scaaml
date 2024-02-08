@@ -15,15 +15,15 @@
 
 from collections import defaultdict
 import hashlib
-from typing import Callable, Optional, TypeVar
+from typing import Callable, DefaultDict, Optional, TypeVar
 
 import tensorflow as tf
 
 T = TypeVar("T")
 
 
-def ddict(value: Optional[defaultdict[str, Callable[[], T]]], levels: int,
-          type_var: Callable[[], T]) -> defaultdict[str, T]:
+def ddict(value: Optional[DefaultDict[str, Callable[[], T]]], levels: int,
+          type_var: Callable[[], T]) -> DefaultDict[str, T]:
     """Returns nested defaultdict of defaultdict (nesting level based on
     level), which are updated with the value dictionary.
 

@@ -13,8 +13,7 @@
 # limitations under the License.
 """Provides attack points for AES."""
 
-from collections.abc import Callable
-from typing import cast
+from typing import Callable, cast
 
 
 class AESSBOX:

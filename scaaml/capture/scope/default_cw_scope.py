@@ -15,7 +15,7 @@
 control."""
 
 from types import TracebackType
-from typing import Optional, Self
+from typing import Optional, Self, Type
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
@@ -57,7 +57,7 @@ class DefaultCWScope(AbstractSScope[OpenADC]):  # pragma: no cover
         self._scope.default_setup()  # type: ignore[no-untyped-call]
         return self
 
-    def __exit__(self, exc_type: Optional[type[BaseException]],
+    def __exit__(self, exc_type: Optional[Type[BaseException]],
                  exc_value: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
