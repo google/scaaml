@@ -368,24 +368,25 @@ def test_repeat_memory():
     max_growth_factor = 2
     python_process = psutil.Process()
     memory_before_iterator = python_process.memory_info().rss
+    memory_threshold = memory_before_iterator * max_growth_factor
 
     long_iterable = build_attack_points_iterator(config)
     long_iterator = iter(long_iterable)
     assert next(long_iterator) == {"key": [1]}
     assert python_process.memory_info(
-    ).rss <= max_growth_factor * memory_before_iterator
+    ).rss <= memory_threshold
     assert next(long_iterator) == {"key": [2]}
     assert next(long_iterator) == {"key": [3]}
     assert python_process.memory_info(
-    ).rss <= max_growth_factor * memory_before_iterator
+    ).rss <= memory_threshold
     assert next(long_iterator) == {"key": [1]}
     assert next(long_iterator) == {"key": [2]}
     assert next(long_iterator) == {"key": [3]}
     assert next(long_iterator) == {"key": [1]}
     assert python_process.memory_info(
-    ).rss <= max_growth_factor * memory_before_iterator
+    ).rss <= memory_threshold
 
     assert len(long_iterable) == len(
         config["configuration"]["values"]) * config["repetitions"]
     assert python_process.memory_info(
-    ).rss <= max_growth_factor * memory_before_iterator
+    ).rss <= memory_threshold
