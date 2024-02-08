@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
 """Runs checks and reports failures. A failed test does not mean an error in
 the dataset, interpretation is problem specific."""
 
+from typing import Callable, Tuple
+
+import numpy as np
 from pprint import pprint
 
 
@@ -32,7 +35,8 @@ class APChecker:
                            attack_point_name='km')
     """
 
-    def __init__(self, counts, attack_point_name: str) -> None:
+    def __init__(self, counts: np.ndarray[Tuple[int, int], np.dtype[np.int64]],
+                 attack_point_name: str) -> None:
         self._counts = counts.copy()
         self._attack_point_name = attack_point_name
         self._something_failed = False
@@ -41,7 +45,7 @@ class APChecker:
         if self._something_failed:
             pprint(self._counts)
 
-    def run_all(self):
+    def run_all(self) -> None:
         """Run all statistical checks. When adding a new test remember to call
         it from this method. To test that your method is called from run_all,
         take a look at
@@ -53,7 +57,7 @@ class APChecker:
         """
         self._run_check(self.check_all_nonzero)
 
-    def _run_check(self, check) -> None:
+    def _run_check(self, check: Callable[[], None]) -> None:
         """Run the given check, if it raises ValueError change take a note
         and print the error message.
 
@@ -76,7 +80,7 @@ class APChecker:
         """Returns the name of the attack point."""
         return self._attack_point_name
 
-    def check_all_nonzero(self):
+    def check_all_nonzero(self) -> None:
         """Check that every value of the attack point appears at least once.
 
         Raises: ValueError if there is a value of an attack point that is

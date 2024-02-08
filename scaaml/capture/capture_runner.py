@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ class AbstractCaptureRunner(ABC):
         Raises: If capturing failed in an unrecoverable way.
         """
 
-    def _stabilize_capture(self, crypto_alg: AbstractSCryptoAlgorithm):
+    def _stabilize_capture(self, crypto_alg: AbstractSCryptoAlgorithm) -> None:
         """Stabilize the capture by capturing a few traces.
 
         Args:
@@ -113,14 +113,14 @@ class AbstractCaptureRunner(ABC):
             # Use native print_screen
             self._scope.print_screen(self._dataset.path / "print_screen.png")
 
-    def capture(self):
+    def capture(self) -> None:
         """Start (or resume) and finish the capture."""
         self._stabilize_capture(crypto_alg=self._crypto_algorithms[0])
         for crypto_alg in self._crypto_algorithms:
             self._capture_dataset(crypto_alg=crypto_alg)
         self._dataset.check()
 
-    def _capture_dataset(self, crypto_alg):
+    def _capture_dataset(self, crypto_alg: AbstractSCryptoAlgorithm) -> None:
         """Capture the dataset.
 
         Args:

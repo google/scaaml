@@ -13,15 +13,17 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-from typing import Optional
+from types import TracebackType
+from typing import Any, Optional, Self
 
 import chipwhisperer as cw
+from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
 
 
-class CWScope(AbstractSScope):
+class CWScope(AbstractSScope[OpenADC]):
     """Scope context manager."""
 
     def __init__(self,
@@ -31,7 +33,7 @@ class CWScope(AbstractSScope):
                  clock: int,
                  sample_rate: str,
                  cw_scope_serial_number: Optional[str] = None,
-                 **_) -> None:
+                 **_: Any) -> None:
         """Create scope context.
 
         Args:
@@ -73,7 +75,7 @@ class CWScope(AbstractSScope):
         self._scope = None
         self._sn = cw_scope_serial_number
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Create scope context.
 
         Returns: self
@@ -85,9 +87,10 @@ class CWScope(AbstractSScope):
         self._scope = scope
 
         self._scope.gain.db = self._gain
-        max_samples = self._scope.adc.oa.hwInfo.maxSamples()  # type: ignore
+        assert self._scope.adc.oa.hwInfo
+        max_samples = self._scope.adc.oa.hwInfo.maxSamples()
         if (self._samples > max_samples and
-                self._scope.adc.oa.hwInfo.is_cw1200()):  # type: ignore
+                self._scope.adc.oa.hwInfo.is_cw1200()):
             self._scope.adc.stream_mode = True
         self._scope.adc.samples = self._samples
         self._scope.adc.offset = self._offset
@@ -99,7 +102,9 @@ class CWScope(AbstractSScope):
         self._scope.adc.presamples = self._presamples
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:
@@ -109,5 +114,5 @@ class CWScope(AbstractSScope):
         """
         if self._scope is None:  # pragma: no cover
             return
-        self._scope.dis()
+        self._scope.dis()  # type: ignore[no-untyped-call]
         self._scope = None

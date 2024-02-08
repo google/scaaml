@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 
 from abc import ABC, abstractmethod
 from time import sleep
+from types import TracebackType
+from typing import Optional, Self
 
 
 class AbstractSControl(ABC):
@@ -30,14 +32,16 @@ class AbstractSControl(ABC):
         """
         self._chip_id = chip_id
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Turn on, initialize, and reset the chip."""
         self.turn_on()
         self.initialize()
         self.reset()
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Turn off the chip. Exceptions fall through."""
         self.turn_off()
 
@@ -55,15 +59,15 @@ class AbstractSControl(ABC):
         """
 
     @abstractmethod
-    def initialize(self):
+    def initialize(self) -> None:
         """Initialize the target."""
 
     @abstractmethod
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on the chip."""
 
     @abstractmethod
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off the chip."""
 
     def power_cycle(self,

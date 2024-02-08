@@ -1076,7 +1076,7 @@ class Dataset():
                   encoding="utf-8") as f:
             json.dump(self.get_config_dictionary(), f)
 
-    def write_config(self):
+    def write_config(self) -> None:
         """Force updating `info.json` file."""
         self._write_config()
 

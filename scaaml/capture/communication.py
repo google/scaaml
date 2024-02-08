@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
 """Communication protocols between the capturing host and the chip."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from types import TracebackType
+from typing import Optional, Self
 
 from chipwhisperer.capture.targets import TargetTypes
 
@@ -22,16 +23,18 @@ from chipwhisperer.capture.targets import TargetTypes
 class AbstractSCommunication(ABC):
     """Base class for communication. Communication is a context manager."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialization of the communication object."""
 
     @abstractmethod
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Initialize target."""
         return self
 
     @abstractmethod
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(self, exc_type: type[BaseException],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:

@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ File format:
 """
 
 from collections import namedtuple
-from typing import Dict, List
+from typing import Any, Dict, List, Self
 
 import numpy as np
 
@@ -103,7 +103,7 @@ def check_lengths(parameters: Dict[str, np.ndarray],
     for parameter, values in parameters.items():
         if len(values) == 0:
             raise ValueError(f"There are no parameters for {parameter}")
-        if len(values) % shard_length != 0:
+        if len(values) % int(shard_length) != 0:
             raise ValueError(f"The number of values of {parameter} is not "
                              f"divisible by shard_length.")
         if len(values) != length:
@@ -231,10 +231,10 @@ class ResumeKTI:
             i = int(i)  # Modulo by np.uint64 produces np.float64
             progress_file.write(str(i))
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         return self
 
-    def __next__(self):
+    def __next__(self) -> Any:
         """Next with auto-save.
 
         Auto-save when a new shard is starting (after each shard length + 1

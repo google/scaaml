@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import time
 import traceback
-from typing import Dict, List, Optional, OrderedDict
+from typing import Any, Dict, List, Optional, OrderedDict, Union
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -19,7 +19,7 @@ from picosdk.PicoDeviceStructs import picoStruct
 from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
-from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceTrype
 
 
 @dataclass
@@ -30,7 +30,7 @@ class ChannelRange:
     range_str: str
 
 
-def assert_ok(status):  # pragma: no cover
+def assert_ok(status: int) -> None:  # pragma: no cover
     """Check assert_pico_ok and if it raises change PicoSDKCtypesError to
     IOError."""
     try:
@@ -57,12 +57,12 @@ class CaptureSettings:
     """Channel settings."""
     _name = "Capture Setting"
 
-    CHANNEL_COUPLINGS = {
+    CHANNEL_COUPLINGS: Dict[str, int] = {
         "DC50": picoEnum.PICO_COUPLING["PICO_DC_50OHM"],
         "DC": picoEnum.PICO_COUPLING["PICO_DC"],
         "AC": picoEnum.PICO_COUPLING["PICO_AC"],
     }
-    CHANNELS = {
+    CHANNELS: Dict[str, int] = {
         "A": picoEnum.PICO_CHANNEL["PICO_CHANNEL_A"],
         "B": picoEnum.PICO_CHANNEL["PICO_CHANNEL_B"],
         "C": picoEnum.PICO_CHANNEL["PICO_CHANNEL_C"],
@@ -131,15 +131,15 @@ class CaptureSettings:
     }
     REV_ATTENUATION = {1: "1:1", 10: "1:10"}
 
-    def __init__(self):
-        self._couplings = {}
-        self._rev_couplings = {}
+    def __init__(self) -> None:
+        self._couplings: Dict[str, int] = {}
+        self._rev_couplings: Dict[int, str] = {}
         for name, val in self.CHANNEL_COUPLINGS.items():
             self._couplings[name] = val
             self._rev_couplings[val] = name
         # channels
-        self._ch_list = {}
-        self._rev_ch_list = {}
+        self._ch_list: Dict[str, int] = {}
+        self._rev_ch_list: Dict[int, str] = {}
         for channel_name, channel_id in self.CHANNELS.items():
             self._ch_list[channel_name] = channel_id
             self._rev_ch_list[channel_id] = channel_name
@@ -163,16 +163,16 @@ class CaptureSettings:
         self.bw_limit: str = "PICO_BW_FULL"
 
     @property
-    def ps_api_channel(self):
+    def ps_api_channel(self) -> int:
         """Channel for PicoScope API."""
         return self._channel
 
     @property
-    def channel(self):
+    def channel(self) -> str:
         return self._rev_ch_list[self._channel]
 
     @channel.setter
-    def channel(self, val):
+    def channel(self, val: str) -> None:
         if val not in self._ch_list:
             raise ValueError(f"Unknown channel {val} not in {self._ch_list}")
         self._channel = self._ch_list[val]
@@ -205,7 +205,7 @@ class CaptureSettings:
         self._port_pin = val
 
     @property
-    def probe_attenuation(self):
+    def probe_attenuation(self) -> str:
         return self.REV_ATTENUATION[self._probe_attenuation]
 
     @probe_attenuation.setter
@@ -216,31 +216,31 @@ class CaptureSettings:
         self._probe_attenuation = self.ATTENUATION[val]
 
     @property
-    def ps_api_coupling(self):
+    def ps_api_coupling(self) -> int:
         return self._coupling
 
     @property
-    def coupling(self):
+    def coupling(self) -> str:
         return self._rev_couplings[self._coupling]
 
     @coupling.setter
-    def coupling(self, val):
+    def coupling(self, val: str) -> None:
         if val not in self._couplings:
             raise ValueError("Unsupported value")
         self._coupling = self._couplings[val]
 
     @property
-    def ps_api_range(self):
+    def ps_api_range(self) -> float:
         """Range value for PicoScope API."""
         return self._ch_range_api_value[self._range]
 
     @property
-    def range(self):
+    def range(self) -> str:
         """Human readable range voltage string."""
         return self._ch_range[self._range]
 
     @range.setter
-    def range(self, val):
+    def range(self, val: float) -> None:
         if not isinstance(val, float):
             raise ValueError("Unsupported value (should be float)")
 
@@ -252,9 +252,9 @@ class CaptureSettings:
         raise ValueError(f"Unsupported value (too large), got {val}, maximum "
                          f"is {self._ch_range_list[-1]}")
 
-    def _dict_repr(self):
+    def _dict_repr(self) -> Dict[str, Any]:
         """Human readable representation as a key value dictionary."""
-        ret = OrderedDict()
+        ret: OrderedDict[str, Any] = OrderedDict()
         ret["channel"] = self.channel
         ret["range"] = self.range
         ret["probe_attenuation"] = self.probe_attenuation
@@ -263,14 +263,16 @@ class CaptureSettings:
         ret["bandwidth_limit"] = self.bw_limit
         return ret
 
-    def dict_repr(self):
+    def dict_repr(self) -> Dict[str, Any]:
         """Public dictionary representation."""
         return self._dict_repr()
 
-    def __repr__(self):
-        return util.dict_to_str(self._dict_repr())
+    def __repr__(self) -> str:
+        val = util.dict_to_str(
+            self._dict_repr())  # type: ignore[no-untyped-call]
+        return str(val)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
     @property
@@ -285,7 +287,7 @@ class TriggerSettings(CaptureSettings):
     """Trigger channel settings."""
     _name = "Trigger Setting"
 
-    THRESHOLD_DIRECTION = {
+    THRESHOLD_DIRECTION: Dict[str, int] = {
         "Above":
             picoEnum.PICO_THRESHOLD_DIRECTION["PICO_ABOVE"],
         "Below":
@@ -298,10 +300,10 @@ class TriggerSettings(CaptureSettings):
             picoEnum.PICO_THRESHOLD_DIRECTION["PICO_RISING_OR_FALLING"],
     }
 
-    def __init__(self):
-        CaptureSettings.__init__(self)
-        self._trig_dir = {}
-        self._rev_trig_dir = {}
+    def __init__(self) -> None:
+        super().__init__()
+        self._trig_dir: Dict[str, int] = {}
+        self._rev_trig_dir: Dict[int, str] = {}
         for name, val in self.THRESHOLD_DIRECTION.items():
             self._trig_dir[name] = val
             self._rev_trig_dir[val] = name
@@ -309,8 +311,8 @@ class TriggerSettings(CaptureSettings):
         self._channel: int = picoEnum.PICO_CHANNEL["PICO_PORT0"]
         self._port_pin: Optional[int] = 0
         self._range: float = 5.0
-        self._coupling = self._couplings["DC"]
-        self._trigger_direction = self._trig_dir["Rising"]
+        self._coupling: int = self._couplings["DC"]
+        self._trigger_direction: int = self._trig_dir["Rising"]
         self._trigger_level: float = 2.0  # V
         # PICO_VERY_HIGH_400MV
         # PICO_HIGH_200MV
@@ -319,7 +321,7 @@ class TriggerSettings(CaptureSettings):
         self.hysteresis: Optional[str] = "PICO_NORMAL_100MV"
 
     @property
-    def ps_api_trigger_direction(self):
+    def ps_api_trigger_direction(self) -> int:
         """Trigger direction compatible with PicoScope API."""
         return self._trigger_direction
 
@@ -346,16 +348,16 @@ class TriggerSettings(CaptureSettings):
         self._trigger_level = val
 
     @property
-    def trigger_direction(self):
+    def trigger_direction(self) -> str:
         return self._rev_trig_dir[self._trigger_direction]
 
     @trigger_direction.setter
-    def trigger_direction(self, val):
+    def trigger_direction(self, val: str) -> None:
         if val not in self._trig_dir:
             raise ValueError("Unsupported value")
         self._trigger_direction = self._trig_dir[val]
 
-    def _dict_repr(self):
+    def _dict_repr(self) -> Dict[str, Any]:
         """Human readable representation as a key value dictionary."""
         config = super()._dict_repr()
         config.update({
@@ -384,14 +386,14 @@ class TriggerSettings(CaptureSettings):
 class Pico6424E(ScopeTemplate):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
-    _NUM_CHANNELS = 4  # Number of analog channels
+    _NUM_CHANNELS: int = 4  # Number of analog channels
     #  Resolutions 8bit and 10bit work, but 12bit does not seem to be working
     #  (PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION)
-    _RESOLUTION = picoEnum.PICO_DEVICE_RESOLUTION["PICO_DR_10BIT"]
+    _RESOLUTION: int = picoEnum.PICO_DEVICE_RESOLUTION["PICO_DR_10BIT"]
 
-    DOWNSAMPLING_RATIO = 1
+    DOWNSAMPLING_RATIO: int = 1
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         del args  # unused
         del kwargs  # unused
         super().__init__()
@@ -399,27 +401,36 @@ class Pico6424E(ScopeTemplate):
 
         self.trace = CaptureSettings()
         self.trigger = TriggerSettings()
-        self._sample_length = 500
-        self._sample_offset = 0
+        self._sample_length: int = 500
+        self._sample_offset: int = 0
 
         # Sample rate settings.
-        self._sample_rate = 1E6
+        self._sample_rate: float = 1E6
         # Set timebase (seconds per sample)
         self._timebase = Pico6424E._get_timebase(self._sample_rate)
 
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
-        self._buffers: List[List] = [[], []]
+        self._buffer_trace: List[float] = []
+        self._buffer_trigger: List[Union[float, bool]] = []
 
         # Part of cw API
-        self.connectStatus = False  # Connected status for cw  # pylint: disable=C0103
+        self.connectStatus: bool = False  # Connected status for cw  # pylint: disable=C0103
         self._max_adc = ctypes.c_int16()  # To get mV values
 
         # Ignore signal overflow during capture.
         self.ignore_overflow: bool = False
 
+        # If we use hardware downsampling, use averaging.
+        # "PICO_RATIO_MODE_DECIMATE" could also be an option.
+        self._downsampling_mode: int = picoEnum.PICO_RATIO_MODE[
+            "PICO_RATIO_MODE_RAW"]
+        if self.DOWNSAMPLING_RATIO > 1:
+            self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
+                "PICO_RATIO_MODE_AVERAGE"]
+
     @staticmethod
-    def _get_timebase(sample_rate: float):
+    def _get_timebase(sample_rate: float) -> ctypes.c_uint32:
         """Return timebase for PicoScope API.
 
         Args:
@@ -459,8 +470,9 @@ class Pico6424E(ScopeTemplate):
         for i in range(4, -1, -1):
             if s_per_sample >= (2**i) * smallest_timebase:
                 return ctypes.c_uint32(i)
+        raise ValueError("Couldn't find a supported timebase")
 
-    def con(self, sn=None) -> bool:  # pragma: no cover
+    def con(self, sn: Optional[str] = None) -> bool:  # pragma: no cover
         del sn  # unused
         try:
             # Open the scope and get the corresponding handle self.ps_handle.
@@ -499,7 +511,7 @@ class Pico6424E(ScopeTemplate):
             self.dis()
             return False
 
-    def dis(self):  # pragma: no cover
+    def dis(self) -> bool:  # pragma: no cover
         if self.ps_handle.value > 0:
             # Check that the scope is connected
             assert self.connectStatus
@@ -516,7 +528,7 @@ class Pico6424E(ScopeTemplate):
         # ScopeTemplate expects True to be returned.
         return True
 
-    def arm(self):  # pragma: no cover
+    def arm(self) -> None:  # pragma: no cover
         """Prepare the scope for capturing."""
         # Check if this scope is connected.
         if self.connectStatus is False:
@@ -582,15 +594,15 @@ class Pico6424E(ScopeTemplate):
 
         # Convert memory buffers into mV values and save them into
         # self._buffers[0] is the trace and self._buffers[1] is the trigger
-        self._buffers[0] = adc2mV(
+        self._buffer_trace = adc2mV(
             self._trace_buffer,
             self.trace.ps_api_range,  # range
             self._max_adc)[:max_samples.value]
         if self.trigger.is_digital:
-            self._buffers[1] = self._trigger_buffer[:max_samples.value]
+            self._buffer_trigger = self._buffer_trigger[:max_samples.value]
         else:
-            self._buffers[1] = adc2mV(
-                self._trigger_buffer,
+            self._trigger_buffer = adc2mV(
+                self._buffer_trigger,
                 self.trigger.ps_api_range,  # range
                 self._max_adc)[:max_samples.value]
 
@@ -602,7 +614,7 @@ class Pico6424E(ScopeTemplate):
         else:
             return (overflow.value >> self.trace.ps_api_channel) & 1 == 1
 
-    def get_last_trace(self, as_int: bool = False) -> np.ndarray:
+    def get_last_trace(self, as_int: bool = False) -> ScopeTraceType:
         """Return a copy of the last trace.
 
         Args:
@@ -616,9 +628,9 @@ class Pico6424E(ScopeTemplate):
             msg = "Returning trace as integers is not implemented."
             raise NotImplementedError(msg)
 
-        return np.array(self._buffers[0][:], dtype=np.float32)
+        return np.array(self._buffer_trace[:], dtype=np.float32)
 
-    def get_last_trigger_trace(self) -> np.ndarray:
+    def get_last_trigger_trace(self) -> ScopeTriggerTraceTrype:
         """Return a copy of the last trigger trace.
 
         Returns: np array representing the trigger trace. If the trigger is
@@ -626,13 +638,13 @@ class Pico6424E(ScopeTemplate):
         """
         # Digital trigger.
         if self.trigger.is_digital:
-            bits = np.array(self._buffers[1][:], dtype=np.int16)
+            bits = np.array(self._buffer_trigger[:], dtype=np.int16)
             port_pin = self.trigger.port_pin
             assert port_pin is not None
-            return np.array((bits >> port_pin) & 1, dtype=bool)
+            return np.array((bits >> port_pin) & 1, dtype=np.bool_)
 
         # Analog trigger.
-        return np.array(self._buffers[1][:], dtype=np.float32)
+        return np.array(self._buffer_trigger[:], dtype=np.float32)
 
     def _set_channel_on(
             self, channel_info: CaptureSettings) -> None:  # pragma: no cover
@@ -736,7 +748,7 @@ class Pico6424E(ScopeTemplate):
                 len(directions),  # n_directions
             ))
 
-    def _set_channels(self):  # pragma: no cover
+    def _set_channels(self) -> None:  # pragma: no cover
         """Setup channels, buffers, and trigger."""
         if self.ps_handle.value <= 0:
             # No opened PicoScope handle
@@ -787,14 +799,6 @@ class Pico6424E(ScopeTemplate):
                                                          self._sample_offset)
         self._trace_buffer = (ctypes.c_int16 * self._total_samples)()
         self._trigger_buffer = (ctypes.c_int16 * self._total_samples)()
-        # If we use hardware downsampling, use averaging.
-        if self.DOWNSAMPLING_RATIO > 1:
-            self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
-                "PICO_RATIO_MODE_AVERAGE"]
-            # "PICO_RATIO_MODE_DECIMATE" could also be an option.
-        else:
-            self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
-                "PICO_RATIO_MODE_RAW"]
         data_type = picoEnum.PICO_DATA_TYPE["PICO_INT16_T"]
         waveform = 0
         # Set trace buffer
@@ -827,35 +831,35 @@ class Pico6424E(ScopeTemplate):
             ))
 
     @property
-    def sample_rate(self):
+    def sample_rate(self) -> float:
         return self._sample_rate
 
     @sample_rate.setter
-    def sample_rate(self, val):
+    def sample_rate(self, val: float) -> None:
         self._sample_rate = val
         self._timebase = Pico6424E._get_timebase(self._sample_rate)
 
     @property
-    def sample_length(self):
+    def sample_length(self) -> int:
         return self._sample_length
 
     @sample_length.setter
-    def sample_length(self, val):
+    def sample_length(self, val: int) -> None:
         self._sample_length = val
         self._set_channels()
 
     @property
-    def sample_offset(self):
+    def sample_offset(self) -> int:
         return self._sample_offset
 
     @sample_offset.setter
-    def sample_offset(self, val):
+    def sample_offset(self, val: int) -> None:
         self._sample_offset = val
         self._set_channels()
 
-    def _dict_repr(self):
+    def _dict_repr(self) -> Dict[str, Any]:
         """Human readable representation as a key value dictionary."""
-        ret = OrderedDict()
+        ret: OrderedDict[str, Any] = OrderedDict()
         ret["trace"] = self.trace.dict_repr()
         ret["trigger"] = self.trigger.dict_repr()
         ret["sample_rate"] = self.sample_rate
@@ -868,7 +872,8 @@ class Pico6424E(ScopeTemplate):
         """Return device name, connected status and dict representation as
         multi-line string."""
         connected = "Connected" if self.connectStatus else "Not connected"
-        dict_repr = util.dict_to_str(self._dict_repr())
+        dict_repr = util.dict_to_str(
+            self._dict_repr())  # type: ignore[no-untyped-call]
         return f"{self._name} device {connected}\n{dict_repr}"
 
     def __str__(self) -> str:

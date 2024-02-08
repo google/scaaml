@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ class AbstractCryptoInput(ABC):
         """Return the key parameter for scaaml.io.Dataset.new_shard."""
 
     @abstractmethod
-    def kwargs(self) -> Dict:
+    def kwargs(self) -> Dict[str, bytearray]:
         """Return keyword arguments for getting an attack point.
 
         Example use: See scaaml.capture.aes.crypto_input.CryptoInput.

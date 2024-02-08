@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 """The class that represents input of the AES cryptographic algorithm."""
 
-from typing import Dict
+from typing import Any, Dict
 
 from scaaml.capture.crypto_input import AbstractCryptoInput
 
@@ -21,7 +21,7 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 class CryptoInput(AbstractCryptoInput):
     """Single instance of cryptographic input for AES."""
 
-    def __init__(self, kt_element) -> None:
+    def __init__(self, kt_element: Any) -> None:
         """Initialize the crypto input.
 
         Args:
@@ -44,7 +44,7 @@ class CryptoInput(AbstractCryptoInput):
         """Return the key parameter of scaaml.io.Dataset.new_shard."""
         return self._key
 
-    def kwargs(self) -> Dict:
+    def kwargs(self) -> Dict[str, bytearray]:
         """Return keyword arguments for getting an attack point.
 
         Example use:

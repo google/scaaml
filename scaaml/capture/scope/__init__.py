@@ -18,3 +18,5 @@ from scaaml.capture.scope.cw_scope import CWScope
 from scaaml.capture.scope.default_cw_scope import DefaultCWScope
 from scaaml.capture.scope.lecroy.lecroy import LeCroy
 from scaaml.capture.scope.picoscope import PicoScope
+
+__all__ = ["AbstractSScope", "CWScope", "DefaultCWScope", "LeCroy", "PicoScope"]

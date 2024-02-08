@@ -17,7 +17,10 @@ import base64
 from copy import deepcopy
 from pathlib import Path
 import time
-from typing import Any, Dict, List, Optional, Tuple
+
+from types import TracebackType
+from typing import Any, Dict, List, Optional, Self, Tuple
+
 import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
@@ -29,11 +32,11 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationSocket
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.lecroy.types import LECROY_CAPTURE_AREA, LECROY_CHANNEL_NAME_T, LECROY_COMMUNICATION_CLASS_NAME
-from scaaml.capture.scope.scope_template import ScopeTemplate
+from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceTrype
 from scaaml.io import Dataset
 
 
-class LeCroy(AbstractSScope):
+class LeCroy(AbstractSScope["LeCroyScope"]):
     """Scope context manager."""
 
     def __init__(self,
@@ -47,7 +50,7 @@ class LeCroy(AbstractSScope):
                  scope_setup_commands: List[Dict[str, Any]],
                  communication_class_name:
                  LECROY_COMMUNICATION_CLASS_NAME = "LeCroyCommunicationVisa",
-                 **_) -> None:
+                 **_: Any) -> None:
         """Create scope context.
 
         Args:
@@ -121,9 +124,9 @@ class LeCroy(AbstractSScope):
                              f"{self._trace_channel} instead")
 
         # Scope object
-        self._scope: Optional[LeCroyScope] = None
+        self._scope = None
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Create scope context.
 
         Returns: self
@@ -145,7 +148,9 @@ class LeCroy(AbstractSScope):
         self._scope.con()
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:
@@ -162,11 +167,16 @@ class LeCroy(AbstractSScope):
         self._scope.dis()
         self._scope = None
 
+    @property
+    def scope(self) -> "LeCroyScope":
+        assert self._scope
+        return self._scope
+
     def post_init(self, dataset: Dataset) -> None:
         """After initialization actions. Saves the scope identity information
         into the capture_info.
         """
-        assert self._scope
+        assert isinstance(self._scope, LeCroyScope)
 
         # Update capture info with oscilloscope details.
         dataset.capture_info.update(self._scope.get_identity_info())
@@ -184,8 +194,7 @@ class LeCroy(AbstractSScope):
           capture_area (LECROY_CAPTURE_AREA): Capture the trace area, full
             window, or full screen. Defaults to the trace area.
         """
-        assert self._scope
-
+        assert isinstance(self._scope, LeCroyScope)
         source_file_path: str = self._scope.call_print_screen(
             capture_area=capture_area)
         self._scope.retrieve_file(source_file_path=source_file_path,
@@ -230,7 +239,7 @@ class LeCroyScope(ScopeTemplate):
         self._communication_class_name = communication_class_name
 
         # Trace and trigger
-        self._last_trace = None
+        self._last_trace: Optional[ScopeTraceType] = None
 
         # Scope object
         self._scope_communication: Optional[LeCroyCommunication] = None
@@ -254,7 +263,7 @@ class LeCroyScope(ScopeTemplate):
         # Actual settings of the scope
         self._scope_answers: Dict[str, str] = {}
 
-    def con(self, sn=None) -> bool:
+    def con(self, sn: Optional[str] = None) -> bool:
         """Set the scope for capture."""
         communication_cls = {
             "LeCroyCommunicationVisa": LeCroyCommunicationVisa,
@@ -285,7 +294,7 @@ class LeCroyScope(ScopeTemplate):
         self._scope_communication = None
         return True  # Success
 
-    def arm(self):
+    def arm(self) -> None:
         """Prepare the scope for capturing."""
         assert self._scope_communication is not None
         self._scope_communication.write("ARM")
@@ -331,7 +340,7 @@ class LeCroyScope(ScopeTemplate):
             self.con()
             return True
 
-    def get_last_trace(self, as_int: bool = False) -> np.ndarray:
+    def get_last_trace(self, as_int: bool = False) -> ScopeTraceType:
         """Return a copy of the last trace.
 
         Args:
@@ -350,7 +359,7 @@ class LeCroyScope(ScopeTemplate):
 
         return self._last_trace
 
-    def get_last_trigger_trace(self) -> np.ndarray:
+    def get_last_trigger_trace(self) -> ScopeTriggerTraceTrype:
         """Return a copy of the last trigger trace."""
         assert self._scope_communication is not None
 
@@ -370,6 +379,7 @@ class LeCroyScope(ScopeTemplate):
             container=bytearray,
         )
 
+        assert isinstance(trigger, bytearray)
         root = ET.fromstring(bytes(trigger).decode("ascii"))
         # Find the binary data (BinaryData is present)
         binary_data = root.findall(".//BinaryData")[0].text
@@ -377,15 +387,15 @@ class LeCroyScope(ScopeTemplate):
             decoded = base64.b64decode(binary_data)
         else:
             # No trigger array
-            return np.array([], dtype=np.uint8)
+            return np.array([], dtype=np.bool_)
 
-        np_trigger = np.frombuffer(decoded, dtype=np.uint8)
+        np_trigger = np.frombuffer(decoded, dtype=np.bool_)
         return np_trigger
 
     def __repr__(self) -> str:
         """Return string representation of self.
         """
-        return util.dict_to_str({
+        val = util.dict_to_str({
             "samples": self._samples,
             "offset": self._offset,
             "ip_address": self._ip_address,
@@ -393,7 +403,8 @@ class LeCroyScope(ScopeTemplate):
             "trigger_channel": self._trigger_channel,
             "communication_timeout": self._communication_timeout,
             "trigger_timeout": self._trigger_timeout,
-        })
+        })  # type: ignore[no-untyped-call]
+        return str(val)
 
     def __str__(self) -> str:
         """Return string representation of self.
@@ -493,11 +504,13 @@ class LeCroyScope(ScopeTemplate):
         #   representation) in bytes
         # crc is the 32-bit CRC plus 8-byte CRC trailer
         ans = self._scope_communication.query_binary_values(
-            f"TRANSFER_FILE? DISK,HDD,FILE,'{source_file_path}'")
+            f"TRANSFER_FILE? DISK,HDD,FILE,'{source_file_path}'",
+            container=bytearray)
 
         # With socket we need to strip the header (if there is no header we are
         # using pyvisa).
         strip_header = True
+        file_size: int = 0
         # Check for start: either "TRFL #9" or "#9"
         if ans[:2] == b"#9":
             # Just number of bytes and CRC

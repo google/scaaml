@@ -14,15 +14,17 @@
 """Context manager chipwhisperer scope that has default setting and is used to
 control."""
 
-from typing import Optional
+from types import TracebackType
+from typing import Optional, Self
 
 import chipwhisperer as cw
+from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
 
 
-class DefaultCWScope(AbstractSScope):  # pragma: no cover
+class DefaultCWScope(AbstractSScope[OpenADC]):  # pragma: no cover
     """Scope context manager."""
 
     def __init__(self, cw_scope_serial_number: Optional[str] = None):
@@ -35,10 +37,10 @@ class DefaultCWScope(AbstractSScope):  # pragma: no cover
             name and colon character.
         """
         super().__init__(samples=0, offset=0)
-        self._scope = None
+        self._scope: Optional[OpenADC] = None
         self._cw_scope_serial_number: Optional[str] = cw_scope_serial_number
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Create scope context.
 
         Returns: self
@@ -52,10 +54,12 @@ class DefaultCWScope(AbstractSScope):  # pragma: no cover
         self._scope = scope
 
         assert self._scope is not None
-        self._scope.default_setup()
+        self._scope.default_setup()  # type: ignore[no-untyped-call]
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:
@@ -65,5 +69,5 @@ class DefaultCWScope(AbstractSScope):  # pragma: no cover
         """
         if self._scope is None:
             return
-        self._scope.dis()
+        self._scope.dis()  # type: ignore[no-untyped-call]
         self._scope = None

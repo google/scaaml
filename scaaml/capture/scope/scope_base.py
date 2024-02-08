@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
 """Context manager for the scope."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from types import TracebackType
+from typing import Generic, Optional, Self, TypeVar, Union
 
-from chipwhisperer.capture.scopes import OpenADC
+from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.io import Dataset
 
+ScopeT = TypeVar("ScopeT", bound=Union[OpenADC, ScopeTemplate])
 
-class AbstractSScope(ABC):
+
+class AbstractSScope(ABC, Generic[ScopeT]):
     """Scope context manager."""
 
     def __init__(self, samples: int, offset: int):
@@ -33,19 +36,21 @@ class AbstractSScope(ABC):
           offset: Number of samples to wait after trigger event occurred before
             starting recording data.
         """
-        self._scope: Optional[Union[OpenADC, ScopeTemplate]] = None
+        self._scope: Optional[ScopeT] = None
         self._samples: int = samples
         self._offset: int = offset
 
     @abstractmethod
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Create scope context.
 
         Returns: self
         """
 
     @abstractmethod
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type: type[BaseException],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:
@@ -55,8 +60,9 @@ class AbstractSScope(ABC):
         """
 
     @property
-    def scope(self) -> Optional[Union[OpenADC, ScopeTemplate]]:
+    def scope(self) -> ScopeT:
         """Scope object for chipwhisperer API."""
+        assert self._scope
         return self._scope
 
     def post_init(self, dataset: Dataset) -> None:

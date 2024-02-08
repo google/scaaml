@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """The target in cw."""
+from types import TracebackType
+from typing import Optional, Self
+
 import chipwhisperer as cw
 
 from scaaml.capture.communication import AbstractSCommunication
@@ -20,25 +23,28 @@ from scaaml.capture.communication import AbstractSCommunication
 class CWCommunication(AbstractSCommunication):
     """target in cw"""
 
-    def __init__(self, scope):
+    def __init__(self, scope: Optional[cw.scopes.ScopeTypes]) -> None:
         """Initialize the communication object."""
         super().__init__()
-        self._scope = scope
-        self._target = None
+        self._scope: Optional[cw.scopes.ScopeTypes] = scope
+        self._target: Optional[cw.targets.TargetTypes] = None
         self._protver = '1.1'
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Initialize target."""
         assert self._target is None  # Do not allow nested with.
         # The scope is there because of communication with the target (it
         # communicated using single USB endpoint). Since CW 5.5 firmware
         # release it uses a separate USB UART.
-        self._target = cw.target(self._scope, cw.targets.SimpleSerial)
+        self._target = cw.target(
+            self._scope, cw.targets.SimpleSerial)  # type: ignore[attr-defined]
         self._target.protver = self._protver  # type: ignore
         self._scope = None
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Safely close all resources.
 
         Args:
@@ -47,10 +53,10 @@ class CWCommunication(AbstractSCommunication):
           exc_tb: None if no exception, otherwise the traceback.
         """
         assert self._target is not None
-        self._target.dis()
+        self._target.dis()  # type: ignore[no-untyped-call]
         self._target = None
 
     @property
-    def target(self):
+    def target(self) -> Optional[cw.targets.TargetTypes]:
         """Returns the target object."""
         return self._target

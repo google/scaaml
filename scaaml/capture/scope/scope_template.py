@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,19 +15,25 @@
 chipwhisperer API."""
 
 from abc import ABC, abstractmethod
+from typing import Optional, Union
 
 import numpy as np
+import numpy.typing as npt
+
+ScopeTraceType = npt.NDArray[np.float32]
+ScopeDigitalTraceType = npt.NDArray[np.bool_]
+ScopeTriggerTraceTrype = Union[ScopeTraceType, ScopeDigitalTraceType]
 
 
 class ScopeTemplate(ABC):
     """A base class for scope objects that can be passed as a scope to
     chipwhisperer API (such as Pico6424E)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the base."""
 
     @abstractmethod
-    def con(self, sn=None) -> bool:
+    def con(self, sn: Optional[str] = None) -> bool:
         """Connect to the attached hardware. Trying to keep compatibility with
         cw.capture.scopes.OpenADC and being able to pass as `scope` argument to
         `cw.capture_trace`.
@@ -55,7 +61,7 @@ class ScopeTemplate(ABC):
         """
 
     @abstractmethod
-    def get_last_trace(self, as_int: bool = False) -> np.ndarray:
+    def get_last_trace(self, as_int: bool = False) -> ScopeTraceType:
         """Return the last trace. Same signature as cw.capture.scopes.OpenADC.
         """
 
