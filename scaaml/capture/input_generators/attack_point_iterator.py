@@ -19,6 +19,7 @@ and can be used with config files.
 from abc import ABC, abstractmethod
 import collections
 import copy
+import itertools
 from typing import Dict, List
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
@@ -43,6 +44,11 @@ class AttackPointIterator(ABC):
         """
 
 
+class LengthIsInfiniteException(Exception):
+    """This exception is raised when the `__len__` function is
+    called on an infinite iterator."""
+
+
 def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
     configuration = copy.deepcopy(configuration)
     iterator = _build_attack_points_iterator(configuration)
@@ -61,6 +67,7 @@ def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
         "constants": AttackPointIteratorConstants,
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
+        "repeat": AttackPointIteratorRepeat,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -152,3 +159,59 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
 
     def get_generated_keys(self) -> List[str]:
         return [self._name]
+
+
+class AttackPointIteratorRepeat(AttackPointIterator):
+    """
+    Attack point iterator class that iterates 
+    over a configuration a repeat amount of times.
+    """
+
+    def __init__(self,
+                 operation: str,
+                 configuration: Dict,
+                 repetitions: int = -1) -> None:
+        """Initialize the repeated iterate. If repetitions is not present
+          or set to a negative number it will do an infinite loop and
+          if it is 0 it will not repeat at all.
+          
+          Args:
+            operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+            configuration (Dict): The config for the iterated object
+                that will get repeated.
+            repetitions (int): This parameter decides how many times the
+                iterator gets repeated. If it is a negative number it
+                will repeat infinitely and if you call __len__ it will
+                raise an LengthIsInfiniteException. If it is 0 then it will not
+                repeat at all. If it is a positive number it will
+                repeat that many times.
+            """
+        assert "repeat" == operation
+        self._configuration_iterator = build_attack_points_iterator(
+            configuration)
+        if repetitions >= 0:
+            self._repetitions = repetitions
+            self._len = repetitions * len(self._configuration_iterator)
+        elif len(self._configuration_iterator) == 0:
+            self._repetitions = 0
+            self._len = 0
+        else:
+            self._repetitions = repetitions
+            self._len = repetitions
+
+    def __len__(self) -> int:
+        if self._len < 0:
+            raise LengthIsInfiniteException("The length is infinite!")
+        return self._len
+
+    def __iter__(self):
+        if self._repetitions < 0:
+            return iter(itertools.cycle(self._configuration_iterator))
+        return iter(value for _ in range(self._repetitions)
+                    for value in self._configuration_iterator)
+
+    def get_generated_keys(self) -> List[str]:
+        return self._configuration_iterator.get_generated_keys()

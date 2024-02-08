@@ -94,6 +94,7 @@ pretrained
 printername
 probas
 protver
+psutil
 pyclass
 pylance
 pyplot
