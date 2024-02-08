@@ -23,6 +23,7 @@ import itertools
 from typing import Dict, List
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
+from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
 
 
 class AttackPointIterator(ABC):
@@ -42,11 +43,6 @@ class AttackPointIterator(ABC):
         Returns an exhaustive list of names this iterator 
         and its children will create.
         """
-
-
-class LengthIsInfiniteException(Exception):
-    """This exception is raised when the `__len__` function is
-    called on an infinite iterator."""
 
 
 def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
@@ -81,12 +77,18 @@ def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
 class AttackPointIteratorConstants(AttackPointIterator):
     """Attack point iterator class that iterates over a constant."""
 
-    def __init__(self, operation: str, name: str,
+    def __init__(self, operation: str, name: str, length: int,
                  values: List[List[int]]) -> None:
         """Initialize the constants to iterate."""
         assert "constants" == operation
         self._name = name
         self._values = values
+        for value in self._values:
+            if len(value) != length:
+                raise ListNotPrescribedLengthException(
+                    f"The predescribed length is {length} and "\
+                    f"the length of {value} is {len(value)}."
+                )
 
     def __len__(self) -> int:
         return len(self._values)
