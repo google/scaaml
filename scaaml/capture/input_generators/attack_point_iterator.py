@@ -20,9 +20,11 @@ from abc import ABC, abstractmethod
 import collections
 import copy
 import itertools
-from typing import Dict, List
+from typing import Any, Dict, Iterator, List, Type
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
+
+AttackPointIteratorT = Iterator[Dict[str, Any]]
 
 
 class AttackPointIterator(ABC):
@@ -33,7 +35,7 @@ class AttackPointIterator(ABC):
         """Return the number of iterated elements."""
 
     @abstractmethod
-    def __iter__(self):
+    def __iter__(self) -> AttackPointIteratorT:
         """Start iterating."""
 
     @abstractmethod
@@ -49,7 +51,8 @@ class LengthIsInfiniteException(Exception):
     called on an infinite iterator."""
 
 
-def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
+def build_attack_points_iterator(
+        configuration: Dict[str, Any]) -> AttackPointIterator:
     configuration = copy.deepcopy(configuration)
     iterator = _build_attack_points_iterator(configuration)
 
@@ -62,8 +65,9 @@ def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
     return iterator
 
 
-def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
-    supported_operations = {
+def _build_attack_points_iterator(
+        configuration: Dict[str, Any]) -> AttackPointIterator:
+    supported_operations: Dict[str, Type[AttackPointIterator]] = {
         "constants": AttackPointIteratorConstants,
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
@@ -91,7 +95,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
     def __len__(self) -> int:
         return len(self._values)
 
-    def __iter__(self):
+    def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in self._values)
 
     def get_generated_keys(self) -> List[str]:
@@ -120,7 +124,7 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
     def __len__(self) -> int:
         return self._len
 
-    def __iter__(self):
+    def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value}
                     for value in balanced_generator(length=self._length,
                                                     bunches=self._bunches,
@@ -152,7 +156,7 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
     def __len__(self) -> int:
         return self._len
 
-    def __iter__(self):
+    def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in unrestricted_generator(
             length=self._length, bunches=self._bunches,
             elements=self._elements))
@@ -169,7 +173,7 @@ class AttackPointIteratorRepeat(AttackPointIterator):
 
     def __init__(self,
                  operation: str,
-                 configuration: Dict,
+                 configuration: Dict[str, Any],
                  repetitions: int = -1) -> None:
         """Initialize the repeated iterate. If repetitions is not present
           or set to a negative number it will do an infinite loop and
@@ -207,7 +211,7 @@ class AttackPointIteratorRepeat(AttackPointIterator):
             raise LengthIsInfiniteException("The length is infinite!")
         return self._len
 
-    def __iter__(self):
+    def __iter__(self) -> AttackPointIteratorT:
         if self._repetitions < 0:
             return iter(itertools.cycle(self._configuration_iterator))
         return iter(value for _ in range(self._repetitions)

@@ -67,7 +67,7 @@ def single_bunch(length: int,
     """
     rng: np.random.Generator = np.random.default_rng(seed=seed)
 
-    transposed_result: List[np.ndarray] = []
+    transposed_result: List[InputGeneratorT] = []
 
     for _ in range(length):
         # One column (content of result[:, i]).
