@@ -19,7 +19,8 @@ from pathlib import Path
 import time
 
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Self, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+from typing_extensions import Self
 
 import xml.etree.ElementTree as ET
 

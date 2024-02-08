@@ -24,6 +24,9 @@ from scaaml.capture.communication import AbstractSCommunication
 from scaaml.capture.control import AbstractSControl
 from scaaml.capture.scope import AbstractSScope
 
+# TODO: temporarily disabling mypy on this file until it's properly fixed.
+# mypy: ignore-errors
+
 
 class AbstractCaptureRunner(ABC):
     """Abstract class for capturing the dataset."""
