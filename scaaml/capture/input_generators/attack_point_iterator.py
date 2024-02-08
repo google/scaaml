@@ -45,7 +45,7 @@ class AttackPointIterator(ABC):
 
 
 class LengthIsInfiniteException(Exception):
-    """This exception is raised when the `__len__` function is 
+    """This exception is raised when the `__len__` function is
     called on an infinite iterator."""
 
 
@@ -171,8 +171,8 @@ class AttackPointIteratorRepeat(AttackPointIterator):
                  operation: str,
                  configuration: Dict,
                  repetitions: int = -1) -> None:
-        """Initialize the repeated iterate if repetitions is not present
-          or set to a negative number it will do an infinite loop 
+        """Initialize the repeated iterate. If repetitions is not present
+          or set to a negative number it will do an infinite loop and
           if it is 0 it will not repeat at all.
           
           Args:
