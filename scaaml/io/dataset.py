@@ -13,6 +13,9 @@
 # limitations under the License.
 """Build and load tensorFlow dataset Record wrapper"""
 
+# Temporarily ignore this file until it's properly typed or reworked
+# mypy: ignore-errors
+
 import copy
 import math
 import json

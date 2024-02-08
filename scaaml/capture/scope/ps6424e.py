@@ -19,7 +19,7 @@ from picosdk.PicoDeviceStructs import picoStruct
 from picosdk.functions import adc2mV, assert_pico_ok
 from picosdk.errors import PicoSDKCtypesError
 
-from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceTrype
+from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceType
 
 
 @dataclass
@@ -630,7 +630,7 @@ class Pico6424E(ScopeTemplate):
 
         return np.array(self._buffer_trace[:], dtype=np.float32)
 
-    def get_last_trigger_trace(self) -> ScopeTriggerTraceTrype:
+    def get_last_trigger_trace(self) -> ScopeTriggerTraceType:
         """Return a copy of the last trigger trace.
 
         Returns: np array representing the trigger trace. If the trigger is

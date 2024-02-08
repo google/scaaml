@@ -22,7 +22,7 @@ import numpy.typing as npt
 
 ScopeTraceType = npt.NDArray[np.float32]
 ScopeDigitalTraceType = npt.NDArray[np.bool_]
-ScopeTriggerTraceTrype = Union[ScopeTraceType, ScopeDigitalTraceType]
+ScopeTriggerTraceType = Union[ScopeTraceType, ScopeDigitalTraceType]
 
 
 class ScopeTemplate(ABC):

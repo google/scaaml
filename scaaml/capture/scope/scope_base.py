@@ -15,7 +15,8 @@
 
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import Generic, Optional, Self, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
+from typing_extensions import Self
 
 from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 

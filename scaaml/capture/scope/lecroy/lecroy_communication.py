@@ -21,7 +21,8 @@ import hashlib
 import logging
 import socket
 from struct import pack, unpack
-from typing import Callable, Optional, ParamSpec, Self, TypeVar, cast
+from typing import Callable, Optional, ParamSpec, TypeVar, cast
+from typing_extensions import Self
 
 import pyvisa
 from pyvisa.util import BINARY_DATATYPES

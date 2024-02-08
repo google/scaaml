@@ -13,7 +13,8 @@
 # limitations under the License.
 """The target in cw."""
 from types import TracebackType
-from typing import Optional, Self
+from typing import Optional
+from typing_extensions import Self
 
 import chipwhisperer as cw
 

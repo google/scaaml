@@ -14,8 +14,8 @@
 """Context manager for the scope."""
 
 from types import TracebackType
-from typing import Any, Literal, Optional, Self
-from typing_extensions import TypeAlias
+from typing import Any, Literal, Optional
+from typing_extensions import Self, TypeAlias
 
 from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E

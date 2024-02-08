@@ -22,7 +22,7 @@ from typing import Any, Dict, Tuple, Union, cast
 import numpy as np
 import numpy.typing as npt
 
-from ..scope_template import ScopeTraceType
+from scaaml.capture.scope.scope_template import ScopeTraceType
 
 
 class LecroyWaveform:

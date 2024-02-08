@@ -61,7 +61,8 @@ File format:
 """
 
 from collections import namedtuple
-from typing import Any, Dict, List, Self
+from typing import Any, Dict, List
+from typing_extensions import Self
 
 import numpy as np
 

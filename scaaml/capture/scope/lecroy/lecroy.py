@@ -32,7 +32,7 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationSocket
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.lecroy.types import LECROY_CAPTURE_AREA, LECROY_CHANNEL_NAME_T, LECROY_COMMUNICATION_CLASS_NAME
-from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceTrype
+from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceType
 from scaaml.io import Dataset
 
 
@@ -359,7 +359,7 @@ class LeCroyScope(ScopeTemplate):
 
         return self._last_trace
 
-    def get_last_trigger_trace(self) -> ScopeTriggerTraceTrype:
+    def get_last_trigger_trace(self) -> ScopeTriggerTraceType:
         """Return a copy of the last trigger trace."""
         assert self._scope_communication is not None
 

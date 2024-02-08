@@ -16,7 +16,8 @@
 from abc import ABC, abstractmethod
 from time import sleep
 from types import TracebackType
-from typing import Optional, Self
+from typing import Optional
+from typing_extensions import Self
 
 
 class AbstractSControl(ABC):

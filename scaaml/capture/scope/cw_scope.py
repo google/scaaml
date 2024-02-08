@@ -14,7 +14,8 @@
 """Context manager for the scope."""
 
 from types import TracebackType
-from typing import Any, Optional, Self, Type
+from typing import Any, Optional, Type
+from typing_extensions import Self
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]

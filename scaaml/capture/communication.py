@@ -15,7 +15,8 @@
 
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import Optional, Self
+from typing import Optional
+from typing_extensions import Self
 
 from chipwhisperer.capture.targets import TargetTypes
 

@@ -15,7 +15,8 @@
 control."""
 
 from types import TracebackType
-from typing import Optional, Self, Type
+from typing import Optional, Type
+from typing_extensions import Self
 
 import chipwhisperer as cw
 from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
