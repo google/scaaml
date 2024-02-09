@@ -88,6 +88,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
                 double check if the operation is the correct one.
 
                 name (str): The name represents the key name of the value.
+
                 length (int): The prescribed length for each list in values.
                 If one of the lists isn't the same length as this variable
                 it will raise an ListNotPrescribedLengthException.
