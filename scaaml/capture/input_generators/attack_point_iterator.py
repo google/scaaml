@@ -84,7 +84,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
             Args:
                 operation (str): The operation of the iterator
                 represents what the iterator does and what 
-                has to be in the config file. This is only used once to
+                arguments should be present. This is only used once to
                 double check if the operation is the correct one.
                 name (str): The name represents the key name of the value.
                 length (int): The prescribed length for each list in values.
