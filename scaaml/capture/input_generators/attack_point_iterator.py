@@ -23,6 +23,7 @@ import itertools
 from typing import Dict, List
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
+from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
 
 
 class AttackPointIterator(ABC):
@@ -42,11 +43,6 @@ class AttackPointIterator(ABC):
         Returns an exhaustive list of names this iterator 
         and its children will create.
         """
-
-
-class LengthIsInfiniteException(Exception):
-    """This exception is raised when the `__len__` function is
-    called on an infinite iterator."""
 
 
 def build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
@@ -81,12 +77,33 @@ def _build_attack_points_iterator(configuration: Dict) -> AttackPointIterator:
 class AttackPointIteratorConstants(AttackPointIterator):
     """Attack point iterator class that iterates over a constant."""
 
-    def __init__(self, operation: str, name: str,
+    def __init__(self, operation: str, name: str, length: int,
                  values: List[List[int]]) -> None:
-        """Initialize the constants to iterate."""
+        """Initialize the constants to iterate.
+        
+            Args:
+                operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                arguments should be present. This is only used once to
+                double check if the operation is the correct one.
+
+                name (str): The name represents the key name of the value.
+
+                length (int): The prescribed length for each list in values.
+                If one of the lists isn't the same length as this variable
+                it will raise an ListNotPrescribedLengthException.
+
+                values (List[List[int]]): List of lists of ints that gets
+                iterated through."""
         assert "constants" == operation
         self._name = name
         self._values = values
+        for value in self._values:
+            if len(value) != length:
+                raise ListNotPrescribedLengthException(
+                    f"The prescribed length is {length} and "\
+                    f"the length of {value} is {len(value)}."
+                )
 
     def __len__(self) -> int:
         return len(self._values)
@@ -180,8 +197,10 @@ class AttackPointIteratorRepeat(AttackPointIterator):
                 represents what the iterator does and what 
                 has to be in the config file. This is only used once to
                 double check if the operation is the correct one.
+
             configuration (Dict): The config for the iterated object
                 that will get repeated.
+                
             repetitions (int): This parameter decides how many times the
                 iterator gets repeated. If it is a negative number it
                 will repeat infinitely and if you call __len__ it will
