@@ -33,6 +33,7 @@ def attack_point_iterator_constants(values, length: int = 16):
         obj["key"] for obj in list(iter(build_attack_points_iterator(config)))
     ]
     assert output == values
+    assert len(values) == len(build_attack_points_iterator(config))
 
 
 def test_attack_point_iterator_no_legal_operation():
@@ -358,8 +359,8 @@ def test_attack_point_iterator_repeat_infinite_minus_two():
         "configuration": {
             "operation": "constants",
             "name": "key",
-            "length": 2,
-            "values": [[1, 2]]
+            "length": 1,
+            "values": [[1], [2]]
         }
     }
     count = 0
