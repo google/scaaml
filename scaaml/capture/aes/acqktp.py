@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import numpy as np
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
 
+# This is legacy code, we don't really want to dig into proper typing
+# mypy: ignore-errors
 class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     """Class for getting uniformly distributed keys and plaintexts for SCAAML.
 

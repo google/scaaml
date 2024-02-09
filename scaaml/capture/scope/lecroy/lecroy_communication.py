@@ -21,13 +21,18 @@ import hashlib
 import logging
 import socket
 from struct import pack, unpack
-from typing import Optional
+from typing import Callable, Optional, ParamSpec, TypeVar, cast
+from typing_extensions import Self
 
 import pyvisa
 from pyvisa.util import BINARY_DATATYPES
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
+
+T = TypeVar("T")
+Param = ParamSpec("Param")
+RetT = TypeVar("RetT")
 
 
 class LeCroyCommunication(ABC):
@@ -48,7 +53,7 @@ class LeCroyCommunication(ABC):
                                          "lecroy_communication")
 
     @abstractmethod
-    def connect(self):
+    def connect(self) -> Self:
         """Connect to the scope."""
         return self
 
@@ -74,13 +79,13 @@ class LeCroyCommunication(ABC):
     @abstractmethod
     def query_binary_values(self,
                             message: str,
-                            datatype: BINARY_DATATYPES = "B",
-                            container=bytearray) -> bytearray:
+                            container: type[T],
+                            datatype: BINARY_DATATYPES = "B") -> T:
         """Query binary data. Beware that the results from socket version might
         contain headers which are stripped by pyvisa.
         """
 
-    def _check_response_template(self):
+    def _check_response_template(self) -> None:
         """ Check if the hash of the waveform template matches the supported
         version. This is a workaround, see
         https://github.com/google/scaaml/issues/130
@@ -98,10 +103,10 @@ class LeCroyCommunicationError(Exception):
     """Custom exception to deal with various possible exceptions."""
 
 
-def make_custom_exception(func):
+def make_custom_exception(func: Callable[Param, RetT]) -> Callable[Param, RetT]:
     """Decorator to wrap specific exception into a custom one."""
 
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Param.args, **kwargs: Param.kwargs) -> RetT:
         try:
             return func(*args, **kwargs)
         except Exception as error:
@@ -123,10 +128,9 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         self._scope: Optional[pyvisa.resources.MessageBasedResource] = None
 
     @make_custom_exception
-    def connect(self):  # pragma: no cover
+    def connect(self) -> Self:  # pragma: no cover
         # For portability and ease of setup we enforce the pure Python backend
         self._resource_manager = pyvisa.ResourceManager("@py")
-        assert self._resource_manager
 
         scope_resource = self._resource_manager.open_resource(
             f"TCPIP::{self._ip_address}::INSTR",
@@ -135,12 +139,12 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         assert isinstance(scope_resource, pyvisa.resources.MessageBasedResource)
         self._scope = scope_resource
 
-        assert self._scope
         self._scope.timeout = self._timeout * 1_000  # Convert second to ms
         self._scope.clear()
 
         # Check if the response template is what LecroyWaveform expects
         self._check_response_template()
+        return self
 
     @make_custom_exception
     def close(self) -> None:  # pragma: no cover
@@ -173,27 +177,25 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
     ) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
-        assert self._scope
-
-        return self._scope.query_binary_values(
-            f"{channel}:WAVEFORM?",
-            datatype="B",
-            container=LecroyWaveform,
-        )  # type: ignore
+        return self.query_binary_values(f"{channel}:WAVEFORM?",
+                                        container=LecroyWaveform,
+                                        datatype="B")
 
     @make_custom_exception
-    def query_binary_values(self,
-                            message: str,
-                            datatype: BINARY_DATATYPES = "B",
-                            container=bytearray):  # pragma: no cover
+    def query_binary_values(
+            self,
+            message: str,
+            container: type[T],
+            datatype: BINARY_DATATYPES = "B") -> T:  # pragma: no cover
         """Query binary data."""
         assert self._scope
         self._logger.debug("query_binary_values(message=\"%s\")", message)
-        return self._scope.query_binary_values(
+        raw_data = self._scope.query_binary_values(
             message,
             datatype=datatype,
             container=container,
         )
+        return cast(T, raw_data)
 
 
 class LeCroyCommunicationSocket(LeCroyCommunication):
@@ -215,7 +217,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         self._socket: Optional[socket.socket] = None
 
     @make_custom_exception
-    def connect(self):  # pragma: no cover
+    def connect(self) -> Self:  # pragma: no cover
         assert self._socket is None
 
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -226,6 +228,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
 
         # Check if the response template is what LecroyWaveform expects
         self._check_response_template()
+        return self
 
     @make_custom_exception
     def close(self) -> None:  # pragma: no cover
@@ -246,7 +249,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """Query the oscilloscope (write, read, and decode the answer as a
         string).
         """
-        return self.query_binary_values(message).decode()
+        return self.query_binary_values(message, container=bytes).decode()
 
     @make_custom_exception
     def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
@@ -255,7 +258,8 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         Args:
           channel (LECROY_CHANNEL_NAME_T): The name of queried channel.
         """
-        raw_data = self.query_binary_values(f"{channel}:WAVEFORM?")
+        raw_data = self.query_binary_values(f"{channel}:WAVEFORM?",
+                                            container=bytes)
         assert raw_data[:6] == b"ALL,#9"  # followed by 9 digits for size
         len_raw_data = int(raw_data[6:15])  # length without the header
         raw_data = raw_data[15:]
@@ -265,10 +269,11 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         return LecroyWaveform(raw_data)
 
     @make_custom_exception
-    def query_binary_values(self,
-                            message: str,
-                            datatype: BINARY_DATATYPES = "B",
-                            container=None) -> bytes:  # pragma: no cover
+    def query_binary_values(
+            self,
+            message: str,
+            container: type[T],
+            datatype: BINARY_DATATYPES = "B") -> T:  # pragma: no cover
         """Query binary data.
 
         Args:
@@ -279,9 +284,8 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         Returns: a bytes representation of the response.
         """
         assert self._socket
-
         del datatype  # ignored
-        del container  # ignored
+        assert container == bytes
 
         self._logger.debug("\"%s\"", message)
 
@@ -289,7 +293,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         self.write(message)
 
         # Receive and decode answer
-        return self._get_raw_response()
+        return cast(T, self._get_raw_response())
 
     def _format_command(self, command: str) -> bytes:
         """Method formatting leCroy command.

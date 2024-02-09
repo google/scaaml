@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,8 @@
 """A context manager dealing with opening new shards, part number and group
 number."""
 
-from typing import Dict, List
+from types import TracebackType
+from typing import Dict, List, Optional, Type
 
 from scaaml.io.dataset import Dataset
 
@@ -98,7 +99,7 @@ class _DatasetFillerContext:
         return self._written_examples % self._examples_per_shard == 0
 
     @property
-    def part_number(self):
+    def part_number(self) -> int:
         """A part is the id of the shard of a single key."""
         # How many examples with the same key.
         examples_with_same_key = self._plaintexts_per_key * self._repetitions
@@ -108,7 +109,7 @@ class _DatasetFillerContext:
         return examples_in_this_part // self._examples_per_shard
 
     @property
-    def group_number(self):
+    def group_number(self) -> int:
         """A group is 1 full rotation of the key bytes (0 - 255)."""
         # How many examples are there in a group (256 different byte values ==
         # 256 different keys).
@@ -176,7 +177,9 @@ class DatasetFiller:
         """Initialize _DatasetFillerContext."""
         return self._dataset_filler_context
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:
+    def __exit__(self, exc_type: Optional[Type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:
         """Make sure to close the last shard.
 
         Args:

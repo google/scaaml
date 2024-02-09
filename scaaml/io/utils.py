@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,17 @@
 
 from collections import defaultdict
 import hashlib
-from typing import Dict, Optional
+from typing import Callable, DefaultDict, Optional, TypeVar
 
 import tensorflow as tf
 
+T = TypeVar("T")
 
-def ddict(value: Optional[Dict], levels: int, type_var):
+
+# TODO: disabling mypy as the ddict() function needs more love for typing
+# mypy: ignore-errors
+def ddict(value: Optional[DefaultDict[str, Callable[[], T]]], levels: int,
+          type_var: Callable[[], T]) -> DefaultDict[str, T]:
     """Returns nested defaultdict of defaultdict (nesting level based on
     level), which are updated with the value dictionary.
 
@@ -50,7 +55,7 @@ def ddict(value: Optional[Dict], levels: int, type_var):
       >>> f = ddict(value=None, levels=1, type_var=list)
     """
 
-    def empty_dd(levels: int, type_var):
+    def empty_dd(levels: int, type_var: Callable[[], T]) -> DefaultDict[str, T]:
         """Returns the right level of defaultdict."""
         if levels == 1:
             return defaultdict(type_var)
@@ -66,7 +71,7 @@ def ddict(value: Optional[Dict], levels: int, type_var):
     return result
 
 
-def sha256sum(filename):
+def sha256sum(filename: str) -> str:
     "compute the sha256 of a given file"
     h = hashlib.sha256()
     b = bytearray(128 * 1024)
@@ -77,7 +82,7 @@ def sha256sum(filename):
     return h.hexdigest()
 
 
-def dtype_name_to_dtype(name: str) -> tf.dtypes.DType:
+def dtype_name_to_dtype(name: str) -> tf.DType:
     """Turn saved string dtype into tf.dtype.
     """
     if name == "float16":
@@ -87,7 +92,7 @@ def dtype_name_to_dtype(name: str) -> tf.dtypes.DType:
     raise ValueError(f"Either float16 or float32 expected, got {name}")
 
 
-def dtype_dtype_to_name(dtype: tf.dtypes.DType) -> str:
+def dtype_dtype_to_name(dtype: tf.DType) -> str:
     """Turn saved string dtype into tf.dtype.
     """
     if dtype == tf.float16:

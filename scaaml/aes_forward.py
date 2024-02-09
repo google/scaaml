@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Provides attack points for AES."""
+
+from typing import Callable, cast
 
 
 class AESSBOX:
@@ -96,7 +98,8 @@ class AESSBOX:
         return plaintext
 
     @classmethod
-    def get_attack_point(cls, name: str, **kwargs: bytearray) -> bytearray:
+    def get_attack_point(cls, name: str, key: bytearray,
+                         plaintext: bytearray) -> bytearray:
         """Return the correct attack point.
 
         Typical usage example:
@@ -109,4 +112,6 @@ class AESSBOX:
         function = getattr(cls, name, None)
         if not function or not callable(function):
             raise ValueError(f"{name} is not a defined attack point")
-        return function(**kwargs)
+        function = cast(Callable[[bytearray, bytearray], bytearray], function)
+        value: bytearray = function(key, plaintext)
+        return value

@@ -105,7 +105,7 @@ def test_scope_setup_commands_empty(mock_run_command, mock_connect, mock_write,
                 trigger_channel="C2",
                 communication_timeout=1.0,
                 scope_setup_commands=[],
-                trigger_timeout=0.1) as lecroy:
+                trigger_timeout=0.1) as _:
         assert mock_run_command.call_args_list == PRE_COMMANDS + POST_COMMANDS
 
 
@@ -125,14 +125,15 @@ def test_scope_setup_commands_empty(mock_run_command, mock_connect, mock_write,
 def test_scope_setup_commands_non_empty(mock_run_command, mock_connect,
                                         mock_write, mock_query, mock_close):
     scope_setup_commands = [uuid.uuid4() for _ in range(4)]
-    with LeCroy(samples=10,
-                offset=0,
-                ip_address="127.0.0.1",
-                trace_channel="C1",
-                trigger_channel="C2",
-                communication_timeout=1.0,
-                scope_setup_commands=scope_setup_commands,
-                trigger_timeout=0.1) as lecroy:
+    with LeCroy(
+            samples=10,
+            offset=0,
+            ip_address="127.0.0.1",
+            trace_channel="C1",
+            trigger_channel="C2",
+            communication_timeout=1.0,
+            scope_setup_commands=scope_setup_commands,  # type: ignore[arg-type]
+            trigger_timeout=0.1) as _:
         assert mock_run_command.call_args_list == PRE_COMMANDS + list(
             map(call, scope_setup_commands)) + POST_COMMANDS
 
@@ -154,8 +155,8 @@ def test_run_command_empty(mock_connect, mock_write, mock_query, mock_close):
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="TRACE_C",
-        trigger_channel="TRIGGER_C",
+        trace_channel="C1",
+        trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
@@ -184,8 +185,8 @@ def test_run_command_command_then_query(mock_connect, mock_write, mock_query,
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="TRACE_C",
-        trigger_channel="TRIGGER_C",
+        trace_channel="C1",
+        trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
@@ -227,8 +228,8 @@ def test_run_command_command_query_updates_scope_answers(
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="TRACE_C",
-        trigger_channel="TRIGGER_C",
+        trace_channel="C1",
+        trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
@@ -265,8 +266,8 @@ def test_run_command_method(mock_set_trig_delay, mock_connect, mock_write,
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="TRACE_C",
-        trigger_channel="TRIGGER_C",
+        trace_channel="C1",
+        trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",

@@ -13,14 +13,15 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-from typing import Literal, Optional
-from typing_extensions import TypeAlias
+from types import TracebackType
+from typing import Any, Literal, Optional
+from typing_extensions import Self, TypeAlias
 
 from scaaml.capture.scope.scope_base import AbstractSScope
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
 
-class PicoScope(AbstractSScope):
+class PicoScope(AbstractSScope[PicoScope6424E]):
     """Scope context manager."""
     CHANNEL_T: TypeAlias = Literal["A", "B", "C", "D", "E", "F", "G", "H",
                                    "PORT0", "PORT1"]
@@ -35,7 +36,8 @@ class PicoScope(AbstractSScope):
                  trace_bw_limit: BW_LIMIT_T, trace_ignore_overflow: bool,
                  trigger_channel: CHANNEL_T, trigger_hysteresis: Optional[str],
                  trigger_pin: Optional[int], trigger_range: float,
-                 trigger_level: float, trigger_coupling: COUPLING_T, **_):
+                 trigger_level: float, trigger_coupling: COUPLING_T,
+                 **_: Any) -> None:
         """Create scope context.
 
         Args:
@@ -94,9 +96,9 @@ class PicoScope(AbstractSScope):
         self._trigger_coupling: PicoScope.COUPLING_T = trigger_coupling
 
         # Scope object
-        self._scope = None
+        self._scope: Optional[PicoScope6424E] = None
 
-    def __enter__(self):  # pragma: no cover
+    def __enter__(self) -> Self:  # pragma: no cover
         """Create scope context.
 
         Suppose that the signal is channel A and the trigger is channel B.
@@ -112,9 +114,10 @@ class PicoScope(AbstractSScope):
 
         # Trace channel settings.
         self._scope.trace.channel = self._trace_channel
-        self._scope.trace.range = self._trace_probe_range
+        # pylint: disable=line-too-long
+        self._scope.trace.range = self._trace_probe_range  # type: ignore[assignment]
+        # pylint: enable=line-too-long
         self._scope.trace.coupling = self._trace_coupling
-        self._scope.trace.range = self._trace_probe_range
         self._scope.trace.probe_attenuation = self._trace_attenuation
         self._scope.trace.bw_limit = self._trace_bw_limit
         self._scope.ignore_overflow = self._ignore_overflow
@@ -126,7 +129,9 @@ class PicoScope(AbstractSScope):
         self._scope.trigger.trigger_level = self._trigger_level
         self._scope.trigger.coupling = self._trigger_coupling
         self._scope.trigger.probe_attenuation = "1:1"
-        self._scope.trigger.range = self._trigger_range
+        # pylint: disable=line-too-long
+        self._scope.trigger.range = self._trigger_range  # type: ignore[assignment]
+        # pylint: enable=line-too-long
 
         # Number of samples settings.
         self._scope.sample_rate = self._sample_rate
@@ -135,7 +140,9 @@ class PicoScope(AbstractSScope):
 
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb) -> None:  # pragma: no cover
+    def __exit__(self, exc_type: Optional[type[BaseException]],
+                 exc_value: Optional[BaseException],
+                 exc_tb: Optional[TracebackType]) -> None:  # pragma: no cover
         """Safely close all resources.
 
         Args:

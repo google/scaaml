@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Iterator, Literal, Optional
+from typing import Any, Dict, Iterator, Literal, Optional
 
 from scaaml.io import Dataset
+
+DatasetType = Literal["Training", "Validation"]
 
 
 class AbstractSCryptoAlgorithm(ABC):
@@ -24,7 +26,7 @@ class AbstractSCryptoAlgorithm(ABC):
 
     def __init__(self,
                  firmware_sha256: str,
-                 crypto_implementation,
+                 crypto_implementation: Any,
                  purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,
@@ -67,7 +69,7 @@ class AbstractSCryptoAlgorithm(ABC):
         self._plaintexts = plaintexts
         self._repetitions = repetitions
         self._examples_per_shard = examples_per_shard
-        self._purpose = purpose
+        self._purpose: Dataset.SPLIT_T = purpose
         self._kt_filename = full_kt_filename
         self._progress_filename = full_progress_filename
         self._full_kt_filename = full_kt_filename
@@ -102,66 +104,66 @@ class AbstractSCryptoAlgorithm(ABC):
         return aps
 
     @property
-    def kti(self):
+    def kti(self) -> Optional[Iterator]:
         """Key-plaintext iterator."""
         return self._kti
 
     @property
-    def examples_per_shard(self):
+    def examples_per_shard(self) -> int:
         """How many traces are captured in a shard."""
         return self._examples_per_shard
 
     @property
-    def keys(self):
+    def keys(self) -> int:
         """Number of different keys generated."""
         return self._keys
 
     @property
-    def plaintexts(self):
+    def plaintexts(self) -> int:
         """Number of different plaintexts used with a single key."""
         return self._plaintexts
 
     @property
-    def repetitions(self):
+    def repetitions(self) -> int:
         """Number of times each (key,text) pair is repeated."""
         return self._repetitions
 
     @property
-    def key_len(self):
+    def key_len(self) -> int:
         """Length of the key in bytes."""
         return self._crypto_implementation.KEY_LENGTH
 
     @property
-    def plaintext_len(self):
+    def plaintext_len(self) -> int:
         """Length of the plaintext in bytes."""
         return self._crypto_implementation.PLAINTEXT_LENGTH
 
     @property
-    def firmware_sha256(self):
+    def firmware_sha256(self) -> str:
         """SHA256 hash of the firmware."""
         return self._firmware_sha256
 
     @property
-    def implementation(self):
+    def implementation(self) -> str:
         """The implementation used."""
         return self._implementation
 
     @property
-    def algorithm(self):
+    def algorithm(self) -> str:
         """The algorithm used."""
         return self._algorithm
 
     @property
-    def purpose(self):
+    def purpose(self) -> Dataset.SPLIT_T:
         """The parameter split in scaaml.io.Database.new_shard, in
         Dataset.SPLITS."""
         return self._purpose
 
     @property
-    def _dataset(self) -> Literal["Training", "Validation"]:
+    def _dataset(self) -> DatasetType:
         """Return the dataset type used in ktp_scaaml."""
         # purpose is used in scaaml.io.Dataset
-        purpose_to_dataset: Dict[str, Literal["Training", "Validation"]] = {
+        purpose_to_dataset: Dict[str, DatasetType] = {
             Dataset.TRAIN_SPLIT: "Training",
             Dataset.TEST_SPLIT: "Training",
             Dataset.HOLDOUT_SPLIT: "Validation",

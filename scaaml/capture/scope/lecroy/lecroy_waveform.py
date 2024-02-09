@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2023-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,12 @@
 import dataclasses
 import datetime
 import struct
-from typing import Tuple, Union
+from typing import Any, Dict, Tuple, Union, cast
 
 import numpy as np
+import numpy.typing as npt
+
+from scaaml.capture.scope.scope_template import ScopeTraceType
 
 
 class LecroyWaveform:
@@ -36,64 +39,69 @@ class LecroyWaveform:
     SUPPORTED_PROTOCOL_TEMPLATE_SHA = "0ad362abcbe5b15ada8410f22f65434240f" \
                                       "1206c7ba4b88847d422b0ee55096b"
 
-    def __init__(self, raw_data):
+    def __init__(self, raw_data: bytes) -> None:
         """Initialize the parser. Use the `parse` method with the `get_wave1`.
 
         Args:
           raw_data (iterable): Iterable of bytes.
         """
         self.raw_data = bytearray(raw_data)
-        self.d = {}
+        self.d: Dict[str, Any] = {}
         self._order = "<"
         self._unit = "b"
         self._ofs = 0
         self._wave_description = WaveDesc()
         self.parse()
 
-    def get_string(self, max_size=16) -> str:
+    def get_string(self, max_size: int = 16) -> str:
         """Parse a string from self.raw_data.
         """
         val = struct.unpack_from(f"{self._order:s}{max_size:d}s", self.raw_data,
                                  self._ofs)[0]
         self._ofs += max_size
-        return val.strip(b"\x00").decode("ascii")
+        return cast(bytes, val).strip(b"\x00").decode("ascii")
 
     def get_int8(self) -> int:
         """Parse int8 from self.raw_data.
         """
         self._ofs += 1
-        return struct.unpack_from("b", self.raw_data, self._ofs - 1)[0]
+        vals = struct.unpack_from("b", self.raw_data, self._ofs - 1)
+        return cast(int, vals[0])
 
     def get_int16(self) -> int:
         """Parse int16 from self.raw_data.
         """
         self._ofs += 2
-        return struct.unpack_from(f"{self._order:s}h", self.raw_data,
-                                  self._ofs - 2)[0]
+        vals = struct.unpack_from(f"{self._order:s}h", self.raw_data,
+                                  self._ofs - 2)
+        return cast(int, vals[0])
 
     def get_int32(self) -> int:
         """Parse int32 from self.raw_data.
         """
         self._ofs += 4
-        return struct.unpack_from(f"{self._order:s}l", self.raw_data,
-                                  self._ofs - 4)[0]
+        vals = struct.unpack_from(f"{self._order:s}l", self.raw_data,
+                                  self._ofs - 4)
+        return cast(int, vals[0])
 
     def get_float(self) -> float:
         """Parse float from self.raw_data.
         """
         self._ofs += 4
-        return struct.unpack_from(f"{self._order:s}f", self.raw_data,
-                                  self._ofs - 4)[0]
+        vals = struct.unpack_from(f"{self._order:s}f", self.raw_data,
+                                  self._ofs - 4)
+        return cast(float, vals[0])
 
     def get_double(self) -> float:
         """Parse double from self.raw_data.
         """
         self._ofs += 8
-        return struct.unpack_from(f"{self._order:s}d", self.raw_data,
-                                  self._ofs - 8)[0]
+        vals = struct.unpack_from(f"{self._order:s}d", self.raw_data,
+                                  self._ofs - 8)
+        return cast(float, vals[0])
 
     def unpack_wave(self, amount: int) -> Tuple[int]:
-        """Parse the whole waveform from self.raw_data. Increments the ofset
+        """Parse the whole waveform from self.raw_data. Increments the offset
         `self._ofs` by the number of parsed bytes.
 
         Args:
@@ -105,7 +113,7 @@ class LecroyWaveform:
         size = struct.calcsize(fmt)
         val = struct.unpack_from(fmt, self.raw_data, self._ofs)
         self._ofs += size
-        return val
+        return cast(Tuple[int], val)
 
     def get_timestamp(self) -> datetime.datetime:
         """Parse timestamp from self.raw_data.
@@ -125,33 +133,37 @@ class LecroyWaveform:
             int(1000 * (vals[0] - (int(vals[0])))),  # microseconds
         )
 
-    def get_raw_wave1(self):
+    def get_raw_wave1(self) -> npt.NDArray[np.uint16]:
         """Get raw (whole, all samples, no gain or offset compensation) wave.
         """
-        return self.d.get("wave1", np.array([]))
+        wave: npt.NDArray[np.uint16] = self.d.get("wave1",
+                                                  np.array([], dtype=np.uint16))
+        return wave
 
-    def get_wave1(self, first_sample=0, length=-1):
+    def get_wave1(self,
+                  first_sample: int = 0,
+                  length: int = -1) -> ScopeTraceType:
         """Get wave.
         """
         if length == 0:
             return np.array([], dtype=np.float32)
-        wave = np.array(self.get_raw_wave1(), dtype=np.float32)
+        wave: ScopeTraceType = np.array(self.get_raw_wave1(), dtype=np.float32)
         gain = self._wave_description.vertical_gain
         offset = self._wave_description.vertical_offset
-        scaled_wave = wave * gain - offset
+        scaled_wave: ScopeTraceType = wave * gain - offset
         end = scaled_wave.size
         if length > 0:
             end = min(end, length + first_sample)
         return scaled_wave[first_sample:end]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return human readable representation of self."""
         return {
             **self.d,
             **dataclasses.asdict(self._wave_description),
         }.__repr__()
 
-    def parse(self):
+    def parse(self) -> None:
         """Parse answer from LeCroy.
         """
         # BEGINNING OF WAVE DESCRIPTION BLOCK

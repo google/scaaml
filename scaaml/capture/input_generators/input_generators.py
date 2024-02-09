@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2023-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
 Usually represented as arrays of byte values.
 """
 
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 import numpy as np
+import numpy.typing as npt
+
+InputGeneratorT = npt.NDArray[np.int64]
 
 
 def single_bunch(length: int,
                  elements: int = 256,
-                 seed: Optional[int] = None) -> np.ndarray:
+                 seed: Optional[int] = None) -> InputGeneratorT:
     """Generate a single bunch of arrays (2D array -- rows * columns). Each row
     has elements chosen uniformly independently from range(elements). But two
     rows have no index where they are equal.
@@ -64,17 +67,17 @@ def single_bunch(length: int,
     """
     rng: np.random.Generator = np.random.default_rng(seed=seed)
 
-    transposed_result: List[np.ndarray] = []
+    transposed_result: List[InputGeneratorT] = []
 
     for _ in range(length):
         # One column (content of result[:, i]).
-        column: np.ndarray = np.arange(elements, dtype=np.int64)
+        column: InputGeneratorT = np.arange(elements, dtype=np.int64)
 
         # permuted does a copy, just to be sure rows are not constant.
         transposed_result.append(rng.permuted(column))
 
     # Convert to np
-    result: np.ndarray = np.array(transposed_result, dtype=np.int64)
+    result: InputGeneratorT = np.array(transposed_result, dtype=np.int64)
 
     # Transpose the output to get a list of arrays
     result = np.transpose(result)
@@ -82,7 +85,9 @@ def single_bunch(length: int,
     return result
 
 
-def balanced_generator(length: int, bunches: int = 1, elements: int = 256):
+def balanced_generator(length: int,
+                       bunches: int = 1,
+                       elements: int = 256) -> Iterator[InputGeneratorT]:
     """Generator of values for the training set. Feel free to use
     unrestricted_generator for holdout, but not for training split.
 
@@ -134,7 +139,7 @@ def balanced_generator(length: int, bunches: int = 1, elements: int = 256):
     >>> np.array(list(balanced_generator(5, bunches=2, elements=3)))
     """
     for _ in range(bunches):
-        bunch: np.ndarray = single_bunch(
+        bunch: InputGeneratorT = single_bunch(
             length=length,
             elements=elements,
             seed=None,  # random
@@ -145,7 +150,9 @@ def balanced_generator(length: int, bunches: int = 1, elements: int = 256):
             yield value
 
 
-def unrestricted_generator(length: int, bunches: int = 1, elements: int = 256):
+def unrestricted_generator(length: int,
+                           bunches: int = 1,
+                           elements: int = 256) -> Iterator[InputGeneratorT]:
     """Do not use this for the training set, use balanced_generator instead.
     Each element is chosen uniformly at random independently from others.
 

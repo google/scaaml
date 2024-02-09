@@ -13,6 +13,9 @@
 # limitations under the License.
 """Build and load tensorFlow dataset Record wrapper"""
 
+# Temporarily ignore this file until it's properly typed or reworked
+# mypy: ignore-errors
+
 import copy
 import math
 import json
@@ -1076,7 +1079,7 @@ class Dataset():
                   encoding="utf-8") as f:
             json.dump(self.get_config_dictionary(), f)
 
-    def write_config(self):
+    def write_config(self) -> None:
         """Force updating `info.json` file."""
         self._write_config()
 
