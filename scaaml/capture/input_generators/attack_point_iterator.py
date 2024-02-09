@@ -79,7 +79,19 @@ class AttackPointIteratorConstants(AttackPointIterator):
 
     def __init__(self, operation: str, name: str, length: int,
                  values: List[List[int]]) -> None:
-        """Initialize the constants to iterate."""
+        """Initialize the constants to iterate.
+        
+            Args:
+                operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+                name (str): The name represents the key name of the value.
+                length (int): The prescribed length for each list in values.
+                If one of the lists isn't the same length as this variable
+                it will raise an ListNotPrescribedLengthException.
+                values (List[List[int]]): List of lists of ints that gets
+                iterated through."""
         assert "constants" == operation
         self._name = name
         self._values = values
