@@ -197,8 +197,10 @@ class AttackPointIteratorRepeat(AttackPointIterator):
                 represents what the iterator does and what 
                 has to be in the config file. This is only used once to
                 double check if the operation is the correct one.
+
             configuration (Dict): The config for the iterated object
                 that will get repeated.
+                
             repetitions (int): This parameter decides how many times the
                 iterator gets repeated. If it is a negative number it
                 will repeat infinitely and if you call __len__ it will
