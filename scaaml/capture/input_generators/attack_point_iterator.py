@@ -91,6 +91,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
                 length (int): The prescribed length for each list in values.
                 If one of the lists isn't the same length as this variable
                 it will raise an ListNotPrescribedLengthException.
+
                 values (List[List[int]]): List of lists of ints that gets
                 iterated through."""
         assert "constants" == operation
