@@ -27,7 +27,7 @@ class APCounter:
     capturing a dataset.
 
     Example use:
-    counter = APCounter({'len': 16, 'max_val': 256})
+    counter = APCounter({"len": 16, "max_val": 256})
     counter.update([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     counts = counter.get_counts()  # counts[i][i] == 1 for i in range(16)
     """
@@ -66,7 +66,7 @@ class APCounter:
         """Convenience alternative of update, when the attack point is one-hot
         encoded.
         """
-        raise NotImplementedError('TODO(issue #89): Implement update_one_hot')
+        raise NotImplementedError("TODO(issue #89): Implement update_one_hot")
 
     def get_counts(self, byte: Optional[int] = None) -> npt.NDArray[np.int64]:
         """Return the counts. If byte is specified returns a one-dimensional
