@@ -71,6 +71,7 @@ keepdims
 keras
 kidx
 kidxs
+intp
 lecroy
 logit
 logits
