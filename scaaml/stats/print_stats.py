@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,10 @@ standalone."""
 from __future__ import annotations
 from collections import defaultdict
 from itertools import product
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Set, cast, get_args
+
+import numpy as np
+import numpy.typing as npt
 
 from tabulate import tabulate
 from tqdm import tqdm
@@ -27,10 +30,10 @@ from scaaml.io import Dataset
 from scaaml.stats.ap_counter import APCounter
 from scaaml.stats.ap_checker import APChecker
 from scaaml.stats.example_iterator import ExampleIterator
-from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofAVGofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofMAXofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofMINofTraces
+from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
 
 
 def _class_name(obj: object) -> str:
@@ -57,8 +60,8 @@ class PrintStats:
     print_stats.print()
     """
 
-    def __init__(self, measurements_info: Dict,
-                 attack_points_info: Dict) -> None:
+    def __init__(self, measurements_info: Dict[str, Any],
+                 attack_points_info: Dict[str, Dict[str, int]]) -> None:
         self._measurements_info = measurements_info
         self._attack_point_info = attack_points_info
         self._split_ap_counters = {
@@ -68,26 +71,29 @@ class PrintStats:
             } for split in Dataset.SPLITS
         }
 
-        self._all_trace_stats = lambda: [
-            # Add trace statistics here.
-            STDDEVofAVGofTraces(),
-            STDDEVofMAXofTraces(),
-            STDDEVofMINofTraces(),
-        ]
         self._split_trace_stats = {
             split: {
-                trace_name: self._all_trace_stats()
+                trace_name: self.get_all_trace_stats()
                 for trace_name in measurements_info
             } for split in Dataset.SPLITS
         }
         self._split_trace_group_stats: Dict[str, Dict[str, Dict[
             int, List[STDDEVofSTATofTraces]]]] = {
                 split: {
-                    trace_name: defaultdict(self._all_trace_stats)
+                    trace_name: defaultdict(self.get_all_trace_stats)
                     for trace_name in measurements_info
                 } for split in Dataset.SPLITS
             }
-        self._all_groups: Set = set()
+        self._all_groups: Set[int] = set()
+
+    @staticmethod
+    def get_all_trace_stats() -> List[STDDEVofSTATofTraces]:
+        # Add trace statistics here.
+        return [
+            STDDEVofAVGofTraces(),
+            STDDEVofMAXofTraces(),
+            STDDEVofMINofTraces(),
+        ]
 
     @staticmethod
     def from_config(dataset_path: str) -> PrintStats:
@@ -109,6 +115,8 @@ class PrintStats:
                         for shard in dataset.shards_list[split])
         prod = list(product(all_splits, all_groups, all_parts))
         for split, group, part in tqdm(prod):
+            assert split in get_args(Dataset.SPLIT_T)
+            split = cast(Dataset.SPLIT_T, split)
             example_iterator = ExampleIterator(dataset_path=dataset_path,
                                                split=split,
                                                group=group,
@@ -121,8 +129,8 @@ class PrintStats:
         print_stats.print()
         return print_stats
 
-    def add_example(self, example: Dict, split: Dataset.SPLIT_T, group: int,
-                    part: int) -> None:
+    def add_example(self, example: Dict[str, npt.NDArray[np.generic]],
+                    split: Dataset.SPLIT_T, group: int, part: int) -> None:
         """Add another example.
 
         Args:
@@ -137,7 +145,8 @@ class PrintStats:
         self._all_groups.add(group)
         for ap_name in self._attack_point_info:
             for ap_counter in self._split_ap_counters[split][ap_name]:
-                ap_counter.update(attack_point=example[ap_name])
+                ap_counter.update(
+                    attack_point=cast(List[int], example[ap_name]))
         for trace_name in self._measurements_info:
             for trace_stat in self._split_trace_stats[split][trace_name]:
                 trace_stat.update(trace=example[trace_name])
@@ -145,7 +154,7 @@ class PrintStats:
                     group]:
                 trace_stat.update(trace=example[trace_name])
 
-    def _print_attack_point_warnings(self):
+    def _print_attack_point_warnings(self) -> None:
         """Print warnings for attack points."""
         print("Attack point check warnings:")
         for split in Dataset.SPLITS:
@@ -157,7 +166,7 @@ class PrintStats:
                     _ = APChecker(counts=ap_count.get_counts(),
                                   attack_point_name=ap_name)
 
-    def _print_trace_statistics(self):
+    def _print_trace_statistics(self) -> None:
         """Print table of statistics. Rows are statistics, columns are splits.
         """
         print("Trace statistics:")
@@ -165,7 +174,7 @@ class PrintStats:
             print("")
             table: List[List[str]] = [[f"{trace_name} stats", *Dataset.SPLITS]]
             # Fill the statistic names.
-            for trace_stat in self._all_trace_stats():
+            for trace_stat in self.get_all_trace_stats():
                 trace_stat_name = _class_name(trace_stat)
                 table.append([trace_stat_name, *["0" for _ in Dataset.SPLITS]])
             # Fill the values.
@@ -177,14 +186,14 @@ class PrintStats:
                     # Check that we are filling the right row.
                     assert _class_name(trace_stat) == table[j + 1][0]
                     table[j + 1][i + 1] = str(trace_stat.result())
-        print(tabulate(table, headers="firstrow"))
+            print(tabulate(table, headers="firstrow"))
 
-    def _print_trace_statistics_per_group(self):
+    def _print_trace_statistics_per_group(self) -> None:
         """Print a table of results for each statistics. Rows are groups,
         columns are splits."""
         print("Trace statistics per group:")
         for trace_name in self._measurements_info:
-            for i, trace_stat in enumerate(self._all_trace_stats()):
+            for i, trace_stat in enumerate(self.get_all_trace_stats()):
                 print("")
                 print(f"{trace_name} {_class_name(trace_stat)}:")
                 table: List[List[str]] = [["group", *Dataset.SPLITS]]
@@ -202,7 +211,7 @@ class PrintStats:
                 print(tabulate(table, headers="firstrow"))
 
     @staticmethod
-    def _print_separator():
+    def _print_separator() -> None:
         """Print separator between two blocks of warnings / statistics."""
         print("")
         print("-------------------------------------------")
