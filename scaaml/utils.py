@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2020-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +15,20 @@
 
 from multiprocessing import Pool
 from random import randint
+from typing import Any, Dict, List, Sequence
 import time
 
 from glob import glob
-from termcolor import cprint, termcolor
+from termcolor import cprint
+from termcolor._types import Color
 from tqdm.auto import tqdm
-import chipwhisperer as cw
+from chipwhisperer.common.traces import Trace
 import numpy as np
+import numpy.typing as npt
 import tensorflow as tf
 
 
-def pretty_hex(val):
+def pretty_hex(val: int) -> str:
     "convert a value into a pretty hex"
     s = hex(int(val))
     s = s[2:]  # remove 0x
@@ -34,7 +37,7 @@ def pretty_hex(val):
     return s.upper()
 
 
-def bytelist_to_hex(lst: list, spacer: str = " ") -> str:
+def bytelist_to_hex(lst: Sequence[int], spacer: str = " ") -> str:
     h = []
 
     for e in lst:
@@ -42,7 +45,9 @@ def bytelist_to_hex(lst: list, spacer: str = " ") -> str:
     return spacer.join(h)
 
 
-def hex_display(lst, prefix="", color="green"):
+def hex_display(lst: Sequence[int],
+                prefix: str = "",
+                color: Color = "green") -> None:
     "display a list of int as colored hex"
     h = []
     if len(prefix) > 0:
@@ -52,21 +57,22 @@ def hex_display(lst, prefix="", color="green"):
     cprint(prefix + " ".join(h), color)
 
 
-def get_model_stub(attack_point, attack_byte, config):
+def get_model_stub(attack_point: str, attack_byte: int,
+                   config: Dict[str, str]) -> str:
     return (f"{config['device']}-{config['algorithm']}-{config['model']}-"
             f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-"
             f"len_{config['max_trace_len']}")
 
 
-def get_target_stub(config):
+def get_target_stub(config: Dict[str, str]) -> str:
     return f"{config['device']}-{config['algorithm']}"
 
 
-def get_num_gpu():
+def get_num_gpu() -> int:
     return len(tf.config.list_physical_devices("GPU"))
 
 
-def tf_cap_memory():
+def tf_cap_memory() -> None:
     gpus = tf.config.experimental.list_physical_devices("GPU")
 
     if gpus:
@@ -78,7 +84,7 @@ def tf_cap_memory():
                 print(e)
 
 
-def convert_shard_to_cw(info):
+def convert_shard_to_cw(info: Dict[str, Any]) -> List[Trace]:
     # avoid trashing the HD by de-synchronizing multi process
     time.sleep(randint(0, 100) / 1000)
     cw_traces = []
@@ -92,13 +98,14 @@ def convert_shard_to_cw(info):
         wave = np.squeeze(shard["traces"][idx])
         wave = wave[:info["trace_len"]]
 
-        t = cw.Trace(wave, pts[idx], cts[idx], keys[idx])
+        t = Trace(wave, pts[idx], cts[idx], keys[idx])
         cw_traces.append(t)
     return cw_traces
 
 
-def convert_to_chipwhisperer_format(file_pattern, num_shards,
-                                    num_traces_by_shard, trace_len):
+def convert_to_chipwhisperer_format(file_pattern: str, num_shards: int,
+                                    num_traces_by_shard: int,
+                                    trace_len: int) -> List[Trace]:
 
     filenames = glob(file_pattern)[:num_shards]
     num_traces = len(filenames) * num_traces_by_shard
@@ -123,7 +130,7 @@ def convert_to_chipwhisperer_format(file_pattern, num_shards,
         return cw_traces
 
 
-def display_config(config_name, config):
+def display_config(config_name: str, config: Dict[str, str]) -> None:
     """Pretty print a config object in terminal.
 
     Args:
@@ -133,14 +140,14 @@ def display_config(config_name, config):
     cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
-        color: termcolor.Color = "yellow"
+        color: Color = "yellow"
         if cnt % 2:
             color = "cyan"
         cprint(f"{k}:{v}", color)
         cnt += 1
 
 
-def from_categorical(predictions):
+def from_categorical(predictions: Sequence[npt.ArrayLike]) -> List[np.intp]:
     "reverse of categorical"
     # note: doing it as a list is significantly faster than a single argmax
     return [np.argmax(p) for p in predictions]

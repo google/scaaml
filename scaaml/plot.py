@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2020-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,18 @@
 # limitations under the License.
 """Plotting functions."""
 
+from typing import Optional, Sequence, Union, cast
+
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
+from matplotlib.colors import Colormap
 import tensorflow as tf
 
 
-def plot_heatmap(batch, cmap="Reds", title=None):
+def plot_heatmap(batch: npt.NDArray[np.generic],
+                 cmap: Optional[Union[str, Colormap]] = "Reds",
+                 title: Optional[str] = None) -> None:
     plt.figure(figsize=(15, 5))
 
     # its a batch
@@ -39,14 +45,14 @@ def plot_heatmap(batch, cmap="Reds", title=None):
     plt.imshow(data, cmap=cmap)
 
     plt.yticks([])
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]
 
 
-def plot_trace(trace,
-               title=None,
-               plot_avg=False,
-               plot_std=False,
-               x_labels=None):
+def plot_trace(trace: npt.NDArray[np.float64],
+               title: Optional[str] = None,
+               plot_avg: bool = False,
+               plot_std: bool = False,
+               x_labels: Optional[Sequence[str]] = None) -> None:
     plt.figure(figsize=(15, 5))
     plt.plot(trace)
 
@@ -54,7 +60,10 @@ def plot_trace(trace,
         plt.plot(np.repeat(np.average(trace), len(trace)))
 
     if plot_std:
-        plt.plot(np.repeat(np.average(trace) + np.std(trace), len(trace)))
+        plt.plot(
+            np.repeat(
+                cast(np.float64, np.average(trace)) +
+                cast(npt.NDArray[np.float64], np.std(trace)), len(trace)))
 
     if title:
         plt.title(title)
@@ -62,15 +71,17 @@ def plot_trace(trace,
     if x_labels:
         plt.xticks(list(range(len(trace))), x_labels)
 
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]
 
 
-def plot_comparison(traces, labels, title):
+def plot_comparison(traces: Sequence[npt.ArrayLike], labels: Sequence[str],
+                    title: str) -> None:
     "Color coded comparison"
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
         label = labels[idx]
         label_lower: str = label.lower()
+        color: Optional[str] = None
         if label == "SNR":
             color = "#8E24AA"
         elif "activation" in label_lower:
@@ -83,10 +94,12 @@ def plot_comparison(traces, labels, title):
 
     plt.title(title)
     plt.legend()
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]
 
 
-def plot_trace_and_trigger(trace, trigger, fig_filename="capture.png"):
+def plot_trace_and_trigger(trace: npt.NDArray[np.generic],
+                           trigger: npt.NDArray[np.generic],
+                           fig_filename: str = "capture.png") -> None:
     """Plot trace and trigger."""
     plt.clf()
     plt.plot(trace, color="blue")
@@ -94,7 +107,11 @@ def plot_trace_and_trigger(trace, trigger, fig_filename="capture.png"):
     plt.savefig(fig_filename)
 
 
-def plot_traces(traces, labels=None, title=None, xlabel=None, ylabel=None):
+def plot_traces(traces: Sequence[npt.NDArray[np.generic]],
+                labels: Optional[Sequence[str]] = None,
+                title: Optional[str] = None,
+                xlabel: Optional[str] = None,
+                ylabel: Optional[str] = None) -> None:
     plt.figure(figsize=(15, 5))
     for idx, trace in enumerate(traces):
         if labels:
@@ -110,22 +127,23 @@ def plot_traces(traces, labels=None, title=None, xlabel=None, ylabel=None):
         plt.xlabel(xlabel)
     if ylabel:
         plt.ylabel(ylabel)
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]
 
 
-def plot_target_distribution(class_ids, title="Y distributions"):
+def plot_target_distribution(class_ids: npt.NDArray[np.generic],
+                             title: str = "Y distributions") -> None:
     plt.title(f"{title} {len(class_ids)} examples")
     plt.hist(class_ids, bins=256)
     plt.xlabel("target value")
     plt.ylabel("example counts")
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]
 
 
-def plot_confusion_matrix(class_ids,
-                          predicted_class_ids,
-                          title="Confusion matrix",
-                          cmap=None,
-                          normalize=True):
+def plot_confusion_matrix(class_ids: Sequence[int],
+                          predicted_class_ids: Sequence[int],
+                          title: str = "Confusion matrix",
+                          cmap: Optional[Union[str, Colormap]] = None,
+                          normalize: bool = True) -> None:
     """ Compute and plot the confusion matrix
 
     Args:
@@ -153,4 +171,4 @@ def plot_confusion_matrix(class_ids,
     plt.tight_layout()
     plt.ylabel("True intermediate values")
     plt.xlabel("Predicted intermediate values")
-    plt.show()
+    plt.show()  # type: ignore[no-untyped-call]

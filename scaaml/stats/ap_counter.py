@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
 # limitations under the License.
 """Counts how many times each value of each attack point appears."""
 
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, cast
 
 import numpy as np
+import numpy.typing as npt
 
 
 class APCounter:
@@ -26,7 +27,7 @@ class APCounter:
     capturing a dataset.
 
     Example use:
-    counter = APCounter({'len': 16, 'max_val': 256})
+    counter = APCounter({"len": 16, "max_val": 256})
     counter.update([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     counts = counter.get_counts()  # counts[i][i] == 1 for i in range(16)
     """
@@ -39,8 +40,8 @@ class APCounter:
             assumed that this dictionary contains 'len' and 'max_val' (both
             natural numbers).
         """
-        self._len = attack_point_info['len']
-        self._max_val = attack_point_info['max_val']
+        self._len = attack_point_info["len"]
+        self._max_val = attack_point_info["max_val"]
         self._cnt = np.zeros((self._len, self._max_val), dtype=np.int64)
         self._byte_numbers = np.arange(self._len)
 
@@ -61,13 +62,13 @@ class APCounter:
         assert len(attack_point) == self._len
         self._cnt[self._byte_numbers, attack_point] += 1
 
-    def update_one_hot(self, attack_point: List[List]) -> None:
+    def update_one_hot(self, attack_point: List[List[int]]) -> None:
         """Convenience alternative of update, when the attack point is one-hot
         encoded.
         """
-        raise NotImplementedError('TODO(issue #89): Implement update_one_hot')
+        raise NotImplementedError("TODO(issue #89): Implement update_one_hot")
 
-    def get_counts(self, byte: Union[None, int] = None) -> np.ndarray:
+    def get_counts(self, byte: Optional[int] = None) -> npt.NDArray[np.int64]:
         """Return the counts. If byte is specified returns a one-dimensional
         array of integers of length max_val. If byte is None returns a
         two-dimensional array of shape (len, max_val).
@@ -80,4 +81,4 @@ class APCounter:
         """
         if byte is None:
             return self._cnt
-        return self._cnt[byte]
+        return cast(npt.NDArray[np.int64], self._cnt[byte])
