@@ -68,6 +68,7 @@ def _build_attack_points_iterator(
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
         "repeat": AttackPointIteratorRepeat,
+        "zip": AttackPointIteratorZip,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -238,3 +239,32 @@ class AttackPointIteratorRepeat(AttackPointIterator):
 
     def get_generated_keys(self) -> List[str]:
         return self._configuration_iterator.get_generated_keys()
+
+class AttackPointIteratorZip(AttackPointIterator):
+    "Attack point iterator abstract class."
+
+    def __init__(self, operation: str, operands: List) -> None:
+        assert "zip" == operation
+        self._operands = list(build_attack_points_iterator(operand) for operand in operands)
+        self._len = 0
+        for operand in self._operands:
+            try:
+                if self._len > len(operand) or self._len <= 0:
+                    self._len = len(operand)
+            except LengthIsInfiniteException:
+                self._len = -1
+
+    def __len__(self) -> int:
+        if self._len < 0:
+            raise LengthIsInfiniteException("The length is infinite!")
+        return self._len
+
+    def __iter__(self) -> AttackPointIteratorT:
+        return iter(dict((key, value[key]) for value in operand for key in value)
+                   for operand in zip(*self._operands))
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys = []
+        for operand in self._operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
