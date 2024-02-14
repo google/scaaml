@@ -56,7 +56,7 @@ def hex_display(lst: Sequence[int],
     cprint(prefix + " ".join(h), color)
 
 
-def get_model_stub(attack_point: str, attack_byte: str,
+def get_model_stub(attack_point: str, attack_byte: int,
                    config: Dict[str, str]) -> str:
     return (f"{config['device']}-{config['algorithm']}-{config['model']}-"
             f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-"
