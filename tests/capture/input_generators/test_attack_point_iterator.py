@@ -458,220 +458,252 @@ def test_repeat_memory():
         config["configuration"]["values"]) * config["repetitions"]
     assert python_process.memory_info().rss <= memory_threshold
 
+
 def test_attack_point_iterator_zip_same_lengths():
     values = [[0], [1], [2]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values
-            }
-        ]
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values
+        }]
     }
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
     output_len = len(output)
-    
-    assert output_iter == [{"key": [0], "plaintext": [0]}, {"key": [1], "plaintext": [1]},  {"key": [2], "plaintext": [2]}]
+
+    assert output_iter == [{
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }, {
+        "key": [2],
+        "plaintext": [2]
+    }]
     assert output_len == len(config["operands"][0]["values"])
+
 
 def test_attack_point_iterator_zip_different_lengths():
     values = [[0], [1], [2]]
-    values2= [[0], [1]]
+    values2 = [[0], [1]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values2
-            }
-        ]
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values2
+        }]
     }
 
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
     output_len = len(output)
 
-    assert output_iter == [{"key": [0], "plaintext": [0]}, {"key": [1], "plaintext": [1]}]
+    assert output_iter == [{
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }]
     assert output_len == len(config["operands"][1]["values"])
+
 
 def test_attack_point_iterator_zip_finite_and_infinite():
     values = [[0], [1]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "repeat",
-                "repetitions": -1,
-                "configuration": {
-                    "operation": "constants",
-                    "name": "key",
-                    "length": 1,
-                    "values": values
-                }
-            },
-            {
-                "operation": "repeat",
-                "repetitions": 2,
-                "configuration": {
-                    "operation": "constants",
-                    "name": "plaintext",
-                    "length": 1,
-                    "values": values
-                }
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
             }
-        ]
+        }, {
+            "operation": "repeat",
+            "repetitions": 2,
+            "configuration": {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }
+        }]
     }
 
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
     output_len = len(output)
 
-    assert output_iter == [{"key": [0], "plaintext": [0]}, {"key": [1], "plaintext": [1]}, {"key": [0], "plaintext": [0]}, {"key": [1], "plaintext": [1]}]
-    assert output_len == len(build_attack_points_iterator(config["operands"][1]))
+    assert output_iter == [{
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }, {
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }]
+    assert output_len == len(build_attack_points_iterator(
+        config["operands"][1]))
+
 
 def test_attack_point_iterator_zip_infinite_and_infinite():
     values = [[0], [1]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "repeat",
-                "repetitions": -1,
-                "configuration": {
-                    "operation": "constants",
-                    "name": "key",
-                    "length": 1,
-                    "values": values
-                }
-            },
-            {
-                "operation": "repeat",
-                "repetitions": -1,
-                "configuration": {
-                    "operation": "constants",
-                    "name": "plaintext",
-                    "length": 1,
-                    "values": values
-                }
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
             }
-        ]
+        }, {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }
+        }]
     }
     count = 0
-    for value1, value2 in zip(build_attack_points_iterator(config), zip(itertools.cycle(values), itertools.cycle(values))):
+    for value1, value2 in zip(
+            build_attack_points_iterator(config),
+            zip(itertools.cycle(values), itertools.cycle(values))):
         if count > 4:
             break
         count += 1
-        assert value1 == {config["operands"][0]["configuration"]["name"]: value2[0], config["operands"][1]["configuration"]["name"]: value2[1]}
+        assert value1 == {
+            config["operands"][0]["configuration"]["name"]: value2[0],
+            config["operands"][1]["configuration"]["name"]: value2[1]
+        }
 
 
 def test_attack_point_iterator_zip_duplicate_name():
     values = [[0], [1], [2]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            }
-        ]
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }]
     }
     with pytest.raises(ValueError):
         build_attack_points_iterator(config)
 
+
 def test_attack_point_iterator_zip_three_operands():
     values = [[0], [1]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "three",
-                "length": 1,
-                "values": values
-            }
-        ]
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "three",
+            "length": 1,
+            "values": values
+        }]
     }
 
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
     output_len = len(output)
 
-    assert output_iter == [{"key": [0], "plaintext": [0], "three": [0]}, {"key": [1], "plaintext": [1], "three": [1]}]
+    assert output_iter == [{
+        "key": [0],
+        "plaintext": [0],
+        "three": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1],
+        "three": [1]
+    }]
     assert output_len == len(config["operands"][1]["values"])
+
 
 def test_attack_point_iterator_zip_get_generated_keys():
     values = [[0], [1]]
     config = {
-        "operation": "zip",
-        "operands" : [
-            {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values
-            },
-            {
-                "operation": "constants",
-                "name": "three",
-                "length": 1,
-                "values": values
-            }
-        ]
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "three",
+            "length": 1,
+            "values": values
+        }]
     }
     output = build_attack_points_iterator(config)
 
-    assert output.get_generated_keys() == [config["operands"][0]["name"], config["operands"][1]["name"], config["operands"][2]["name"]]
+    assert output.get_generated_keys() == [
+        config["operands"][0]["name"], config["operands"][1]["name"],
+        config["operands"][2]["name"]
+    ]
+
 
 def test_attack_point_iterator_zip_no_operands():
     values = [[0], [1], [2]]
-    config = {
-        "operation": "zip",
-        "operands" : []
-    }
+    config = {"operation": "zip", "operands": []}
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
     output_len = len(output)

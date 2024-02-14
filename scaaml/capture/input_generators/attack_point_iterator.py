@@ -240,12 +240,25 @@ class AttackPointIteratorRepeat(AttackPointIterator):
     def get_generated_keys(self) -> List[str]:
         return self._configuration_iterator.get_generated_keys()
 
-class AttackPointIteratorZip(AttackPointIterator):
-    "Attack point iterator abstract class."
 
-    def __init__(self, operation: str, operands: List) -> None:
+class AttackPointIteratorZip(AttackPointIterator):
+    """Attack point iterator zip class. This class takes any amount of operands
+    and combines them just like the zip function in python."""
+
+    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+        """Initialize the zip iterate.
+          
+          Args:
+            operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+                
+            operands (List[Dict[str, Any]]): The operands are any number of
+                iterator configs that will be combined."""
         assert "zip" == operation
-        self._operands = list(build_attack_points_iterator(operand) for operand in operands)
+        self._operands = list(
+            build_attack_points_iterator(operand) for operand in operands)
         self._len = 0
         for operand in self._operands:
             try:
@@ -260,8 +273,11 @@ class AttackPointIteratorZip(AttackPointIterator):
         return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
-        return iter(dict((key, value[key]) for value in operand for key in value)
-                   for operand in zip(*self._operands))
+        return iter(
+            dict((key, value[key])
+                 for value in operand
+                 for key in value)
+            for operand in zip(*self._operands))
 
     def get_generated_keys(self) -> List[str]:
         generated_keys = []
