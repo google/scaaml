@@ -261,8 +261,10 @@ class AttackPointIteratorZip(AttackPointIterator):
         assert "zip" == operation
         self._operands = list(
             build_attack_points_iterator(operand) for operand in operands)
-        
-        list_of_lengths = [operand._len for operand in self._operands if operand._len >= 0]
+
+        list_of_lengths = [
+            operand._len for operand in self._operands if operand._len >= 0
+        ]
         if not self._operands:
             self._len = 0
         else:
@@ -274,11 +276,13 @@ class AttackPointIteratorZip(AttackPointIterator):
         return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
-        return iter(self.merge_dictionaries(tuple_of_dictionaries) for tuple_of_dictionaries in zip(*self._operands))
+        return iter(
+            self.merge_dictionaries(tuple_of_dictionaries)
+            for tuple_of_dictionaries in zip(*self._operands))
 
-    def merge_dictionaries(self, tuple) -> Dict:    
+    def merge_dictionaries(self, tuple_of_dictionaries) -> Dict:
         merged_dictionary = {}
-        for value in tuple:
+        for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
         return merged_dictionary
 
