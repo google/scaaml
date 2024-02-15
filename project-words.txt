@@ -4,6 +4,7 @@ Bursztein
 DSOWINDOW
 FULLSCREEN
 GPIB
+GPIO
 GRIDAREAONLY
 HWAES
 Invernizzi
@@ -51,6 +52,7 @@ cmap
 colorbar
 cprint
 crossentropy
+cwhardware
 cwnano
 cwscope
 ddict
