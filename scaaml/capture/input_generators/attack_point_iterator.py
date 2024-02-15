@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 import collections
 import copy
 import itertools
-from typing import Any, Dict, Iterator, List, Type
+from typing import Any, Dict, Iterator, List, Tuple, Type
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
@@ -30,10 +30,13 @@ AttackPointIteratorT = Iterator[Dict[str, Any]]
 
 class AttackPointIterator(ABC):
     "Attack point iterator abstract class."
+    _len: int
 
-    @abstractmethod
     def __len__(self) -> int:
         """Return the number of iterated elements."""
+        if self._len < 0:
+            raise LengthIsInfiniteException("The length is infinite!")
+        return self._len
 
     @abstractmethod
     def __iter__(self) -> AttackPointIteratorT:
@@ -68,6 +71,7 @@ def _build_attack_points_iterator(
         "balanced_generator": AttackPointIteratorBalancedGenerator,
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
         "repeat": AttackPointIteratorRepeat,
+        "zip": AttackPointIteratorZip,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -108,9 +112,7 @@ class AttackPointIteratorConstants(AttackPointIterator):
                     f"The prescribed length is {length} and "\
                     f"the length of {value} is {len(value)}."
                 )
-
-    def __len__(self) -> int:
-        return len(self._values)
+        self._len = len(self._values)
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in self._values)
@@ -137,9 +139,6 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
         self._bunches = bunches
         self._elements = elements
         self._len = self._bunches * self._elements
-
-    def __len__(self) -> int:
-        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value}
@@ -169,9 +168,6 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
         self._elements = elements
         self._bunches = bunches
         self._len = self._bunches * self._elements
-
-    def __len__(self) -> int:
-        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in unrestricted_generator(
@@ -225,11 +221,6 @@ class AttackPointIteratorRepeat(AttackPointIterator):
             self._repetitions = repetitions
             self._len = repetitions
 
-    def __len__(self) -> int:
-        if self._len < 0:
-            raise LengthIsInfiniteException("The length is infinite!")
-        return self._len
-
     def __iter__(self) -> AttackPointIteratorT:
         if self._repetitions < 0:
             return iter(itertools.cycle(self._configuration_iterator))
@@ -238,3 +229,53 @@ class AttackPointIteratorRepeat(AttackPointIterator):
 
     def get_generated_keys(self) -> List[str]:
         return self._configuration_iterator.get_generated_keys()
+
+
+class AttackPointIteratorZip(AttackPointIterator):
+    """Attack point iterator zip class. This class takes any amount of operands
+    and combines them just like the `zip` function in Python."""
+
+    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+        """Initialize the zip iterator.
+          
+          Args:
+            operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+                
+            operands (List[Dict[str, Any]]): The operands are any number of
+                iterator configs that will be combined."""
+        assert "zip" == operation
+        self._operands = list(
+            build_attack_points_iterator(operand) for operand in operands)
+
+        non_negative_lengths = [
+            operand._len for operand in self._operands if operand._len >= 0
+        ]
+        if not self._operands:
+            self._len = 0
+        else:
+            # If `non_negative_lengths` is empty it means that all
+            # operands are infinite.
+            self._len = min(non_negative_lengths, default=-1)
+
+    def __iter__(self) -> AttackPointIteratorT:
+        return iter(
+            self.merge_dictionaries(tuple_of_dictionaries)
+            for tuple_of_dictionaries in zip(*self._operands))
+
+    @staticmethod
+    def merge_dictionaries(
+        tuple_of_dictionaries: Tuple[Dict[str,
+                                          List[int]]]) -> Dict[str, List[int]]:
+        merged_dictionary = {}
+        for value in tuple_of_dictionaries:
+            merged_dictionary.update(value)
+        return merged_dictionary
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys = []
+        for operand in self._operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
