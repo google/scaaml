@@ -14,7 +14,7 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, Literal, Optional, Type
+from typing import Any, Dict, Iterator, List, Literal, Optional, Type
 
 from scaaml.io import Dataset
 from scaaml.aes_forward import AESSBOX
@@ -90,7 +90,7 @@ class AbstractSCryptoAlgorithm(ABC):
         """Returns the attack points info."""
         return self._crypto_implementation.ATTACK_POINTS_INFO
 
-    def attack_points(self, **kwargs: bytearray) -> Dict[str, bytearray]:
+    def attack_points(self, **kwargs: bytearray) -> Dict[str, List[int]]:
         """Returns the attack points for specific parameters (such as the
         key-text pair).
 

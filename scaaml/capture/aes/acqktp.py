@@ -14,7 +14,7 @@
 """Generating uniformly distributed keys."""
 
 import random
-from typing import Iterable, Iterator, Optional, Tuple
+from typing import Iterator, Optional, Tuple
 from typing_extensions import Self
 
 import numpy as np
@@ -22,8 +22,6 @@ import numpy.typing as npt
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
 
-# This is legacy code, we don't really want to dig into proper typing
-# mypy: ignore-errors
 class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     """Class for getting uniformly distributed keys and plaintexts for SCAAML.
 
@@ -42,13 +40,14 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
     DATASET_TYPES: Tuple[str, ...] = (DATASET_TRAINING, DATASET_VALIDATION)
 
     def __init__(self) -> None:
-        AcqKeyTextPattern_Base.__init__(self)
+        AcqKeyTextPattern_Base.__init__(self)  # type: ignore[no-untyped-call]
         self._pt_per_key = 256
         self._repeat = 4
         self._nbkeys = 3072
 
         self._dataset = self.DATASET_TRAINING
-        self._input_generator: Optional[Iterable] = None
+        self._input_generator: Optional[Iterator[Tuple[bytearray,
+                                                       bytearray]]] = None
         self._input_shape = (self._key_len, self._text_len)
 
         self._key = bytearray(
@@ -135,8 +134,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             # shouldn't happen while generating a given dataset but may happen
             # when generating different datasets for different algorithms using
             # the GUI.
-            self._input_generator: Optional[Iterator[Tuple[bytearray,
-                                                           bytearray]]] = None
+            self._input_generator = None
         if not self._input_generator:
             if self._dataset == self.DATASET_TRAINING:
                 self._input_generator = self._get_dataset_generator()
@@ -156,7 +154,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             values, counts = np.unique(matrix, return_counts=True)
             if len(values) != 256:
                 return False
-            return (counts == (length * num_batch)).all()
+            return bool((counts == (length * num_batch)).all())
 
         def generate_matrix(length: int) -> npt.NDArray[np.uint8]:
             """Generate a length x 256 matrix that spread values with no
@@ -227,8 +225,9 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                              f"Currently set to {self._dataset}")
 
         # Check pair works with target
-        self.validateKey()
-        self.validateText()
+        # Chipwhisperer isn't fully typed
+        self.validateKey()  # type: ignore[no-untyped-call]
+        self.validateText()  # type: ignore[no-untyped-call]
 
         return self._key, self._textin
 

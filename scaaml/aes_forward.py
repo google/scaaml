@@ -13,7 +13,7 @@
 # limitations under the License.
 """Provides attack points for AES."""
 
-from typing import Callable, cast
+from typing import Callable, List, cast
 
 
 class AESSBOX:
@@ -99,7 +99,7 @@ class AESSBOX:
 
     @classmethod
     def get_attack_point(cls, name: str, key: bytearray,
-                         plaintext: bytearray) -> bytearray:
+                         plaintext: bytearray) -> List[int]:
         """Return the correct attack point.
 
         Typical usage example:
@@ -113,5 +113,5 @@ class AESSBOX:
         if not function or not callable(function):
             raise ValueError(f"{name} is not a defined attack point")
         function = cast(Callable[[bytearray, bytearray], bytearray], function)
-        value: bytearray = function(key, plaintext)
+        value = list(function(key, plaintext))
         return value

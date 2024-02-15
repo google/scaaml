@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Build and load tensorFlow dataset Record wrapper"""
+
+from typing import Dict, List
 
 from tqdm import tqdm
 
@@ -152,7 +154,7 @@ def reshape_into_new_dataset(old_ds: Dataset,
 
                     # Write the example (open new shards automatically).
                     dataset_filler.write_example(
-                        attack_points=attack_points,
+                        attack_points=attack_points,  # type: ignore[arg-type]
                         measurement=measurement,
                         current_key=cur_key,
                         split_name=split,
