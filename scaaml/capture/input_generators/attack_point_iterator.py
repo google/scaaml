@@ -30,6 +30,7 @@ AttackPointIteratorT = Iterator[Dict[str, Any]]
 
 class AttackPointIterator(ABC):
     "Attack point iterator abstract class."
+    _len: int
 
     @abstractmethod
     def __len__(self) -> int:
@@ -109,9 +110,10 @@ class AttackPointIteratorConstants(AttackPointIterator):
                     f"The prescribed length is {length} and "\
                     f"the length of {value} is {len(value)}."
                 )
+        self._len = len(self._values)
 
     def __len__(self) -> int:
-        return len(self._values)
+        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in self._values)
@@ -259,17 +261,12 @@ class AttackPointIteratorZip(AttackPointIterator):
         assert "zip" == operation
         self._operands = list(
             build_attack_points_iterator(operand) for operand in operands)
-        self._len = 0
-        for operand in self._operands:
-            try:
-                if len(operand) == 0:
-                    break
-                if self._len > len(operand) or self._len <= 0:
-                    self._len = len(operand)
-            except LengthIsInfiniteException:
-                if self._len == 0:
-                    self._len = -1
-                
+        
+        list_of_lengths = [operand._len for operand in self._operands if operand._len >= 0]
+        if not self._operands:
+            self._len = 0
+        else:
+            self._len = min(list_of_lengths, default=-1)
 
     def __len__(self) -> int:
         if self._len < 0:
@@ -277,11 +274,13 @@ class AttackPointIteratorZip(AttackPointIterator):
         return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
-        return iter(
-            dict((key, value[key])
-                 for value in operand
-                 for key in value)
-            for operand in zip(*self._operands))
+        return iter(self.merge_dictionaries(tuple_of_dictionaries) for tuple_of_dictionaries in zip(*self._operands))
+
+    def merge_dictionaries(self, tuple) -> Dict:    
+        merged_dictionary = {}
+        for value in tuple:
+            merged_dictionary.update(value)
+        return merged_dictionary
 
     def get_generated_keys(self) -> List[str]:
         generated_keys = []

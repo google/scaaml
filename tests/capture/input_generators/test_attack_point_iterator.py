@@ -776,7 +776,6 @@ def test_attack_point_iterator_zip_get_generated_keys():
 
 
 def test_attack_point_iterator_zip_no_operands():
-    values = [[0], [1], [2]]
     config = {"operation": "zip", "operands": []}
     output = build_attack_points_iterator(config)
     output_iter = list(iter(output))
