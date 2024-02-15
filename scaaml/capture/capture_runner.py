@@ -13,8 +13,11 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, NamedTuple, Sequence, Tuple
 from tqdm.auto import tqdm
+
+import numpy as np
+import numpy.typing as npt
 
 from scaaml.io import Dataset
 from scaaml.io import DatasetFiller
@@ -31,7 +34,7 @@ from scaaml.capture.scope import AbstractSScope
 class AbstractCaptureRunner(ABC):
     """Abstract class for capturing the dataset."""
 
-    def __init__(self, crypto_algorithms: List[AbstractSCryptoAlgorithm],
+    def __init__(self, crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
                  communication: AbstractSCommunication,
                  control: AbstractSControl, scope: AbstractSScope,
                  dataset: Dataset) -> None:
@@ -76,8 +79,9 @@ class AbstractCaptureRunner(ABC):
 
     @abstractmethod
     def get_attack_points_and_measurement(
-            self, crypto_alg: AbstractSCryptoAlgorithm,
-            crypto_input: AbstractCryptoInput) -> Tuple[Dict, Dict]:
+        self, crypto_alg: AbstractSCryptoAlgorithm,
+        crypto_input: AbstractCryptoInput
+    ) -> Tuple[Dict[str, bytearray], Dict[str, npt.NDArray[np.generic]]]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
@@ -114,7 +118,9 @@ class AbstractCaptureRunner(ABC):
         # TODO(#183) Plot the measured trace
         if hasattr(self._scope, "print_screen"):
             # Use native print_screen
-            self._scope.print_screen(self._dataset.path / "print_screen.png")
+            print_screen_fn = getattr(self._scope, "print_screen")
+            assert callable(print_screen_fn)
+            print_screen_fn(self._dataset.path / "print_screen.png")
 
     def capture(self) -> None:
         """Start (or resume) and finish the capture."""

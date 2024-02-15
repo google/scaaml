@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """CaptureRunner runs the capture."""
-from typing import Dict, Tuple
+from typing import Dict, NamedTuple, Optional, Tuple
+
+import numpy as np
+import numpy.typing as npt
 
 import chipwhisperer as cw
+from chipwhisperer.common.traces import Trace
+from chipwhisperer.common.utils import util as cw_util
 
 from scaaml.capture.capture_runner import AbstractCaptureRunner
+from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.aes.crypto_input import CryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 
@@ -24,7 +30,7 @@ from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 class CaptureRunner(AbstractCaptureRunner):
     """Class for capturing the dataset."""
 
-    def get_crypto_input(self, kt_element) -> CryptoInput:
+    def get_crypto_input(self, kt_element: NamedTuple) -> AbstractCryptoInput:
         """Process single element from ResumeKTI and return information for
         the crypto algorithm.
 
@@ -37,7 +43,7 @@ class CaptureRunner(AbstractCaptureRunner):
         """
         return CryptoInput(kt_element=kt_element)
 
-    def capture_trace(self, crypto_input: CryptoInput):
+    def capture_trace(self, crypto_input: CryptoInput) -> Optional[Trace]:
         """Try to capture a single trace.
 
         Args:
@@ -52,8 +58,8 @@ class CaptureRunner(AbstractCaptureRunner):
             plaintext.
         """
         # Convert to cw bytearray, which has nicer __str__ and __repr__.
-        plaintext = cw.common.utils.util.bytearray(crypto_input.plaintext)
-        key = cw.common.utils.util.bytearray(crypto_input.key)
+        plaintext = cw_util.bytearray(crypto_input.plaintext)
+        key = cw_util.bytearray(crypto_input.key)
 
         # Get the scope object.
         scope = self._scope.scope
@@ -65,17 +71,17 @@ class CaptureRunner(AbstractCaptureRunner):
 
         # Capture the trace.
         # TODO(issue #79): Allow typechecking of this call.
-        trace = cw.capture_trace(
-            scope=scope,  # type: ignore
-            target=target,
-            plaintext=plaintext,
-            key=key)
+        trace = cw.capture_trace(scope=scope,
+                                 target=target,
+                                 plaintext=plaintext,
+                                 key=key)
 
         return trace
 
-    def get_attack_points_and_measurement(self,
-                                          crypto_alg: AbstractSCryptoAlgorithm,
-                                          crypto_input) -> Tuple[Dict, Dict]:
+    def get_attack_points_and_measurement(
+        self, crypto_alg: AbstractSCryptoAlgorithm,
+        crypto_input: AbstractCryptoInput
+    ) -> Tuple[Dict[str, bytearray], Dict[str, npt.NDArray[np.generic]]]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
@@ -91,6 +97,7 @@ class CaptureRunner(AbstractCaptureRunner):
 
         Raises: If capturing failed in an unrecoverable way.
         """
+        assert isinstance(crypto_input, CryptoInput)
         while True:  # Make sure to capture the trace.
             trace = self.capture_trace(crypto_input=crypto_input)
             if trace:

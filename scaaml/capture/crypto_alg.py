@@ -14,9 +14,10 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, Literal, Optional
+from typing import Any, Dict, Iterator, Literal, Optional, Type
 
 from scaaml.io import Dataset
+from scaaml.aes_forward import AESSBOX
 
 DatasetType = Literal["Training", "Validation"]
 
@@ -26,7 +27,7 @@ class AbstractSCryptoAlgorithm(ABC):
 
     def __init__(self,
                  firmware_sha256: str,
-                 crypto_implementation: Any,
+                 crypto_implementation: Type[AESSBOX],
                  purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,
@@ -76,16 +77,16 @@ class AbstractSCryptoAlgorithm(ABC):
         self._full_progress_filename = full_progress_filename
 
         # Initialized in a child class.
-        self._kti: Optional[Iterator] = None
-        self._stabilization_ktp: Optional[Iterator] = None
+        self._kti: Optional[Iterator[Any]] = None
+        self._stabilization_ktp: Optional[Iterator[Any]] = None
 
     @abstractmethod
-    def get_stabilization_kti(self) -> Iterator:
+    def get_stabilization_kti(self) -> Iterator[Any]:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """
 
-    def attack_points_info(self) -> Dict:
+    def attack_points_info(self) -> Dict[str, Dict[str, int]]:
         """Returns the attack points info."""
         return self._crypto_implementation.ATTACK_POINTS_INFO
 
@@ -104,7 +105,7 @@ class AbstractSCryptoAlgorithm(ABC):
         return aps
 
     @property
-    def kti(self) -> Optional[Iterator]:
+    def kti(self) -> Optional[Iterator[Any]]:
         """Key-plaintext iterator."""
         return self._kti
 

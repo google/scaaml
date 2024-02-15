@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2020-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 """Backward AES."""
 
 import numpy as np
+import numpy.typing as npt
 
 # used for sub_bytes_out0
 SBREV = np.array([
@@ -36,7 +37,9 @@ SBREV = np.array([
 ])
 
 
-def ap_preds_to_key_preds(preds, plaintexts, attack_point):
+def ap_preds_to_key_preds(preds: npt.NDArray[np.generic],
+                          plaintexts: npt.NDArray[np.generic],
+                          attack_point: str) -> npt.NDArray[np.generic]:
     "Convert attack points predictions to key byte prediction"
 
     preds = np.array(preds)

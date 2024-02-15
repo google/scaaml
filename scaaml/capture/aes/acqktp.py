@@ -14,9 +14,11 @@
 """Generating uniformly distributed keys."""
 
 import random
-from typing import Iterable, Optional
+from typing import Iterable, Iterator, Optional, Tuple
+from typing_extensions import Self
 
 import numpy as np
+import numpy.typing as npt
 from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
 
@@ -34,12 +36,12 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
          ktp.init(0)
          key, text = ktp.new_pair()
     """
-    _name = "SCAAML"
-    DATASET_TRAINING = "Training"
-    DATASET_VALIDATION = "Validation"
-    DATASET_TYPES = (DATASET_TRAINING, DATASET_VALIDATION)
+    _name: str = "SCAAML"
+    DATASET_TRAINING: str = "Training"
+    DATASET_VALIDATION: str = "Validation"
+    DATASET_TYPES: Tuple[str, ...] = (DATASET_TRAINING, DATASET_VALIDATION)
 
-    def __init__(self):
+    def __init__(self) -> None:
         AcqKeyTextPattern_Base.__init__(self)
         self._pt_per_key = 256
         self._repeat = 4
@@ -55,30 +57,30 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             [random.randint(0, 255) for _ in range(self._text_len)])
 
     @property
-    def key_len(self):
+    def key_len(self) -> int:
         return self._key_len
 
     @key_len.setter
-    def key_len(self, n):
+    def key_len(self, n: int) -> None:
         self._key_len = n
         self._input_generator = None
 
     @property
-    def text_len(self):
+    def text_len(self) -> int:
         return self._text_len
 
     @text_len.setter
-    def text_len(self, n):
+    def text_len(self, n: int) -> None:
         self._text_len = n
         self._input_generator = None
 
     @property
-    def plaintext_per_key(self):
+    def plaintext_per_key(self) -> int:
         """How many different plaintexts are used with a single key."""
         return self._pt_per_key
 
     @plaintext_per_key.setter
-    def plaintext_per_key(self, val):
+    def plaintext_per_key(self, val: int) -> None:
         if self._dataset == self.DATASET_TRAINING:
             if val % 256:
                 raise ValueError("plaintext_per_key must be a multiple of 256")
@@ -89,34 +91,34 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             raise ValueError("Unsupported dataset type")
 
     @property
-    def repetitions(self):
+    def repetitions(self) -> int:
         """How many times is a concrete (key, plaintext) pair repeated."""
         return self._repeat
 
     @repetitions.setter
-    def repetitions(self, val):
+    def repetitions(self, val: int) -> None:
         """How many times is a concrete (key, plaintext) pair repeated."""
         self._repeat = val
 
     @property
-    def dataset(self):
+    def dataset(self) -> str:
         """dataset type"""
         return self._dataset
 
     @dataset.setter
-    def dataset(self, val):
+    def dataset(self, val: str) -> None:
         """set dataset type"""
         if val not in self.DATASET_TYPES:
             raise ValueError(f"dataset must be {self.DATASET_TYPES}")
         self._dataset = val
 
     @property
-    def nb_keys(self):
+    def nb_keys(self) -> int:
         """nb_keys"""
         return self._nbkeys
 
     @nb_keys.setter
-    def nb_keys(self, val):
+    def nb_keys(self, val: int) -> None:
         if self._dataset == self.DATASET_TRAINING:
             if val % 256:
                 raise ValueError("nb_keys must be a multiple of 256")
@@ -126,14 +128,15 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
         else:
             raise ValueError("Unsupported dataset type")
 
-    def init(self, maxtraces: int):
+    def init(self, maxtraces: int) -> None:
         del maxtraces  # unused
         if self._input_shape != (self.key_len, self.text_len):
             # Force recreating the generator if shape has changed. This
             # shouldn't happen while generating a given dataset but may happen
             # when generating different datasets for different algorithms using
             # the GUI.
-            self._input_generator = None
+            self._input_generator: Optional[Iterator[Tuple[bytearray,
+                                                           bytearray]]] = None
         if not self._input_generator:
             if self._dataset == self.DATASET_TRAINING:
                 self._input_generator = self._get_dataset_generator()
@@ -144,15 +147,18 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
     init_pair = init
 
-    def _generate_inputs(self):
+    def _generate_inputs(
+            self) -> Tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]:
 
-        def test_matrix(matrix, length, num_batch=1):
+        def test_matrix(matrix: npt.NDArray[np.uint8],
+                        length: int,
+                        num_batch: int = 1) -> bool:
             values, counts = np.unique(matrix, return_counts=True)
             if len(values) != 256:
                 return False
             return (counts == (length * num_batch)).all()
 
-        def generate_matrix(length):
+        def generate_matrix(length: int) -> npt.NDArray[np.uint8]:
             """Generate a length x 256 matrix that spread values with no
             repetition."""
             matrix = np.zeros((length, 256),
@@ -176,7 +182,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             pts.append(np.transpose(plain_text))
         return keys, np.transpose(pts, (0, 2, 1))
 
-    def _get_dataset_generator(self):
+    def _get_dataset_generator(self) -> Iterator[Tuple[bytearray, bytearray]]:
         self._input_shape = (self.key_len, self.text_len)
         for _ in range(0, self._nbkeys, 256):
             keys, pts = self._generate_inputs()
@@ -185,7 +191,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                     for _ in range(self._repeat):
                         yield bytearray(key_value), bytearray(plain_text)
 
-    def _get_random_generator(self):
+    def _get_random_generator(self) -> Iterator[Tuple[bytearray, bytearray]]:
         for _ in range(self._nbkeys):
             key = bytearray(
                 [random.randint(0, 255) for _ in range(self.key_len)])
@@ -195,18 +201,18 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                 for _ in range(self._repeat):
                     yield key, plain_text
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         """Return self as an iterator."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> Tuple[bytearray, bytearray]:
         """Convenience for calling new_pair (allow to use self in a for loop).
         """
         return self.new_pair()
 
-    def new_pair(self):
+    def new_pair(self) -> Tuple[bytearray, bytearray]:
         assert self._input_generator is not None
-        self._key, self._textin = next(self._input_generator)  # type: ignore
+        self._key, self._textin = next(self._input_generator)
         if self._dataset == self.DATASET_TRAINING:
             if self._pt_per_key % 256:
                 raise ValueError("plaintext_per_key must be a multiple of 256")
@@ -226,6 +232,6 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
         return self._key, self._textin
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (f"{self._name} ({self._dataset}, {self._pt_per_key}, "
                 f"{self._repeat}, {self._nbkeys})")

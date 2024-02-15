@@ -17,6 +17,9 @@ from typing import Optional
 from typing_extensions import Self
 
 import chipwhisperer as cw
+from chipwhisperer.capture.scopes import ScopeTypes
+from chipwhisperer.capture.targets import TargetTypes
+from chipwhisperer.capture.targets.SimpleSerial import SimpleSerial
 
 from scaaml.capture.communication import AbstractSCommunication
 
@@ -24,11 +27,11 @@ from scaaml.capture.communication import AbstractSCommunication
 class CWCommunication(AbstractSCommunication):
     """target in cw"""
 
-    def __init__(self, scope: Optional[cw.scopes.ScopeTypes]) -> None:
+    def __init__(self, scope: Optional[ScopeTypes]) -> None:
         """Initialize the communication object."""
         super().__init__()
-        self._scope: Optional[cw.scopes.ScopeTypes] = scope
-        self._target: Optional[cw.targets.TargetTypes] = None
+        self._scope: Optional[ScopeTypes] = scope
+        self._target: Optional[TargetTypes] = None
         self._protver = '1.1'
 
     def __enter__(self) -> Self:
@@ -37,9 +40,9 @@ class CWCommunication(AbstractSCommunication):
         # The scope is there because of communication with the target (it
         # communicated using single USB endpoint). Since CW 5.5 firmware
         # release it uses a separate USB UART.
-        self._target = cw.target(
-            self._scope, cw.targets.SimpleSerial)  # type: ignore[attr-defined]
-        self._target.protver = self._protver  # type: ignore
+        self._target = cw.target(self._scope, SimpleSerial)
+        if isinstance(self._target, SimpleSerial):
+            self._target.protver = self._protver
         self._scope = None
         return self
 
@@ -58,6 +61,6 @@ class CWCommunication(AbstractSCommunication):
         self._target = None
 
     @property
-    def target(self) -> Optional[cw.targets.TargetTypes]:
+    def target(self) -> Optional[TargetTypes]:
         """Returns the target object."""
         return self._target

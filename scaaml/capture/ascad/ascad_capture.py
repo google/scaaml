@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@ from scaaml.aes_forward import AESSBOX
 from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 from scaaml.capture.scope import PicoScope
 
+from typing import Any, Dict, Optional, Type
+
 
 def capture_ascad_default_parameters(
         firmware_sha256: str,
-        crypto_implementation=AESSBOX,
+        crypto_implementation: Type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",
@@ -29,7 +31,7 @@ def capture_ascad_default_parameters(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info=None,
+        measurements_info: Optional[Dict[str, Any]] = None,
         repetitions: int = 1,
         train_keys: int = 4 * 1024,
         train_plaintexts: int = 256,
