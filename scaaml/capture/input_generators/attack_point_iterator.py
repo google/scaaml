@@ -32,9 +32,11 @@ class AttackPointIterator(ABC):
     "Attack point iterator abstract class."
     _len: int
 
-    @abstractmethod
     def __len__(self) -> int:
         """Return the number of iterated elements."""
+        if self._len < 0:
+            raise LengthIsInfiniteException("The length is infinite!")
+        return self._len
 
     @abstractmethod
     def __iter__(self) -> AttackPointIteratorT:
@@ -112,9 +114,6 @@ class AttackPointIteratorConstants(AttackPointIterator):
                 )
         self._len = len(self._values)
 
-    def __len__(self) -> int:
-        return self._len
-
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in self._values)
 
@@ -140,9 +139,6 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
         self._bunches = bunches
         self._elements = elements
         self._len = self._bunches * self._elements
-
-    def __len__(self) -> int:
-        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value}
@@ -172,9 +168,6 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
         self._elements = elements
         self._bunches = bunches
         self._len = self._bunches * self._elements
-
-    def __len__(self) -> int:
-        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter({self._name: value} for value in unrestricted_generator(
@@ -228,11 +221,6 @@ class AttackPointIteratorRepeat(AttackPointIterator):
             self._repetitions = repetitions
             self._len = repetitions
 
-    def __len__(self) -> int:
-        if self._len < 0:
-            raise LengthIsInfiniteException("The length is infinite!")
-        return self._len
-
     def __iter__(self) -> AttackPointIteratorT:
         if self._repetitions < 0:
             return iter(itertools.cycle(self._configuration_iterator))
@@ -269,11 +257,6 @@ class AttackPointIteratorZip(AttackPointIterator):
             self._len = 0
         else:
             self._len = min(list_of_lengths, default=-1)
-
-    def __len__(self) -> int:
-        if self._len < 0:
-            raise LengthIsInfiniteException("The length is infinite!")
-        return self._len
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter(

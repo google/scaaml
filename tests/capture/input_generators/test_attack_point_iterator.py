@@ -672,10 +672,10 @@ def test_attack_point_iterator_zip_infinite_and_infinite():
             }
         }]
     }
+    output = build_attack_points_iterator(config)
     count = 0
     for value1, value2 in zip(
-            build_attack_points_iterator(config),
-            zip(itertools.cycle(values), itertools.cycle(values))):
+            output, zip(itertools.cycle(values), itertools.cycle(values))):
         if count > 4:
             break
         count += 1
@@ -683,6 +683,8 @@ def test_attack_point_iterator_zip_infinite_and_infinite():
             config["operands"][0]["configuration"]["name"]: value2[0],
             config["operands"][1]["configuration"]["name"]: value2[1]
         }
+    with pytest.raises(LengthIsInfiniteException):
+        len(output)
 
 
 def test_attack_point_iterator_zip_duplicate_name():
