@@ -14,7 +14,8 @@
 """AES specific SCryptoAlgorithm."""
 
 from collections import namedtuple
-from typing import Iterator, Optional, Self, Tuple
+from typing import Iterator, Optional, Tuple
+from typing_extensions import Self
 import numpy as np
 
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm

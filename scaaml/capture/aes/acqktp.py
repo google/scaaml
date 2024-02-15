@@ -14,7 +14,8 @@
 """Generating uniformly distributed keys."""
 
 import random
-from typing import Generator, Iterable, Optional, Self, Tuple
+from typing import Generator, Iterable, Optional, Tuple
+from typing_extensions import Self
 
 import numpy as np
 import numpy.typing as npt
