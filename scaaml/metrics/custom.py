@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,16 @@ Related metrics:
   tf.keras.metrics.TopKCategoricalAccuracy: How often the correct class
     is in the top K predictions (how often is rank less than K).
 """
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
+from keras.metrics import Metric, MeanMetricWrapper
 
 
-@tf.function
-def rank(y_true, y_pred, optimistic: bool = False):
+@tf.function  # type: ignore[misc]
+def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
     """Calculates the rank of the correct class (counted from 0). If the
     prediction is correct, the rank is equal to zero. If the correct class is
     the least probable according to y_pred, than the rank is equal to number
@@ -91,12 +92,11 @@ def rank(y_true, y_pred, optimistic: bool = False):
     # Do not count the correct class itself (rank is counted from 0).
     if optimistic:
         return ranks
-    else:
-        return ranks - 1
+    return ranks - 1
 
 
-@tf.function
-def confidence(y_true, y_pred):
+@tf.function  # type: ignore[misc]
+def confidence(y_true: Any, y_pred: Any) -> Any:
     """Return the confidence of the prediction, that is the difference of the
     highest value and the second highest value. A prediction contributes to
     the overall score even if the prediction was incorrect.
@@ -125,8 +125,8 @@ def confidence(y_true, y_pred):
     return top_two.values[:, 0] - top_two.values[:, 1]
 
 
-@tf.keras.utils.register_keras_serializable(package="SCAAML")
-class MeanConfidence(keras.metrics.MeanMetricWrapper):
+@keras.utils.register_keras_serializable(package="SCAAML")
+class MeanConfidence(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
     """Calculates the average confidence of a prediction, that is the difference
     of the two largest values (regardless if the prediction is correct or not).
 
@@ -151,12 +151,14 @@ class MeanConfidence(keras.metrics.MeanMetricWrapper):
     ```
     """
 
-    def __init__(self, name: str = "mean_confidence", dtype=None) -> None:
+    def __init__(self,
+                 name: str = "mean_confidence",
+                 dtype: Optional[np.generic] = None) -> None:
         super().__init__(confidence, name, dtype=dtype)
 
 
-@tf.keras.utils.register_keras_serializable(package="SCAAML")
-class MeanRank(keras.metrics.MeanMetricWrapper):
+@keras.utils.register_keras_serializable(package="SCAAML")
+class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
     """Calculates the mean rank of the correct class.
 
     The rank is the index of the correct class in the ordered predictions (the
@@ -187,12 +189,12 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
 
     def __init__(self,
                  name: str = "mean_rank",
-                 dtype=None,
-                 decimals: Optional[int] = None):
+                 dtype: Optional[np.generic] = None,
+                 decimals: Optional[int] = None) -> None:
         super().__init__(rank, name, dtype=dtype)
         self._decimals = decimals
 
-    def result(self):
+    def result(self) -> Any:
         """Return the result, possibly rounded to the right number of digits.
         See the decimals parameter of the constructor.
         """
@@ -209,8 +211,8 @@ class MeanRank(keras.metrics.MeanMetricWrapper):
         return tf.convert_to_tensor(rounded, dtype=res.dtype)
 
 
-@tf.keras.utils.register_keras_serializable(package="SCAAML")
-class MaxRank(keras.metrics.Metric):
+@keras.utils.register_keras_serializable(package="SCAAML")
+class MaxRank(Metric):  # type: ignore[no-any-unimported,misc]
     """Calculates the maximum rank of the correct class.
 
     The rank is the index of the correct class in the ordered predictions (the
@@ -237,11 +239,14 @@ class MaxRank(keras.metrics.Metric):
     ```
     """
 
-    def __init__(self, name: str = "max_rank", **kwargs):
+    def __init__(self, name: str = "max_rank", **kwargs: Any) -> None:
         super().__init__(name=name, **kwargs)
         self.max_rank = self.add_weight(name="max_rank", initializer="zeros")
 
-    def update_state(self, y_true, y_pred, sample_weight=None):
+    def update_state(self,
+                     y_true: Any,
+                     y_pred: Any,
+                     sample_weight: Optional[Any] = None) -> None:
         """Update the state.
 
         Args:
@@ -255,11 +260,11 @@ class MaxRank(keras.metrics.Metric):
         rank_update = tf.math.reduce_max(rank_update)
         self.max_rank.assign(tf.math.maximum(self.max_rank, rank_update))
 
-    def result(self):
+    def result(self) -> Any:
         """Return the result."""
         return tf.cast(self.max_rank, dtype=tf.int32)
 
-    def reset_state(self):
+    def reset_state(self) -> None:
         """Reset the state for new measurement."""
         # The state of the metric will be reset at the start of each epoch.
         self.max_rank.assign(0.0)
