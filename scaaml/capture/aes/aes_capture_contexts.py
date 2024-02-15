@@ -35,7 +35,7 @@ def capture_aes_dataset(
         shortname: str,
         description: str,
         capture_info: Dict[str, Any],
-        crypto_implementation: Any = AESSBOX,
+        crypto_implementation: Type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",

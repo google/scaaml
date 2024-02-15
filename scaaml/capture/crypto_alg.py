@@ -14,7 +14,7 @@
 """Crypto algorithm."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, Literal, Optional
+from typing import Any, Dict, Iterator, Literal, Optional, Type
 
 from scaaml.io import Dataset
 from scaaml.aes_forward import AESSBOX
@@ -27,7 +27,7 @@ class AbstractSCryptoAlgorithm(ABC):
 
     def __init__(self,
                  firmware_sha256: str,
-                 crypto_implementation: type[AESSBOX],
+                 crypto_implementation: Type[AESSBOX],
                  purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,

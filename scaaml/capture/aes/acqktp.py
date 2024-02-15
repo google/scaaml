@@ -14,7 +14,7 @@
 """Generating uniformly distributed keys."""
 
 import random
-from typing import Generator, Iterable, Optional, Tuple
+from typing import Iterable, Iterator, Optional, Tuple
 from typing_extensions import Self
 
 import numpy as np
@@ -135,7 +135,8 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             # shouldn't happen while generating a given dataset but may happen
             # when generating different datasets for different algorithms using
             # the GUI.
-            self._input_generator = None
+            self._input_generator: Optional[Iterator[Tuple[bytearray,
+                                                           bytearray]]] = None
         if not self._input_generator:
             if self._dataset == self.DATASET_TRAINING:
                 self._input_generator = self._get_dataset_generator()
@@ -181,8 +182,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
             pts.append(np.transpose(plain_text))
         return keys, np.transpose(pts, (0, 2, 1))
 
-    def _get_dataset_generator(
-            self) -> Generator[Tuple[bytearray, bytearray], None, None]:
+    def _get_dataset_generator(self) -> Iterator[Tuple[bytearray, bytearray]]:
         self._input_shape = (self.key_len, self.text_len)
         for _ in range(0, self._nbkeys, 256):
             keys, pts = self._generate_inputs()
@@ -191,8 +191,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
                     for _ in range(self._repeat):
                         yield bytearray(key_value), bytearray(plain_text)
 
-    def _get_random_generator(
-            self) -> Generator[Tuple[bytearray, bytearray], None, None]:
+    def _get_random_generator(self) -> Iterator[Tuple[bytearray, bytearray]]:
         for _ in range(self._nbkeys):
             key = bytearray(
                 [random.randint(0, 255) for _ in range(self.key_len)])
@@ -213,7 +212,7 @@ class AcqKeyTextPatternScaaml(AcqKeyTextPattern_Base):
 
     def new_pair(self) -> Tuple[bytearray, bytearray]:
         assert self._input_generator is not None
-        self._key, self._textin = next(self._input_generator)  # type: ignore
+        self._key, self._textin = next(self._input_generator)
         if self._dataset == self.DATASET_TRAINING:
             if self._pt_per_key % 256:
                 raise ValueError("plaintext_per_key must be a multiple of 256")

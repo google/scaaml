@@ -14,7 +14,7 @@
 """AES specific SCryptoAlgorithm."""
 
 from collections import namedtuple
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional, Tuple, Type
 from typing_extensions import Self
 import numpy as np
 
@@ -35,7 +35,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
     def __init__(self,
                  firmware_sha256: str,
-                 crypto_implementation: type[AESSBOX],
+                 crypto_implementation: Type[AESSBOX],
                  purpose: Dataset.SPLIT_T,
                  implementation: str = "MBEDTLS",
                  algorithm: str = "simpleserial-aes",

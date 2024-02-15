@@ -17,12 +17,12 @@ from scaaml.aes_forward import AESSBOX
 from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 from scaaml.capture.scope import PicoScope
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type
 
 
 def capture_ascad_default_parameters(
         firmware_sha256: str,
-        crypto_implementation: Any = AESSBOX,
+        crypto_implementation: Type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",
