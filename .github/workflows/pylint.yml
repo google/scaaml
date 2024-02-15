@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install pylint
+          pip install --upgrade pylint
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json
       - name: Test code with pylint

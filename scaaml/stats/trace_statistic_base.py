@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,17 @@
 """Compute a statistic of many traces."""
 
 from abc import ABC, abstractmethod
+from typing import Callable, Generic, TypeVar
 
 import numpy as np
+import numpy.typing as npt
+
+OutputT = TypeVar("OutputT")
+TraceInputT = TypeVar("TraceInputT", bound=np.generic)
+StatisticFunctionT = Callable[[npt.NDArray[TraceInputT]], OutputT]
 
 
-class AbstractTraceStatistic(ABC):
+class AbstractTraceStatistic(ABC, Generic[TraceInputT, OutputT]):
     """Base class to compute a statistic over many traces.
 
     Example use:
@@ -28,11 +34,13 @@ class AbstractTraceStatistic(ABC):
       print(trace_stats.result())
     """
 
-    def __init__(self) -> None:
+    def __init__(self, stat_fn: StatisticFunctionT[TraceInputT,
+                                                   OutputT]) -> None:
         """Create a new statistic computation."""
+        self._stat_fn = stat_fn
 
     @abstractmethod
-    def update(self, trace: np.ndarray) -> None:
+    def update(self, trace: npt.NDArray[TraceInputT]) -> None:
         """Update the statistic with a single trace.
 
         Args:
@@ -40,5 +48,5 @@ class AbstractTraceStatistic(ABC):
         """
 
     @abstractmethod
-    def result(self):
+    def result(self) -> OutputT:
         """Return the statistic."""

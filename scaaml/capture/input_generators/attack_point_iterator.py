@@ -245,10 +245,10 @@ class AttackPointIteratorRepeat(AttackPointIterator):
 
 class AttackPointIteratorZip(AttackPointIterator):
     """Attack point iterator zip class. This class takes any amount of operands
-    and combines them just like the zip function in python."""
+    and combines them just like the `zip` function in Python."""
 
     def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
-        """Initialize the zip iterate.
+        """Initialize the zip iterator.
           
           Args:
             operation (str): The operation of the iterator

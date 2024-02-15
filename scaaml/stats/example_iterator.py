@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@
 # limitations under the License.
 """Iterates over examples in a dataset."""
 
-from typing import Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing_extensions import Self
+
+import numpy as np
+import numpy.typing as npt
 
 from scaaml.io import Dataset
 
@@ -37,7 +41,7 @@ class ExampleIterator:
         """Example iterator.
 
         Args:
-          dataset_path (str): Path to the dataset.
+          dataset_path (Path): Path to the dataset.
           split (Optional[str]): If None or empty string, then all splits are
             iterated.  Otherwise only one split is iterated (one of
             scaaml.io.Dataset.SPLITS).
@@ -54,7 +58,8 @@ class ExampleIterator:
         else:
             splits = list(Dataset.SPLITS)
 
-        self._shards_list = []
+        self._shards_list: List[Tuple[int, Dict[str, Any],
+                                      Dataset.SPLIT_T]] = []
         dataset = Dataset.from_config(dataset_path=dataset_path, verbose=False)
         for current_split in splits:
             for shard_id, shard in enumerate(
@@ -66,13 +71,14 @@ class ExampleIterator:
                 self._shards_list.append((shard_id, shard, current_split))
         self._shard_idx = 0
         # _shard_iterator is initialized by the first call of __next__.
-        self._shard_iterator: Iterator = iter([])
+        self._shard_iterator: Iterator[Dict[str,
+                                            npt.NDArray[np.generic]]] = iter([])
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         """Returns self."""
         return self
 
-    def __next__(self):
+    def __next__(self) -> Dict[str, npt.NDArray[np.generic]]:
         """Return next example.
 
         Returns: The next example as returned by
@@ -88,11 +94,9 @@ class ExampleIterator:
                 # does not make sense to re-raise it, since we raise only after
                 # we are done will all shards.
                 raise StopIteration  # pylint: disable=W0707
-            shard_id = self._shards_list[self._shard_idx][0]
-            shard = self._shards_list[self._shard_idx][1]
-            split = self._shards_list[self._shard_idx][2]
+            shard_id, shard, split = self._shards_list[self._shard_idx]
             self._shard_idx += 1
-            num_example = shard["examples"]
+            num_example: int = shard["examples"]
             self._shard_iterator = Dataset.inspect(
                 dataset_path=self._dataset_path,
                 split=split,
@@ -110,5 +114,5 @@ class ExampleIterator:
         if not self._shards_list:
             return 0
         n_shards = len(self._shards_list)
-        n_examples = self._shards_list[0][1]["examples"]
+        n_examples: int = self._shards_list[0][1]["examples"]
         return n_shards * n_examples
