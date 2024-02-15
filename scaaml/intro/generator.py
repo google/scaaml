@@ -13,7 +13,7 @@
 # limitations under the License.
 """Dataset creation and loading."""
 
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
