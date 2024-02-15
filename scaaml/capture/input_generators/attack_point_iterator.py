@@ -262,13 +262,14 @@ class AttackPointIteratorZip(AttackPointIterator):
         self._operands = list(
             build_attack_points_iterator(operand) for operand in operands)
 
-        list_of_lengths = [
+        non_negative_lengths = [
             operand._len for operand in self._operands if operand._len >= 0
         ]
         if not self._operands:
             self._len = 0
         else:
-            self._len = min(list_of_lengths, default=-1)
+            # If `non_negative_lengths` is empty it means that all operands are infinite.
+            self._len = min(non_negative_lengths, default=-1)
 
     def __len__(self) -> int:
         if self._len < 0:
@@ -280,7 +281,8 @@ class AttackPointIteratorZip(AttackPointIterator):
             self.merge_dictionaries(tuple_of_dictionaries)
             for tuple_of_dictionaries in zip(*self._operands))
 
-    def merge_dictionaries(self, tuple_of_dictionaries) -> Dict:
+    @staticmethod
+    def merge_dictionaries(tuple_of_dictionaries: Tuple[Dict[str, List[int]]]) -> Dict[str, List[int]]:
         merged_dictionary = {}
         for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
