@@ -1,3 +1,5 @@
+mypy
+pydantic
 pytest
 pytest-cov
 flake8
