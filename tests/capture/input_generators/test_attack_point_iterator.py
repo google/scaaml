@@ -525,6 +525,32 @@ def test_attack_point_iterator_zip_different_lengths():
     }]
     assert output_len == len(config["operands"][1]["values"])
 
+def test_attack_point_iterator_zip_different_lengths_length_zero():
+    values = []
+    values2 = [[0], [1], [2]]
+    config = {
+        "operation":
+            "zip",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values2
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+    output_iter = list(iter(output))
+    output_len = len(output)
+
+    assert output_iter == []
+    assert output_len == len(config["operands"][0]["values"])
+
 
 def test_attack_point_iterator_zip_infinite_and_finite():
     values = [[0], [1]]

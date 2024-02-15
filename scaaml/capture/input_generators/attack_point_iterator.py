@@ -262,6 +262,8 @@ class AttackPointIteratorZip(AttackPointIterator):
         self._len = 0
         for operand in self._operands:
             try:
+                if len(operand) == 0:
+                    break
                 if self._len > len(operand) or self._len <= 0:
                     self._len = len(operand)
             except LengthIsInfiniteException:
