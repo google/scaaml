@@ -14,7 +14,7 @@
 """Capture script for easier manipulation."""
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Type
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -28,7 +28,7 @@ from scaaml.capture.scope.scope_base import AbstractSScope, ScopeT
 
 
 def capture_aes_dataset(
-        scope_class: type[AbstractSScope[ScopeT]],
+        scope_class: Type[AbstractSScope[ScopeT]],
         firmware_sha256: str,
         architecture: str,
         implementation: str,
@@ -249,7 +249,7 @@ def _get_current_capture_info(capture_info: Dict[str, Any],
     return current_capture_info
 
 
-def _capture(scope_class: type[AbstractSScope[ScopeT]],
+def _capture(scope_class: Type[AbstractSScope[ScopeT]],
              capture_info: Dict[str, Any], chip_id: int,
              crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
              dataset: Any) -> None:

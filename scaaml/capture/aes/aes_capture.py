@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Capture script for easier manipulation."""
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.capture.scope import CWScope
@@ -21,7 +21,7 @@ from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 
 def capture_aes_scald_stm32f4_mbedtls(
         firmware_sha256: str,
-        crypto_implementation: type[AESSBOX] = AESSBOX,
+        crypto_implementation: Type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",
