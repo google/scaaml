@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,14 @@ from time import sleep
 
 from scaaml.capture.control import AbstractSControl
 
+from chipwhisperer.capture.scopes.cwhardware import ChipWhispererExtra
+
 
 class CWControl(AbstractSControl):
     """turning on/off the chip, resetting the chip, etc."""
 
-    def __init__(self, chip_id: int, scope_io) -> None:
+    def __init__(self, chip_id: int,
+                 scope_io: ChipWhispererExtra.GPIOSettings) -> None:
         """Initialize the control object.
 
         Args:
@@ -53,16 +56,16 @@ class CWControl(AbstractSControl):
         self._scope_io.nrst = "high_z"
         sleep(sleep_after)
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Initialize the target."""
         self._scope_io.tio1 = self._tio1
         self._scope_io.tio2 = self._tio2
         self._scope_io.hs2 = self._hs2
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on the chip."""
         self._scope_io.target_pwr = True
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off the chip."""
         self._scope_io.target_pwr = False

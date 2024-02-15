@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Capture script for easier manipulation."""
+from typing import Any, Dict, Optional
+
 from scaaml.aes_forward import AESSBOX
 from scaaml.capture.scope import CWScope
 from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
@@ -19,7 +21,7 @@ from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 
 def capture_aes_scald_stm32f4_mbedtls(
         firmware_sha256: str,
-        crypto_implementation=AESSBOX,
+        crypto_implementation: type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",
@@ -28,7 +30,7 @@ def capture_aes_scald_stm32f4_mbedtls(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info=None,
+        measurements_info: Optional[Dict[str, Any]] = None,
         repetitions: int = 1,
         train_keys: int = 4 * 1024,
         train_plaintexts: int = 256,

@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """AES specific SCryptoAlgorithm."""
+
 from collections import namedtuple
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Self, Tuple
 import numpy as np
 
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.aes.acqktp import AcqKeyTextPatternScaaml as ktp_scaaml
+from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
 from scaaml.io import resume_kti
+
+from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
 EncryptionParameters = namedtuple("EncryptionParameters", ["keys", "texts"])
 
@@ -30,7 +34,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
     def __init__(self,
                  firmware_sha256: str,
-                 crypto_implementation,
+                 crypto_implementation: type[AESSBOX],
                  purpose: Dataset.SPLIT_T,
                  implementation: str = "MBEDTLS",
                  algorithm: str = "simpleserial-aes",
@@ -92,9 +96,10 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
         # Set in get_stabilization_kti.
-        self._stabilization_ktp: Optional[Iterator] = None
+        self._stabilization_ktp: Optional[Iterator[Tuple[bytearray,
+                                                         bytearray]]] = None
 
-    def _get_new_ktp(self):
+    def _get_new_ktp(self) -> ktp_scaaml:
         ktp = ktp_scaaml()
         ktp.dataset = self._dataset
         ktp.plaintext_per_key = self._plaintexts
@@ -103,7 +108,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
         ktp.init(0)
         return ktp
 
-    def get_stabilization_kti(self) -> Iterator:
+    def get_stabilization_kti(self) -> Iterator[Tuple[bytearray, bytearray]]:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """
@@ -114,15 +119,15 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             """Iterates through key-plaintext pairs used for stabilizing the
             capture."""
 
-            def __init__(self, ktp):
+            def __init__(self, ktp: AcqKeyTextPattern_Base) -> None:
                 self._ktp = ktp
 
-            def __iter__(self):
+            def __iter__(self) -> Self:
                 return self
 
-            def __next__(self):
+            def __next__(self) -> EncryptionParameters:
                 # AcqKeyTextPatternScaaml.new_pair raises StopIteration itself.
-                kt_pair = self._ktp.new_pair()
+                kt_pair = self._ktp.new_pair()  # type: ignore[no-untyped-call]
                 # Allow the same iteration as using resume_kti.
                 return EncryptionParameters(keys=list(kt_pair[0]),
                                             texts=list(kt_pair[1]))

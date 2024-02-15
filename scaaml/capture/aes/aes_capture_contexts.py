@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2022-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 """Capture script for easier manipulation."""
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Sequence
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -22,18 +22,20 @@ from scaaml.capture.aes.capture_runner import CaptureRunner
 from scaaml.capture.aes.crypto_alg import SCryptoAlgorithm
 from scaaml.capture.aes.communication import CWCommunication
 from scaaml.capture.aes.control import CWControl
+from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.scope import DefaultCWScope
+from scaaml.capture.scope.scope_base import AbstractSScope, ScopeT
 
 
 def capture_aes_dataset(
-        scope_class,
+        scope_class: type[AbstractSScope[ScopeT]],
         firmware_sha256: str,
         architecture: str,
         implementation: str,
         shortname: str,
         description: str,
-        capture_info: Dict,
-        crypto_implementation=AESSBOX,
+        capture_info: Dict[str, Any],
+        crypto_implementation: Any = AESSBOX,
         algorithm: str = "simpleserial-aes",
         version: int = 1,
         root_path: str = "/mnt/storage/chipwhisperer",
@@ -42,7 +44,7 @@ def capture_aes_dataset(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info=None,
+        measurements_info: Optional[Dict[str, Any]] = None,
         repetitions: int = 1,
         train_keys: int = 3 * 1024,
         train_plaintexts: int = 256,
@@ -142,13 +144,13 @@ def capture_aes_dataset(
         measurements_info=measurements_info,
         attack_points_info=crypto_implementation.ATTACK_POINTS_INFO,
         capture_info=capture_info,
-    )
+    )  # type: ignore[no-untyped-call]
 
     # Generators of key-plaintext pairs for different splits.
-    crypto_algorithms = []
+    crypto_algorithms: List[AbstractSCryptoAlgorithm] = []
 
     def add_crypto_alg(split: Dataset.SPLIT_T, keys: int, plaintexts: int,
-                       repetitions: int):
+                       repetitions: int) -> None:
         """Does not overwrite, safe to call multiple times.
 
         Args:
@@ -170,10 +172,12 @@ def capture_aes_dataset(
             repetitions=repetitions,
             examples_per_shard=examples_per_shard,
             firmware_sha256=firmware_sha256,
-            full_kt_filename=Path(root_path) / dataset.slug /
-            f"{split}_parameters_tuples.txt",
-            full_progress_filename=Path(root_path) / dataset.slug /
-            f"{split}_progress_tuples.txt")
+            full_kt_filename=str(
+                Path(root_path) / dataset.slug /
+                f"{split}_parameters_tuples.txt"),
+            full_progress_filename=str(
+                Path(root_path) / dataset.slug /
+                f"{split}_progress_tuples.txt"))
         crypto_algorithms.append(new_crypto_alg)
 
     if test_keys:
@@ -218,7 +222,8 @@ def capture_aes_dataset(
         )
 
 
-def _get_current_capture_info(capture_info: Dict, prefix: str) -> Dict:
+def _get_current_capture_info(capture_info: Dict[str, Any],
+                              prefix: str) -> Dict[str, Any]:
     """Update capture info for use of capturing train or holdout.
 
     Args:
@@ -244,8 +249,10 @@ def _get_current_capture_info(capture_info: Dict, prefix: str) -> Dict:
     return current_capture_info
 
 
-def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
-             crypto_algorithms: List, dataset) -> None:
+def _capture(scope_class: type[AbstractSScope[ScopeT]],
+             capture_info: Dict[str, Any], chip_id: int,
+             crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
+             dataset: Any) -> None:
     """Create scope contexts managers and capture the dataset.
 
     Args:
@@ -274,8 +281,10 @@ def _capture(scope_class, capture_info: Dict[str, Any], chip_id: int,
             )
 
 
-def _control_communication_and_capture(chip_id: int, cwscope, crypto_algorithms,
-                                       scope, dataset) -> None:
+def _control_communication_and_capture(
+        chip_id: int, cwscope: DefaultCWScope,
+        crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
+        scope: AbstractSScope[ScopeT], dataset: Any) -> None:
     """Create control and communication context managers and run the capture.
 
     Args:
