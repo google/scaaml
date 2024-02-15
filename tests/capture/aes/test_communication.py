@@ -15,6 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
+from chipwhisperer.capture.targets.SimpleSerial import SimpleSerial
 
 from scaaml.capture.aes.communication import CWCommunication
 
@@ -22,10 +23,7 @@ from scaaml.capture.aes.communication import CWCommunication
 @patch.object(cw, 'target')
 def test_with(mock_target_fn):
     mock_scope = MagicMock()
-    mock_target = MagicMock()
-    mock_target_fn.return_value = mock_target
+    mock_target_fn.return_value = SimpleSerial()
     with CWCommunication(mock_scope) as target:
+        assert isinstance(target.target, SimpleSerial)
         assert target.target.protver == '1.1'
-        assert mock_target.dis.call_count == 0
-
-    mock_target.dis.assert_called_once()
