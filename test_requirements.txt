@@ -4,4 +4,4 @@ flake8
 twine
 perfCounters
 psutil
-type-tensorflow
+types-tensorflow
