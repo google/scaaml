@@ -14,7 +14,7 @@
 """AES specific SCryptoAlgorithm."""
 
 from collections import namedtuple
-from typing import Iterator, List, Optional, Tuple, Type
+from typing import Iterator, Optional, Tuple, Type
 from typing_extensions import Self
 import numpy as np
 
@@ -97,8 +97,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
             kt_filename=self._full_kt_filename,
             progress_filename=self._full_progress_filename)
         # Set in get_stabilization_kti.
-        self._stabilization_ktp: Optional[Iterator[Tuple[List[int],
-                                                         List[int]]]] = None
+        self._stabilization_ktp: Optional[Iterator[Tuple[bytearray,
+                                                         bytearray]]] = None
 
     def _get_new_ktp(self) -> ktp_scaaml:
         ktp = ktp_scaaml()
@@ -109,7 +109,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
         ktp.init(0)
         return ktp
 
-    def get_stabilization_kti(self) -> Iterator[Tuple[List[int], List[int]]]:
+    def get_stabilization_kti(self) -> Iterator[Tuple[bytearray, bytearray]]:
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """

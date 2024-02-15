@@ -13,7 +13,7 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from typing import Dict, Generic, List, NamedTuple, Sequence, Tuple
+from typing import Dict, Generic, NamedTuple, Sequence, Tuple
 from tqdm.auto import tqdm
 
 import numpy as np
@@ -78,7 +78,7 @@ class AbstractCaptureRunner(ABC, Generic[ScopeT]):
     def get_attack_points_and_measurement(
         self, crypto_alg: AbstractSCryptoAlgorithm,
         crypto_input: AbstractCryptoInput
-    ) -> Tuple[Dict[str, List[int]], Dict[str, npt.NDArray[np.generic]]]:
+    ) -> Tuple[Dict[str, bytearray], Dict[str, npt.NDArray[np.generic]]]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 
@@ -141,8 +141,9 @@ class AbstractCaptureRunner(ABC, Generic[ScopeT]):
             self._scope.scope)
 
         assert crypto_alg.kti is not None
-        # TODO: crypto_alg.kti is generically typed as Iterator[Any] but would need a
-        # proper base class instead that implements the `initial_index` property
+        # TODO: crypto_alg.kti is generically typed as Iterator[Any] but would
+        # need a proper base class instead that implements the `initial_index`
+        # property.
         # In practice it can be a `ResumeKTI`` which has it or a
         # `AcqKeyTextPatternScaaml` which doesn't.
         skip_examples: int = getattr(crypto_alg.kti, "initial_index", 0)

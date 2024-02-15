@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """CaptureRunner runs the capture."""
-from typing import Dict, List, NamedTuple, Optional, Tuple
+
+from typing import Dict, NamedTuple, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -83,7 +84,7 @@ class CaptureRunner(AbstractCaptureRunner[ScopeT]):
     def get_attack_points_and_measurement(
         self, crypto_alg: AbstractSCryptoAlgorithm,
         crypto_input: AbstractCryptoInput
-    ) -> Tuple[Dict[str, List[int]], Dict[str, npt.NDArray[np.generic]]]:
+    ) -> Tuple[Dict[str, bytearray], Dict[str, npt.NDArray[np.generic]]]:
         """Get attack points and measurement. Repeat capture if necessary.
         Raises if hardware fails.
 

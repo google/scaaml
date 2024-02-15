@@ -64,7 +64,7 @@ class Shard:
         # build and cache tffeature format
         self.features = self._build_tffeature()
 
-    def write(self, attack_points: Dict[str, List[int]],
+    def write(self, attack_points: Dict[str, bytearray],
               measurements: Dict[str, List[float]]) -> None:
         """Write example on disk as TFRecord
 

@@ -55,7 +55,9 @@ class FakeTqdm(Generic[_T]):
         return iter(self.iterable)
 
 
-ProgressBarT: TypeAlias = Union[Type[tqdm[_T]], Type[FakeTqdm[_T]]]
+ProgressBarT: TypeAlias = Union[
+    Type[tqdm],  # type: ignore[type-arg]
+    Type[FakeTqdm[_T]]]
 
 
 class Dataset:
@@ -334,7 +336,7 @@ class Dataset:
                                 measurement_dtype=self.measurement_dtype,
                                 compression=self.compression)
 
-    def write_example(self, attack_points: Dict[str, List[int]],
+    def write_example(self, attack_points: Dict[str, bytearray],
                       measurement: Dict[str, Any]) -> None:
         assert self.curr_shard is not None
         self.curr_shard.write(attack_points, measurement)
