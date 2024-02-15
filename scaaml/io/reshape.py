@@ -13,8 +13,6 @@
 # limitations under the License.
 """Build and load tensorFlow dataset Record wrapper"""
 
-from typing import Dict, List
-
 from tqdm import tqdm
 
 from scaaml.io import Dataset
