@@ -526,7 +526,7 @@ def test_attack_point_iterator_zip_different_lengths():
     assert output_len == len(config["operands"][1]["values"])
 
 
-def test_attack_point_iterator_zip_finite_and_infinite():
+def test_attack_point_iterator_zip_infinite_and_finite():
     values = [[0], [1]]
     config = {
         "operation":
@@ -571,6 +571,54 @@ def test_attack_point_iterator_zip_finite_and_infinite():
     }]
     assert output_len == len(build_attack_points_iterator(
         config["operands"][1]))
+    
+def test_attack_point_iterator_zip_finite_and_infinite():
+    values = [[0], [1]]
+    config = {
+        "operation":
+            "zip",
+        "operands": [
+            {
+            "operation": "repeat",
+            "repetitions": 2,
+            "configuration": {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }
+        },
+        {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+    output_iter = list(iter(output))
+    output_len = len(output)
+
+    assert output_iter == [{
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }, {
+        "key": [0],
+        "plaintext": [0]
+    }, {
+        "key": [1],
+        "plaintext": [1]
+    }]
+    assert output_len == len(build_attack_points_iterator(
+        config["operands"][0]))
 
 
 def test_attack_point_iterator_zip_infinite_and_infinite():
