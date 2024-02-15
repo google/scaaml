@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 import collections
 import copy
 import itertools
-from typing import Any, Dict, Iterator, List, Type
+from typing import Any, Dict, Iterator, List, Tuple, Type
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
@@ -256,7 +256,8 @@ class AttackPointIteratorZip(AttackPointIterator):
         if not self._operands:
             self._len = 0
         else:
-            # If `non_negative_lengths` is empty it means that all operands are infinite.
+            # If `non_negative_lengths` is empty it means that all
+            # operands are infinite.
             self._len = min(non_negative_lengths, default=-1)
 
     def __iter__(self) -> AttackPointIteratorT:
@@ -265,7 +266,9 @@ class AttackPointIteratorZip(AttackPointIterator):
             for tuple_of_dictionaries in zip(*self._operands))
 
     @staticmethod
-    def merge_dictionaries(tuple_of_dictionaries: Tuple[Dict[str, List[int]]]) -> Dict[str, List[int]]:
+    def merge_dictionaries(
+        tuple_of_dictionaries: Tuple[Dict[str,
+                                          List[int]]]) -> Dict[str, List[int]]:
         merged_dictionary = {}
         for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
