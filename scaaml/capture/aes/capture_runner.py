@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """CaptureRunner runs the capture."""
+
 from typing import Dict, NamedTuple, Optional, Tuple
 
 import numpy as np
@@ -25,9 +26,10 @@ from scaaml.capture.capture_runner import AbstractCaptureRunner
 from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.aes.crypto_input import CryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
+from scaaml.capture.scope import ScopeT
 
 
-class CaptureRunner(AbstractCaptureRunner):
+class CaptureRunner(AbstractCaptureRunner[ScopeT]):
     """Class for capturing the dataset."""
 
     def get_crypto_input(self, kt_element: NamedTuple) -> AbstractCryptoInput:
@@ -71,10 +73,11 @@ class CaptureRunner(AbstractCaptureRunner):
 
         # Capture the trace.
         # TODO(issue #79): Allow typechecking of this call.
-        trace = cw.capture_trace(scope=scope,
-                                 target=target,
-                                 plaintext=plaintext,
-                                 key=key)
+        trace = cw.capture_trace(
+            scope=scope,  # type: ignore[arg-type]
+            target=target,
+            plaintext=plaintext,
+            key=key)
 
         return trace
 

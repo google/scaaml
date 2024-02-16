@@ -71,8 +71,7 @@ class ExampleIterator:
                 self._shards_list.append((shard_id, shard, current_split))
         self._shard_idx = 0
         # _shard_iterator is initialized by the first call of __next__.
-        self._shard_iterator: Iterator[Dict[str,
-                                            npt.NDArray[np.generic]]] = iter([])
+        self._shard_iterator: Iterator[Any] = iter([])
 
     def __iter__(self) -> Self:
         """Returns self."""

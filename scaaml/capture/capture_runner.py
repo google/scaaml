@@ -13,7 +13,7 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from typing import Dict, NamedTuple, Sequence, Tuple
+from typing import Dict, Generic, NamedTuple, Sequence, Tuple
 from tqdm.auto import tqdm
 
 import numpy as np
@@ -25,18 +25,15 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.communication import AbstractSCommunication
 from scaaml.capture.control import AbstractSControl
-from scaaml.capture.scope import AbstractSScope
-
-# TODO: temporarily disabling mypy on this file until it's properly fixed.
-# mypy: ignore-errors
+from scaaml.capture.scope import AbstractSScope, ScopeT
 
 
-class AbstractCaptureRunner(ABC):
+class AbstractCaptureRunner(ABC, Generic[ScopeT]):
     """Abstract class for capturing the dataset."""
 
     def __init__(self, crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
                  communication: AbstractSCommunication,
-                 control: AbstractSControl, scope: AbstractSScope,
+                 control: AbstractSControl, scope: AbstractSScope[ScopeT],
                  dataset: Dataset) -> None:
         """Holds all information needed to capture a dataset (using the method
         `capture`).
@@ -143,16 +140,22 @@ class AbstractCaptureRunner(ABC):
         self._dataset.capture_info[f"scope_{crypto_alg.purpose}"] = repr(
             self._scope.scope)
 
+        assert crypto_alg.kti is not None
+        # TODO: crypto_alg.kti is generically typed as Iterator[Any] but would
+        # need a proper base class instead that implements the `initial_index`
+        # property.
+        # In practice it can be a `ResumeKTI` which has it or a
+        # `AcqKeyTextPatternScaaml` which doesn't.
+        skip_examples: int = getattr(crypto_alg.kti, "initial_index", 0)
         # Context manager properly opens and closes shards.
         with DatasetFiller(
                 dataset=self._dataset,
                 plaintexts_per_key=crypto_alg.plaintexts,
                 repetitions=crypto_alg.repetitions,
-                skip_examples=crypto_alg.kti.initial_index,
+                skip_examples=skip_examples,
         ) as dataset_filler:
             # Add examples, new shards are opened automatically.
-            for ktt in tqdm(crypto_alg.kti,
-                            initial=crypto_alg.kti.initial_index):
+            for ktt in tqdm(crypto_alg.kti, initial=skip_examples):
                 crypto_input = self.get_crypto_input(ktt)
                 (
                     attack_points,

@@ -13,7 +13,7 @@
 # limitations under the License.
 """Dataset creation and loading."""
 
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -24,15 +24,15 @@ from tqdm.auto import tqdm
 from glob import glob
 
 
-def create_dataset(file_pattern,
-                   batch_size=32,
-                   attack_point="key",
-                   attack_byte=0,
-                   num_shards=256,
-                   num_traces_per_shard=256,
-                   max_trace_length=20000,
-                   is_training=True,
-                   shuffle_size=65535):
+def create_dataset(file_pattern: str,
+                   batch_size: int = 32,
+                   attack_point: str = "key",
+                   attack_byte: int = 0,
+                   num_shards: int = 256,
+                   num_traces_per_shard: int = 256,
+                   max_trace_length: int = 20000,
+                   is_training: bool = True,
+                   shuffle_size: int = 65535) -> Tuple[Tensor, Tensor]:
     del shuffle_size  # unused
     del is_training  # unused
     del batch_size  # unused
@@ -44,8 +44,8 @@ def create_dataset(file_pattern,
         raise ValueError(
             "invalid attack point. avail: key, sub_bytes_in, sub_bytes_out")
 
-    x_list: List = []
-    y_list: List = []
+    x_list: List[Tensor] = []
+    y_list: List[Tensor] = []
     pb = tqdm(total=num_shards, desc="loading shards")
     with tf.device("/cpu:0"):
         for idx, shard_fname in enumerate(shards):
@@ -87,16 +87,17 @@ def create_dataset(file_pattern,
     return (x, y)
 
 
-def list_shards(file_pattern, num_shards):
+def list_shards(file_pattern: str, num_shards: int) -> List[str]:
     return glob(file_pattern)[:num_shards]
 
 
-def load_attack_shard(fname,
-                      attack_byte,
-                      attack_point,
-                      max_trace_length,
-                      num_traces=256,
-                      full_key=False):
+def load_attack_shard(
+        fname: str,
+        attack_byte: int,
+        attack_point: str,
+        max_trace_length: int,
+        num_traces: int = 256,
+        full_key: bool = False) -> Tuple[bytearray, bytearray, Tensor, Tensor]:
     """Load a shard of data that target a given key
 
     Args:
@@ -134,8 +135,9 @@ def load_attack_shard(fname,
     return k, pts, x, y
 
 
-def load_shard(fname, attack_byte, attack_point, max_trace_length,
-               num_traces_per_shard):
+def load_shard(fname: str, attack_byte: int, attack_point: str,
+               max_trace_length: int,
+               num_traces_per_shard: int) -> Tuple[Tensor, Tensor]:
     shard = np.load(fname)
 
     # load y
