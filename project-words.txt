@@ -99,6 +99,7 @@ probas
 protver
 psutil
 pyclass
+pydantic
 pylance
 pyplot
 pyvisa
@@ -118,6 +119,7 @@ softmax
 sparsed
 sparsing
 subarray
+subclassing
 termcolor
 textin
 tfdata
