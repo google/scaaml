@@ -389,7 +389,7 @@ class Dataset:
     @staticmethod
     def as_tfdataset(
         dataset_path: str,
-        split: str,
+        split: SPLIT_T,
         attack_points: List[Dict[str, Union[str, int]]],
         traces: Union[List[str], str],
         shards: Optional[int] = None,
@@ -408,7 +408,7 @@ class Dataset:
 
         Args:
           dataset_path (str): The root path of the dataset.
-          split (str): Split, see Dataset.SPLITS.
+          split (SPLIT_T): Split, see Dataset.SPLITS.
           attack_points (List[Dict[str, Union[str, int]]]): Attack point
             information. Contains the attack point name, index, and type. For
             example:

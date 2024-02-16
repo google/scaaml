@@ -144,7 +144,7 @@ class AbstractCaptureRunner(ABC, Generic[ScopeT]):
         # TODO: crypto_alg.kti is generically typed as Iterator[Any] but would
         # need a proper base class instead that implements the `initial_index`
         # property.
-        # In practice it can be a `ResumeKTI`` which has it or a
+        # In practice it can be a `ResumeKTI` which has it or a
         # `AcqKeyTextPatternScaaml` which doesn't.
         skip_examples: int = getattr(crypto_alg.kti, "initial_index", 0)
         # Context manager properly opens and closes shards.
