@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,22 +14,35 @@
 """Dataset shard manipulation."""
 
 import math
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from dataclasses import dataclass
 
 import numpy as np
 import tensorflow as tf
+
 from scaaml.io.tfdata import bytes_feature, int64_feature, float_feature
 
+CompressionT = Literal["", "GZIP", "ZLIB"]
 
-class Shard():
+
+@dataclass
+class ShardStats:
+    # Number of examples in the shard
+    examples: int
+    min_values: Dict[str, float]
+    max_values: Dict[str, float]
+
+
+class Shard:
     """A shard contains N measurement pertaining to the same key"""
 
     def __init__(self,
                  path: str,
-                 attack_points_info: Dict,
-                 measurements_info: Dict,
-                 measurement_dtype: tf.dtypes.DType,
-                 compression: str = "GZIP") -> None:
+                 attack_points_info: Dict[str, Any],
+                 measurements_info: Dict[str, Any],
+                 measurement_dtype: tf.DType,
+                 compression: CompressionT = "GZIP") -> None:
         self.path = path
         self.attack_points_info = attack_points_info
         self.measurements_info = measurements_info
@@ -41,8 +54,8 @@ class Shard():
 
         # counters
         self.examples = 0
-        self.min_values = {}
-        self.max_values = {}
+        self.min_values: Dict[str, float] = {}
+        self.max_values: Dict[str, float] = {}
         for k in measurements_info.keys():
             # By convention minimum of an empty set is infinity.
             self.min_values[k] = math.inf
@@ -51,8 +64,8 @@ class Shard():
         # build and cache tffeature format
         self.features = self._build_tffeature()
 
-    def write(self, attack_points: Dict[str, List[int]],
-              measurements: Dict[str, List[float]]):
+    def write(self, attack_points: Dict[str, bytearray],
+              measurements: Dict[str, List[float]]) -> None:
         """Write example on disk as TFRecord
 
         Args:
@@ -68,26 +81,28 @@ class Shard():
             self.writer.write(example)
             self.examples += 1
 
-    def read(self, num=10) -> Dict:
+    def read(
+        self,
+        num: int = 10
+    ) -> tf.data.Dataset[Dict[str, Union[tf.Tensor, tf.SparseTensor]]]:
         """Open and read N examples from the shard"""
         shard = tf.data.TFRecordDataset(self.path,
                                         compression_type=self.compression)
         data = shard.map(self._from_tfrecord)
         return data.take(num)
 
-    def close(self) -> Dict:
+    def close(self) -> ShardStats:
         "close shard and return statistics"
         if not self.writer:
             raise ValueError("Trying to close a shard that was not open")
 
         self.writer.close()
-        return {
-            "examples": self.examples,
-            "min_values": self.min_values,
-            "max_values": self.max_values
-        }
+        return ShardStats(examples=self.examples,
+                          min_values=self.min_values,
+                          max_values=self.max_values)
 
-    def _to_tfrecord(self, attack_points, measurements):
+    def _to_tfrecord(self, attack_points: Dict[str, Any],
+                     measurements: Dict[str, Any]) -> bytes:
         """Convert example data into a tfrecord example
 
         Args:
@@ -150,9 +165,11 @@ class Shard():
 
         tf_features = tf.train.Features(feature=feature)
         record = tf.train.Example(features=tf_features)
-        return record.SerializeToString()
+        return bytes(record.SerializeToString())
 
-    def _from_tfrecord(self, tfrecord):
+    def _from_tfrecord(
+            self,
+            tfrecord: str) -> Dict[str, Union[tf.Tensor, tf.SparseTensor]]:
         """Convert tf_record to dictionary
 
         Args:
@@ -160,6 +177,7 @@ class Shard():
         Returns:
             reloaded example as dictionary
         """
+        rec: Dict[str, Union[tf.Tensor, tf.SparseTensor]]
         rec = tf.io.parse_single_example(tfrecord, self._build_tffeature())
         if self.measurement_dtype == tf.float16:
             for name, ipt in self.measurements_info.items():
@@ -167,7 +185,7 @@ class Shard():
                 rec[name] = tf.ensure_shape(rec[name], shape=(ipt["len"],))
         return rec
 
-    def _build_tffeature(self):
+    def _build_tffeature(self) -> Dict[str, tf.io.FixedLenFeature]:
         "build tf feature dictionary based of meta data"
         features = {}
 

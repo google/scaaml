@@ -65,9 +65,10 @@ from typing import Any, Dict, List
 from typing_extensions import Self
 
 import numpy as np
+import numpy.typing as npt
 
 
-def get_any_value_len(parameters: Dict[str, np.ndarray]) -> int:
+def get_any_value_len(parameters: Dict[str, npt.NDArray[np.generic]]) -> int:
     """Convenience function that returns the len of any value. All lengths
     should be the same (so that we can iterate).
 
@@ -82,7 +83,7 @@ def get_any_value_len(parameters: Dict[str, np.ndarray]) -> int:
     return len(next(iter(parameters.values())))
 
 
-def check_lengths(parameters: Dict[str, np.ndarray],
+def check_lengths(parameters: Dict[str, npt.NDArray[np.generic]],
                   shard_length: np.uint64) -> None:
     """Check that all parameters have the same non-zero length.
 
@@ -111,7 +112,7 @@ def check_lengths(parameters: Dict[str, np.ndarray],
             raise ValueError("There are different number of parameter values.")
 
 
-def _create_resume_kti(parameters: Dict[str, np.ndarray],
+def _create_resume_kti(parameters: Dict[str, npt.NDArray[np.generic]],
                        shard_length: np.uint64,
                        kt_filename: str = "parameters_tuples.txt",
                        progress_filename: str = "progress_tuples.txt",
@@ -190,7 +191,7 @@ class ResumeKTI:
             # Create the namedtuple class. Ignore mypy warning that named
             # tuples should not be constructed dynamically and that a list or
             # tuple literal should be used for the names.
-            self._element_class = namedtuple(  # type: ignore
+            self._element_class = namedtuple(  # type: ignore[misc]
                 "EncryptionParameters", parameter_names)
 
             # Load all parameters.
@@ -274,7 +275,7 @@ class ResumeKTI:
         return self._initial_index
 
 
-def create_resume_kti(parameters: Dict[str, np.ndarray],
+def create_resume_kti(parameters: Dict[str, npt.NDArray[np.generic]],
                       shard_length: np.uint64,
                       kt_filename: str = "parameters_tuples.txt",
                       progress_filename: str = "progress_tuples.txt",

@@ -144,7 +144,7 @@ def capture_aes_dataset(
         measurements_info=measurements_info,
         attack_points_info=crypto_implementation.ATTACK_POINTS_INFO,
         capture_info=capture_info,
-    )  # type: ignore[no-untyped-call]
+    )
 
     # Generators of key-plaintext pairs for different splits.
     crypto_algorithms: List[AbstractSCryptoAlgorithm] = []

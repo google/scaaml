@@ -15,7 +15,7 @@
 number."""
 
 from types import TracebackType
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from scaaml.io.dataset import Dataset
 
@@ -61,8 +61,9 @@ class _DatasetFillerContext:
         # and if we should close the last shard.
         self.written_examples_not_skipped: int = 0
 
-    def write_example(self, attack_points: Dict, measurement: Dict,
-                      current_key: List, split_name: str, chip_id: int) -> None:
+    def write_example(self, attack_points: Dict[str, bytearray],
+                      measurement: Dict[str, Any], current_key: List[int],
+                      split_name: str, chip_id: int) -> None:
         """Write an example. Opens a new shard if necessary.
 
         Args:

@@ -13,6 +13,9 @@
 # limitations under the License.
 """Intro model."""
 
+from typing import Any, Dict, Tuple
+
+from tensorflow import Tensor
 from tensorflow.keras import layers
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
@@ -21,12 +24,12 @@ from scaaml.utils import display_config
 from scaaml.utils import get_num_gpu
 
 
-def block(x,
-          filters,
-          kernel_size=3,
-          strides=1,
-          conv_shortcut=False,
-          activation="relu"):
+def block(x: Tensor,
+          filters: int,
+          kernel_size: int = 3,
+          strides: int = 1,
+          conv_shortcut: bool = False,
+          activation: str = "relu") -> Tensor:
     """Residual block with pre-activation
     From: https://arxiv.org/pdf/1603.05027.pdf
 
@@ -80,7 +83,12 @@ def block(x,
     return x
 
 
-def stack(x, filters, blocks, kernel_size=3, strides=2, activation="relu"):
+def stack(x: Tensor,
+          filters: int,
+          blocks: int,
+          kernel_size: int = 3,
+          strides: int = 2,
+          activation: str = "relu") -> Tensor:
     """A set of stacked residual blocks.
     Args:
         filters (int): filters of the bottleneck layer.
@@ -112,7 +120,9 @@ def stack(x, filters, blocks, kernel_size=3, strides=2, activation="relu"):
     return x
 
 
-def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=C0103
+# pylint: disable=C0103
+def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
+             mdl_cfg: Dict[str, Any], optim_cfg: Dict[str, Any]) -> Model:
     del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
@@ -164,7 +174,8 @@ def Resnet1D(input_shape, attack_point, mdl_cfg, optim_cfg):  # pylint: disable=
     return model
 
 
-def get_model(input_shape, attack_point, config):
+def get_model(input_shape: Tuple[int, ...], attack_point: str,
+              config: Dict[str, Any]) -> Model:
     """Return an instantiated model based of the config provided.
 
     Args:

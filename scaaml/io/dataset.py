@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2021-2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,6 @@
 # limitations under the License.
 """Build and load tensorFlow dataset Record wrapper"""
 
-# Temporarily ignore this file until it's properly typed or reworked
-# mypy: ignore-errors
-
 import copy
 import math
 import json
@@ -24,7 +21,9 @@ from collections import defaultdict
 import shutil
 from time import time
 from typing_extensions import TypeAlias
-from typing import Dict, List, Literal, Optional, Union, Set, Tuple
+from typing import Any, DefaultDict, Dict, Generic, Iterable, Iterator
+from typing import List, Literal, Optional
+from typing import Union, Sequence, Set, Tuple, Type, TypeVar, cast
 from pathlib import Path
 import pprint
 
@@ -40,11 +39,28 @@ from scaaml.utils import bytelist_to_hex
 from scaaml.io.spell_check import find_misspellings
 import scaaml.io.utils as siutils
 from scaaml.io.utils import dtype_name_to_dtype, dtype_dtype_to_name
-from scaaml.io.shard import Shard
+from scaaml.io.shard import Shard, CompressionT
 from scaaml.io.errors import DatasetExistsError
 
+_T = TypeVar("_T")
 
-class Dataset():
+
+class FakeTqdm(Generic[_T]):
+
+    def __init__(self, iterable: Iterable[_T], **kwargs: Any) -> None:
+        del kwargs
+        self.iterable = iterable
+
+    def __iter__(self) -> Iterator[_T]:
+        return iter(self.iterable)
+
+
+ProgressBarT: TypeAlias = Union[
+    Type[tqdm],  # type: ignore[type-arg]
+    Type[FakeTqdm[_T]]]
+
+
+class Dataset:
     """Dataset class."""
     # Valid split values (used also as directory names).
     SPLIT_T: TypeAlias = Literal["train", "test", "holdout"]
@@ -67,19 +83,19 @@ class Dataset():
         firmware_sha256: str,
         description: str,
         examples_per_shard: int,
-        measurements_info: Dict,
-        attack_points_info: Dict,
+        measurements_info: Dict[str, Any],
+        attack_points_info: Dict[str, Dict[str, Any]],
         url: str,
         firmware_url: str = "",
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
-        compression: str = "GZIP",
-        shards_list: Optional[Dict[str, List]] = None,
+        compression: CompressionT = "GZIP",
+        shards_list: Optional[Dict[str, List[Any]]] = None,
         keys_per_group: Optional[Dict[str, Dict[int, int]]] = None,
         keys_per_split: Optional[Dict[str, int]] = None,
         examples_per_group: Optional[Dict[str, Dict[int, int]]] = None,
         examples_per_split: Optional[Dict[str, int]] = None,
-        capture_info: Optional[dict] = None,
+        capture_info: Optional[Dict[str, Any]] = None,
         min_values: Optional[Dict[str, float]] = None,
         max_values: Optional[Dict[str, float]] = None,
         from_config: bool = False,
@@ -171,28 +187,34 @@ class Dataset():
         # [counters] - must be passed as param to allow reload.
         # shards_list[split] is a list of shard info dictionaries (where split
         # in Dataset.SPLITS).
-        self.shards_list = siutils.ddict(value=shards_list,
-                                         levels=1,
-                                         type_var=list)
+        self.shards_list: DefaultDict[str, List[Any]]
+        self.shards_list = siutils.ddict(
+            value=shards_list,  # type: ignore[arg-type]
+            levels=1,
+            type_var=list)
 
         # keys counting
         # keys_per_group[split][group_id] contains the number (int) of keys
         # belonging to the group (group_id is int)
-        self.keys_per_group = siutils.ddict(value=keys_per_group,
-                                            levels=2,
-                                            type_var=int)
-        self.keys_per_split = siutils.ddict(value=keys_per_split,
-                                            levels=1,
-                                            type_var=int)
+        self.keys_per_group = siutils.ddict(
+            value=keys_per_group,  # type: ignore[arg-type]
+            levels=2,
+            type_var=int)
+        self.keys_per_split = siutils.ddict(
+            value=keys_per_split,  # type: ignore[arg-type]
+            levels=1,
+            type_var=int)
 
         # examples counting
         # keys_per_group[split][gid] = cnt
-        self.examples_per_group = siutils.ddict(value=examples_per_group,
-                                                levels=2,
-                                                type_var=int)
-        self.examples_per_split = siutils.ddict(value=examples_per_split,
-                                                levels=1,
-                                                type_var=int)
+        self.examples_per_group = siutils.ddict(
+            value=examples_per_group,  # type: ignore[arg-type]
+            levels=2,
+            type_var=int)
+        self.examples_per_split = siutils.ddict(
+            value=examples_per_split,  # type: ignore[arg-type]
+            levels=1,
+            type_var=int)
         self.examples_per_shard = examples_per_shard
 
         # traces extreme values
@@ -209,7 +231,7 @@ class Dataset():
             self._write_config()
 
     @staticmethod
-    def get_dataset(*args, **kwargs):
+    def get_dataset(*args: Any, **kwargs: Any) -> "Dataset":
         """Convenience method for getting a Dataset either by creating a new
         dataset using the Dataset constructor or by calling Dataset.from_config.
 
@@ -262,8 +284,8 @@ class Dataset():
         kwargs["shard_part"] = int(parts[2].split(".")[0])
         return kwargs
 
-    def new_shard(self, key: list, part: int, group: int, split: str,
-                  chip_id: int):
+    def new_shard(self, key: Sequence[int], part: int, group: int, split: str,
+                  chip_id: int) -> None:
         """Initiate a new key
 
         Args:
@@ -314,41 +336,44 @@ class Dataset():
                                 measurement_dtype=self.measurement_dtype,
                                 compression=self.compression)
 
-    def write_example(self, attack_points: Dict, measurement: Dict):
+    def write_example(self, attack_points: Dict[str, bytearray],
+                      measurement: Dict[str, Any]) -> None:
         assert self.curr_shard is not None
         self.curr_shard.write(attack_points, measurement)
 
-    def close_shard(self):
+    def close_shard(self) -> None:
         # close the shard
         assert self.curr_shard is not None
         assert self.shard_path is not None
         stats = self.curr_shard.close()
-        if stats["examples"] != self.examples_per_shard:
+        if stats.examples != self.examples_per_shard:
             cprint(
-                f"This shard contains {stats['examples']}, expected "
+                f"This shard contains {stats.examples}, expected "
                 f"{self.examples_per_shard}", "red")
 
         # update min/max values
-        for k, v in stats["min_values"].items():
+        for k, v in stats.min_values.items():
             self.min_values[k] = min(self.min_values[k], v)
 
-        for k, v in stats["max_values"].items():
+        for k, v in stats.max_values.items():
             self.max_values[k] = max(self.max_values[k], v)
 
         # update key stats only if key changed
         if self.shard_key != self.prev_shard_key:
-            self.keys_per_split[self.shard_split] += 1
-            self.keys_per_group[self.shard_split][self.shard_group] += 1
+            self.keys_per_split[self.shard_split] += 1  # type: ignore[index]
+            tmp = self.keys_per_group[self.shard_split]  # type: ignore[index]
+            tmp[self.shard_group] += 1  # type: ignore[index]
             self.prev_shard_key = self.shard_key
 
-        self.examples_per_split[self.shard_split] += stats["examples"]
-        self.examples_per_group[self.shard_split][
-            self.shard_group] += stats["examples"]
+        self.examples_per_split[
+            self.shard_split] += stats.examples  # type: ignore[index]
+        tmp = self.examples_per_group[self.shard_split]  # type: ignore[index]
+        tmp[self.shard_group] += stats.examples  # type: ignore[index]
 
         # record in shard list
-        self.shards_list[self.shard_split].append({
+        self.shards_list[self.shard_split].append({  # type: ignore[index]
             "path": str(self.shard_relative_path),
-            "examples": stats["examples"],
+            "examples": stats.examples,
             "size": os.stat(self.shard_path).st_size,
             "sha256": siutils.sha256sum(self.shard_path).lower(),
             "group": self.shard_group,
@@ -362,31 +387,28 @@ class Dataset():
         self.curr_shard = None
 
     @staticmethod
-    def download(url: str):
-        "Download dataset from a given url"
-        raise NotImplementedError("implement me using keras dl mechanism")
-
-    @staticmethod
-    def as_tfdataset(dataset_path: str,
-                     split: str,
-                     attack_points: List[Dict[str, Union[str, int]]],
-                     traces: Union[List[str], str],
-                     shards: Optional[int] = None,
-                     parts: Optional[Union[List[int], int]] = None,
-                     trace_start: int = 0,
-                     trace_len: Optional[int] = None,
-                     batch_size: int = 32,
-                     prefetch: int = 4,
-                     file_parallelism: Optional[int] = os.cpu_count(),
-                     parallelism: Optional[int] = os.cpu_count(),
-                     shuffle: int = 1000,
-                     additional_attack_points: Optional[List[Dict]] = None,
-                     **kwargs) -> Union[tf.data.Dataset, Dict, Dict]:
+    def as_tfdataset(
+        dataset_path: str,
+        split: SPLIT_T,
+        attack_points: List[Dict[str, Union[str, int]]],
+        traces: Union[List[str], str],
+        shards: Optional[int] = None,
+        parts: Optional[Union[List[int], int]] = None,
+        trace_start: int = 0,
+        trace_len: Optional[int] = None,
+        batch_size: int = 32,
+        prefetch: int = 4,
+        file_parallelism: Optional[int] = os.cpu_count(),
+        parallelism: Optional[int] = os.cpu_count(),
+        shuffle: int = 1000,
+        additional_attack_points: Optional[List[Dict[str, Any]]] = None,
+        **kwargs: Any
+    ) -> Tuple[tf.data.Dataset[Any], Dict[str, Any], Dict[str, Any]]:
         """"Dataset as tfdataset
 
         Args:
           dataset_path (str): The root path of the dataset.
-          split (str): Split, see Dataset.SPLITS.
+          split (SPLIT_T): Split, see Dataset.SPLITS.
           attack_points (List[Dict[str, Union[str, int]]]): Attack point
             information. Contains the attack point name, index, and type. For
             example:
@@ -454,7 +476,9 @@ class Dataset():
             tf_features[name] = tf.io.FixedLenFeature([ap["len"]], tf.int64)
 
         # decoding function
-        def from_tfrecord(tfrecord):
+        def from_tfrecord(
+                tfrecord: str) -> Dict[str, Union[tf.Tensor, tf.SparseTensor]]:
+            rec: Dict[str, Union[tf.Tensor, tf.SparseTensor]]
             rec = tf.io.parse_single_example(tfrecord, tf_features)
             # Decoding needed for float16
             if dataset.measurement_dtype == tf.float16:
@@ -468,7 +492,7 @@ class Dataset():
             return rec
 
         # inputs construction
-        inputs = {}  # model inputs
+        inputs: Dict[str, Any] = {}  # model inputs
         for name in traces:
             ipt = copy.deepcopy(dataset.measurements_info[name])
             inputs[name] = ipt
@@ -479,9 +503,9 @@ class Dataset():
             inputs[name]["delta"] = delta
 
         # output construction
-        outputs = {}  # model outputs
+        outputs: Dict[str, Any] = {}  # model outputs
         for attack_point in attack_points:
-            ap_name = attack_point["name"]
+            ap_name: str = cast(str, attack_point["name"])
             ap_index = attack_point["index"]
             ap_type = attack_point["type"]
             full_name = f"{ap_name}_{ap_index}"
@@ -498,12 +522,13 @@ class Dataset():
 
         # processing function
         # @tf.function
-        def process_record(rec):
+        def process_record(
+                rec: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             "process the tf record to get it ready for learning"
             x = {}
             # normalize the traces
             for name, data in inputs.items():
-                trace = rec[name]
+                trace: Any = rec[name]
 
                 # truncate if needed
                 if trace_start:
@@ -593,10 +618,9 @@ class Dataset():
         # Additional attack points to outputs
         if additional_attack_points:
             for attack_point in additional_attack_points:
-                info = attack_point["info"]
-                # This holds, mypy fails without this assert.
-                assert isinstance(info, Dict)
-                outputs[info["full_name"]] = info
+                info = cast(Dict[str, Any], attack_point["info"])
+                name = cast(str, info["full_name"])
+                outputs[name] = info
 
         # # batching with repeat
         ds = ds.repeat()
@@ -606,7 +630,7 @@ class Dataset():
         return ds, inputs, outputs
 
     @staticmethod
-    def summary(dataset_path):
+    def summary(dataset_path: Union[str, Path]) -> None:
         """Print a summary of the dataset"""
         lst = [
             "shortname", "description", "url", "architecture", "implementation",
@@ -641,11 +665,11 @@ class Dataset():
         print(tabulate(d, ["split", "num_shards", "num_keys", "num_examples"]))
 
     @staticmethod
-    def inspect(dataset_path,
+    def inspect(dataset_path: Union[str, Path],
                 split: SPLIT_T,
                 shard_id: int,
                 num_example: int,
-                verbose: bool = True):
+                verbose: bool = True) -> tf.data.Dataset[Any]:
         """Display the content of a given shard.
 
         Args:
@@ -682,7 +706,7 @@ class Dataset():
     def check(self,
               deep_check: bool = True,
               show_progressbar: bool = True,
-              key_ap: str = "key"):
+              key_ap: str = "key") -> None:
         """Check the dataset integrity. Check integrity of metadata in config
         and also that no key from the train is in the test.
 
@@ -698,12 +722,13 @@ class Dataset():
         """
         if key_ap not in self.attack_points_info:
             raise ValueError(f"{key_ap} is not an attack point.")
+        pbar: ProgressBarT[Any]
         if show_progressbar:
             pbar = tqdm
         else:
             # Redefine tqdm to the identity function returning the first unnamed
             # parameter.
-            pbar = lambda *args, **kwargs: args[0]  # pylint: disable=C3001
+            pbar = FakeTqdm
 
         Dataset._check_chip_id(self.shards_list)
 
@@ -725,7 +750,7 @@ class Dataset():
                                       deep_check=deep_check)
 
     @staticmethod
-    def _check_chip_id(shards_list) -> None:
+    def _check_chip_id(shards_list: Dict[str, List[Any]]) -> None:
         """Check that no chip_id is repeated between holdout and other splits.
 
         Raises: a ValueError if the same chip_id is present in holdout and
@@ -749,7 +774,10 @@ class Dataset():
                     raise ValueError(f"Same chip_id in {split} and "
                                      f"{Dataset.HOLDOUT_SPLIT}")
 
-    def _check_disjoint_keys(self, pbar, key_ap: str, deep_check: bool = True):
+    def _check_disjoint_keys(self,
+                             pbar: ProgressBarT[Any],
+                             key_ap: str,
+                             deep_check: bool = True) -> None:
         """Check that no key in the train split is present in the test split.
 
         Args:
@@ -786,7 +814,8 @@ class Dataset():
                 pbar=pbar)
 
     @staticmethod
-    def _check_sha256sums(shards_list, dpath: Path, pbar):
+    def _check_sha256sums(shards_list: Dict[str, List[Any]], dpath: Path,
+                          pbar: ProgressBarT[Any]) -> None:
         """Check the metadata of this dataset.
 
         Args:
@@ -807,7 +836,8 @@ class Dataset():
                     raise ValueError(shard_info["path"], "SHA256 miss-match")
 
     @staticmethod
-    def _check_shard_metadata(shard_info: Dict, dataset_path: Path) -> None:
+    def _check_shard_metadata(shard_info: Dict[str, Any],
+                              dataset_path: Path) -> None:
         """Checks shard metadata.
 
         Args:
@@ -858,8 +888,9 @@ class Dataset():
                              f"{type(chip_id)}, in shard: {shard_info}")
 
     @staticmethod
-    def _check_metadata(config,
-                        n_examples_in_each_shard_is_constant: bool = False):
+    def _check_metadata(
+            config: Dict[str, Any],
+            n_examples_in_each_shard_is_constant: bool = False) -> None:
         """Check the metadata of this dataset.
 
         Args:
@@ -925,7 +956,8 @@ class Dataset():
                 raise ValueError("sum example don't match top_examples")
 
     @staticmethod
-    def _shallow_check(seen_keys, train_shards, pbar):
+    def _shallow_check(seen_keys: Set[bytes], train_shards: List[Any],
+                       pbar: ProgressBarT[Any]) -> None:
         """Check just what is in self.shards_list info (do not parse all
         shards).
 
@@ -945,8 +977,9 @@ class Dataset():
                     f"Duplicate key: {k} in test split, in {shard}")
 
     @staticmethod
-    def _deep_check(seen_keys, dpath, train_shards, pbar,
-                    examples_per_shard: int, key_ap: str):
+    def _deep_check(seen_keys: Set[bytes], dpath: Path, train_shards: List[Any],
+                    pbar: ProgressBarT[Any], examples_per_shard: int,
+                    key_ap: str) -> None:
         """Check all keys from all shards (parse all shards in the train split).
 
         Args:
@@ -970,10 +1003,10 @@ class Dataset():
                 cur_key = example[key_ap].astype(np.uint8).tobytes()
                 if cur_key in seen_keys:
                     raise ValueError(
-                        f"Duplicate key: {cur_key} in test split, in "
+                        f"Duplicate key: {cur_key!r} in test split, in "
                         f"{train_shards[i]}")
 
-    def get_config_dictionary(self):
+    def get_config_dictionary(self) -> Dict[str, Any]:
         """Return dictionary of information about this dataset.
 
         Raises: ValueError if saving this dictionary using json would cause
@@ -1025,7 +1058,7 @@ class Dataset():
         return representation
 
     @staticmethod
-    def _load_config(conf_path: Path) -> Dict:
+    def _load_config(conf_path: Path) -> Dict[str, Any]:
         """Get config dictionary from a file. Use this function instead of an
         json.loads, as this function returns correct types for group ids.
 
@@ -1038,7 +1071,7 @@ class Dataset():
         return Dataset._from_loaded_json(json.loads(conf_path.read_text()))
 
     @staticmethod
-    def _from_loaded_json(loaded_dict: Dict) -> Dict:
+    def _from_loaded_json(loaded_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Fix types in the data-structure loaded from JSON. Necessary as JSON
         allows only string keys, but for instance group keys are integers in
         Dataset.
@@ -1073,7 +1106,7 @@ class Dataset():
                 fixed_dict[k] = ""
         return fixed_dict
 
-    def _write_config(self):
+    def _write_config(self) -> None:
         """Save configuration as json."""
         with open(self._get_config_path(self.path), "w+",
                   encoding="utf-8") as f:
@@ -1084,7 +1117,7 @@ class Dataset():
         self._write_config()
 
     @staticmethod
-    def from_config(dataset_path: str, verbose: bool = True):
+    def from_config(dataset_path: str, verbose: bool = True) -> "Dataset":
         """Load a dataset from a config file.
 
         Args:
@@ -1139,11 +1172,12 @@ class Dataset():
         )
 
     @staticmethod
-    def _get_config_path(path) -> Path:
+    def _get_config_path(path: Union[str, Path]) -> Path:
         return Path(path) / "info.json"
 
     @staticmethod
-    def _cleanup_shards(dataset_path: Path, print_info: bool = True):
+    def _cleanup_shards(dataset_path: Path,
+                        print_info: bool = True) -> Dict[str, Any]:
         """Returns an updated config which contains only shards that correspond
         to existing files.
 
@@ -1183,7 +1217,7 @@ class Dataset():
             examples_per_group[split] = {
                 k: 0 for k in config["examples_per_group"][split]
             }
-            names_keys_per_group: Dict[int, Set] = {
+            names_keys_per_group: Dict[int, Set[Any]] = {
                 k: set() for k in config["keys_per_group"][split]
             }
             key_names_per_split = set()
@@ -1207,7 +1241,7 @@ class Dataset():
         return config
 
     @staticmethod
-    def cleanup_shards(dataset_path):
+    def cleanup_shards(dataset_path: Union[str, Path]) -> None:
         """Remove non_existing shards from the config and update the config.
         Makes a backup of the old config named info.json.sav.{time()}.json.
 
@@ -1279,11 +1313,14 @@ class Dataset():
         # Fix metadata.
         self.examples_per_split[from_split] -= shard["examples"]
         self.examples_per_split[to_split] += shard["examples"]
-        self.examples_per_group[from_split][shard["group"]] -= shard["examples"]
+        tmp = cast(Dict[str, int], self.examples_per_group[from_split])
+        tmp[shard["group"]] -= shard["examples"]
         # Zero value should not be present.
-        if self.examples_per_group[from_split][shard["group"]] == 0:
-            del self.examples_per_group[from_split][shard["group"]]
-        self.examples_per_group[to_split][shard["group"]] += shard["examples"]
+        tmp = cast(Dict[str, int], self.examples_per_group[from_split])
+        if tmp[shard["group"]] == 0:
+            del tmp[shard["group"]]
+        tmp = cast(Dict[str, int], self.examples_per_group[to_split])
+        tmp[shard["group"]] += shard["examples"]
 
     def move_shards(self, from_split: str, to_split: str,
                     shards: Union[int, Set[int]]) -> None:
@@ -1329,16 +1366,19 @@ class Dataset():
             all_keys.update(group_keys)
         self.keys_per_split[from_split] -= len(all_keys)
         self.keys_per_split[to_split] += len(all_keys)
-        for group in self.keys_per_group[from_split]:
-            self.keys_per_group[from_split][group] -= len(keys_moved[group])
-            self.keys_per_group[to_split][group] += len(keys_moved[group])
+        for group in self.keys_per_group[
+                from_split]:  # type: ignore[attr-defined]
+            tmp = cast(Dict[Any, int], self.keys_per_group[from_split])
+            tmp[group] -= len(keys_moved[group])
+            tmp = cast(Dict[Any, int], self.keys_per_group[to_split])
+            tmp[group] += len(keys_moved[group])
         # Write config to save the state of this dataset. (Also the config is
         # used in self.check()).
         self._write_config()
         # Check the resulting dataset (especially for key repetition).
         self.check()
 
-    def merge_with(self, other_dataset) -> None:
+    def merge_with(self, other_dataset: "Dataset") -> None:
         """Merge other_dataset into this dataset. This method changes this
         dataset (self). Make a backup before calling this method.
 
@@ -1404,8 +1444,8 @@ class Dataset():
 
         # Update shards.
         for split in other_dataset.shards_list:
-            seen_keys: Set = set()
-            seen_keys_per_group: Dict = {}
+            seen_keys: Set[Any] = set()
+            seen_keys_per_group: Dict[Any, Any] = {}
             for shard in tqdm(other_dataset.shards_list[split],
                               desc=f"Merging {split}"):
                 self.shards_list[split].append(shard)
@@ -1425,13 +1465,14 @@ class Dataset():
                 shutil.copy(str(other_file), str(copied_file))
 
                 # Update metadata.
-                self.examples_per_group[split][
-                    shard["group"]] += shard["examples"]
+                tmp = cast(Dict[Any, int], self.examples_per_group[split])
+                tmp[shard["group"]] += shard["examples"]
                 self.examples_per_split[split] += shard["examples"]
 
             self.keys_per_split[split] += len(seen_keys)
             for group, key_set in seen_keys_per_group.items():
-                self.keys_per_group[split][group] += len(key_set)
+                tmp = cast(Dict[Any, int], self.keys_per_group[split])
+                tmp[group] += len(key_set)
 
         # Write config to save the state of this dataset. (Also the config is
         # used in self.check()).
