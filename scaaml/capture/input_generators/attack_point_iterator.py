@@ -72,6 +72,7 @@ def _build_attack_points_iterator(
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
         "repeat": AttackPointIteratorRepeat,
         "zip": AttackPointIteratorZip,
+        "cartesian_product": AttackPointIteratorCartesianProduct,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -272,6 +273,50 @@ class AttackPointIteratorZip(AttackPointIterator):
         merged_dictionary = {}
         for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
+        return merged_dictionary
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys = []
+        for operand in self._operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
+
+
+class AttackPointIteratorCartesianProduct(AttackPointIterator):
+    """
+    Attack point iterator cartesian product class. This class takes any amount
+    of operands and combines them just like a cartesianal product would.
+    """
+
+    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+        assert "cartesian_product" == operation
+        self._operands = list(
+            build_attack_points_iterator(operand) for operand in operands)
+
+        operand_lengths = [operand._len for operand in self._operands]
+        if not self._operands or any(
+                length <= 0
+                for length in operand_lengths) or len(operand_lengths) != 2:
+            self._len = 0
+            print(len(self))
+        else:
+            self._len = operand_lengths[0] * operand_lengths[1]
+
+    def __iter__(self) -> AttackPointIteratorT:
+        if any(len(operand) <= 0 for operand in self._operands) or len(
+                self._operands) != 2:
+            raise ValueError
+        return iter(
+            self.merge_dictionaries(value_one, value_two)
+            for value_one in self._operands[0]
+            for value_two in self._operands[1])
+
+    @staticmethod
+    def merge_dictionaries(value_one: Dict[str, Any],
+                           value_two: Dict[str, Any]) -> Dict[str, Any]:
+        merged_dictionary = {}
+        merged_dictionary.update(value_one)
+        merged_dictionary.update(value_two)
         return merged_dictionary
 
     def get_generated_keys(self) -> List[str]:
