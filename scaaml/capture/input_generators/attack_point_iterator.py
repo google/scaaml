@@ -308,7 +308,6 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
                 length <= 0
                 for length in operand_lengths) or len(operand_lengths) != 2:
             self._len = 0
-            print(len(self))
         else:
             self._len = operand_lengths[0] * operand_lengths[1]
 
