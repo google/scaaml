@@ -304,9 +304,9 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
             build_attack_points_iterator(operand) for operand in operands)
 
         operand_lengths = [operand._len for operand in self._operands]
-        if not self._operands or any(
-                length <= 0
-                for length in operand_lengths) or len(operand_lengths) != 2:
+        if any(length < 0 for length in operand_lengths):
+            raise ValueError
+        elif not self._operands or any(length == 0 for length in operand_lengths):
             self._len = 0
         else:
             self._len = operand_lengths[0] * operand_lengths[1]
