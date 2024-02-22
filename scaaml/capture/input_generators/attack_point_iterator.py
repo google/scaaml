@@ -263,11 +263,11 @@ class AttackPointIteratorZip(AttackPointIterator):
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter(
-            self.merge_dictionaries(tuple_of_dictionaries)
+            self._merge_dictionaries(tuple_of_dictionaries)
             for tuple_of_dictionaries in zip(*self._operands))
 
     @staticmethod
-    def merge_dictionaries(
+    def _merge_dictionaries(
         tuple_of_dictionaries: Tuple[Dict[str,
                                           List[int]]]) -> Dict[str, List[int]]:
         merged_dictionary = {}
@@ -312,16 +312,15 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
             self._len = operand_lengths[0] * operand_lengths[1]
 
     def __iter__(self) -> AttackPointIteratorT:
-        if any(len(operand) <= 0 for operand in self._operands) or len(
-                self._operands) != 2:
+        if len(self._operands) != 2:
             raise ValueError
         return iter(
-            self.merge_dictionaries(value_one, value_two)
+            self._merge_dictionaries(value_one, value_two)
             for value_one in self._operands[0]
             for value_two in self._operands[1])
 
     @staticmethod
-    def merge_dictionaries(value_one: Dict[str, Any],
+    def _merge_dictionaries(value_one: Dict[str, Any],
                            value_two: Dict[str, Any]) -> Dict[str, Any]:
         merged_dictionary = {}
         merged_dictionary.update(value_one)
