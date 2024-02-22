@@ -21,6 +21,7 @@ import collections
 import copy
 import itertools
 from typing import Any, Dict, Iterator, List, Tuple, Type
+import math
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
@@ -300,28 +301,39 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
             operands (List[Dict[str, Any]]): The operands are any number of
                 iterator configs that will be combined."""
         assert "cartesian_product" == operation
-        self._operands = list(
-            build_attack_points_iterator(operand) for operand in operands)
-
+        if not operands:
+            raise ValueError
+        elif len(operands) > 1:
+            self._operands = [
+                build_attack_points_iterator(operands[0]),
+                build_attack_points_iterator({
+                    "operation": "cartesian_product",
+                    "operands": operands[1:]
+                })
+            ]
+        else:
+            self._operands = [build_attack_points_iterator(operands[0])]
         operand_lengths = [operand._len for operand in self._operands]
         if any(length < 0 for length in operand_lengths):
-            raise ValueError
-        elif not self._operands or any(length == 0 for length in operand_lengths):
+            raise LengthIsInfiniteException
+        elif not self._operands or any(
+                length == 0 for length in operand_lengths):
             self._len = 0
         else:
-            self._len = operand_lengths[0] * operand_lengths[1]
+            self._len = math.prod(operand_lengths)
 
     def __iter__(self) -> AttackPointIteratorT:
-        if len(self._operands) != 2:
-            raise ValueError
-        return iter(
-            self._merge_dictionaries(value_one, value_two)
-            for value_one in self._operands[0]
-            for value_two in self._operands[1])
+        if len(self._operands) == 2:
+            return iter(
+                self._merge_dictionaries(value_one, value_two)
+                for value_one in self._operands[0]
+                for value_two in self._operands[1])
+        else:
+            return iter(self._operands[0])
 
     @staticmethod
     def _merge_dictionaries(value_one: Dict[str, Any],
-                           value_two: Dict[str, Any]) -> Dict[str, Any]:
+                            value_two: Dict[str, Any]) -> Dict[str, Any]:
         merged_dictionary = {}
         merged_dictionary.update(value_one)
         merged_dictionary.update(value_two)

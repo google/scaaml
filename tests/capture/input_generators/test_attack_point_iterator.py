@@ -857,11 +857,41 @@ def test_attack_point_iterator_cartesian_product_three_operands():
     }
 
     output = build_attack_points_iterator(config)
-    output_len = len(output)
 
-    with pytest.raises(ValueError):
-        list(iter(output))
-    assert output_len == 0
+    assert list(iter(output)) == [{
+        "key": [1],
+        "plaintext": [3],
+        "three": [5]
+    }, {
+        "key": [1],
+        "plaintext": [3],
+        "three": [6]
+    }, {
+        "key": [1],
+        "plaintext": [4],
+        "three": [5]
+    }, {
+        "key": [1],
+        "plaintext": [4],
+        "three": [6]
+    }, {
+        "key": [2],
+        "plaintext": [3],
+        "three": [5]
+    }, {
+        "key": [2],
+        "plaintext": [3],
+        "three": [6]
+    }, {
+        "key": [2],
+        "plaintext": [4],
+        "three": [5]
+    }, {
+        "key": [2],
+        "plaintext": [4],
+        "three": [6]
+    }]
+    assert len(output) == 8
 
 
 def test_attack_point_iterator_cartesian_product_finite_and_no_values():
@@ -884,11 +914,8 @@ def test_attack_point_iterator_cartesian_product_finite_and_no_values():
 
     output = build_attack_points_iterator(config)
 
-    output_len = len(output)
-
-    with pytest.raises(ValueError):
-        list(iter(output))
-    assert output_len == 0
+    assert list(iter(output)) == []
+    assert len(output) == 0
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_no_values():
@@ -913,11 +940,8 @@ def test_attack_point_iterator_cartesian_product_infinite_and_no_values():
         }]
     }
 
-    output = build_attack_points_iterator(config)
-    output_len = len(output)
     with pytest.raises(LengthIsInfiniteException):
-        list(iter(output))
-    assert output_len == 0
+        build_attack_points_iterator(config)
 
 
 def test_attack_point_iterator_cartesian_product_finite_and_infinite():
@@ -943,11 +967,8 @@ def test_attack_point_iterator_cartesian_product_finite_and_infinite():
         }]
     }
 
-    output = build_attack_points_iterator(config)
     with pytest.raises(LengthIsInfiniteException):
-        list(iter(output))
-
-    assert len(output) == 0
+        build_attack_points_iterator(config)
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_finite():
@@ -973,10 +994,8 @@ def test_attack_point_iterator_cartesian_product_infinite_and_finite():
         }]
     }
 
-    output = build_attack_points_iterator(config)
     with pytest.raises(LengthIsInfiniteException):
-        list(iter(output))
-    assert len(output) == 0
+        build_attack_points_iterator(config)
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_infinite():
@@ -1006,21 +1025,14 @@ def test_attack_point_iterator_cartesian_product_infinite_and_infinite():
         }]
     }
 
-    output = build_attack_points_iterator(config)
     with pytest.raises(LengthIsInfiniteException):
-        list(iter(output))
-    assert len(output) == 0
+        build_attack_points_iterator(config)
 
 
 def test_attack_point_iterator_cartesian_product_no_operands():
     config = {"operation": "cartesian_product", "operands": []}
-
-    output = build_attack_points_iterator(config)
-    output_len = len(output)
-
     with pytest.raises(ValueError):
-        list(iter(output))
-    assert output_len == 0
+        build_attack_points_iterator(config)
 
 
 def test_attack_point_iterator_cartesian_product_same_name():
