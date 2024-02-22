@@ -285,10 +285,20 @@ class AttackPointIteratorZip(AttackPointIterator):
 class AttackPointIteratorCartesianProduct(AttackPointIterator):
     """
     Attack point iterator cartesian product class. This class takes any amount
-    of operands and combines them just like a cartesianal product would.
+    of operands and combines them just like a cartesian product would.
     """
 
     def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+        """Initialize the cartesian product iterator.
+          
+          Args:
+            operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+                
+            operands (List[Dict[str, Any]]): The operands are any number of
+                iterator configs that will be combined."""
         assert "cartesian_product" == operation
         self._operands = list(
             build_attack_points_iterator(operand) for operand in operands)
