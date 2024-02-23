@@ -325,7 +325,7 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
     def __iter__(self) -> AttackPointIteratorT:
         if len(self._operands) == 2:
             return iter(
-                self._merge_dictionaries(value_one, value_two)
+                {**value_one, **value_two}
                 for value_one in self._operands[0]
                 for value_two in self._operands[1])
         else:
