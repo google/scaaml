@@ -340,14 +340,6 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
         else:
             return iter(self._operands[0])
 
-    @staticmethod
-    def _merge_dictionaries(value_one: Dict[str, Any],
-                            value_two: Dict[str, Any]) -> Dict[str, Any]:
-        merged_dictionary = {}
-        merged_dictionary.update(value_one)
-        merged_dictionary.update(value_two)
-        return merged_dictionary
-
     def get_generated_keys(self) -> List[str]:
         generated_keys = []
         for operand in self._operands:
