@@ -299,7 +299,9 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
                 double check if the operation is the correct one.
                 
             operands (List[Dict[str, Any]]): The operands are any number of
-                iterator configs that will be combined."""
+                iterator configs that will be combined. If the iterator 
+                config is an infinite iterator it will raise an 
+                exception in the init."""
         assert "cartesian_product" == operation
         if not operands:
             raise ValueError
