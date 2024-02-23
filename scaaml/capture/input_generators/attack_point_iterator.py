@@ -324,10 +324,12 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
 
     def __iter__(self) -> AttackPointIteratorT:
         if len(self._operands) == 2:
-            return iter(
-                {**value_one, **value_two}
-                for value_one in self._operands[0]
-                for value_two in self._operands[1])
+            return iter({
+                **value_one,
+                **value_two
+            }
+                        for value_one in self._operands[0]
+                        for value_two in self._operands[1])
         else:
             return iter(self._operands[0])
 
