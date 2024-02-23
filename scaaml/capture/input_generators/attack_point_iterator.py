@@ -300,8 +300,12 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
                 
             operands (List[Dict[str, Any]]): The operands are any number of
                 iterator configs that will be combined. If the operands list
-                is empty it will raise a ValueError. If one of the operands 
-                iterates infinitly it will throw a LengthIsInfiniteException"""
+                is empty it will raise a ValueError. If one of the operands
+                length is 0 the length of the cartesian product iterator will
+                also be 0, it will return an empty iterator.If one of the
+                operands iterates infinitly it will throw a
+                LengthIsInfiniteException in the init.
+                """
         assert "cartesian_product" == operation
         if not operands:
             raise ValueError
@@ -316,15 +320,17 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
         else:
             self._operands = [build_attack_points_iterator(operands[0])]
         operand_lengths = [operand._len for operand in self._operands]
-        if any(length < 0 for length in operand_lengths):
-            raise LengthIsInfiniteException
-        elif not self._operands or any(
+        if not self._operands or any(
                 length == 0 for length in operand_lengths):
             self._len = 0
+        elif any(length < 0 for length in operand_lengths):
+            raise LengthIsInfiniteException
         else:
             self._len = math.prod(operand_lengths)
 
     def __iter__(self) -> AttackPointIteratorT:
+        if self._len == 0:
+            return iter([])
         if len(self._operands) == 2:
             return iter({
                 **value_one,

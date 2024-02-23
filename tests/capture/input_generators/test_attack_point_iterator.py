@@ -940,8 +940,10 @@ def test_attack_point_iterator_cartesian_product_infinite_and_no_values():
         }]
     }
 
-    with pytest.raises(LengthIsInfiniteException):
-        build_attack_points_iterator(config)
+    output = build_attack_points_iterator(config)
+
+    assert list(iter(output)) == []
+    assert len(output) == 0
 
 
 def test_attack_point_iterator_cartesian_product_finite_and_infinite():
