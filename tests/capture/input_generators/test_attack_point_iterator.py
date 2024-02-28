@@ -785,3 +785,276 @@ def test_attack_point_iterator_zip_no_operands():
 
     assert output_iter == []
     assert output_len == 0
+
+
+def test_attack_point_iterator_cartesian_product_two_operands():
+    values1 = [[1], [2]]
+    values2 = [[4], [5]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values1
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values2
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+    output_iter = list(iter(output))
+    output_len = len(output)
+
+    assert output_iter == [
+        {
+            "key": [1],
+            "plaintext": [4]
+        },
+        {
+            "key": [1],
+            "plaintext": [5]
+        },
+        {
+            "key": [2],
+            "plaintext": [4]
+        },
+        {
+            "key": [2],
+            "plaintext": [5]
+        },
+    ]
+    assert output_len == len(values1) * len(values2)
+
+
+def test_attack_point_iterator_cartesian_product_three_operands():
+    values1 = [[1], [2]]
+    values2 = [[3], [4]]
+    values3 = [[5], [6]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values1
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values2
+        }, {
+            "operation": "constants",
+            "name": "three",
+            "length": 1,
+            "values": values3
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+
+    assert list(iter(output)) == [{
+        "key": [1],
+        "plaintext": [3],
+        "three": [5]
+    }, {
+        "key": [1],
+        "plaintext": [3],
+        "three": [6]
+    }, {
+        "key": [1],
+        "plaintext": [4],
+        "three": [5]
+    }, {
+        "key": [1],
+        "plaintext": [4],
+        "three": [6]
+    }, {
+        "key": [2],
+        "plaintext": [3],
+        "three": [5]
+    }, {
+        "key": [2],
+        "plaintext": [3],
+        "three": [6]
+    }, {
+        "key": [2],
+        "plaintext": [4],
+        "three": [5]
+    }, {
+        "key": [2],
+        "plaintext": [4],
+        "three": [6]
+    }]
+    assert len(output) == 8
+
+
+def test_attack_point_iterator_cartesian_product_finite_and_no_values():
+    values1 = [[1], [2]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values1
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": []
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+
+    assert list(iter(output)) == []
+    assert len(output) == 0
+
+
+def test_attack_point_iterator_cartesian_product_infinite_and_no_values():
+    values1 = [[1], [2]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": []
+        }]
+    }
+
+    output = build_attack_points_iterator(config)
+
+    assert list(iter(output)) == []
+    assert len(output) == 0
+
+
+def test_attack_point_iterator_cartesian_product_finite_and_infinite():
+    values1 = [[1], [2]]
+    values2 = [[3], [4]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values1
+        }, {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values2
+            }
+        }]
+    }
+
+    with pytest.raises(LengthIsInfiniteException):
+        build_attack_points_iterator(config)
+
+
+def test_attack_point_iterator_cartesian_product_infinite_and_finite():
+    values1 = [[1], [2]]
+    values2 = [[3], [4]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }
+        }, {
+            "operation": "constants",
+            "name": "plaintext",
+            "length": 1,
+            "values": values2
+        }]
+    }
+
+    with pytest.raises(LengthIsInfiniteException):
+        build_attack_points_iterator(config)
+
+
+def test_attack_point_iterator_cartesian_product_infinite_and_infinite():
+    values1 = [[1], [2]]
+    values2 = [[3], [4]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }
+        }, {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values2
+            }
+        }]
+    }
+
+    with pytest.raises(LengthIsInfiniteException):
+        build_attack_points_iterator(config)
+
+
+def test_attack_point_iterator_cartesian_product_no_operands():
+    config = {"operation": "cartesian_product", "operands": []}
+    with pytest.raises(ValueError):
+        build_attack_points_iterator(config)
+
+
+def test_attack_point_iterator_cartesian_product_same_name():
+    values1 = [[1], [2]]
+    values2 = [[3], [4]]
+    config = {
+        "operation":
+            "cartesian_product",
+        "operands": [{
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values1
+        }, {
+            "operation": "constants",
+            "name": "key",
+            "length": 1,
+            "values": values2
+        }]
+    }
+
+    with pytest.raises(ValueError):
+        build_attack_points_iterator(config)

@@ -21,6 +21,7 @@ import collections
 import copy
 import itertools
 from typing import Any, Dict, Iterator, List, Tuple, Type
+import math
 
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
@@ -72,6 +73,7 @@ def _build_attack_points_iterator(
         "unrestricted_generator": AttackPointIteratorUnrestrictedGenerator,
         "repeat": AttackPointIteratorRepeat,
         "zip": AttackPointIteratorZip,
+        "cartesian_product": AttackPointIteratorCartesianProduct,
     }
     operation = configuration["operation"]
     iterator_cls = supported_operations.get(operation)
@@ -262,17 +264,81 @@ class AttackPointIteratorZip(AttackPointIterator):
 
     def __iter__(self) -> AttackPointIteratorT:
         return iter(
-            self.merge_dictionaries(tuple_of_dictionaries)
+            self._merge_dictionaries(tuple_of_dictionaries)
             for tuple_of_dictionaries in zip(*self._operands))
 
     @staticmethod
-    def merge_dictionaries(
+    def _merge_dictionaries(
         tuple_of_dictionaries: Tuple[Dict[str,
                                           List[int]]]) -> Dict[str, List[int]]:
         merged_dictionary = {}
         for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
         return merged_dictionary
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys = []
+        for operand in self._operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
+
+
+class AttackPointIteratorCartesianProduct(AttackPointIterator):
+    """
+    Attack point iterator cartesian product class. This class takes any amount
+    of operands and combines them just like a cartesian product would.
+    """
+
+    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+        """Initialize the cartesian product iterator.
+          
+          Args:
+            operation (str): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file. This is only used once to
+                double check if the operation is the correct one.
+                
+            operands (List[Dict[str, Any]]): The operands are any number of
+                iterator configs that will be combined. If the operands list
+                is empty it will raise a ValueError. If one of the operands
+                length is 0 the length of the cartesian product iterator will
+                also be 0, it will return an empty iterator. If one of the
+                operands iterates infinitely it will throw a
+                LengthIsInfiniteException in the init.
+                """
+        assert "cartesian_product" == operation
+        if not operands:
+            raise ValueError
+        elif len(operands) > 1:
+            self._operands = [
+                build_attack_points_iterator(operands[0]),
+                build_attack_points_iterator({
+                    "operation": "cartesian_product",
+                    "operands": operands[1:]
+                })
+            ]
+        else:
+            self._operands = [build_attack_points_iterator(operands[0])]
+        operand_lengths = [operand._len for operand in self._operands]
+        if any(length == 0 for length in operand_lengths):
+            self._len = 0
+        elif any(length < 0 for length in operand_lengths):
+            raise LengthIsInfiniteException
+        else:
+            self._len = math.prod(operand_lengths)
+
+    def __iter__(self) -> AttackPointIteratorT:
+        if self._len == 0:
+            return iter([])
+        if len(self._operands) == 2:
+            return iter({
+                **value_one,
+                **value_two
+            }
+                        for value_one in self._operands[0]
+                        for value_two in self._operands[1])
+        else:
+            return iter(self._operands[0])
 
     def get_generated_keys(self) -> List[str]:
         generated_keys = []
