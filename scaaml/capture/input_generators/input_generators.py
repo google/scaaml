@@ -146,8 +146,7 @@ def balanced_generator(length: int,
         )
 
         # yield each row
-        for value in bunch:
-            yield value
+        yield from bunch
 
 
 def unrestricted_generator(length: int,
