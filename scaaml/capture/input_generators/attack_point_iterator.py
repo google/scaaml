@@ -320,7 +320,7 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
         else:
             self._operands = [build_attack_points_iterator(operands[0])]
         operand_lengths = [operand._len for operand in self._operands]
-        if not self._operands or any(length == 0 for length in operand_lengths):
+        if any(length == 0 for length in operand_lengths):
             self._len = 0
         elif any(length < 0 for length in operand_lengths):
             raise LengthIsInfiniteException
