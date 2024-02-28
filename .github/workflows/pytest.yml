@@ -61,13 +61,15 @@ jobs:
         run:
           pip install --upgrade picosdk
       - name: Install workflow dependencies
-        run: pip install --upgrade pytest coverage coveralls
-      - name: Running unit tests
-        run: coverage run
+        run: pip install --upgrade pytest coverage
+      - name: Running unit tests with coverage
         env:
           DISABLE_AUTOGRAPH: 1
+        run: |
+          coverage run -m pytest
+          coverage xml
       - name: Upload results
-        run: coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage.xml
 
