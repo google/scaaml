@@ -302,7 +302,7 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
                 iterator configs that will be combined. If the operands list
                 is empty it will raise a ValueError. If one of the operands
                 length is 0 the length of the cartesian product iterator will
-                also be 0, it will return an empty iterator.If one of the
+                also be 0, it will return an empty iterator. If one of the
                 operands iterates infinitely it will throw a
                 LengthIsInfiniteException in the init.
                 """
