@@ -233,8 +233,7 @@ def _get_current_capture_info(capture_info: Dict[str, Any],
     current_capture_info = deepcopy(capture_info)
     for name, value in capture_info.items():
         if name.startswith(prefix):
-            # str.removeprefix introduced in Python 3.9, we support 3.8
-            short_name = name[len(prefix):]
+            short_name = name.removeprefix(prefix)
 
             # Check that we do not set short_name by mistake
             if short_name in current_capture_info:

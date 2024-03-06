@@ -59,13 +59,19 @@ def hex_display(lst: Sequence[int],
 
 def get_model_stub(attack_point: str, attack_byte: int,
                    config: Dict[str, str]) -> str:
-    return (f"{config['device']}-{config['algorithm']}-{config['model']}-"
-            f"v{config['version']}-ap_{attack_point}-byte_{attack_byte}-"
-            f"len_{config['max_trace_len']}")
+    device = config["device"]
+    algorithm = config["algorithm"]
+    model = config["model"]
+    version = config["version"]
+    max_trace_len = config["max_trace_len"]
+    return (f"{device}-{algorithm}-{model}-v{version}-ap_{attack_point}-"
+            f"byte_{attack_byte}-len_{max_trace_len}")
 
 
 def get_target_stub(config: Dict[str, str]) -> str:
-    return f"{config['device']}-{config['algorithm']}"
+    device = config["device"]
+    algorithm = config["algorithm"]
+    return f"{device}-{algorithm}"
 
 
 def get_num_gpu() -> int:
