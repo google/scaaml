@@ -31,7 +31,7 @@ from scaaml.utils import tf_cap_memory
 
 def train_model(config):
     tf_cap_memory()
-    algorithm = config['algorithm']
+    algorithm = config["algorithm"]
     train_glob = f"datasets/{algorithm}/train/*"
     test_glob = f"datasets/{algorithm}/test/*"
     test_shards = 256
