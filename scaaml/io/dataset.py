@@ -872,15 +872,17 @@ class Dataset:
                                  f"{shard_info[key]}, in shard: {shard_info}")
         # Check key (in filename it is lower case, in info it is upper case)
         if str(file_info["shard_key"]).lower() != shard_info["key"].lower():
+            expected_key = file_info["shard_key"]
+            actual_key = shard_info["key"]
             raise ValueError(f"key does not match filename, expected: "
-                             f"{file_info['shard_key']}, got: "
-                             f"{shard_info['key']} (not case sensitive), in "
-                             f"shard: {shard_info}")
+                             f"{expected_key}, got: {actual_key} (not case "
+                             f"sensitive), in shard: {shard_info}")
         # Check size of the file
         size = os.stat(dataset_path / shard_info["path"]).st_size
         if size != shard_info["size"]:
+            expected_size = shard_info["size"]
             raise ValueError(f"Wrong size, got: {size}, expected: "
-                             f"{shard_info['size']}, in shard: {shard_info}")
+                             f"{expected_size}, in shard: {shard_info}")
         # Check chip_id is non-negative integer
         chip_id = shard_info["chip_id"]
         if not isinstance(chip_id, int) or chip_id < 0:
@@ -947,9 +949,11 @@ class Dataset:
             for shard_info in shard_list:
                 actual_examples += shard_info["examples"]
                 if shard_info["examples"] != config["examples_per_shard"]:
+                    expected_examples_per_shard = config["examples_per_shard"]
+                    actual_examples_now = shard_info["examples"]
                     raise ValueError(f"Wrong number of examples, expected: "
-                                     f"{config['examples_per_shard']}, got: "
-                                     f"{shard_info['examples']}, in shard: "
+                                     f"{expected_examples_per_shard}, got:"
+                                     f"{actual_examples_now}, in shard: "
                                      f"{shard_info}")
 
             if actual_examples != expected_examples:
@@ -1137,9 +1141,10 @@ class Dataset:
         if "scaaml_version" in config.keys():
             if semver.Version.parse(config["scaaml_version"]).compare(
                     scaaml.__version__) > 0:
+                version_in_config = config["scaaml_version"]
                 raise ValueError(f"SCAAML module is outdated, scaaml_version: "
                                  f"{scaaml.__version__}, but dataset was "
-                                 f"created using: {config['scaaml_version']}")
+                                 f"created using: {version_in_config}")
         return Dataset(
             root_path=str(dpath),
             shortname=config["shortname"],

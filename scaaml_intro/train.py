@@ -31,8 +31,9 @@ from scaaml.utils import tf_cap_memory
 
 def train_model(config):
     tf_cap_memory()
-    train_glob = f"datasets/{config['algorithm']}/train/*"
-    test_glob = f"datasets/{config['algorithm']}/test/*"
+    algorithm = config["algorithm"]
+    train_glob = f"datasets/{algorithm}/train/*"
+    test_glob = f"datasets/{algorithm}/test/*"
     test_shards = 256
     num_traces_per_test_shards = 16
     batch_size = config["batch_size"] * get_num_gpu()
@@ -67,7 +68,7 @@ def train_model(config):
             K.clear_session()
 
             # display config
-            cprint(f"[{config['algorithm']}]", "magenta")
+            cprint(f"[{algorithm}]", "magenta")
             cprint(">Attack params", "green")
             cprint(f"|-attack_point:{attack_point}", "cyan")
             cprint(f"|-attack_byte:{attack_byte}", "yellow")
