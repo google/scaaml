@@ -122,7 +122,7 @@ def stack(x: Tensor,
 
 # pylint: disable=C0103
 def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
-             mdl_cfg: Dict[str, Any], optim_cfg: Dict[str, Any]) -> Model:
+             mdl_cfg: Dict[str, Any], optim_cfg: Dict[str, Any]) -> Model[Any]:
     del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
@@ -160,7 +160,7 @@ def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
 
     outputs = layers.Dense(256, activation="softmax")(x)
 
-    model = Model(inputs=inputs, outputs=outputs)
+    model: Model[Any] = Model(inputs=inputs, outputs=outputs)
     model.summary()
 
     if get_num_gpu() > 1:
@@ -175,7 +175,7 @@ def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
 
 
 def get_model(input_shape: Tuple[int, ...], attack_point: str,
-              config: Dict[str, Any]) -> Model:
+              config: Dict[str, Any]) -> Model[Any]:
     """Return an instantiated model based of the config provided.
 
     Args:
