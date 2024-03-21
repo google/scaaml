@@ -122,7 +122,8 @@ def stack(x: Tensor,
 
 # pylint: disable=C0103
 def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
-             mdl_cfg: Dict[str, Any], optim_cfg: Dict[str, Any]) -> Model[Any, Any]:
+             mdl_cfg: Dict[str, Any], optim_cfg: Dict[str,
+                                                      Any]) -> Model[Any, Any]:
     del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
