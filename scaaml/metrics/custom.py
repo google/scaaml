@@ -345,8 +345,8 @@ class H0(Metric):  # type: ignore[no-any-unimported,misc]
         # probability that it has at most k-1 successes.
         k = self.correct.numpy()
         n = self.seen.numpy()
-        P = self.possibilities.numpy()
-        return 1 - scipy.stats.binom.cdf(k - 1, n, 1 / P)
+        possibilities = self.possibilities.numpy()
+        return 1 - scipy.stats.binom.cdf(k - 1, n, 1 / possibilities)
 
     def reset_state(self) -> None:
         """Reset the state for new measurement."""
