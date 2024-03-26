@@ -301,7 +301,8 @@ class H0(Metric):  # type: ignore[no-any-unimported,misc]
     def __init__(self, name: str = "H0", **kwargs: Any) -> None:
         super().__init__(name=name, **kwargs)
         self.correct = self.add_weight(name="correct", initializer="zeros")
-        self.possibilities = self.add_weight(name="possibilities", initializer="zeros")
+        self.possibilities = self.add_weight(name="possibilities",
+                                             initializer="zeros")
         self.seen = self.add_weight(name="seen", initializer="zeros")
 
     def update_state(self,
