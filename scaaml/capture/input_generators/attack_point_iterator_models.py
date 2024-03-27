@@ -85,7 +85,6 @@ class GeneratedIteratorModel(BaseModel):
     """
 
     operation: Literal["balanced_generator", "unrestricted_generator"]
-    operation: Literal["balanced_generator", "unrestricted_generator"]
     name: str
     length: int
     bunches: int = 1
