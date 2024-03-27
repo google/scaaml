@@ -26,7 +26,7 @@ class ConstantIteratorModel(BaseModel):
     Attack point iterator pydantic model that iterates over given constants.
     
     Args:
-        operation (str): The operation of the iterator
+        operation (Literal["constants"]): The operation of the iterator
         represents what the iterator does and what 
         arguments should be present.
 
@@ -69,7 +69,8 @@ class GeneratedIteratorModel(BaseModel):
     Attack point iterator pydantic model that iterates over
     the balanced and unrestricted generator.
 
-    operation (str): The operation of the iterator
+    operation (Literal["balanced_generator", "unrestricted_generator"]):
+        The operation of the iterator
         represents what the iterator does and what 
         arguments should be present.
 
