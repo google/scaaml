@@ -28,8 +28,7 @@ class ConstantIteratorModel(BaseModel):
     Args:
         operation (str): The operation of the iterator
         represents what the iterator does and what 
-        arguments should be present. This is only used once to
-        double check if the operation is the correct one.
+        arguments should be present.
 
         name (str): The name represents the key name of the value.
 
@@ -40,21 +39,21 @@ class ConstantIteratorModel(BaseModel):
         values (List[List[int]]): List of lists of ints that gets
         iterated through.
     """
-    operation: Literal['constants']
+    operation: Literal["constants"]
     name: str
     length: int
     values: List[List[int]]
 
-    @model_validator(mode='after')
-    def check(self) -> 'ConstantIteratorModel':
+    @model_validator(mode="after")
+    def check(self) -> "ConstantIteratorModel":
         for value in self.values:
             if len(value) != self.length:
                 raise ListNotPrescribedLengthException(
-                    f'The prescribed length is {self.length} and \
-                    the length of {value} is {len(value)}.')
+                    f"The prescribed length is {self.length} and \
+                    the length of {value} is {len(value)}.")
         return self
 
-    def len(self) -> int:
+    def __len__(self) -> int:
         """Return the number of iterated elements."""
         return len(self.values)
 
@@ -72,8 +71,7 @@ class GeneratedIteratorModel(BaseModel):
 
     operation (str): The operation of the iterator
         represents what the iterator does and what 
-        arguments should be present. This is only used once to
-        double check if the operation is the correct one.
+        arguments should be present.
 
     name (str): The name represents the key name of the value.
     
@@ -86,28 +84,26 @@ class GeneratedIteratorModel(BaseModel):
         for the generator.
     """
 
-    operation: Literal['balanced_generator', 'unrestricted_generator']
+    operation: Literal["balanced_generator", "unrestricted_generator"]
     name: str
     length: int
     bunches: int = 1
     elements: int = 256
 
-    def len(self) -> int:
+    def __len__(self) -> int:
         """Return the number of iterated elements."""
         return self.bunches * self.elements
 
     def iter(self) -> AttackPointIteratorT:
-        if self.operation == 'balanced_generator':
-            return iter({self.name: value}
-                        for value in balanced_generator(length=self.length,
-                                                        bunches=self.bunches,
-                                                        elements=self.elements))
+        if self.operation == "balanced_generator":
+            generator = balanced_generator
+        elif self.operation == "unrestricted_generator":
+            generator = unrestricted_generator
         else:
-            return iter(
-                {self.name: value}
-                for value in unrestricted_generator(length=self.length,
-                                                    bunches=self.bunches,
-                                                    elements=self.elements))
+            raise ValueError(f"Unknown generator type: {self.operation}")
+
+        return iter({self.name: value} for value in generator(
+            length=self.length, bunches=self.bunches, elements=self.elements))
 
     def get_generated_keys(self) -> List[str]:
         return [self.name]
