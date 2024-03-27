@@ -16,4 +16,3 @@
 from scaaml.capture.input_generators.input_generators import balanced_generator, single_bunch, unrestricted_generator
 from scaaml.capture.input_generators.attack_point_iterator import build_attack_points_iterator
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
-from scaaml.capture.input_generators.attack_point_iterator_models import IteratorModel
