@@ -57,7 +57,7 @@ class ConstantIteratorModel(BaseModel):
         """Return the number of iterated elements."""
         return len(self.values)
 
-    def iter(self) -> AttackPointIteratorT:
+    def items(self) -> AttackPointIteratorT:
         return iter({self.name: value} for value in self.values)
 
     def get_generated_keys(self) -> List[str]:
