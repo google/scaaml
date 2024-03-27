@@ -58,6 +58,8 @@ class ConstantIteratorModel(BaseModel):
         return len(self.values)
 
     def iter(self) -> AttackPointIteratorT:
+        """This function returns an Iterator of the items that should be
+        iterated through."""
         return iter({self.name: value} for value in self.values)
 
     def get_generated_keys(self) -> List[str]:
@@ -94,7 +96,9 @@ class GeneratedIteratorModel(BaseModel):
         """Return the number of iterated elements."""
         return self.bunches * self.elements
 
-    def iter(self) -> AttackPointIteratorT:
+    def items(self) -> AttackPointIteratorT:
+        """This function returns an Iterator of the items that should be
+        iterated through."""
         if self.operation == "balanced_generator":
             generator = balanced_generator
         elif self.operation == "unrestricted_generator":
