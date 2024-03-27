@@ -23,7 +23,7 @@ AttackPointIteratorT = Iterator[Dict[str, Any]]
 
 class ConstantIteratorModel(BaseModel):
     """
-    Attack point iterator pydantic model that iterates over a constant.
+    Attack point iterator pydantic model that iterates over given constants.
     
     Args:
         operation (str): The operation of the iterator
@@ -39,7 +39,7 @@ class ConstantIteratorModel(BaseModel):
         values (List[List[int]]): List of lists of ints that gets
         iterated through.
     """
-    operation: Literal["constants"]
+    operation: Literal["constants"] = "constants"
     name: str
     length: int
     values: List[List[int]]
@@ -84,6 +84,7 @@ class GeneratedIteratorModel(BaseModel):
         for the generator.
     """
 
+    operation: Literal["balanced_generator", "unrestricted_generator"]
     operation: Literal["balanced_generator", "unrestricted_generator"]
     name: str
     length: int
