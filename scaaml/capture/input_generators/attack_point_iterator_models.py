@@ -23,7 +23,7 @@ AttackPointIteratorT = Iterator[Dict[str, Any]]
 
 class ConstantIteratorModel(BaseModel):
     """
-    Attack point iterator pydantic model that iterates over a constant.
+    Attack point iterator pydantic model that iterates over given constants.
     
     Args:
         operation (str): The operation of the iterator
