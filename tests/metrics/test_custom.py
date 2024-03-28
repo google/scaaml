@@ -15,7 +15,7 @@
 import numpy as np
 
 from scaaml.metrics import MeanConfidence
-from scaaml.metrics import H0
+from scaaml.metrics import SignificanceTest
 from scaaml.metrics import MaxRank, MeanRank
 from scaaml.metrics.custom import confidence
 from scaaml.metrics.custom import rank
@@ -247,25 +247,25 @@ def test_optimistic_with_all_different():
 
 
 def test_h0_doc():
-    m = H0()
+    m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.6, 0.4]])
     assert np.isclose(m.result(), 0.25)
 
 
 def test_h0_significant():
     N = 10
-    m = H0()
+    m = SignificanceTest()
     m.update_state([[0., 1.] for _ in range(N)], [[0.1, 0.9] for _ in range(N)])
     assert np.isclose(m.result(), 2**(-N))
 
 
 def test_h0_all_wrong():
-    m = H0()
+    m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.9, 0.1], [0.4, 0.6]])
     assert np.isclose(m.result(), 1.)
 
 
 def test_h0_one_wrong():
-    m = H0()
+    m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.4, 0.6]])
     assert np.isclose(m.result(), 0.75)
