@@ -272,7 +272,7 @@ class MaxRank(Metric):  # type: ignore[no-any-unimported,misc]
 
 
 @keras.utils.register_keras_serializable(package="SCAAML")
-class H0(Metric):  # type: ignore[no-any-unimported,misc]
+class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
     """Calculates the probability that a random guess would get the same
     accuracy. Probability is in the interval [0, 1] (impossible to always). By
     convention one rejects the null hypothesis at a given p-value (say 0.005 if
@@ -284,7 +284,7 @@ class H0(Metric):  # type: ignore[no-any-unimported,misc]
 
     Standalone usage:
 
-    >>> m = H0()
+    >>> m = SignificanceTest()
     >>> m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.6, 0.4]])
     >>> m.result().numpy()
     0.25
@@ -294,11 +294,11 @@ class H0(Metric):  # type: ignore[no-any-unimported,misc]
     ```python
     model.compile(optimizer="sgd",
                   loss="mse",
-                  metrics=[H0()])
+                  metrics=[SignificanceTest()])
     ```
     """
 
-    def __init__(self, name: str = "H0", **kwargs: Any) -> None:
+    def __init__(self, name: str = "SignificanceTest", **kwargs: Any) -> None:
         super().__init__(name=name, **kwargs)
         self.correct = self.add_weight(name="correct", initializer="zeros")
         self.possibilities = self.add_weight(name="possibilities",
