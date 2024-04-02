@@ -116,6 +116,7 @@ class GeneratedIteratorModel(BaseModel):
 BasicIteratorModels: TypeAlias = Union[ConstantIteratorModel,
                                        GeneratedIteratorModel]
 
+
 class RepeatIteratorModel(BaseModel):
     """
     Initialize the repeated iterate. If repetitions is not present
