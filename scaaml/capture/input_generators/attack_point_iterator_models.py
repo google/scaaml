@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Pydantic models for the attack point iterator."""
-from pydantic import BaseModel, model_validator
+import itertools
+from pydantic import BaseModel, Field, model_validator
 from typing import Any, Dict, Iterator, Literal, List, TypeAlias, Union
 
-from scaaml.capture.input_generators.attack_point_iterator_exceptions import ListNotPrescribedLengthException
+from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 
 AttackPointIteratorT = Iterator[Dict[str, Any]]
@@ -114,3 +115,53 @@ class GeneratedIteratorModel(BaseModel):
 
 BasicIteratorModels: TypeAlias = Union[ConstantIteratorModel,
                                        GeneratedIteratorModel]
+
+
+class RepeatIteratorModel(BaseModel):
+    """
+    Initialize the repeated iterate. If repetitions is not present
+    or set to a negative number it will do an infinite loop and
+    if it is 0 it will not repeat at all.
+          
+        Args:
+            operation (Literal['repeat']): The operation of the iterator
+                represents what the iterator does and what 
+                has to be in the config file.
+
+            configuration (BasicIteratorModels): The config for the iterated
+                object that will get repeated.
+                
+            repetitions (int): This parameter decides how many times the
+                iterator gets repeated. If it is a negative number it
+                will repeat infinitely and if you call __len__ it will
+                raise an LengthIsInfiniteException. If it is 0 then it will not
+                repeat at all. If it is a positive number it will
+                repeat that many times.
+    """
+    operation: Literal["repeat"]
+    repetitions: int = Field(default=-1)
+    configuration: BasicIteratorModels
+
+    @model_validator(mode="after")
+    def check_model(self) -> "RepeatIteratorModel":
+        if len(self.configuration) == 0:
+            self.repetitions = 0
+        return self
+
+    def __len__(self) -> int:
+        if self.repetitions >= 0:
+            return self.repetitions * len(self.configuration)
+        else:
+            raise LengthIsInfiniteException("The length is infinite!")
+
+    def items(self) -> AttackPointIteratorT:
+        """This function returns an Iterator of the items that should be
+        iterated through."""
+        if self.repetitions < 0:
+            return iter(itertools.cycle(self.configuration.items()))
+        return iter(value for _ in range(self.repetitions)
+                    for value in self.configuration.items())
+
+    def get_generated_keys(self) -> List[str]:
+        """Returns an exhaustive list of names this iterator will create."""
+        return self.configuration.get_generated_keys()
