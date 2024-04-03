@@ -151,8 +151,6 @@ class RepeatIteratorModel(BaseModel):
     def __len__(self) -> int:
         if self.repetitions >= 0:
             return self.repetitions * len(self.configuration)
-        elif len(self.configuration) == 0:
-            return 0
         else:
             raise LengthIsInfiniteException("The length is infinite!")
 
