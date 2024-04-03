@@ -128,7 +128,7 @@ class RepeatIteratorModel(BaseModel):
                 represents what the iterator does and what 
                 has to be in the config file.
 
-            configuration (Dict): The config for the iterated object
+            configuration (BasicIteratorModels): The config for the iterated object
                 that will get repeated.
                 
             repetitions (int): This parameter decides how many times the
