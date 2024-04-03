@@ -13,7 +13,7 @@
 # limitations under the License.
 """Pydantic models for the attack point iterator."""
 import itertools
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from typing import Any, Dict, Iterator, Literal, List, TypeAlias, Union
 
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
@@ -139,13 +139,13 @@ class RepeatIteratorModel(BaseModel):
                 repeat that many times.
     """
     operation: Literal["repeat"]
-    repetitions: int
+    repetitions: int = Field(default=-1)
     configuration: BasicIteratorModels
 
     @model_validator(mode="after")
     def check_model(self) -> "RepeatIteratorModel":
         if len(self.configuration) == 0:
-            self._repetitions = 0
+            self.repetitions = 0
         return self
 
     def __len__(self) -> int:
@@ -159,9 +159,9 @@ class RepeatIteratorModel(BaseModel):
     def items(self) -> AttackPointIteratorT:
         """This function returns an Iterator of the items that should be
         iterated through."""
-        if self._repetitions < 0:
+        if self.repetitions < 0:
             return iter(itertools.cycle(self.configuration.items()))
-        return iter(value for _ in range(self._repetitions)
+        return iter(value for _ in range(self.repetitions)
                     for value in self.configuration.items())
 
     def get_generated_keys(self) -> List[str]:
