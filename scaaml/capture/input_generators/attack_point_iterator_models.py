@@ -18,8 +18,6 @@ import math
 from pydantic import BaseModel, Field, model_validator
 from typing import Any, Dict, Iterator, Literal, List, Tuple, TypeAlias, Union
 
-from pydantic.main import TupleGenerator
-
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
 
@@ -185,7 +183,7 @@ class ZipIteratorModel(BaseModel):
             The operands are any number of BasicIteratorModels or
             RepeatIteratorModles that will be combined.
     """
-    operation: Literal['zip']
+    operation: Literal["zip"]
     operands: List[Union[BasicIteratorModels, RepeatIteratorModel]]
 
     def __len__(self) -> int:
@@ -213,21 +211,23 @@ class ZipIteratorModel(BaseModel):
         return iter(
             self._merge_dictionaries(tuple_of_dictionaries)
             for tuple_of_dictionaries in zip(*items_of_operands))
-    
+
     @staticmethod
     def _merge_dictionaries(
-        tuple_of_dictionaries: Tuple[Dict[str,List[int]]]
-        ) -> Dict[str, List[int]]:
+        tuple_of_dictionaries: Tuple[Dict[str,
+                                          List[int]]]) -> Dict[str, List[int]]:
         merged_dictionary = {}
         for value in tuple_of_dictionaries:
             merged_dictionary.update(value)
         return merged_dictionary
-    
+
     def get_generated_keys(self) -> List[str]:
         generated_keys = []
         for operand in self.operands:
             generated_keys += operand.get_generated_keys()
         return generated_keys
+
+
 class CartesianProductIteratorModel(BaseModel):
     """
     Attack point iterator cartesian product pydantic model. This class takes
@@ -249,15 +249,17 @@ class CartesianProductIteratorModel(BaseModel):
             operands iterates infinitely it will throw a
             LengthIsInfiniteException in the init.
     """
-    operation: Literal['cartesian_product']
-    operands: List[Union[BasicIteratorModels, RepeatIteratorModel, "ComplicatedIteratorModel"]]
-    
+    operation: Literal["cartesian_product"]
+    operands: List[Union[BasicIteratorModels, RepeatIteratorModel,
+                         "ComplicatedIteratorModel"]]
 
     @model_validator(mode="after")
     def check_model(self) -> "CartesianProductIteratorModel":
         if len(self.operands) > 1:
-            self.operands = [self.operands[0],
-                CartesianProductIteratorModel(operation="cartesian_product", operands=self.operands[1:])
+            self.operands = [
+                self.operands[0],
+                CartesianProductIteratorModel(operation="cartesian_product",
+                                              operands=self.operands[1:])
             ]
         else:
             self.operands = [self.operands[0]]
@@ -278,10 +280,10 @@ class CartesianProductIteratorModel(BaseModel):
             raise LengthIsInfiniteException
         else:
             return math.prod(operand_lengths)
-            
+
     def items(self) -> AttackPointIteratorT:
         try:
-            if self.__len__ == 0:
+            if len(self) == 0:
                 return iter([])
         except LengthIsInfiniteException:
             pass
@@ -302,6 +304,7 @@ class CartesianProductIteratorModel(BaseModel):
             generated_keys += operand.get_generated_keys()
         return generated_keys
 
+
 ComplicatedIteratorModel: TypeAlias = Union[ZipIteratorModel,
                                             CartesianProductIteratorModel]
 
@@ -319,9 +322,9 @@ class IteratorModel(BaseModel):
         together.
             
     """
-    iterator_model: Union[BasicIteratorModels,
-                          ComplicatedIteratorModel, RepeatIteratorModel]
-    
+    iterator_model: Union[BasicIteratorModels, ComplicatedIteratorModel,
+                          RepeatIteratorModel]
+
     @model_validator(mode="after")
     def check_duplicate_names(self) -> "IteratorModel":
         # Check that all names are unique
@@ -337,4 +340,3 @@ class IteratorModel(BaseModel):
 
     def items(self) -> AttackPointIteratorT:
         return self.iterator_model.items()
-        
