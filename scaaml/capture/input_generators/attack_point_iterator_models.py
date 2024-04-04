@@ -181,7 +181,7 @@ class ZipIteratorModel(BaseModel):
             
         operands (List[Union[BasicIteratorModels, RepeatIteratorModel]]):
             The operands are any number of BasicIteratorModels or
-            RepeatIteratorModles that will be combined.
+            RepeatIteratorModels that will be combined.
     """
     operation: Literal["zip"]
     operands: List[Union[BasicIteratorModels, RepeatIteratorModel]]
@@ -242,7 +242,7 @@ class CartesianProductIteratorModel(BaseModel):
             
         operands (List[Union[BasicIteratorModels, RepeatIteratorModel]]):
            The operands are any number of BasicIteratorModels or
-            RepeatIteratorModles that will be combined. If the operands list
+            RepeatIteratorModels that will be combined. If the operands list
             is empty it will raise a ValueError. If one of the operands
             length is 0 the length of the cartesian product iterator will
             also be 0, it will return an empty iterator. If one of the
