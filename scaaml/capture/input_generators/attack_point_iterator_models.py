@@ -167,7 +167,9 @@ class RepeatIteratorModel(BaseModel):
         """Returns an exhaustive list of names this iterator will create."""
         return self.configuration.get_generated_keys()
 
+
 SimpleIteratorModel: TypeAlias = Union[BasicIteratorModels, RepeatIteratorModel]
+
 
 class ZipIteratorModel(BaseModel):
     """
@@ -180,7 +182,7 @@ class ZipIteratorModel(BaseModel):
             has to be in the config file. This is only used once to
             double check if the operation is the correct one.
             
-        operands (List[Union[BasicIteratorModels, RepeatIteratorModel]]):
+        operands (List[SimpleIteratorModel]):
             The operands are any number of BasicIteratorModels or
             RepeatIteratorModels that will be combined.
     """
@@ -241,7 +243,7 @@ class CartesianProductIteratorModel(BaseModel):
             has to be in the config file. This is only used once to
             double check if the operation is the correct one.
             
-        operands (List[Union[BasicIteratorModels, RepeatIteratorModel]]):
+        operands (List[Union[SimpleIteratorModel, "ComplicatedIteratorModel"]]):
            The operands are any number of BasicIteratorModels or
             RepeatIteratorModels that will be combined. If the operands list
             is empty it will raise a ValueError. If one of the operands
@@ -251,8 +253,7 @@ class CartesianProductIteratorModel(BaseModel):
             LengthIsInfiniteException in the init.
     """
     operation: Literal["cartesian_product"]
-    operands: List[Union[SimpleIteratorModel,
-                         "ComplicatedIteratorModel"]]
+    operands: List[Union[SimpleIteratorModel, "ComplicatedIteratorModel"]]
 
     @model_validator(mode="after")
     def check_model(self) -> "CartesianProductIteratorModel":
