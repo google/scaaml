@@ -167,11 +167,12 @@ class RepeatIteratorModel(BaseModel):
         """Returns an exhaustive list of names this iterator will create."""
         return self.configuration.get_generated_keys()
 
+SimpleIteratorModel: TypeAlias = Union[BasicIteratorModels, RepeatIteratorModel]
 
 class ZipIteratorModel(BaseModel):
     """
     Attack point iterator zip pydantic model. This class takes any amount of
-    operands and combines them just like the `zip` function in Python.
+    operands and combines them similar to the `zip` function in Python.
     
     Args:
         operation (Literal['zip']): The operation of the iterator
@@ -184,7 +185,7 @@ class ZipIteratorModel(BaseModel):
             RepeatIteratorModels that will be combined.
     """
     operation: Literal["zip"]
-    operands: List[Union[BasicIteratorModels, RepeatIteratorModel]]
+    operands: List[SimpleIteratorModel]
 
     def __len__(self) -> int:
         non_negative_lengths: List[int] = []
@@ -250,19 +251,20 @@ class CartesianProductIteratorModel(BaseModel):
             LengthIsInfiniteException in the init.
     """
     operation: Literal["cartesian_product"]
-    operands: List[Union[BasicIteratorModels, RepeatIteratorModel,
+    operands: List[Union[SimpleIteratorModel,
                          "ComplicatedIteratorModel"]]
 
     @model_validator(mode="after")
     def check_model(self) -> "CartesianProductIteratorModel":
+        """If the length of the operands is bigger then 1 it will set operands
+        to the first item of the operands and a CartesianProductIteratorModel
+        of the remaining list of operands as the second item."""
         if len(self.operands) > 1:
             self.operands = [
                 self.operands[0],
                 CartesianProductIteratorModel(operation="cartesian_product",
                                               operands=self.operands[1:])
             ]
-        else:
-            self.operands = [self.operands[0]]
         return self
 
     def __len__(self) -> int:
