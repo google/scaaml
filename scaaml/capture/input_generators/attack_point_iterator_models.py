@@ -122,7 +122,7 @@ BasicIteratorModels: TypeAlias = Union[ConstantIteratorModel,
 class RepeatIteratorModel(BaseModel):
     """
     Attack point iterator pydantic model that iterates over the configuration
-    a repeated number of times.
+    a `repeat` number of times.
           
         Args:
             operation (Literal['repeat']): The operation of the iterator
