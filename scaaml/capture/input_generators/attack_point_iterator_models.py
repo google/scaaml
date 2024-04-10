@@ -272,8 +272,7 @@ class CartesianProductIteratorModel(BaseModel):
         operand_lengths: List[int] = []
         for operand in self.operands:
             try:
-                if len(operand) >= 0:
-                    operand_lengths.append(len(operand))
+                operand_lengths.append(len(operand))
             except LengthIsInfiniteException:
                 operand_lengths.append(-1)
 
