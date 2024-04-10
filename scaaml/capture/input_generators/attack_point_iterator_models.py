@@ -275,7 +275,7 @@ class CartesianProductIteratorModel(BaseModel):
             except LengthIsInfiniteException:
                 operand_lengths.append(-1)
 
-        if any(length == 0 for length in operand_lengths):
+        if 0 in operand_lengths:
             return 0
         elif any(length < 0 for length in operand_lengths):
             raise LengthIsInfiniteException("The length is infinite!")
