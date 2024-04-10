@@ -190,8 +190,7 @@ class ZipIteratorModel(BaseModel):
         non_negative_lengths: List[int] = []
         for operand in self.operands:
             try:
-                if len(operand) >= 0:
-                    non_negative_lengths.append(len(operand))
+                non_negative_lengths.append(len(operand))
             except LengthIsInfiniteException:
                 pass
         if not self.operands:
