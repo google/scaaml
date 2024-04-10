@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Pydantic models for the attack point iterator."""
+import collections
 import itertools
+import math
 from pydantic import BaseModel, Field, model_validator
-from typing import Any, Dict, Iterator, Literal, List, TypeAlias, Union
+from typing import Any, Dict, Iterator, Literal, List, Tuple, TypeAlias, Union
 
 from scaaml.capture.input_generators.attack_point_iterator_exceptions import LengthIsInfiniteException, ListNotPrescribedLengthException
 from scaaml.capture.input_generators.input_generators import balanced_generator, unrestricted_generator
@@ -40,7 +42,7 @@ class ConstantIteratorModel(BaseModel):
         values (List[List[int]]): List of lists of ints that gets
         iterated through.
     """
-    operation: Literal["constants"] = "constants"
+    operation: Literal["constants"] = Field(default="constants")
     name: str
     length: int
     values: List[List[int]]
@@ -119,9 +121,8 @@ BasicIteratorModels: TypeAlias = Union[ConstantIteratorModel,
 
 class RepeatIteratorModel(BaseModel):
     """
-    Initialize the repeated iterate. If repetitions is not present
-    or set to a negative number it will do an infinite loop and
-    if it is 0 it will not repeat at all.
+    Attack point iterator pydantic model that iterates over the configuration
+    a `repeat` number of times.
           
         Args:
             operation (Literal['repeat']): The operation of the iterator
@@ -140,7 +141,7 @@ class RepeatIteratorModel(BaseModel):
     """
     operation: Literal["repeat"]
     repetitions: int = Field(default=-1)
-    configuration: BasicIteratorModels
+    configuration: "IteratorModels"
 
     @model_validator(mode="after")
     def check_model(self) -> "RepeatIteratorModel":
@@ -165,3 +166,178 @@ class RepeatIteratorModel(BaseModel):
     def get_generated_keys(self) -> List[str]:
         """Returns an exhaustive list of names this iterator will create."""
         return self.configuration.get_generated_keys()
+
+
+class ZipIteratorModel(BaseModel):
+    """
+    Attack point iterator zip pydantic model. This class takes any amount of
+    operands and combines them similar to the `zip` function in Python.
+    
+    Args:
+        operation (Literal['zip']): The operation of the iterator
+            represents what the iterator does and what 
+            has to be in the config file. This is only used once to
+            double check if the operation is the correct one.
+            
+        operands (List[SimpleIteratorModel]):
+            The operands are any number of BasicIteratorModels or
+            RepeatIteratorModels that will be combined.
+    """
+    operation: Literal["zip"]
+    operands: List["IteratorModels"]
+
+    def __len__(self) -> int:
+        non_negative_lengths: List[int] = []
+        for operand in self.operands:
+            try:
+                non_negative_lengths.append(len(operand))
+            except LengthIsInfiniteException:
+                pass
+        if not self.operands:
+            return 0
+        else:
+            # If `non_negative_lengths` is empty it means that all
+            # operands are infinite.
+            smallest_length: int = min(non_negative_lengths, default=-1)
+            if smallest_length < 0:
+                raise LengthIsInfiniteException("The length is infinite!")
+            return smallest_length
+
+    def items(self) -> AttackPointIteratorT:
+        items_of_operands: List[AttackPointIteratorT] = []
+        for operand in self.operands:
+            items_of_operands.append(operand.items())
+        return iter(
+            self._merge_dictionaries(tuple_of_dictionaries)
+            for tuple_of_dictionaries in zip(*items_of_operands))
+
+    @staticmethod
+    def _merge_dictionaries(
+        tuple_of_dictionaries: Tuple[Dict[str,
+                                          List[int]]]) -> Dict[str, List[int]]:
+        merged_dictionary = {}
+        for value in tuple_of_dictionaries:
+            merged_dictionary.update(value)
+        return merged_dictionary
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys = []
+        for operand in self.operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
+
+
+class CartesianProductIteratorModel(BaseModel):
+    """
+    Attack point iterator cartesian product pydantic model. This class takes
+    any amount of operands and combines them just like a cartesian product 
+    would.
+
+    Args:
+        operation (Literal['cartesian_product']): The operation of the iterator
+            represents what the iterator does and what 
+            has to be in the config file. This is only used once to
+            double check if the operation is the correct one.
+            
+        operands (List[Union[SimpleIteratorModel, "ComplicatedIteratorModel"]]):
+           The operands are any number of BasicIteratorModels or
+            RepeatIteratorModels that will be combined. If the operands list
+            is empty it will raise a ValueError. If one of the operands
+            length is 0 the length of the cartesian product iterator will
+            also be 0, it will return an empty iterator. If one of the
+            operands iterates infinitely it will throw a
+            LengthIsInfiniteException in the init.
+    """
+    operation: Literal["cartesian_product"]
+    operands: List["IteratorModels"]
+
+    @model_validator(mode="after")
+    def check_model(self) -> "CartesianProductIteratorModel":
+        """If the length of the operands is bigger then 1 it will set operands
+        to the first item of the operands and a CartesianProductIteratorModel
+        of the remaining list of operands as the second item. If the list of 
+        operands is empty it will raise a ValueError."""
+        if not self.operands:
+            raise ValueError("List of operands is empty!")
+        if len(self.operands) > 1:
+            self.operands = [
+                self.operands[0],
+                CartesianProductIteratorModel(operation="cartesian_product",
+                                              operands=self.operands[1:])
+            ]
+        return self
+
+    def __len__(self) -> int:
+        operand_lengths: List[int] = []
+        for operand in self.operands:
+            try:
+                operand_lengths.append(len(operand))
+            except LengthIsInfiniteException:
+                operand_lengths.append(-1)
+
+        if 0 in operand_lengths:
+            return 0
+        elif any(length < 0 for length in operand_lengths):
+            raise LengthIsInfiniteException("The length is infinite!")
+        else:
+            return math.prod(operand_lengths)
+
+    def items(self) -> AttackPointIteratorT:
+        try:
+            if len(self) == 0:
+                return iter([])
+        except LengthIsInfiniteException:
+            pass
+
+        if len(self.operands) == 2:
+            return iter({
+                **value_one,
+                **value_two
+            }
+                        for value_one in self.operands[0].items()
+                        for value_two in self.operands[1].items())
+        else:
+            return iter(self.operands[0].items())
+
+    def get_generated_keys(self) -> List[str]:
+        generated_keys: List[str] = []
+        for operand in self.operands:
+            generated_keys += operand.get_generated_keys()
+        return generated_keys
+
+
+IteratorModels: TypeAlias = Union[BasicIteratorModels, RepeatIteratorModel,
+                                  ZipIteratorModel,
+                                  CartesianProductIteratorModel]
+
+
+class IteratorModel(BaseModel):
+    """
+    This is the general iterator pydantic model which combines all of the other
+    models into one. With IteratorModel.validate_model(dict) the user can
+    create an instance with a dict. To see how the dict should look like
+    use IteratorModel.model_json_schema().
+
+    Args:
+        iterator_model (Union[BasicIteratorModels, ComplicatedIteratorModel,
+        RepeatIteratorModel]): The iterator model combines all of the models
+        together.
+            
+    """
+    iterator_model: IteratorModels
+
+    @model_validator(mode="after")
+    def check_duplicate_names(self) -> "IteratorModel":
+        # Check that all names are unique
+        names_list = collections.Counter(
+            self.iterator_model.get_generated_keys())
+        duplicates = [name for name, count in names_list.items() if count > 1]
+        if duplicates:
+            raise ValueError(f"Duplicated attack point names {duplicates}")
+        return self
+
+    def __len__(self) -> int:
+        return len(self.iterator_model)
+
+    def items(self) -> AttackPointIteratorT:
+        return self.iterator_model.items()
