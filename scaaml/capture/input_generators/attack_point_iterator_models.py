@@ -141,7 +141,7 @@ class RepeatIteratorModel(BaseModel):
     """
     operation: Literal["repeat"]
     repetitions: int = Field(default=-1)
-    configuration: BasicIteratorModels
+    configuration: "IteratorModels"
 
     @model_validator(mode="after")
     def check_model(self) -> "RepeatIteratorModel":
@@ -168,9 +168,6 @@ class RepeatIteratorModel(BaseModel):
         return self.configuration.get_generated_keys()
 
 
-SimpleIteratorModel: TypeAlias = Union[BasicIteratorModels, RepeatIteratorModel]
-
-
 class ZipIteratorModel(BaseModel):
     """
     Attack point iterator zip pydantic model. This class takes any amount of
@@ -187,7 +184,7 @@ class ZipIteratorModel(BaseModel):
             RepeatIteratorModels that will be combined.
     """
     operation: Literal["zip"]
-    operands: List[SimpleIteratorModel]
+    operands: List["IteratorModels"]
 
     def __len__(self) -> int:
         non_negative_lengths: List[int] = []
@@ -204,7 +201,7 @@ class ZipIteratorModel(BaseModel):
             # operands are infinite.
             smallest_length: int = min(non_negative_lengths, default=-1)
             if smallest_length < 0:
-                raise LengthIsInfiniteException
+                raise LengthIsInfiniteException("The length is infinite!")
             return smallest_length
 
     def items(self) -> AttackPointIteratorT:
@@ -253,13 +250,16 @@ class CartesianProductIteratorModel(BaseModel):
             LengthIsInfiniteException in the init.
     """
     operation: Literal["cartesian_product"]
-    operands: List[Union[SimpleIteratorModel, "ComplicatedIteratorModel"]]
+    operands: List["IteratorModels"]
 
     @model_validator(mode="after")
     def check_model(self) -> "CartesianProductIteratorModel":
         """If the length of the operands is bigger then 1 it will set operands
         to the first item of the operands and a CartesianProductIteratorModel
-        of the remaining list of operands as the second item."""
+        of the remaining list of operands as the second item. If the list of 
+        operands is empty it will raise a ValueError."""
+        if not self.operands:
+            raise ValueError("List of operands is empty!")
         if len(self.operands) > 1:
             self.operands = [
                 self.operands[0],
@@ -279,7 +279,7 @@ class CartesianProductIteratorModel(BaseModel):
         if any(length == 0 for length in operand_lengths):
             return 0
         elif any(length < 0 for length in operand_lengths):
-            raise LengthIsInfiniteException
+            raise LengthIsInfiniteException("The length is infinite!")
         else:
             return math.prod(operand_lengths)
 
@@ -307,8 +307,9 @@ class CartesianProductIteratorModel(BaseModel):
         return generated_keys
 
 
-ComplicatedIteratorModel: TypeAlias = Union[ZipIteratorModel,
-                                            CartesianProductIteratorModel]
+IteratorModels: TypeAlias = Union[BasicIteratorModels, RepeatIteratorModel,
+                                  ZipIteratorModel,
+                                  CartesianProductIteratorModel]
 
 
 class IteratorModel(BaseModel):
@@ -324,8 +325,7 @@ class IteratorModel(BaseModel):
         together.
             
     """
-    iterator_model: Union[BasicIteratorModels, ComplicatedIteratorModel,
-                          RepeatIteratorModel]
+    iterator_model: IteratorModels
 
     @model_validator(mode="after")
     def check_duplicate_names(self) -> "IteratorModel":
