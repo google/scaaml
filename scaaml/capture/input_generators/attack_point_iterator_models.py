@@ -13,6 +13,7 @@
 # limitations under the License.
 """Pydantic models for the attack point iterator."""
 import collections
+import copy
 import itertools
 import math
 from pydantic import BaseModel, Field, model_validator
@@ -341,3 +342,9 @@ class IteratorModel(BaseModel):
 
     def items(self) -> AttackPointIteratorT:
         return self.iterator_model.items()
+
+
+def build_attack_points_iterator(
+        configuration: Dict[str, Any]) -> IteratorModel:
+    configuration = copy.deepcopy(configuration)
+    return IteratorModel.model_validate({"iterator_model": configuration})
