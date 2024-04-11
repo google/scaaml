@@ -16,37 +16,40 @@
 import itertools
 import psutil
 import numpy as np
+from pydantic import ValidationError
 import pytest
 
-from scaaml.capture.input_generators import build_attack_points_iterator, LengthIsInfiniteException
-from scaaml.capture.input_generators.attack_point_iterator_exceptions import ListNotPrescribedLengthException
+from scaaml.capture.input_generators import IteratorModel, LengthIsInfiniteException, ListNotPrescribedLengthException
 
 
 def attack_point_iterator_constants(values, length: int = 16):
     config = {
-        "operation": "constants",
-        "name": "key",
-        "length": length,
-        "values": values
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "length": length,
+            "values": values
+        }
     }
-    output = [
-        obj["key"] for obj in list(iter(build_attack_points_iterator(config)))
-    ]
+    iterator = IteratorModel.model_validate(config)
+    output = [obj["key"] for obj in list(iter(iterator.items()))]
     assert output == values
-    assert len(values) == len(build_attack_points_iterator(config))
+    assert len(values) == len(iterator)
 
 
 def test_attack_point_iterator_no_legal_operation():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     config = {
-        "operation": "NONE",
-        "name": "key",
-        "length": 16,
-        "values": values
+        "iterator_model": {
+            "operation": "NONE",
+            "name": "key",
+            "length": 16,
+            "values": values
+        }
     }
     with pytest.raises(ValueError):
-        build_attack_points_iterator(config)
+        IteratorModel.model_validate(config)
 
 
 def test_attack_point_iterator_constants():
@@ -59,19 +62,27 @@ def test_single_key_in_iterator_constants():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     config = {
-        "operation": "constants",
-        "name": "key",
-        "length": 16,
-        "values": values
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "length": 16,
+            "values": values
+        }
     }
-    for constant in build_attack_points_iterator(config):
+    for constant in IteratorModel.model_validate(config).items():
         assert list(constant.keys()) == ["key"]
 
 
 def test_attack_point_iterator_constants_no_values():
-    config = {"operation": "constants", "name": "key", "length": 16}
-    with pytest.raises(TypeError):
-        build_attack_points_iterator(config)
+    config = {
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "length": 16
+        }
+    }
+    with pytest.raises(ValidationError):
+        IteratorModel.model_validate(config)
 
 
 def test_attack_point_iterator_constant_lengths():
@@ -84,39 +95,49 @@ def test_attack_point_iterator_constant_length_config():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     config = {
-        "operation": "constants",
-        "name": "key",
-        "length": 16,
-        "values": values
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "length": 16,
+            "values": values
+        }
     }
-    iterator = build_attack_points_iterator(config)
-    for values in iterator._values:
-        assert len(values) == config["length"]
+    iterator = IteratorModel.model_validate(config)
+    for values in iterator.iterator_model.values:
+        assert len(values) == config["iterator_model"]["length"]
 
 
 def test_attack_point_iterator_constant_length_config_missing():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-    config = {"operation": "constants", "name": "key", "values": values}
-    with pytest.raises(TypeError):
-        build_attack_points_iterator(config)
+    config = {
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "values": values
+        }
+    }
+    with pytest.raises(ValidationError):
+        IteratorModel.model_validate(config)
 
 
 def test_attack_point_iterator_constant_bad_list_length():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     config = {
-        "operation": "constants",
-        "length": 16,
-        "name": "key",
-        "values": values
+        "iterator_model": {
+            "operation": "constants",
+            "length": 16,
+            "name": "key",
+            "values": values
+        }
     }
     with pytest.raises(ListNotPrescribedLengthException):
-        build_attack_points_iterator(config)
+        IteratorModel.model_validate(config)
 
 
 def repeated_iteration(config):
-    rep_iterator = build_attack_points_iterator(config)
+    rep_iterator = IteratorModel.model_validate(config)
     assert list(iter(rep_iterator)) == list(iter(rep_iterator))
 
 
@@ -124,217 +145,294 @@ def test_repeated_iteration_constants():
     values = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
     config = {
-        "operation": "constants",
-        "name": "key",
-        "length": 16,
-        "values": values
+        "iterator_model": {
+            "operation": "constants",
+            "name": "key",
+            "length": 16,
+            "values": values
+        }
     }
     repeated_iteration(config)
 
 
 def test_attack_point_iterator_balanced_generator():
-    config = {"operation": "balanced_generator", "name": "key", "length": 16}
-    output = list(iter(build_attack_points_iterator(config)))
+    config = {
+        "iterator_model": {
+            "operation": "balanced_generator",
+            "name": "key",
+            "length": 16
+        }
+    }
+    output = list(iter(IteratorModel.model_validate(config).items()))
     assert len(output) == 256
 
 
 def test_attack_point_iterator_balanced_generator_all_kwargs():
     config = {
-        "operation": "balanced_generator",
-        "name": "key",
-        "length": 16,
-        "bunches": 2,
-        "elements": 3
+        "iterator_model": {
+            "operation": "balanced_generator",
+            "name": "key",
+            "length": 16,
+            "bunches": 2,
+            "elements": 3
+        }
     }
-    output = list(iter(build_attack_points_iterator(config)))
-    assert isinstance(config["bunches"], int)
-    assert isinstance(config["elements"], int)
-    assert len(output) == config["bunches"] * config["elements"]
+    output = list(iter(IteratorModel.model_validate(config).items()))
+    assert isinstance(config["iterator_model"]["bunches"], int)
+    assert isinstance(config["iterator_model"]["elements"], int)
+    assert len(output) == config["iterator_model"]["bunches"] * config[
+        "iterator_model"]["elements"]
 
 
 def test_attack_point_iterator_unrestricted_generator():
     config = {
-        "operation": "unrestricted_generator",
-        "name": "key",
-        "length": 16
+        "iterator_model": {
+            "operation": "unrestricted_generator",
+            "name": "key",
+            "length": 16
+        }
     }
-    output = list(iter(build_attack_points_iterator(config)))
+    output = list(iter(IteratorModel.model_validate(config).items()))
     assert len(output) == 256
 
 
 def test_attack_point_iterator_balanced_generator_all_args():
     config = {
-        "operation": "unrestricted_generator",
-        "name": "key",
-        "length": 16,
-        "bunches": 2,
-        "elements": 3
+        "iterator_model": {
+            "operation": "unrestricted_generator",
+            "name": "key",
+            "length": 16,
+            "bunches": 2,
+            "elements": 3
+        }
     }
-    output = list(iter(build_attack_points_iterator(config)))
-    assert len(output) == config["bunches"] * config["elements"]
+    output = list(iter(IteratorModel.model_validate(config).items()))
+    assert len(output) == config["iterator_model"]["bunches"] * config[
+        "iterator_model"]["elements"]
 
 
 def test_attack_point_iterator_balanced_generator_len():
-    config = {"operation": "balanced_generator", "name": "key", "length": 16}
-    output = build_attack_points_iterator(config)
+    config = {
+        "iterator_model": {
+            "operation": "balanced_generator",
+            "name": "key",
+            "length": 16
+        }
+    }
+    output = IteratorModel.model_validate(config)
     assert len(output) == 256
 
 
 def test_attack_point_iterator_balanced_generator_all_args_len():
     config = {
-        "operation": "balanced_generator",
-        "name": "key",
-        "length": 16,
-        "bunches": 2,
-        "elements": 3
+        "iterator_model": {
+            "operation": "balanced_generator",
+            "name": "key",
+            "length": 16,
+            "bunches": 2,
+            "elements": 3
+        }
     }
-    output = list(iter(build_attack_points_iterator(config)))
-    assert len(output) == config["bunches"] * config["elements"]
-    assert len(output) == len(build_attack_points_iterator(config))
+    iterator = IteratorModel.model_validate(config)
+    output = list(iter(iterator.items()))
+    assert len(output) == config["iterator_model"]["bunches"] * config[
+        "iterator_model"]["elements"]
+    assert len(output) == len(iterator)
 
 
 def test_attack_point_iterator_unrestricted_generator_all_args_len():
     config = {
-        "operation": "unrestricted_generator",
-        "name": "key",
-        "length": 16,
-        "bunches": 2,
-        "elements": 3
+        "iterator_model": {
+            "operation": "unrestricted_generator",
+            "name": "key",
+            "length": 16,
+            "bunches": 2,
+            "elements": 3
+        }
     }
-    output = list(iter(build_attack_points_iterator(config)))
-    assert len(output) == config["bunches"] * config["elements"]
-    assert len(output) == len(build_attack_points_iterator(config))
+    iterator = IteratorModel.model_validate(config)
+    output = list(iter(iterator.items()))
+    assert len(output) == config["iterator_model"]["bunches"] * config[
+        "iterator_model"]["elements"]
+    assert len(output) == len(iterator)
 
 
 def test_attack_point_iterator_repeat_default_value():
     config = {
-        "operation": "repeat",
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = build_attack_points_iterator(config)
-    assert output._repetitions == -1
+    output = IteratorModel.model_validate(config)
+    assert output.iterator_model.repetitions == -1
 
 
 def test_attack_point_iterator_repeat_zero():
     config = {
-        "operation": "repeat",
-        "repetitions": 0,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 0,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = list(build_attack_points_iterator(config))
+    output = list(IteratorModel.model_validate(config).items())
     assert output == []
 
 
 def test_attack_point_iterator_repeat_zero_len():
     config = {
-        "operation": "repeat",
-        "repetitions": 0,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 0,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = len(build_attack_points_iterator(config))
+    output = len(IteratorModel.model_validate(config))
     assert output == 0
 
 
 def test_attack_point_iterator_repeat_one():
     config = {
-        "operation": "repeat",
-        "repetitions": 1,
-        "configuration": {
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
+        }
+    }
+
+    configuration = {
+        "iterator_model": {
             "operation": "constants",
             "name": "key",
             "length": 3,
             "values": [[1, 2, 3]]
         }
     }
-    output = list(iter(build_attack_points_iterator(config)))
+
+    output = list(iter(IteratorModel.model_validate(config).items()))
     assert output == list(
-        iter(build_attack_points_iterator(config["configuration"])))
+        iter(IteratorModel.model_validate(configuration).items()))
 
 
 def test_attack_point_iterator_repeat_one_len():
     config = {
-        "operation": "repeat",
-        "repetitions": 1,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = len(build_attack_points_iterator(config))
-    assert output == len(config["configuration"]["values"])
+
+    output = len(IteratorModel.model_validate(config))
+    assert output == len(config["iterator_model"]["configuration"]["values"])
 
 
 def test_attack_point_iterator_repeat_two():
     config = {
-        "operation": "repeat",
-        "repetitions": 2,
-        "configuration": {
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 2,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
+        }
+    }
+
+    configuration = {
+        "iterator_model": {
             "operation": "constants",
             "name": "key",
             "length": 3,
             "values": [[1, 2, 3]]
         }
     }
-    output = list(iter(build_attack_points_iterator(config)))
+
+    output = list(iter(IteratorModel.model_validate(config).items()))
     assert output == list(
-        iter(build_attack_points_iterator(
-            config["configuration"]))) * config["repetitions"]
+        iter(IteratorModel.model_validate(
+            configuration).items())) * config["iterator_model"]["repetitions"]
 
 
 def test_attack_point_iterator_repeat_two_len():
     config = {
-        "operation": "repeat",
-        "repetitions": 2,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 2,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = len(build_attack_points_iterator(config))
-    assert output == config["repetitions"] * len(
-        config["configuration"]["values"])
+    output = len(IteratorModel.model_validate(config))
+    assert output == config["iterator_model"]["repetitions"] * len(
+        config["iterator_model"]["configuration"]["values"])
 
 
 def test_attack_point_iterator_repeat_three_len():
     config = {
-        "operation": "repeat",
-        "repetitions": 3,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 3,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
-    output = len(build_attack_points_iterator(config))
-    assert output == config["repetitions"] * len(
-        config["configuration"]["values"])
+    output = len(IteratorModel.model_validate(config))
+    assert output == config["iterator_model"]["repetitions"] * len(
+        config["iterator_model"]["configuration"]["values"])
 
 
 def test_attack_point_iterator_repeat_infinite():
     config = {
-        "operation": "repeat",
-        "repetitions": -1,
-        "configuration": {
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": [[1]]
+            }
+        }
+    }
+    configuration = {
+        "iterator_model": {
             "operation": "constants",
             "name": "key",
             "length": 1,
@@ -343,9 +441,9 @@ def test_attack_point_iterator_repeat_infinite():
     }
     count = 0
     for value1, value2 in zip(
-            build_attack_points_iterator(config),
+            IteratorModel.model_validate(config).items(),
             itertools.cycle(
-                build_attack_points_iterator(config["configuration"]))):
+                IteratorModel.model_validate(configuration).items())):
         if count > 4:
             break
         count += 1
@@ -354,9 +452,20 @@ def test_attack_point_iterator_repeat_infinite():
 
 def test_attack_point_iterator_repeat_infinite_minus_two():
     config = {
-        "operation": "repeat",
-        "repetitions": -2,
-        "configuration": {
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": -2,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": [[1], [2]]
+            }
+        }
+    }
+
+    configuration = {
+        "iterator_model": {
             "operation": "constants",
             "name": "key",
             "length": 1,
@@ -365,9 +474,9 @@ def test_attack_point_iterator_repeat_infinite_minus_two():
     }
     count = 0
     for value1, value2 in zip(
-            build_attack_points_iterator(config),
+            IteratorModel.model_validate(config).items(),
             itertools.cycle(
-                build_attack_points_iterator(config["configuration"]))):
+                IteratorModel.model_validate(configuration).items())):
         if count > 4:
             break
         count += 1
@@ -376,17 +485,19 @@ def test_attack_point_iterator_repeat_infinite_minus_two():
 
 def test_attack_point_iterator_repeat_infinite_no_values():
     config = {
-        "operation": "repeat",
-        "repetitions": -1,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 0,
-            "values": []
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 0,
+                "values": []
+            }
         }
     }
     output = []
-    for count, value in enumerate(build_attack_points_iterator(config)):
+    for count, value in enumerate(IteratorModel.model_validate(config).items()):
         if count > 5:
             break
         output.append(value)
@@ -396,43 +507,49 @@ def test_attack_point_iterator_repeat_infinite_no_values():
 
 def test_attack_point_iterator_repeat_infinite_no_values_len():
     config = {
-        "operation": "repeat",
-        "repetitions": -1,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 0,
-            "values": []
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 0,
+                "values": []
+            }
         }
     }
-    output = len(build_attack_points_iterator(config))
+    output = len(IteratorModel.model_validate(config))
     assert output == 0
 
 
 def test_attack_point_iterator_repeat_infinite_len():
     config = {
-        "operation": "repeat",
-        "repetitions": -1,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 3,
-            "values": [[1, 2, 3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": -1,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 3,
+                "values": [[1, 2, 3]]
+            }
         }
     }
     with pytest.raises(LengthIsInfiniteException):
-        len(build_attack_points_iterator(config))
+        len(IteratorModel.model_validate(config))
 
 
 def test_repeat_memory():
     config = {
-        "operation": "repeat",
-        "repetitions": 1_000_000_000_000,
-        "configuration": {
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": [[1], [2], [3]]
+        "iterator_model": {
+            "operation": "repeat",
+            "repetitions": 1_000_000_000_000,
+            "configuration": {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": [[1], [2], [3]]
+            }
         }
     }
 
@@ -441,8 +558,8 @@ def test_repeat_memory():
     memory_before_iterator = python_process.memory_info().rss
     memory_threshold = memory_before_iterator * max_growth_factor
 
-    long_iterable = build_attack_points_iterator(config)
-    long_iterator = iter(long_iterable)
+    long_iterable = IteratorModel.model_validate(config)
+    long_iterator = iter(long_iterable.items())
     assert next(long_iterator) == {"key": [1]}
     assert python_process.memory_info().rss <= memory_threshold
     assert next(long_iterator) == {"key": [2]}
@@ -455,29 +572,32 @@ def test_repeat_memory():
     assert python_process.memory_info().rss <= memory_threshold
 
     assert len(long_iterable) == len(
-        config["configuration"]["values"]) * config["repetitions"]
+        config["iterator_model"]["configuration"]
+        ["values"]) * config["iterator_model"]["repetitions"]
     assert python_process.memory_info().rss <= memory_threshold
 
 
 def test_attack_point_iterator_zip_same_lengths():
     values = [[0], [1], [2]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }]
+        }
     }
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [{
@@ -490,30 +610,32 @@ def test_attack_point_iterator_zip_same_lengths():
         "key": [2],
         "plaintext": [2]
     }]
-    assert output_len == len(config["operands"][0]["values"])
+    assert output_len == len(config["iterator_model"]["operands"][0]["values"])
 
 
 def test_attack_point_iterator_zip_different_lengths():
     values = [[0], [1], [2]]
     values2 = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values2
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values2
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [{
@@ -523,51 +645,67 @@ def test_attack_point_iterator_zip_different_lengths():
         "key": [1],
         "plaintext": [1]
     }]
-    assert output_len == len(config["operands"][1]["values"])
+    assert output_len == len(config["iterator_model"]["operands"][1]["values"])
 
 
 def test_attack_point_iterator_zip_different_lengths_length_zero():
     values = []
     values2 = [[0], [1], [2]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values2
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values2
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == []
-    assert output_len == len(config["operands"][0]["values"])
+    assert output_len == len(config["iterator_model"]["operands"][0]["values"])
 
 
 def test_attack_point_iterator_zip_infinite_and_finite():
     values = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            }
-        }, {
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values
+                }
+            }, {
+                "operation": "repeat",
+                "repetitions": 2,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "plaintext",
+                    "length": 1,
+                    "values": values
+                }
+            }]
+        }
+    }
+    length_config = {
+        "iterator_model": {
             "operation": "repeat",
             "repetitions": 2,
             "configuration": {
@@ -576,11 +714,11 @@ def test_attack_point_iterator_zip_infinite_and_finite():
                 "length": 1,
                 "values": values
             }
-        }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [{
@@ -596,16 +734,39 @@ def test_attack_point_iterator_zip_infinite_and_finite():
         "key": [1],
         "plaintext": [1]
     }]
-    assert output_len == len(build_attack_points_iterator(
-        config["operands"][1]))
+    assert output_len == len(IteratorModel.model_validate(length_config))
 
 
 def test_attack_point_iterator_zip_finite_and_infinite():
     values = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": 2,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "plaintext",
+                    "length": 1,
+                    "values": values
+                }
+            }, {
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values
+                }
+            }]
+        }
+    }
+
+    len_config = {
+        "iterator_model": {
             "operation": "repeat",
             "repetitions": 2,
             "configuration": {
@@ -614,20 +775,11 @@ def test_attack_point_iterator_zip_finite_and_infinite():
                 "length": 1,
                 "values": values
             }
-        }, {
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            }
-        }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [{
@@ -643,45 +795,49 @@ def test_attack_point_iterator_zip_finite_and_infinite():
         "key": [1],
         "plaintext": [1]
     }]
-    assert output_len == len(build_attack_points_iterator(
-        config["operands"][0]))
+    assert output_len == len(IteratorModel.model_validate(len_config))
 
 
 def test_attack_point_iterator_zip_infinite_and_infinite():
     values = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values
-            }
-        }, {
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values
-            }
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values
+                }
+            }, {
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "plaintext",
+                    "length": 1,
+                    "values": values
+                }
+            }]
+        }
     }
-    output = build_attack_points_iterator(config)
+    output = IteratorModel.model_validate(config)
     count = 0
     for value1, value2 in zip(
-            output, zip(itertools.cycle(values), itertools.cycle(values))):
+            output.items(), zip(itertools.cycle(values),
+                                itertools.cycle(values))):
         if count > 4:
             break
         count += 1
         assert value1 == {
-            config["operands"][0]["configuration"]["name"]: value2[0],
-            config["operands"][1]["configuration"]["name"]: value2[1]
+            config["iterator_model"]["operands"][0]["configuration"]["name"]:
+                value2[0],
+            config["iterator_model"]["operands"][1]["configuration"]["name"]:
+                value2[1]
         }
     with pytest.raises(LengthIsInfiniteException):
         len(output)
@@ -690,49 +846,53 @@ def test_attack_point_iterator_zip_infinite_and_infinite():
 def test_attack_point_iterator_zip_duplicate_name():
     values = [[0], [1], [2]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }]
+        }
     }
     with pytest.raises(ValueError):
-        build_attack_points_iterator(config)
+        IteratorModel.model_validate(config)
 
 
 def test_attack_point_iterator_zip_three_operands():
     values = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "three",
-            "length": 1,
-            "values": values
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "three",
+                "length": 1,
+                "values": values
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [{
@@ -744,43 +904,46 @@ def test_attack_point_iterator_zip_three_operands():
         "plaintext": [1],
         "three": [1]
     }]
-    assert output_len == len(config["operands"][1]["values"])
+    assert output_len == len(config["iterator_model"]["operands"][1]["values"])
 
 
 def test_attack_point_iterator_zip_get_generated_keys():
     values = [[0], [1]]
     config = {
-        "operation":
-            "zip",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values
-        }, {
-            "operation": "constants",
-            "name": "three",
-            "length": 1,
-            "values": values
-        }]
+        "iterator_model": {
+            "operation":
+                "zip",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values
+            }, {
+                "operation": "constants",
+                "name": "three",
+                "length": 1,
+                "values": values
+            }]
+        }
     }
-    output = build_attack_points_iterator(config)
+    output = IteratorModel.model_validate(config)
 
-    assert output.get_generated_keys() == [
-        config["operands"][0]["name"], config["operands"][1]["name"],
-        config["operands"][2]["name"]
+    assert output.iterator_model.get_generated_keys() == [
+        config["iterator_model"]["operands"][0]["name"],
+        config["iterator_model"]["operands"][1]["name"],
+        config["iterator_model"]["operands"][2]["name"]
     ]
 
 
 def test_attack_point_iterator_zip_no_operands():
-    config = {"operation": "zip", "operands": []}
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    config = {"iterator_model": {"operation": "zip", "operands": []}}
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == []
@@ -791,23 +954,25 @@ def test_attack_point_iterator_cartesian_product_two_operands():
     values1 = [[1], [2]]
     values2 = [[4], [5]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values1
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values2
-        }]
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values2
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
-    output_iter = list(iter(output))
+    output = IteratorModel.model_validate(config)
+    output_iter = list(iter(output.items()))
     output_len = len(output)
 
     assert output_iter == [
@@ -836,29 +1001,31 @@ def test_attack_point_iterator_cartesian_product_three_operands():
     values2 = [[3], [4]]
     values3 = [[5], [6]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values1
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values2
-        }, {
-            "operation": "constants",
-            "name": "three",
-            "length": 1,
-            "values": values3
-        }]
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": values2
+            }, {
+                "operation": "constants",
+                "name": "three",
+                "length": 1,
+                "values": values3
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
+    output = IteratorModel.model_validate(config)
 
-    assert list(iter(output)) == [{
+    assert list(iter(output.items())) == [{
         "key": [1],
         "plaintext": [3],
         "three": [5]
@@ -897,52 +1064,56 @@ def test_attack_point_iterator_cartesian_product_three_operands():
 def test_attack_point_iterator_cartesian_product_finite_and_no_values():
     values1 = [[1], [2]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values1
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": []
-        }]
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }, {
+                "operation": "constants",
+                "name": "plaintext",
+                "length": 1,
+                "values": []
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
+    output = IteratorModel.model_validate(config)
 
-    assert list(iter(output)) == []
+    assert list(iter(output.items())) == []
     assert len(output) == 0
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_no_values():
     values1 = [[1], [2]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values1
+                }
+            }, {
                 "operation": "constants",
-                "name": "key",
+                "name": "plaintext",
                 "length": 1,
-                "values": values1
-            }
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": []
-        }]
+                "values": []
+            }]
+        }
     }
 
-    output = build_attack_points_iterator(config)
+    output = IteratorModel.model_validate(config)
 
-    assert list(iter(output)) == []
+    assert list(iter(output.items())) == []
     assert len(output) == 0
 
 
@@ -950,111 +1121,118 @@ def test_attack_point_iterator_cartesian_product_finite_and_infinite():
     values1 = [[1], [2]]
     values2 = [[3], [4]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values1
-        }, {
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
                 "operation": "constants",
-                "name": "key",
+                "name": "plaintext",
                 "length": 1,
-                "values": values2
-            }
-        }]
+                "values": values1
+            }, {
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values2
+                }
+            }]
+        }
     }
 
     with pytest.raises(LengthIsInfiniteException):
-        build_attack_points_iterator(config)
+        len(IteratorModel.model_validate(config))
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_finite():
     values1 = [[1], [2]]
     values2 = [[3], [4]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values1
+                }
+            }, {
                 "operation": "constants",
-                "name": "key",
+                "name": "plaintext",
                 "length": 1,
-                "values": values1
-            }
-        }, {
-            "operation": "constants",
-            "name": "plaintext",
-            "length": 1,
-            "values": values2
-        }]
+                "values": values2
+            }]
+        }
     }
 
     with pytest.raises(LengthIsInfiniteException):
-        build_attack_points_iterator(config)
+        len(IteratorModel.model_validate(config))
 
 
 def test_attack_point_iterator_cartesian_product_infinite_and_infinite():
     values1 = [[1], [2]]
     values2 = [[3], [4]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "key",
-                "length": 1,
-                "values": values1
-            }
-        }, {
-            "operation": "repeat",
-            "repetitions": -1,
-            "configuration": {
-                "operation": "constants",
-                "name": "plaintext",
-                "length": 1,
-                "values": values2
-            }
-        }]
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "key",
+                    "length": 1,
+                    "values": values1
+                }
+            }, {
+                "operation": "repeat",
+                "repetitions": -1,
+                "configuration": {
+                    "operation": "constants",
+                    "name": "plaintext",
+                    "length": 1,
+                    "values": values2
+                }
+            }]
+        }
     }
-
     with pytest.raises(LengthIsInfiniteException):
-        build_attack_points_iterator(config)
+        len(IteratorModel.model_validate(config))
 
 
 def test_attack_point_iterator_cartesian_product_no_operands():
     config = {"operation": "cartesian_product", "operands": []}
     with pytest.raises(ValueError):
-        build_attack_points_iterator(config)
+        IteratorModel.model_validate(config)
 
 
 def test_attack_point_iterator_cartesian_product_same_name():
     values1 = [[1], [2]]
     values2 = [[3], [4]]
     config = {
-        "operation":
-            "cartesian_product",
-        "operands": [{
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values1
-        }, {
-            "operation": "constants",
-            "name": "key",
-            "length": 1,
-            "values": values2
-        }]
+        "iterator_model": {
+            "operation":
+                "cartesian_product",
+            "operands": [{
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values1
+            }, {
+                "operation": "constants",
+                "name": "key",
+                "length": 1,
+                "values": values2
+            }]
+        }
     }
 
     with pytest.raises(ValueError):
-        build_attack_points_iterator(config)
+        IteratorModel.model_validate(config)
