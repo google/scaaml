@@ -346,5 +346,4 @@ class IteratorModel(BaseModel):
 
 def build_attack_points_iterator(
         configuration: Dict[str, Any]) -> IteratorModel:
-    configuration = copy.deepcopy(configuration)
     return IteratorModel.model_validate({"iterator_model": configuration})
