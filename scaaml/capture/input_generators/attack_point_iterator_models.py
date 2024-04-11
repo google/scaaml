@@ -13,7 +13,6 @@
 # limitations under the License.
 """Pydantic models for the attack point iterator."""
 import collections
-import copy
 import itertools
 import math
 from pydantic import BaseModel, Field, model_validator
