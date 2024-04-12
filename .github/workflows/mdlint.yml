@@ -2,7 +2,7 @@ name: markdownlint
 on:
   push:
     paths:
-      - 'publications/**/*.md'
+      - '**/*.md'
       - '.markdownlint.json'
   pull_request:
     types: [opened, synchronize, reopened]
@@ -15,5 +15,6 @@ jobs:
       - name: markdownlint-cli
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
-          files: 'publications/**/*.md'
+          files: '**/*.md'
+          ignore_files: "scaaml_intro/**"
           config_file: ".markdownlint.json"
