@@ -56,6 +56,8 @@ TODO
 This section is best effort. We will be happy if you send us a pull request with
 an update, open an issue or just send us an email.
 
+-  Remove testing print
+
 ## Cite as
 
 ```bibtex
