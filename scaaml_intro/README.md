@@ -11,9 +11,10 @@ This dataset and code is **for educational and demo purpose only**.
 It is not suitable for research as TinyAES is an easy target and
 we don't provide the holdout dataset to do proper evaluations.
 
-If you use this code, models or dataset in any shape or form please provide attribution
-by citing our [DEF CON presentation](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/) or having a link to this
-[repository](https://github.com/google/scaaml).
+If you use this code, models or dataset in any shape or form please provide
+attribution by citing our
+[DEF CON presentation](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/)
+or having a link to this [repository](https://github.com/google/scaaml).
 
 ```bibtex
 @inproceedings{burszteindc27,
