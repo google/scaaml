@@ -66,7 +66,7 @@ the community to independently replicate our results and build on them.
 
 ## Models
 
-Comming soon...
+Coming soon...
 
 ## List of citations and followup work
 
