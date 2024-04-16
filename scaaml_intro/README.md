@@ -73,4 +73,4 @@ The code is split into two parts:
 
 -   `key_recovery_demo.ipynb` is the notebook that showcases how to use the
     trained model and the `scaaml` library to recover TinyAES keys with just 4
-    traces. You can either use the models provided, or train your own.
+    traces. You can either use the provided models, or train your own.
