@@ -68,19 +68,9 @@ its codebase, models or datasets please cite:
 }
 ```
 
-To cite the [paper](https://arxiv.org/abs/2306.07249) describing the approach,
-please cite:
+### List of all papers
 
-```bibtex
-@misc{bursztein2023generic,
-      title={Generic Attacks against Cryptographic Hardware through Long-Range Deep Learning},
-      author={Elie Bursztein and Luca Invernizzi and Karel Král and Daniel Moghimi and Jean-Michel Picod and Marina Zhang},
-      year={2023},
-      eprint={2306.07249},
-      archivePrefix={arXiv},
-      primaryClass={cs.CR}
-}
-```
+[A list of all our papers](https://github.com/google/scaaml/tree/main/papers/).
 
 ### SCAAML AES tutorial
 
