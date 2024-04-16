@@ -70,6 +70,6 @@ The code is split into two parts:
     here `config/stm32f415_tinyaes.json` and you can use it to train your own
     models by running `python train.py -c config/stm32f415_tinyaes.json`
 
--  `key_recovery_demo.ipynb` is the notebook that showcases how to use the
+-   `key_recovery_demo.ipynb` is the notebook that showcases how to use the
     trained model and the `scaaml` library to recover TinyAES keys with just 4
     traces. You can either use the models provided, or train your own.
