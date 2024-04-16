@@ -1,4 +1,5 @@
 # SCAAML: Side Channel Attacks Assisted with Machine Learning
+
 ![SCAAML banner](https://storage.googleapis.com/scaaml-public/visuals/scaaml-banner.png)
 
 SCAAML (Side Channel Attacks Assisted with Machine Learning) is a deep learning
@@ -9,13 +10,13 @@ top of TensorFlow 2.x.
 
 ## Available components
 
-- [`scaaml/`](https://github.com/google/scaaml/tree/master/scaaml/): The SCAAML
-  framework code. Its used by the various tools.
+-  [`scaaml/`](https://github.com/google/scaaml/tree/master/scaaml/): The SCAAML
+   framework code. Its used by the various tools.
 
-- [`scaaml_intro/`](https://github.com/google/scaaml/tree/master/scaaml_intro):
-  *A Hacker Guide To Deep Learning Based Side Channel Attacks*.  Code, dataset
-  and models used in our step by step tutorial on how to use deep-learning to
-  perform AES side-channel attacks in practice.
+-  [`scaaml_intro/`](https://github.com/google/scaaml/tree/master/scaaml_intro):
+   *A Hacker Guide To Deep Learning Based Side Channel Attacks*.  Code, dataset
+   and models used in our step by step tutorial on how to use deep-learning to
+   perform AES side-channel attacks in practice.
 
 ## Install
 
@@ -24,16 +25,15 @@ top of TensorFlow 2.x.
 To use SCAAML you need to have a working version of [TensorFlow
 2.x](https://www.tensorflow.org/install) and a version of Python >=3.9
 
-
 ### SCAAML framework install
 
-1. Clone the repository: `git clone github.com/google/scaaml/`
-2. Create and activate Python virtual environment:
-      `python3 -m venv my_env`
-      `source my_env/bin/activate`
-3. Install dependencies: `python3 -m pip install --require-hashes -r
-   requirements.txt`
-4. Install the SCAAML package: `python setup.py develop`
+1.  Clone the repository: `git clone github.com/google/scaaml/`
+2.  Create and activate Python virtual environment:
+       `python3 -m venv my_env`
+       `source my_env/bin/activate`
+3.  Install dependencies: `python3 -m pip install --require-hashes -r
+    requirements.txt`
+4.  Install the SCAAML package: `python setup.py develop`
 
 ### Update dependencies
 
@@ -70,6 +70,7 @@ its codebase, models or datasets please cite:
 
 To cite the [paper](https://arxiv.org/abs/2306.07249) describing the approach,
 please cite:
+
 ```bibtex
 @misc{bursztein2023generic,
       title={Generic Attacks against Cryptographic Hardware through Long-Range Deep Learning},

@@ -26,7 +26,7 @@ the community to independently replicate our results and build on them.
 
 ## List of datasets used in this paper
 
-### Newly captured datasets:
+### Newly captured datasets
 
 | Name    | Trace length | Examples in train | test  | holdout | Download size (in TB) | Download and usage instructions                                           |
 | ------- | ------------ | ----------------: | ----- | ------- | --------------------: | ------------------------------------------------------------------------- |
@@ -35,17 +35,21 @@ the community to independently replicate our results and build on them.
 | ECC CM2 | 10M          | 122,880           | 8,192 | 8,192   | 2.1                   | [ECC CM2](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) |
 | ECC CM3 | 17,5M        | 122,880           | 8,192 | 8,192   | 3.7                   | [ECC CM3](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) |
 
-### Publicly available datasets:
+### Publicly available datasets
 
-[REASSURE (H2020 731591) ECC Dataset](https://zenodo.org/records/3609789), Łukasz Chmielewski
+[REASSURE (H2020 731591) ECC Dataset](https://zenodo.org/records/3609789)
+Łukasz Chmielewski
 
-[ASCADv2](https://www.data.gouv.fr/en/datasets/ascadv2/) Loïc Masure and Rémi Strullu.
+[ASCADv2](https://www.data.gouv.fr/en/datasets/ascadv2/)
+Loïc Masure and Rémi Strullu.
 Side-channel analysis against ANSSI’s protected AES implementation on ARM: end-to-end attacks with multi-task learning.
 Journal of Cryptographic Engineering, 2023. [https://eprint.iacr.org/2021/592.pdf]
 
-[ASCADv1](https://github.com/ANSSI-FR/ASCAD) ATMEGA boolean masked AES variable key, Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
+[ASCADv1](https://github.com/ANSSI-FR/ASCAD)
+ATMEGA boolean masked AES variable key, Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
 
-[CHES 2023 SMAesH challenge](https://smaesh-challenge.simple-crypto.org/) Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.
+[CHES 2023 SMAesH challenge](https://smaesh-challenge.simple-crypto.org/)
+Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.
 
 ## Models
 
