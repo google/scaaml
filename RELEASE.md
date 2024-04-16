@@ -14,7 +14,6 @@ Initial public release.
 * Visualization redone
 * SCAAML tutorial available
 
-
 ## Thanks to our Contributors
 
 This release contains contributions from many people at Google, as well as our

@@ -56,10 +56,6 @@ TODO
 This section is best effort. We will be happy if you send us a pull request with
 an update, open an issue or just send us an email.
 
-- Remove testing print TODO DO NOT SUBMIT
-
-- I am a loong list TODO DO NOT SUBMIT
-
 ## Cite as
 
 ```bibtex
