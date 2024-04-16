@@ -11,9 +11,9 @@ jobs:
   mdlint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Register matcher
         run: echo ::add-matcher::./.github/mdlint_matcher.json
-      - uses: actions/checkout@v4
       - name: markdownlint-cli
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
