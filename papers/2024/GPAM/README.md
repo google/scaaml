@@ -37,25 +37,36 @@ the community to independently replicate our results and build on them.
 
 ### Publicly available datasets
 
-[REASSURE (H2020 731591) ECC Dataset](https://zenodo.org/records/3609789)
-Łukasz Chmielewski
+-   REASSURE (H2020 731591) ECC Dataset
+    Łukasz Chmielewski
 
-[ASCADv2](https://www.data.gouv.fr/en/datasets/ascadv2/)
-Loïc Masure and Rémi Strullu.
-Side-channel analysis against ANSSI’s protected AES implementation on ARM:
-end-to-end attacks with multi-task learning.
-Journal of Cryptographic Engineering, 2023. [https://eprint.iacr.org/2021/592.pdf]
+    [link](https://zenodo.org/records/3609789)
 
-[ASCADv1](https://github.com/ANSSI-FR/ASCAD)
-Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
-ATMEGA boolean masked AES variable key
+-   ASCADv2
+    Loïc Masure and Rémi Strullu.
 
-[CHES 2023 SMAesH challenge](https://smaesh-challenge.simple-crypto.org/)
-Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.
+    Side-channel analysis against ANSSI’s protected AES implementation on ARM:
+    end-to-end attacks with multi-task learning.
+
+    Journal of Cryptographic Engineering, 2023. [https://eprint.iacr.org/2021/592.pdf]
+
+    [link](https://www.data.gouv.fr/en/datasets/ascadv2/)
+
+-   ASCADv1
+    Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
+
+    ATMEGA boolean masked AES variable key
+
+    [link](https://github.com/ANSSI-FR/ASCAD)
+
+-   CHES 2023 SMAesH challenge
+    Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.
+
+    [link](https://smaesh-challenge.simple-crypto.org/)
 
 ## Models
 
-TODO
+Comming soon...
 
 ## List of citations and followup work
 

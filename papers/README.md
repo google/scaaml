@@ -1,7 +1,7 @@
-# SCAAML list of papers and publications
+# SCAAML list of papers and our publications
 
 This directory provides the list of papers, presentations, code, and datasets
-used in the publications.
+used in our publications.
 
 ## List of papers (reversed chronological order)
 

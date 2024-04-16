@@ -3,7 +3,7 @@
 ![SCAAML banner](https://storage.googleapis.com/scaaml-public/visuals/scaaml-banner.png)
 
 SCAAML (Side Channel Attacks Assisted with Machine Learning) is a deep learning
-framework dedicated to side-channel attacks.  It is written in python and run on
+framework dedicated to side-channel attacks. It is written in python and run on
 top of TensorFlow 2.x.
 
 [![Coverage Status](https://coveralls.io/repos/github/google/scaaml/badge.svg?branch=main)](https://coveralls.io/github/google/scaaml?branch=main)
@@ -48,10 +48,11 @@ and commit requirements.txt.
 
 ### Dataset and models
 
-Every SCAAML component rely on a datasets and optional models that you will need
-to download in the component directory. The link to download those are available
-in the components specific README.md. Simply click on the directory representing
-the component of your choice, or the link to the component in the list above.
+Every SCAAML component relies on a dataset and optional models that you will
+need to download in the component directory. The links to download these are
+available in the component specific `README.md`. Simply click on the directory
+representing the component of your choice, or the link to the component in the
+list above.
 
 ## Publications & Citation
 
@@ -68,9 +69,9 @@ its codebase, models or datasets please cite:
 }
 ```
 
-### List of all papers
+### List of our papers
 
-[A list of all our papers](https://github.com/google/scaaml/tree/main/papers/).
+[A list of our papers](https://github.com/google/scaaml/tree/main/papers/).
 
 ### SCAAML AES tutorial
 

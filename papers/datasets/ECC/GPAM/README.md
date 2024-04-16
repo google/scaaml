@@ -65,5 +65,5 @@ Multiplicative blinding using a 128-bit long random mask.
 
 ## ECC CM3
 
-Combination of CM1 and CM2 (CM1 where each each scalar multiplication in CM1 is
+Combination of CM1 and CM2 (CM1 where each scalar multiplication in CM1 is
 protected by an independent CM2).

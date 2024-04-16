@@ -1,7 +1,7 @@
 # SCAAML AES side-channel attacks tutorial
 
-This directory provide the code, models and dataset needed to reproduce the AES
-deep-learning side channel attack demonstrated at
+This directory provides the code, models and the dataset needed to reproduce the
+AES deep-learning side channel attack demonstrated at
 [DEF CON 27](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/)
 and in our online tutorial.
 
@@ -66,9 +66,10 @@ interested in looking at how fast the models converged.
 The code is split into two parts:
 
 -   `train.py` is used to train the attack models. It takes as argument a config
-    that define what to train. The configuration used in the tutorial is located
-    here `config/stm32f415_tinyaes.json` and you can use it to train your own
-    models by running `python train.py -c config/stm32f415_tinyaes.json`
+    that defines what to train. The configuration used in the tutorial is
+    located here `config/stm32f415_tinyaes.json` and you can use it to train
+    your own models by running
+    `python train.py -c config/stm32f415_tinyaes.json`
 
 -   `key_recovery_demo.ipynb` is the notebook that showcases how to use the
     trained model and the `scaaml` library to recover TinyAES keys with just 4
