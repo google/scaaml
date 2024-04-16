@@ -11,11 +11,6 @@ jobs:
   mdlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Register matcher
-        run: echo ::add-matcher::./.github/mdlint_matcher.json
-      - name: markdownlint-cli
-        uses: nosborn/github-action-markdown-cli@v3
+      - uses: DavidAnson/markdownlint-cli2-action@v16
         with:
-          files: '**/*.md'
-          config_file: ".markdownlint.json"
+          globs: '**/*.md'
