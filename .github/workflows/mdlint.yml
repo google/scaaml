@@ -8,9 +8,11 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  mdlint:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: DavidAnson/markdownlint-cli2-action@v16
-        with:
-          globs: '**/*.md'
+    - uses: actions/checkout@v4
+    - uses: DavidAnson/markdownlint-cli2-action@v16
+      with:
+        globs: |
+          *.md
