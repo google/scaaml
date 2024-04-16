@@ -12,6 +12,8 @@
     },
     "line-length": {
         "line_length": 80,
+        "tables": false,
+        "strict": true,
         "code_blocks": false
     },
     "list-marker-space": {
