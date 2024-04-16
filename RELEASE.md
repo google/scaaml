@@ -4,16 +4,15 @@ Initial public release.
 
 ## Major Features and Improvements
 
-* Tutorial code and dataset released
+*   Tutorial code and dataset released
 
 ## Breaking Changes
 
-* SCAAML full rearchitecting around Tensorflow 2.2+
-* Models reworked
-* Attack code refactored
-* Visualization redone
-* SCAAML tutorial available
-
+*   SCAAML full rearchitecting around Tensorflow 2.2+
+*   Models reworked
+*   Attack code refactored
+*   Visualization redone
+*   SCAAML tutorial available
 
 ## Thanks to our Contributors
 
