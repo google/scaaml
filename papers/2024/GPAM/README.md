@@ -42,11 +42,13 @@ the community to independently replicate our results and build on them.
 
 [ASCADv2](https://www.data.gouv.fr/en/datasets/ascadv2/)
 Loïc Masure and Rémi Strullu.
-Side-channel analysis against ANSSI’s protected AES implementation on ARM: end-to-end attacks with multi-task learning.
+Side-channel analysis against ANSSI’s protected AES implementation on ARM:
+end-to-end attacks with multi-task learning.
 Journal of Cryptographic Engineering, 2023. [https://eprint.iacr.org/2021/592.pdf]
 
 [ASCADv1](https://github.com/ANSSI-FR/ASCAD)
-ATMEGA boolean masked AES variable key, Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
+Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
+ATMEGA boolean masked AES variable key
 
 [CHES 2023 SMAesH challenge](https://smaesh-challenge.simple-crypto.org/)
 Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.

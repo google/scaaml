@@ -10,13 +10,13 @@ top of TensorFlow 2.x.
 
 ## Available components
 
--  [`scaaml/`](https://github.com/google/scaaml/tree/master/scaaml/): The SCAAML
-   framework code. Its used by the various tools.
+-   [`scaaml/`](https://github.com/google/scaaml/tree/master/scaaml/): The
+    SCAAML framework code. Its used by the various tools.
 
--  [`scaaml_intro/`](https://github.com/google/scaaml/tree/master/scaaml_intro):
-   *A Hacker Guide To Deep Learning Based Side Channel Attacks*.  Code, dataset
-   and models used in our step by step tutorial on how to use deep-learning to
-   perform AES side-channel attacks in practice.
+-   [`scaaml_intro/`](https://github.com/google/scaaml/tree/master/scaaml_intro):
+    *A Hacker Guide To Deep Learning Based Side Channel Attacks*.  Code, dataset
+    and models used in our step by step tutorial on how to use deep-learning to
+    perform AES side-channel attacks in practice.
 
 ## Install
 
