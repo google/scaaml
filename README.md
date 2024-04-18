@@ -60,12 +60,11 @@ Here is the list of publications and talks related to SCAAML. If you use any of
 its codebase, models or datasets please cite:
 
 ```bibtex
-@online{bursztein2019scaaml,
-  title={SCAAML:  Side Channel Attacks Assisted with Machine Learning},
-  author={Bursztein, Elie and others},
-  year={2019},
-  publisher={GitHub},
-  url={https://github.com/google/scaaml},
+@article{bursztein2023generic,
+  title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
+  author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+  journal={arXiv preprint arXiv:2306.07249},
+  year={2023}
 }
 ```
 
