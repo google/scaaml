@@ -124,6 +124,8 @@ def load_attack_shard(
         y = shard["sub_bytes_in"][attack_byte]
     elif attack_point == "sub_bytes_out":
         y = shard["sub_bytes_out"][attack_byte]
+    else:
+        raise ValueError(f"Unknown attack point {attack_point}.")
 
     y = y[:num_traces]
     y = to_categorical(y, 256)
@@ -147,6 +149,8 @@ def load_shard(fname: str, attack_byte: int, attack_point: str,
         y = shard["sub_bytes_in"][attack_byte]
     elif attack_point == "sub_bytes_out":
         y = shard["sub_bytes_out"][attack_byte]
+    else:
+        raise ValueError(f"Unknown attack point {attack_point}.")
 
     y = y[:num_traces_per_shard]
     y = to_categorical(y, 256)

@@ -45,7 +45,7 @@ def plot_heatmap(batch: npt.NDArray[np.generic],
     plt.imshow(data, cmap=cmap)
 
     plt.yticks([])
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
 
 
 def plot_trace(trace: npt.NDArray[np.float64],
@@ -71,7 +71,7 @@ def plot_trace(trace: npt.NDArray[np.float64],
     if x_labels:
         plt.xticks(list(range(len(trace))), x_labels)
 
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
 
 
 def plot_comparison(traces: Sequence[npt.ArrayLike], labels: Sequence[str],
@@ -94,7 +94,7 @@ def plot_comparison(traces: Sequence[npt.ArrayLike], labels: Sequence[str],
 
     plt.title(title)
     plt.legend()
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
 
 
 def plot_trace_and_trigger(trace: npt.NDArray[np.generic],
@@ -127,7 +127,7 @@ def plot_traces(traces: Sequence[npt.NDArray[np.generic]],
         plt.xlabel(xlabel)
     if ylabel:
         plt.ylabel(ylabel)
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
 
 
 def plot_target_distribution(class_ids: npt.NDArray[np.generic],
@@ -136,7 +136,7 @@ def plot_target_distribution(class_ids: npt.NDArray[np.generic],
     plt.hist(class_ids, bins=256)
     plt.xlabel("target value")
     plt.ylabel("example counts")
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
 
 
 def plot_confusion_matrix(class_ids: Sequence[int],
@@ -171,4 +171,4 @@ def plot_confusion_matrix(class_ids: Sequence[int],
     plt.tight_layout()
     plt.ylabel("True intermediate values")
     plt.xlabel("Predicted intermediate values")
-    plt.show()  # type: ignore[no-untyped-call]
+    plt.show()
