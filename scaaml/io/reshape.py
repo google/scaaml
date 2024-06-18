@@ -152,7 +152,7 @@ def reshape_into_new_dataset(old_ds: Dataset,
 
                     # Write the example (open new shards automatically).
                     dataset_filler.write_example(
-                        attack_points=attack_points,  # type: ignore[arg-type]
+                        attack_points=attack_points,
                         measurement=measurement,
                         current_key=cur_key,
                         split_name=split,

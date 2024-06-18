@@ -37,7 +37,7 @@ from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, S
 from scaaml.io import Dataset
 
 
-class LeCroy(AbstractSScope["LeCroyScope"]):
+class LeCroy(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self,
@@ -169,7 +169,7 @@ class LeCroy(AbstractSScope["LeCroyScope"]):
         self._scope = None
 
     @property
-    def scope(self) -> "LeCroyScope":
+    def scope(self) -> ScopeTemplate:
         assert self._scope
         return self._scope
 

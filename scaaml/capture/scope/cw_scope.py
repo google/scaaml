@@ -22,9 +22,10 @@ from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
+from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
-class CWScope(AbstractSScope[OpenADC]):
+class CWScope(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self,
@@ -115,5 +116,5 @@ class CWScope(AbstractSScope[OpenADC]):
         """
         if self._scope is None:  # pragma: no cover
             return
-        self._scope.dis()  # type: ignore[no-untyped-call]
+        self._scope.dis()
         self._scope = None

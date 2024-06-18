@@ -18,10 +18,11 @@ from typing import Any, Literal, Optional
 from typing_extensions import Self, TypeAlias
 
 from scaaml.capture.scope.scope_base import AbstractSScope
+from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.capture.scope.ps6424e import Pico6424E as PicoScope6424E
 
 
-class PicoScope(AbstractSScope[PicoScope6424E]):
+class PicoScope(AbstractSScope):
     """Scope context manager."""
     CHANNEL_T: TypeAlias = Literal["A", "B", "C", "D", "E", "F", "G", "H",
                                    "PORT0", "PORT1"]
@@ -96,7 +97,7 @@ class PicoScope(AbstractSScope[PicoScope6424E]):
         self._trigger_coupling: PicoScope.COUPLING_T = trigger_coupling
 
         # Scope object
-        self._scope: Optional[PicoScope6424E] = None
+        self._scope: ScopeTemplate | None = None
 
     def __enter__(self) -> Self:  # pragma: no cover
         """Create scope context.

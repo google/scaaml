@@ -16,6 +16,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Type
 
+from chipwhisperer.capture.scopes.cwnano import CWNano
+
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
 from scaaml.capture.aes.capture_runner import CaptureRunner
@@ -24,11 +26,11 @@ from scaaml.capture.aes.communication import CWCommunication
 from scaaml.capture.aes.control import CWControl
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.scope import DefaultCWScope
-from scaaml.capture.scope.scope_base import AbstractSScope, ScopeT
+from scaaml.capture.scope.scope_base import AbstractSScope
 
 
 def capture_aes_dataset(
-        scope_class: Type[AbstractSScope[ScopeT]],
+        scope_class: Type[AbstractSScope],
         firmware_sha256: str,
         architecture: str,
         implementation: str,
@@ -248,8 +250,8 @@ def _get_current_capture_info(capture_info: Dict[str, Any],
     return current_capture_info
 
 
-def _capture(scope_class: Type[AbstractSScope[ScopeT]],
-             capture_info: Dict[str, Any], chip_id: int,
+def _capture(scope_class: Type[AbstractSScope], capture_info: Dict[str, Any],
+             chip_id: int,
              crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
              dataset: Any) -> None:
     """Create scope contexts managers and capture the dataset.
@@ -283,7 +285,7 @@ def _capture(scope_class: Type[AbstractSScope[ScopeT]],
 def _control_communication_and_capture(
         chip_id: int, cwscope: DefaultCWScope,
         crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
-        scope: AbstractSScope[ScopeT], dataset: Any) -> None:
+        scope: AbstractSScope, dataset: Any) -> None:
     """Create control and communication context managers and run the capture.
 
     Args:
@@ -296,7 +298,11 @@ def _control_communication_and_capture(
       scope: The scope that does the measurements.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
-    with CWControl(chip_id=chip_id, scope_io=cwscope.scope.io) as control:
+    scope_parameter = cwscope.scope
+    assert isinstance(scope_parameter, CWNano)
+    with CWControl(
+            chip_id=chip_id,
+            scope_io=scope_parameter.io) as control:  # type: ignore[arg-type]
         with CWCommunication(cwscope.scope) as target:
             capture_runner = CaptureRunner(crypto_algorithms=crypto_algorithms,
                                            scope=scope,
