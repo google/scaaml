@@ -137,7 +137,11 @@ def reshape_into_new_dataset(old_ds: Dataset,
 
                     # Get attack points and measurement.
                     attack_points = {
-                        ap_name: example[ap_name]
+                        # Call tolist first in order to avoid silently
+                        # representing large numbers as multiple bytes. Large
+                        # values fail loud.
+                        # TODO allow saving other data types than bytearrays.
+                        ap_name: bytearray(example[ap_name].tolist())
                         for ap_name in old_ds.attack_points_info
                     }
                     measurement = {
