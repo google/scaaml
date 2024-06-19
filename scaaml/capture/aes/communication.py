@@ -44,7 +44,8 @@ class CWCommunication(AbstractSCommunication):
         # self._scope here is a CWNano, we know it is a ScopeTemplate, but cw
         # typing wants OpenADC | CWNano | None. We don't want to check
         # isinstance because we use a mock in unit-tests.
-        self._target = cw.target(self._scope, SimpleSerial)  # type: ignore[arg-type]
+        self._target = cw.target(self._scope,
+                                 SimpleSerial)  # type: ignore[arg-type]
         if isinstance(self._target, SimpleSerial):
             self._target.protver = self._protver
         self._scope = None
