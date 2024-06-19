@@ -97,7 +97,7 @@ class PicoScope(AbstractSScope):
         self._trigger_coupling: PicoScope.COUPLING_T = trigger_coupling
 
         # Scope object
-        self._scope: ScopeTemplate | None = None
+        self._scope: Optional[ScopeTemplate] = None
 
     def __enter__(self) -> Self:  # pragma: no cover
         """Create scope context.

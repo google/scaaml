@@ -15,10 +15,8 @@
 
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import Generic, Optional
+from typing import Optional
 from typing_extensions import Self
-
-from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.io import Dataset

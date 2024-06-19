@@ -17,7 +17,6 @@ from typing import Optional
 from typing_extensions import Self
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes.cwnano import CWNano
 from chipwhisperer.capture.targets import TargetTypes
 from chipwhisperer.capture.targets.SimpleSerial import SimpleSerial
 

@@ -18,11 +18,9 @@ from typing import Any, Optional, Type
 from typing_extensions import Self
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
-from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
 class CWScope(AbstractSScope):

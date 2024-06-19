@@ -38,7 +38,7 @@ class DefaultCWScope(AbstractSScope):
             name and colon character.
         """
         super().__init__(samples=0, offset=0)
-        self._scope: ScopeTemplate | None = None
+        self._scope: Optional[ScopeTemplate] = None
         self._cw_scope_serial_number: Optional[str] = cw_scope_serial_number
 
     def __enter__(self) -> Self:
