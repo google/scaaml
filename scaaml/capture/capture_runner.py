@@ -13,7 +13,7 @@
 # limitations under the License.
 """CaptureRunner runs the capture."""
 from abc import ABC, abstractmethod
-from typing import Dict, Generic, NamedTuple, Sequence, Tuple
+from typing import Dict, NamedTuple, Sequence, Tuple
 from tqdm.auto import tqdm
 
 import numpy as np
@@ -25,15 +25,15 @@ from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
 from scaaml.capture.communication import AbstractSCommunication
 from scaaml.capture.control import AbstractSControl
-from scaaml.capture.scope import AbstractSScope, ScopeT
+from scaaml.capture.scope import AbstractSScope
 
 
-class AbstractCaptureRunner(ABC, Generic[ScopeT]):
+class AbstractCaptureRunner(ABC):
     """Abstract class for capturing the dataset."""
 
     def __init__(self, crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
                  communication: AbstractSCommunication,
-                 control: AbstractSControl, scope: AbstractSScope[ScopeT],
+                 control: AbstractSControl, scope: AbstractSScope,
                  dataset: Dataset) -> None:
         """Holds all information needed to capture a dataset (using the method
         `capture`).

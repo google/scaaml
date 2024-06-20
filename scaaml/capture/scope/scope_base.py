@@ -15,18 +15,14 @@
 
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import Generic, Optional, TypeVar, Union
+from typing import Optional
 from typing_extensions import Self
-
-from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 
 from scaaml.capture.scope.scope_template import ScopeTemplate
 from scaaml.io import Dataset
 
-ScopeT = TypeVar("ScopeT", bound=Union[OpenADC, ScopeTemplate])
 
-
-class AbstractSScope(ABC, Generic[ScopeT]):
+class AbstractSScope(ABC):
     """Scope context manager."""
 
     def __init__(self, samples: int, offset: int):
@@ -37,7 +33,7 @@ class AbstractSScope(ABC, Generic[ScopeT]):
           offset: Number of samples to wait after trigger event occurred before
             starting recording data.
         """
-        self._scope: Optional[ScopeT] = None
+        self._scope: Optional[ScopeTemplate] = None
         self._samples: int = samples
         self._offset: int = offset
 
@@ -61,7 +57,7 @@ class AbstractSScope(ABC, Generic[ScopeT]):
         """
 
     @property
-    def scope(self) -> ScopeT:
+    def scope(self) -> ScopeTemplate:
         """Scope object for chipwhisperer API."""
         assert self._scope
         return self._scope

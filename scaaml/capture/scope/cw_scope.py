@@ -18,13 +18,12 @@ from typing import Any, Optional, Type
 from typing_extensions import Self
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
 
 
-class CWScope(AbstractSScope[OpenADC]):
+class CWScope(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self,
@@ -115,5 +114,5 @@ class CWScope(AbstractSScope[OpenADC]):
         """
         if self._scope is None:  # pragma: no cover
             return
-        self._scope.dis()  # type: ignore[no-untyped-call]
+        self._scope.dis()
         self._scope = None

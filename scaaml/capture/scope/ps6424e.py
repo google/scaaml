@@ -396,7 +396,6 @@ class Pico6424E(ScopeTemplate):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         del args  # unused
         del kwargs  # unused
-        super().__init__()
         self.ps_handle = ctypes.c_int16()
 
         self.trace = CaptureSettings()

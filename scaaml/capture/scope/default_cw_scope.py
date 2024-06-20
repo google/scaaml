@@ -19,13 +19,13 @@ from typing import Optional, Type
 from typing_extensions import Self
 
 import chipwhisperer as cw
-from chipwhisperer.capture.scopes import OpenADC  # type: ignore[attr-defined]
 from chipwhisperer.capture.scopes.cwnano import CWNano
 
 from scaaml.capture.scope.scope_base import AbstractSScope
+from scaaml.capture.scope.scope_template import ScopeTemplate
 
 
-class DefaultCWScope(AbstractSScope[OpenADC]):  # pragma: no cover
+class DefaultCWScope(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self, cw_scope_serial_number: Optional[str] = None):
@@ -38,7 +38,7 @@ class DefaultCWScope(AbstractSScope[OpenADC]):  # pragma: no cover
             name and colon character.
         """
         super().__init__(samples=0, offset=0)
-        self._scope: Optional[OpenADC] = None
+        self._scope: Optional[ScopeTemplate] = None
         self._cw_scope_serial_number: Optional[str] = cw_scope_serial_number
 
     def __enter__(self) -> Self:
@@ -70,5 +70,5 @@ class DefaultCWScope(AbstractSScope[OpenADC]):  # pragma: no cover
         """
         if self._scope is None:
             return
-        self._scope.dis()  # type: ignore[no-untyped-call]
+        self._scope.dis()
         self._scope = None

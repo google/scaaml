@@ -26,10 +26,9 @@ from scaaml.capture.capture_runner import AbstractCaptureRunner
 from scaaml.capture.crypto_input import AbstractCryptoInput
 from scaaml.capture.aes.crypto_input import CryptoInput
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
-from scaaml.capture.scope import ScopeT
 
 
-class CaptureRunner(AbstractCaptureRunner[ScopeT]):
+class CaptureRunner(AbstractCaptureRunner):
     """Class for capturing the dataset."""
 
     def get_crypto_input(self, kt_element: NamedTuple) -> AbstractCryptoInput:
