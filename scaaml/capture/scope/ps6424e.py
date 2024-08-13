@@ -411,7 +411,7 @@ class Pico6424E(ScopeTemplate):
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
         self._buffer_trace: List[float] = []
-        self._buffer_trigger: list[float] | list[int] = []
+        self._buffer_trigger: List[float] | List[int] = []
 
         # Part of cw API
         self.connectStatus: bool = False  # Connected status for cw  # pylint: disable=C0103
