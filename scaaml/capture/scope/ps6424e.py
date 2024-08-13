@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import time
 import traceback
-from typing import Any, Dict, List, Optional, OrderedDict, Union
+from typing import Any, Dict, Optional, OrderedDict, Union
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -72,7 +72,7 @@ class CaptureSettings:
         "External": 4,
         "TriggerAux": 5
     }
-    CHANNEL_RANGE: List[ChannelRange] = [
+    CHANNEL_RANGE: list[ChannelRange] = [
         ChannelRange(
             range_v=20E-3,
             api_value=1,
@@ -145,7 +145,7 @@ class CaptureSettings:
             self._rev_ch_list[channel_id] = channel_name
         # ranges
         self._ch_range: Dict[float, str] = {}
-        self._ch_range_list: List[float] = []
+        self._ch_range_list: list[float] = []
         self._ch_range_api_value: Dict[float, int] = {}
         for key in self.CHANNEL_RANGE:
             self._ch_range[key.range_v] = key.range_str
@@ -410,7 +410,7 @@ class Pico6424E(ScopeTemplate):
 
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
-        self._buffer_trace: List[float] = []
+        self._buffer_trace: list[float] = []
         self._buffer_trigger: Union[list[float] | list[int]] = []
 
         # Part of cw API
