@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import time
 import traceback
-from typing import Any, Dict, List, Optional, OrderedDict, Union
+from typing import Any, Dict, List, Optional, OrderedDict
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -411,7 +411,7 @@ class Pico6424E(ScopeTemplate):
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
         self._buffer_trace: List[float] = []
-        self._buffer_trigger: List[float] | List[int] = []
+        self._buffer_trigger: list[float] | list[int] = []
 
         # Part of cw API
         self.connectStatus: bool = False  # Connected status for cw  # pylint: disable=C0103
