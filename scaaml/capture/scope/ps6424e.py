@@ -396,7 +396,7 @@ class Pico6424E(ScopeTemplate):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         del args  # unused
         del kwargs  # unused
-        self.ps_handle: ctypes.c_short = ctypes.c_int16()
+        self.ps_handle: ctypes.c_int16 = ctypes.c_int16()
 
         self.trace = CaptureSettings()
         self.trigger = TriggerSettings()
@@ -415,7 +415,7 @@ class Pico6424E(ScopeTemplate):
 
         # Part of cw API
         self.connectStatus: bool = False  # Connected status for cw  # pylint: disable=C0103
-        self._max_adc: ctypes.c_short = ctypes.c_int16()  # To get mV values
+        self._max_adc: ctypes.c_int16 = ctypes.c_int16()  # To get mV values
 
         # Ignore signal overflow during capture.
         self.ignore_overflow: bool = False
@@ -564,8 +564,8 @@ class Pico6424E(ScopeTemplate):
         del poll_done  # unused
 
         # Wait until the result is ready
-        ready: ctypes.c_short = ctypes.c_int16(0)
-        check: ctypes.c_short = ctypes.c_int16(0)
+        ready: ctypes.c_int16 = ctypes.c_int16(0)
+        check: ctypes.c_int16 = ctypes.c_int16(0)
         start_waiting = time.time()  # s from start of the epoch
         while ready.value == check.value:
             ps.ps6000aIsReady(self.ps_handle, ctypes.byref(ready))
@@ -578,8 +578,8 @@ class Pico6424E(ScopeTemplate):
                 return True
 
         # Retrieve the values
-        overflow: ctypes.c_short = ctypes.c_int16()
-        max_samples: ctypes.c_int = ctypes.c_int32(self._total_samples)
+        overflow: ctypes.c_int16 = ctypes.c_int16()
+        max_samples: ctypes.c_int32 = ctypes.c_int32(self._total_samples)
         assert_ok(
             ps.ps6000aGetValues(
                 self.ps_handle,  # handle
