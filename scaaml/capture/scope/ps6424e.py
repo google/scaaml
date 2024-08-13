@@ -598,10 +598,10 @@ class Pico6424E(ScopeTemplate):
             self.trace.ps_api_range,  # range
             self._max_adc)[:max_samples.value]
         if self.trigger.is_digital:
-            self._buffer_trigger = self._buffer_trigger[:max_samples.value]
+            self._buffer_trigger = self._trigger_buffer[:max_samples.value]
         else:
-            self._trigger_buffer = adc2mV(
-                self._buffer_trigger,
+            self._buffer_trigger = adc2mV(
+                self._trigger_buffer,
                 self.trigger.ps_api_range,  # range
                 self._max_adc)[:max_samples.value]
 
