@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_DOWN
 import time
 import traceback
-from typing import Any, Dict, List, Optional, OrderedDict, Union
+from typing import Any, Dict, Optional, OrderedDict, Union
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -72,7 +72,7 @@ class CaptureSettings:
         "External": 4,
         "TriggerAux": 5
     }
-    CHANNEL_RANGE: List[ChannelRange] = [
+    CHANNEL_RANGE: list[ChannelRange] = [
         ChannelRange(
             range_v=20E-3,
             api_value=1,
@@ -145,7 +145,7 @@ class CaptureSettings:
             self._rev_ch_list[channel_id] = channel_name
         # ranges
         self._ch_range: Dict[float, str] = {}
-        self._ch_range_list: List[float] = []
+        self._ch_range_list: list[float] = []
         self._ch_range_api_value: Dict[float, int] = {}
         for key in self.CHANNEL_RANGE:
             self._ch_range[key.range_v] = key.range_str
@@ -396,7 +396,7 @@ class Pico6424E(ScopeTemplate):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         del args  # unused
         del kwargs  # unused
-        self.ps_handle = ctypes.c_int16()
+        self.ps_handle: ctypes.c_int16 = ctypes.c_int16()
 
         self.trace = CaptureSettings()
         self.trigger = TriggerSettings()
@@ -410,12 +410,12 @@ class Pico6424E(ScopeTemplate):
 
         # Trace and trigger buffer, _buffers[0] is the trace buffer,
         # _buffers[1] is the trigger buffer.
-        self._buffer_trace: List[float] = []
-        self._buffer_trigger: List[Union[float, bool]] = []
+        self._buffer_trace: list[float] = []
+        self._buffer_trigger: Union[list[float], list[int]] = []
 
         # Part of cw API
         self.connectStatus: bool = False  # Connected status for cw  # pylint: disable=C0103
-        self._max_adc = ctypes.c_int16()  # To get mV values
+        self._max_adc: ctypes.c_int16 = ctypes.c_int16()  # To get mV values
 
         # Ignore signal overflow during capture.
         self.ignore_overflow: bool = False
@@ -564,8 +564,8 @@ class Pico6424E(ScopeTemplate):
         del poll_done  # unused
 
         # Wait until the result is ready
-        ready = ctypes.c_int16(0)
-        check = ctypes.c_int16(0)
+        ready: ctypes.c_int16 = ctypes.c_int16(0)
+        check: ctypes.c_int16 = ctypes.c_int16(0)
         start_waiting = time.time()  # s from start of the epoch
         while ready.value == check.value:
             ps.ps6000aIsReady(self.ps_handle, ctypes.byref(ready))
@@ -578,8 +578,8 @@ class Pico6424E(ScopeTemplate):
                 return True
 
         # Retrieve the values
-        overflow = ctypes.c_int16()
-        max_samples = ctypes.c_int32(self._total_samples)
+        overflow: ctypes.c_int16 = ctypes.c_int16()
+        max_samples: ctypes.c_int32 = ctypes.c_int32(self._total_samples)
         assert_ok(
             ps.ps6000aGetValues(
                 self.ps_handle,  # handle
@@ -598,10 +598,10 @@ class Pico6424E(ScopeTemplate):
             self.trace.ps_api_range,  # range
             self._max_adc)[:max_samples.value]
         if self.trigger.is_digital:
-            self._buffer_trigger = self._buffer_trigger[:max_samples.value]
+            self._buffer_trigger = self._trigger_buffer[:max_samples.value]
         else:
-            self._trigger_buffer = adc2mV(
-                self._buffer_trigger,
+            self._buffer_trigger = adc2mV(
+                self._trigger_buffer,
                 self.trigger.ps_api_range,  # range
                 self._max_adc)[:max_samples.value]
 
