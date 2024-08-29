@@ -17,6 +17,8 @@ import argparse
 import json
 import sys
 from termcolor import cprint
+import os
+from tensorflow.keras.models import load_model
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
@@ -77,17 +79,23 @@ def train_model(config):
             # multi gpu
             strategy = tf.distribute.MirroredStrategy()
             with strategy.scope():
-                model = get_model(input_shape, attack_point, config)
-
-                # model recording setup
                 stub = get_model_stub(attack_point, attack_byte, config)
+                file_path = f"models/{stub}.keras"
+                    
+                # model recording setup
                 cb = [
                     ModelCheckpoint(monitor="val_loss",
-                                    filepath=f"models/{stub}",
+                                    filepath=file_path,
                                     save_best_only=True),
                     TensorBoard(log_dir="logs/" + stub, update_freq="batch")
                 ]
-
+                if os.path.exists(file_path):
+                    print("File exists")
+                    model = load_model(file_path)
+                else:
+                    print("File does not exist")
+                    model = get_model(input_shape, attack_point, config)
+                    
                 model.fit(x_train,
                           y_train,
                           validation_data=(x_test, y_test),
@@ -105,3 +113,4 @@ if __name__ == "__main__":
         sys.exit()
     with open(args.config, encoding="utf-8") as config_file:
         train_model(json.loads(config_file.read()))
+
