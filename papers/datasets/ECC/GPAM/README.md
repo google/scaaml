@@ -20,7 +20,7 @@ gsutil du -sh gs://scaaml-public/datasets/ECC/GPAM
 
 # Download all (beware that the multiprocessing option -m can saturate your
 # network connection). Or download just the dataset you want.
-gsutil rsync -m gs://scaaml-public/datasets/ECC/GPAM .
+gsutil -m rsync -r gs://scaaml-public/datasets/ECC/GPAM .
 ```
 
 ## How to load and use a dataset
