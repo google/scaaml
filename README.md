@@ -34,7 +34,7 @@ To use SCAAML you need to have a working version of [TensorFlow
 3.  Install dependencies: `python3 -m pip install --require-hashes -r
     requirements.txt`
 4.  Install the SCAAML package: `python setup.py develop`
-5.  Use prepare_ASCAD_data_for_scaaml.py to change ASCAD dataset to scaaml compatable dataset
+
 
 ### Update dependencies (maintainers only)
 
