@@ -1,6 +1,7 @@
 AESSBOX
 ANSSI’s
 ATMEGA
+Adafactor
 BCKG
 Benadjila
 Bursztein
@@ -60,6 +61,7 @@ batchnormalization
 bckg
 bibtex
 binom
+bnhr
 booktitle
 burszteindc
 bytelist
@@ -127,16 +129,20 @@ relu
 resnet
 resumekti
 ristime
+rname
 savefig
 scaaml
 scipy
+sedpack
 setaf
 simpleserial
 siutils
 sname
 softmax
+softsign
 sparsed
 sparsing
+sqrrelu
 subarray
 subclassing
 termcolor
@@ -148,6 +154,7 @@ tfrec
 tfrecord
 tinyaes
 tobytes
+toeplitz
 tqdm
 trigtime
 vals
