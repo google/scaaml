@@ -66,7 +66,41 @@ the community to independently replicate our results and build on them.
 
 ## Models
 
-Coming soon...
+ECC CM1 model code ready for training with our dataset:
+[gpam_ecc_cm1.py](https://github.com/google/scaaml/blob/main/papers/2024/GPAM/gpam_ecc_cm1.py).
+
+Trained models: [models](gs://scaaml-public/datasets/ECC/GPAM_MODELS), download
+them the same way as datasets [GPAM ECC datasets](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM).
+Beware that for some reason one needs an older version of TensorFlow:
+
+```bash
+python3 -m venv gpam_env
+source gpam_env/bin/activate
+python -m pip install "tensorflow==2.12"
+```
+
+```python
+import tensorflow as tf
+
+print(tf.__version__)
+loaded_model = tf.keras.models.load_model(
+    # path to the model, e.g.,
+    # "saved_model_ecc_cm2_ablation_of_intermediates_k_0_1675073027/"
+    model_path,
+    custom_objects={
+        # No need to pass a learning rate schedule since we are not
+        # training.
+        "CosineDecayWithWarmupSchedule": lambda *args, **kwargs: 0.001,
+    },
+)
+```
+
+## Use with sedpack TODO
+
+How to use with [sedpack](https://github.com/google/sedpack) coming soon (if
+you already downloaded the datasets four small json files per dataset will be
+needed, if you used `gsutil rsync` to download, these will be downloaded very
+fast).
 
 ## List of citations and followup work
 
