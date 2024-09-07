@@ -8,6 +8,11 @@ top of TensorFlow 2.x.
 
 [![Coverage Status](https://coveralls.io/repos/github/google/scaaml/badge.svg?branch=main)](https://coveralls.io/github/google/scaaml?branch=main)
 
+## Latest Updates
+
+- Sep 2024: [GPAM][https://github.com/google/scaaml/tree/main/papers/2024/GPAM] the first power side-channel general model capable of attacking multiple algorithms using full traces, were presented at CHES and are now available for download.
+- Sep 2024: [ECC datasets](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) our large-scale ECC datasets are available for download.
+  
 ## Available components
 
 -   [`scaaml/`](https://github.com/google/scaaml/tree/master/scaaml/): The
@@ -17,6 +22,11 @@ top of TensorFlow 2.x.
     *A Hacker Guide To Deep Learning Based Side Channel Attacks*.  Code, dataset
     and models used in our step by step tutorial on how to use deep-learning to
     perform AES side-channel attacks in practice.
+
+- [`GPAM`][https://github.com/google/scaaml/tree/main/papers/2024/GPAM] *Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning* model and datasets
+  needed to reproduce our results are available for download
+  
+- [`ECC datasets`](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) A collection of large-scale hardware protected ECC datasets 
 
 ## Install
 
@@ -35,44 +45,33 @@ To use SCAAML you need to have a working version of [TensorFlow
     requirements.txt`
 4.  Install the SCAAML package: `python setup.py develop`
 
-### Update dependencies (maintainers only)
-
-Make sure to have: `sudo apt install python3 python3-pip python3-venv` and
-activated the virtual environment.
-
-Install requirements:
-`pip install --require-hashes -r base-tooling-requirements.txt`
-
-Update: `pip-compile --allow-unsafe requirements.in --generate-hashes --upgrade`
-and commit `requirements.txt`.
-
-### Dataset and models
-
-Every SCAAML component relies on a dataset and optional models that you will
-need to download in the component directory. The links to download these are
-available in the component specific `README.md`. Simply click on the directory
-representing the component of your choice, or the link to the component in the
-list above.
-
 ## Publications & Citation
 
 Here is the list of publications and talks related to SCAAML. If you use any of
-its codebase, models or datasets please cite:
+its codebase, models or datasets please cite the repo and the relevants papers:
+
+```bibtex
+@software{UniSim_Universal_Similarity_2023,
+    title = {{SCAAML: Side Channel Attacks Assisted with Machine Learning}},
+    author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Picod, Jean-Michel},
+    url = {https://github.com/google/scaaml},
+    version = {1.0.0},
+    year = {2019}
+}
+```
+
+## Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning
 
 ```bibtex
 @article{bursztein2023generic,
   title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
   author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
-  journal={arXiv preprint arXiv:2306.07249},
-  year={2023}
+  journal={CHES},
+  year={2024}
 }
 ```
 
-### List of our papers
-
-[A list of our papers](https://github.com/google/scaaml/tree/main/papers/).
-
-### SCAAML AES tutorial
+## SCAAML AES tutorial
 
 DEF CON talk that provides a practical introduction to AES deep-learning based
 side-channel attacks
