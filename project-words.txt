@@ -9,6 +9,7 @@ CHES
 Cassiers
 Chmielewski
 DSOWINDOW
+Diátaxis
 FULLSCREEN
 GPAM
 GPAM’s
@@ -53,6 +54,7 @@ argmax
 argmin
 argsort
 ascad
+astrojs
 astype
 autoreload
 autoscaled
@@ -80,6 +82,7 @@ dpath
 dtype
 dtypes
 eprint
+evenodd
 figsize
 firstrow
 frombuffer
@@ -157,6 +160,7 @@ tobytes
 toeplitz
 tqdm
 trigtime
+tsconfigs
 vals
 vispy
 vsintellicode

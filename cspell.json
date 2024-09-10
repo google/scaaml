@@ -9,5 +9,18 @@
     }
   ],
   "dictionaries": ["project-words", "en_US", "en-gb", "python"],
-  "ignorePaths": ["node_modules", "/project-words.txt", "/tests", "/.github", ".pylintrc", "cspell.json", "requirements.in", "requirements.txt", "base-tooling-requirements.txt"]
+  "ignorePaths": [
+    "*.js",
+    "*.json",
+    "*.ts",
+    "node_modules",
+    "/project-words.txt",
+    "/tests",
+    "/.github",
+    ".pylintrc",
+    "cspell.json",
+    "requirements.in",
+    "requirements.txt",
+    "base-tooling-requirements.txt"
+  ]
 }
