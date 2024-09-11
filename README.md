@@ -35,6 +35,7 @@ To use SCAAML you need to have a working version of [TensorFlow
     requirements.txt`
 4.  Install the SCAAML package: `python setup.py develop`
 
+
 ### Update dependencies (maintainers only)
 
 Make sure to have: `sudo apt install python3 python3-pip python3-venv` and

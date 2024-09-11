@@ -123,7 +123,7 @@ def stack(x: Tensor,
 # pylint: disable=C0103
 def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
              mdl_cfg: Dict[str, Any], optim_cfg: Dict[str,
-                                                      Any]) -> Model[Any, Any]:
+                                                      Any]) -> Model:
     del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
@@ -176,7 +176,7 @@ def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
 
 
 def get_model(input_shape: Tuple[int, ...], attack_point: str,
-              config: Dict[str, Any]) -> Model[Any, Any]:
+              config: Dict[str, Any]) -> Model:
     """Return an instantiated model based of the config provided.
 
     Args:
