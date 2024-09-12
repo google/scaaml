@@ -28,10 +28,13 @@ top of TensorFlow 2.x.
     and models used in our step by step tutorial on how to use deep-learning to
     perform AES side-channel attacks in practice.
 
--   [`GPAM`](https://github.com/google/scaaml/tree/main/papers/2024/GPAM) *Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning* model and datasets
-    needed to reproduce our results are available for download.
+-   [`GPAM`](https://github.com/google/scaaml/tree/main/papers/2024/GPAM)
+    *Generalized Power Attacks against Crypto Hardware using Long-Range Deep
+    Learning* model and datasets needed to reproduce our results are available
+    for download.
 
--   [`ECC datasets`](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) A collection of large-scale hardware protected ECC datasets.
+-   [`ECC datasets`](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM)
+    A collection of large-scale hardware protected ECC datasets.
 
 ## Install
 

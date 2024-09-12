@@ -191,8 +191,10 @@ class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
     def __init__(self,
                  name: str = "mean_rank",
                  dtype: Optional[np.generic] = None,
-                 decimals: Optional[int] = None) -> None:
-        super().__init__(rank, name, dtype=dtype)
+                 decimals: Optional[int] = None, *args,
+                 **kwargs) -> None:
+        kwargs.pop("fn", None)  # We already provide fn as rank.
+        super().__init__(rank, name, dtype=dtype, *args, **kwargs)
         self._decimals = decimals
 
     def result(self) -> Any:
@@ -210,6 +212,15 @@ class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
         rounded = np.round(res.numpy(), self._decimals)
         # Cast back to tensor.
         return tf.convert_to_tensor(rounded, dtype=res.dtype)
+
+    def get_config(self):
+        base_config = super().get_config()
+        config = {}
+        return {**base_config, **config}
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
 
 
 @keras.utils.register_keras_serializable(package="SCAAML")
