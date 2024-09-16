@@ -4,6 +4,8 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://google.github.io/scaaml/',
+	base: '/scaaml',
 	integrations: [
 		starlight({
 			title: 'SCAAML documentation',
