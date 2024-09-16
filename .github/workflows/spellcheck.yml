@@ -7,6 +7,8 @@ on:
       - '**/*.md'
   pull_request:
     types: [opened, synchronize, reopened]
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
+  workflow_dispatch:
 jobs:
   spellchecking:
     runs-on: ubuntu-22.04
