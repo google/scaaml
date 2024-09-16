@@ -8,6 +8,8 @@ on:
     types: [opened, synchronize, reopened]
   schedule:
     - cron: 0 5 * * 1 # Every Monday at 5:00 UTC
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
+  workflow_dispatch:
 
 jobs:
   unittesting:

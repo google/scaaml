@@ -5,6 +5,8 @@ on:
       - '**/*.py'
   pull_request:
     types: [opened, synchronize, reopened]
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
+  workflow_dispatch:
 jobs:
   yapf:
     runs-on: ubuntu-22.04
