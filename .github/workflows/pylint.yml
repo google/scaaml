@@ -6,8 +6,7 @@ on:
       - '.pylintrc'
   pull_request:
     types: [opened, synchronize, reopened]
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
-  workflow_dispatch:
+  merge_group:
 jobs:
   copyright_header:
     runs-on: ubuntu-22.04
