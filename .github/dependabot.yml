@@ -7,8 +7,9 @@ version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/website"
-    lables:
+    labels:
       - "dependencies"
+      - "javascript"
     # Run every Monday
     schedule:
       interval: "weekly"
@@ -26,10 +27,31 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
 
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    labels:
+      - "depedencies"
+      - "CI"
+    # Run every Monday
+    schedule:
+      interval: "weekly"
+      timezone: "Europe/Zurich"
+    groups:
+      dependabot:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "*"
+        # For github-actions, we only care about major version update
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
+
   - package-ecosystem: "pip"
     directory: "/"
     labels:
       - "dependencies"
+      - "python"
     # Run every Monday
     schedule:
       interval: "weekly"
