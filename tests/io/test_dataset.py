@@ -470,7 +470,7 @@ def test_reshape_into_new_dataset_filled(tmp_path):
                              {"trace1": np.random.rand(1024)})
     old_ds.close_shard()
 
-    new_ds = reshape_into_new_dataset(old_ds, examples_per_shard=4)
+    new_ds = reshape_into_new_dataset(old_ds=old_ds, examples_per_shard=4)
     old_ds.check()
     new_ds.check()
     same_examples(old_ds, new_ds)
