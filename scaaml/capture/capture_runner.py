@@ -31,7 +31,7 @@ from scaaml.capture.scope import AbstractSScope
 class AbstractCaptureRunner(ABC):
     """Abstract class for capturing the dataset."""
 
-    def __init__(self, crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
+    def __init__(self, *, crypto_algorithms: Sequence[AbstractSCryptoAlgorithm],
                  communication: AbstractSCommunication,
                  control: AbstractSControl, scope: AbstractSScope,
                  dataset: Dataset) -> None:

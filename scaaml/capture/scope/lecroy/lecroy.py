@@ -41,6 +41,7 @@ class LeCroy(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self,
+                 *,
                  samples: int,
                  offset: int,
                  ip_address: str,
@@ -207,7 +208,7 @@ class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(
-            self, samples: int, offset: int, ip_address: str,
+            self, *, samples: int, offset: int, ip_address: str,
             trace_channel: LECROY_CHANNEL_NAME_T,
             trigger_channel: LECROY_CHANNEL_NAME_T,
             communication_timeout: float, trigger_timeout: float,

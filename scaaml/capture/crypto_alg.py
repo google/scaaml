@@ -26,6 +26,7 @@ class AbstractSCryptoAlgorithm(ABC):
     """Attack points and basic information about it (e.g. key length, etc.)"""
 
     def __init__(self,
+                 *,
                  firmware_sha256: str,
                  crypto_implementation: Type[AESSBOX],
                  purpose: Dataset.SPLIT_T,

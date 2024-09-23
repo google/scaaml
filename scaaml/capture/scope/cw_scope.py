@@ -27,6 +27,7 @@ class CWScope(AbstractSScope):
     """Scope context manager."""
 
     def __init__(self,
+                 *,
                  gain: int,
                  samples: int,
                  offset: int,

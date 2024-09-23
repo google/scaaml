@@ -31,7 +31,7 @@ class PicoScope(AbstractSScope):
     BW_LIMIT_T: TypeAlias = Literal["PICO_BW_FULL", "PICO_BW_20MHZ",
                                     "PICO_BW_200MHZ"]
 
-    def __init__(self, samples: int, sample_rate: float, offset: int,
+    def __init__(self, *, samples: int, sample_rate: float, offset: int,
                  trace_channel: CHANNEL_T, trace_probe_range: float,
                  trace_coupling: COUPLING_T, trace_attenuation: ATTENUATION_T,
                  trace_bw_limit: BW_LIMIT_T, trace_ignore_overflow: bool,

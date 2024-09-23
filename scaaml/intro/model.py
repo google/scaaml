@@ -24,6 +24,7 @@ from scaaml.utils import display_config
 from scaaml.utils import get_num_gpu
 
 
+# pylint: disable=too-many-positional-arguments
 def block(x: Tensor,
           filters: int,
           kernel_size: int = 3,
@@ -83,6 +84,7 @@ def block(x: Tensor,
     return x
 
 
+# pylint: disable=too-many-positional-arguments
 def stack(x: Tensor,
           filters: int,
           blocks: int,

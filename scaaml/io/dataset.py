@@ -74,6 +74,7 @@ class Dataset:
 
     def __init__(
         self,
+        *,
         root_path: str,
         shortname: str,
         architecture: str,
@@ -284,8 +285,8 @@ class Dataset:
         kwargs["shard_part"] = int(parts[2].split(".")[0])
         return kwargs
 
-    def new_shard(self, key: Sequence[int], part: int, group: int, split: str,
-                  chip_id: int) -> None:
+    def new_shard(self, *, key: Sequence[int], part: int, group: int,
+                  split: str, chip_id: int) -> None:
         """Initiate a new key
 
         Args:
@@ -392,6 +393,7 @@ class Dataset:
         split: SPLIT_T,
         attack_points: List[Dict[str, Union[str, int]]],
         traces: Union[List[str], str],
+        *,
         shards: Optional[int] = None,
         parts: Optional[Union[List[int], int]] = None,
         trace_start: int = 0,
@@ -981,9 +983,9 @@ class Dataset:
                     f"Duplicate key: {k} in test split, in {shard}")
 
     @staticmethod
-    def _deep_check(seen_keys: Set[bytes], dpath: Path, train_shards: List[Any],
-                    pbar: ProgressBarT[Any], examples_per_shard: int,
-                    key_ap: str) -> None:
+    def _deep_check(*, seen_keys: Set[bytes], dpath: Path,
+                    train_shards: List[Any], pbar: ProgressBarT[Any],
+                    examples_per_shard: int, key_ap: str) -> None:
         """Check all keys from all shards (parse all shards in the train split).
 
         Args:
