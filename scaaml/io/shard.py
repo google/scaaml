@@ -41,6 +41,7 @@ class Shard:
                  path: str,
                  attack_points_info: Dict[str, Any],
                  measurements_info: Dict[str, Any],
+                 *,
                  measurement_dtype: tf.DType,
                  compression: CompressionT = "GZIP") -> None:
         self.path = path

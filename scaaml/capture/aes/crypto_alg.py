@@ -34,6 +34,7 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
     length, etc.)."""
 
     def __init__(self,
+                 *,
                  firmware_sha256: str,
                  crypto_implementation: Type[AESSBOX],
                  purpose: Dataset.SPLIT_T,

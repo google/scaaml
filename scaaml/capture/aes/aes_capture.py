@@ -20,6 +20,7 @@ from scaaml.capture.aes.aes_capture_contexts import capture_aes_dataset
 
 
 def capture_aes_scald_stm32f4_mbedtls(
+        *,
         firmware_sha256: str,
         crypto_implementation: Type[AESSBOX] = AESSBOX,
         algorithm: str = "simpleserial-aes",

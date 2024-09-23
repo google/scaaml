@@ -24,6 +24,7 @@ from tqdm.auto import tqdm
 from glob import glob
 
 
+# pylint: disable=too-many-positional-arguments
 def create_dataset(file_pattern: str,
                    batch_size: int = 32,
                    attack_point: str = "key",
@@ -91,6 +92,7 @@ def list_shards(file_pattern: str, num_shards: int) -> List[str]:
     return glob(file_pattern)[:num_shards]
 
 
+# pylint: disable=too-many-positional-arguments
 def load_attack_shard(
         fname: str,
         attack_byte: int,

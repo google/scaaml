@@ -30,6 +30,7 @@ from scaaml.capture.scope.scope_base import AbstractSScope
 
 
 def capture_aes_dataset(
+        *,
         scope_class: Type[AbstractSScope],
         firmware_sha256: str,
         architecture: str,

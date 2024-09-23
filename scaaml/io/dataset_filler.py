@@ -61,7 +61,7 @@ class _DatasetFillerContext:
         # and if we should close the last shard.
         self.written_examples_not_skipped: int = 0
 
-    def write_example(self, attack_points: Dict[str, bytearray],
+    def write_example(self, *, attack_points: Dict[str, bytearray],
                       measurement: Dict[str, Any], current_key: List[int],
                       split_name: str, chip_id: int) -> None:
         """Write an example. Opens a new shard if necessary.

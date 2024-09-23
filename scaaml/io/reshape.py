@@ -19,7 +19,8 @@ from scaaml.io import Dataset
 from scaaml.io import DatasetFiller
 
 
-def reshape_into_new_dataset(old_ds: Dataset,
+def reshape_into_new_dataset(*,
+                             old_ds: Dataset,
                              examples_per_shard: int,
                              name_prefix: str = "reshaped",
                              from_idx: int = 0,

@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-An Iterator that iterates through attack points 
-and can be used with config files.
+"""An Iterator that iterates through attack points and can be used with config
+files.
 """
 
 from abc import ABC, abstractmethod
@@ -45,9 +44,8 @@ class AttackPointIterator(ABC):
 
     @abstractmethod
     def get_generated_keys(self) -> List[str]:
-        """
-        Returns an exhaustive list of names this iterator 
-        and its children will create.
+        """Returns an exhaustive list of names this iterator and its children
+        will create.
         """
 
 
@@ -87,13 +85,13 @@ def _build_attack_points_iterator(
 class AttackPointIteratorConstants(AttackPointIterator):
     """Attack point iterator class that iterates over a constant."""
 
-    def __init__(self, operation: str, name: str, length: int,
+    def __init__(self, *, operation: str, name: str, length: int,
                  values: List[List[int]]) -> None:
         """Initialize the constants to iterate.
-        
+
             Args:
                 operation (str): The operation of the iterator
-                represents what the iterator does and what 
+                represents what the iterator does and what
                 arguments should be present. This is only used once to
                 double check if the operation is the correct one.
 
@@ -129,6 +127,7 @@ class AttackPointIteratorBalancedGenerator(AttackPointIterator):
     """
 
     def __init__(self,
+                 *,
                  operation: str,
                  name: str,
                  length: int,
@@ -158,6 +157,7 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
     """
 
     def __init__(self,
+                 *,
                  operation: str,
                  name: str,
                  length: int,
@@ -182,27 +182,28 @@ class AttackPointIteratorUnrestrictedGenerator(AttackPointIterator):
 
 class AttackPointIteratorRepeat(AttackPointIterator):
     """
-    Attack point iterator class that iterates 
+    Attack point iterator class that iterates
     over a configuration a repeat amount of times.
     """
 
     def __init__(self,
+                 *,
                  operation: str,
                  configuration: Dict[str, Any],
                  repetitions: int = -1) -> None:
         """Initialize the repeated iterate. If repetitions is not present
           or set to a negative number it will do an infinite loop and
           if it is 0 it will not repeat at all.
-          
+
           Args:
             operation (str): The operation of the iterator
-                represents what the iterator does and what 
+                represents what the iterator does and what
                 has to be in the config file. This is only used once to
                 double check if the operation is the correct one.
 
             configuration (Dict): The config for the iterated object
                 that will get repeated.
-                
+
             repetitions (int): This parameter decides how many times the
                 iterator gets repeated. If it is a negative number it
                 will repeat infinitely and if you call __len__ it will
@@ -237,15 +238,16 @@ class AttackPointIteratorZip(AttackPointIterator):
     """Attack point iterator zip class. This class takes any amount of operands
     and combines them just like the `zip` function in Python."""
 
-    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+    def __init__(self, *, operation: str, operands: List[Dict[str,
+                                                              Any]]) -> None:
         """Initialize the zip iterator.
-          
+
           Args:
             operation (str): The operation of the iterator
-                represents what the iterator does and what 
+                represents what the iterator does and what
                 has to be in the config file. This is only used once to
                 double check if the operation is the correct one.
-                
+
             operands (List[Dict[str, Any]]): The operands are any number of
                 iterator configs that will be combined."""
         assert "zip" == operation
@@ -289,15 +291,16 @@ class AttackPointIteratorCartesianProduct(AttackPointIterator):
     of operands and combines them just like a cartesian product would.
     """
 
-    def __init__(self, operation: str, operands: List[Dict[str, Any]]) -> None:
+    def __init__(self, *, operation: str, operands: List[Dict[str,
+                                                              Any]]) -> None:
         """Initialize the cartesian product iterator.
-          
+
           Args:
             operation (str): The operation of the iterator
-                represents what the iterator does and what 
+                represents what the iterator does and what
                 has to be in the config file. This is only used once to
                 double check if the operation is the correct one.
-                
+
             operands (List[Dict[str, Any]]): The operands are any number of
                 iterator configs that will be combined. If the operands list
                 is empty it will raise a ValueError. If one of the operands
