@@ -82,8 +82,11 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
         # Set in get_stabilization_kti.
         self._stabilization_ktp = resume_kti.create_resume_kti(
             parameters={
-                "keys": np.array(keys_list[:10], dtype=np.uint8),
-                "texts": np.array(texts[:10], dtype=np.uint8),
+                "keys":
+                    np.array(keys_list[:self._examples_per_shard],
+                             dtype=np.uint8),
+                "texts":
+                    np.array(texts[:self._examples_per_shard], dtype=np.uint8),
             },
             shard_length=np.uint64(self._examples_per_shard),
             kt_filename=self._full_kt_filename + "_stabilize.txt",

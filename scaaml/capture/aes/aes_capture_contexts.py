@@ -14,7 +14,7 @@
 """Capture script for easier manipulation."""
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Type
+from typing import Any, Dict, Literal, Optional, Sequence, Type
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -178,11 +178,11 @@ def capture_aes_dataset(
                 f"{split}_progress_tuples.txt"),
         )
 
-        # TODO ideally remove
+        prefix = f"{chip_id.split('_', maxsplit=1)[0]}_"
+        assert prefix in ("train_", "holdout_")
         current_capture_info = _get_current_capture_info(
             capture_info,
-            # Prefix is either "train_" or "holdout_".
-            prefix=chip_id.split("_")[0] + "_",
+            prefix=prefix,  # type: ignore[arg-type]
         )
 
         _capture(
@@ -196,9 +196,12 @@ def capture_aes_dataset(
     return dataset.path
 
 
-def _get_current_capture_info(capture_info: Dict[str, Any],
-                              prefix: str) -> Dict[str, Any]:
-    """Update capture info for use of capturing train or holdout.
+def _get_current_capture_info(
+        capture_info: Dict[str, Any],
+        prefix: Literal["train_", "holdout_"]) -> Dict[str, Any]:
+    """Update capture info for use of capturing train or holdout. Fill the
+    following based on the current prefix value (train_ or holdout_): chip_id,
+    cw_scope_serial_number, trace_channel, trigger_pin.
 
     Args:
       capture_info (Dict): The old capture info.
@@ -218,7 +221,6 @@ def _get_current_capture_info(capture_info: Dict[str, Any],
                 raise ValueError(msg)
 
             # Provide also the short value
-            print(f">>> {current_capture_info[short_name] = } = {value}")
             current_capture_info[short_name] = value
     return current_capture_info
 
@@ -235,8 +237,8 @@ def _capture(scope_class: Type[AbstractSScope], capture_info: Dict[str, Any],
       chip_id: Identifies the physical chip/board used. It is unique for a
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
-        generators.
+      crypto_algorithms (Sequence[SCryptoAlgorithm]): Sequence of key,
+        plaintext generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     with scope_class(**capture_info) as scope_context:
@@ -266,8 +268,8 @@ def _control_communication_and_capture(
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
       cwscope (CWScope): The scope to control.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
-        generators.
+      crypto_algorithms (Sequence[SCryptoAlgorithm]): Sequence of key,
+        plaintext generators.
       scope: The scope that does the measurements.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
