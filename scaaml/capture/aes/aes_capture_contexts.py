@@ -100,6 +100,8 @@ def capture_aes_dataset(
       ValueError: If something is wrong with the splits (either we are
         capturing train and holdout with the same chip, or we are capturing
         an unsupported split).
+
+    Returns: dataset path of the created dataset.
     """
     if not any([train_iterator, holdout_iterator, test_iterator]):
         raise ValueError(
