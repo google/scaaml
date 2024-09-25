@@ -137,7 +137,7 @@ class VarianceSinglePass:
           correlation set to 1. For more information see `np.var`.
         """
         self._ddof: int = ddof
-        self._sum: Sum = Sum()
+        self._online_mean: Sum = Sum()
         self._msq: Sum = Sum()
         self._n_seen: int = 0
 
@@ -156,15 +156,15 @@ class VarianceSinglePass:
         """
         self._n_seen += 1
         if self._n_seen == 1:
-            self._sum.update(value)
+            self._online_mean.update(value)
             self._msq.update(np.zeros_like(value, dtype=np.float64))
             return
 
-        mean = self._sum.result
+        mean = self._online_mean.result
         assert mean is not None
         delta = value - mean
-        self._sum.update(delta / self._n_seen)
-        mean = self._sum.result
+        self._online_mean.update(delta / self._n_seen)
+        mean = self._online_mean.result
         assert mean is not None
         self._msq.update(delta * (value - mean))
 
