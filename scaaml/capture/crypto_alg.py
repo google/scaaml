@@ -13,7 +13,7 @@
 # limitations under the License.
 """Crypto algorithm."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, Iterator, Literal, Optional, Type
 
 from scaaml.io import Dataset

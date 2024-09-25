@@ -16,8 +16,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Type
 
-from chipwhisperer.capture.scopes.cwnano import CWNano
-
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
 from scaaml.capture.aes.capture_runner import CaptureRunner

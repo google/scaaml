@@ -14,18 +14,14 @@
 """AES specific SCryptoAlgorithm."""
 
 from collections import namedtuple
-from typing import Any, Iterator, Optional, Tuple, Type
-from typing_extensions import Self
+from typing import Any, Type
 import numpy as np
 
-from scaaml.capture.input_generators.attack_point_iterator import build_attack_points_iterator, AttackPointIterator
+from scaaml.capture.input_generators.attack_point_iterator import build_attack_points_iterator
 from scaaml.capture.crypto_alg import AbstractSCryptoAlgorithm
-from scaaml.capture.aes.acqktp import AcqKeyTextPatternScaaml as ktp_scaaml
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
 from scaaml.io import resume_kti
-
-from chipwhisperer.capture.acq_patterns._base import AcqKeyTextPattern_Base
 
 EncryptionParameters = namedtuple("EncryptionParameters", ["keys", "texts"])
 
@@ -50,8 +46,8 @@ class SCryptoAlgorithm(AbstractSCryptoAlgorithm):
 
         Args:
           iterator_definition (dict[str, Any]): Definition of the iterated
-          attack points, passed into
-          `scaaml.capture.input_generators.attack_point_iterator.build_attack_points_iterator`.
+          attack points, passed into `build_attack_points_iterator` of
+          `scaaml.capture.input_generators.attack_point_iterator`.
           firmware_sha256: SHA256 hash of the binary used on the chip.
           crypto_implementation: The class that provides attack points info and
             attack points values (for instance scaaml.aes_forward.AESSBOX).

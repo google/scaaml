@@ -31,12 +31,7 @@ def capture_aes_scald_stm32f4_mbedtls(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info: Optional[Dict[str, Any]] = None,
-        repetitions: int = 1,
-        train_keys: int = 4 * 1024,
-        train_plaintexts: int = 256,
-        holdout_keys: int = 0 * 1024,
-        holdout_plaintexts: int = 1) -> None:
+        measurements_info: Optional[Dict[str, Any]] = None) -> None:
     """SCALD STM32F4 MBEDTLS specific defaults for capture_aes_dataset."""
     architecture: str = "CW308_STM32F4"
     implementation: str = "MBEDTLS"
@@ -77,9 +72,4 @@ def capture_aes_scald_stm32f4_mbedtls(
         examples_per_shard=examples_per_shard,
         measurements_info=measurements_info,
         capture_info=capture_info,
-        repetitions=repetitions,
-        train_keys=train_keys,
-        train_plaintexts=train_plaintexts,
-        holdout_keys=holdout_keys,
-        holdout_plaintexts=holdout_plaintexts,
     )

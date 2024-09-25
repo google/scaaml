@@ -81,6 +81,7 @@ ddict
 dpath
 dtype
 dtypes
+encryptor
 eprint
 evenodd
 figsize
@@ -150,6 +151,7 @@ subarray
 subclassing
 termcolor
 textin
+textout
 tfdata
 tfdataset
 tffeature
