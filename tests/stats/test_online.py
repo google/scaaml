@@ -31,9 +31,9 @@ def test_sum_large_and_small():
     s = Sum()
 
     s.update(1.0)
-    s.update(10 ** 100)
+    s.update(10**100)
     s.update(1.0)
-    s.update(-10 ** 100)
+    s.update(-10**100)
 
     assert s.result == 2
 
@@ -43,7 +43,7 @@ def test_sum_docstring_example():
     s = Sum()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.sum(axis=0))
 
@@ -53,7 +53,7 @@ def test_mean():
     s = Mean()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.mean(axis=0))
 
@@ -63,7 +63,7 @@ def test_mean():
     s = Mean()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.mean(axis=0))
 
@@ -73,7 +73,7 @@ def test_variance_single_pass_ddof0():
     s = VarianceSinglePass()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.var(axis=0))
 
@@ -84,7 +84,7 @@ def test_variance_single_pass_ddof1():
     s = VarianceSinglePass(ddof=1)
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.var(axis=0, ddof=1))
 
@@ -94,12 +94,12 @@ def test_variance_two_pass_ddof0():
     s = VarianceTwoPass()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     s.set_second_pass()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.var(axis=0))
 
@@ -110,11 +110,11 @@ def test_variance_two_pass_ddof1():
     s = VarianceTwoPass(ddof=1)
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     s.set_second_pass()
 
     for e in a:
-      s.update(e)
+        s.update(e)
 
     np.testing.assert_allclose(s.result, a.var(axis=0, ddof=1))

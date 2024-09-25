@@ -3,6 +3,7 @@ ANSSI’s
 ATMEGA
 Adafactor
 BCKG
+Babuska
 Benadjila
 Bursztein
 CHES
@@ -30,6 +31,7 @@ MBEDTLS
 Masure
 Moghimi
 Momin
+Neumaier
 Picod
 Prouff
 Pylance
@@ -78,6 +80,7 @@ cwhardware
 cwnano
 cwscope
 ddict
+ddof
 dpath
 dtype
 dtypes

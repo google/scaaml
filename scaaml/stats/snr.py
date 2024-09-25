@@ -29,6 +29,8 @@ class AttackPoint(Enum):
 
 
 class LeakageModelAES128:
+    """The value that might be correlated with value(s) in the trace.
+    """
 
     def __init__(self,
                  byte_index: int = 0,
@@ -46,13 +48,13 @@ class LeakageModelAES128:
           use_hamming_weight (bool): Use just the Hamming weight of the value.
         """
         assert byte_index in range(16)
-        self._hamming_weight_table = self._precompute_hw_table()
+        self._hamming_weight_table: list[int] = self._precompute_hw_table()
         self._byte_index: int = byte_index
         self._use_hamming_weight: bool = use_hamming_weight
         self._attack_point: AttackPoint = attack_point
 
     @staticmethod
-    def _precompute_hw_table() -> np.ndarray:
+    def _precompute_hw_table() -> list[int]:
         """Precompute Hamming weight table for values in range(256).
         """
         r = []
@@ -64,22 +66,23 @@ class LeakageModelAES128:
                     hwi += 1
                 x = x // 2
             r.append(hwi)
-        return np.array(r)
+        return r
 
-    def leakage(self, plaintext: np.ndarray, key: np.ndarray) -> int:
+    def leakage(self, plaintext: np.typing.NDArray[np.float64],
+                key: np.typing.NDArray[np.float64]) -> int:
         """Return the leakage value.
         """
         # Get the byte value of the leakage.
         byte_value: int
         if self._attack_point == AttackPoint.SUB_BYTES_OUT:
             byte_value = AESSBOX.sub_bytes_out(
-                key=key,
-                plaintext=plaintext,
+                key=bytearray(key),
+                plaintext=bytearray(plaintext),
             )[self._byte_index]
         elif self._attack_point == AttackPoint.SUB_BYTES_IN:
             byte_value = AESSBOX.sub_bytes_in(
-                key=key,
-                plaintext=plaintext,
+                key=bytearray(key),
+                plaintext=bytearray(plaintext),
             )[self._byte_index]
         else:
             raise NotImplementedError("Unknown attack point "
@@ -113,13 +116,13 @@ class SNRSinglePass:
         self._value_to_mean: defaultdict[int, Mean] = defaultdict(Mean)
         self.db: bool = db
 
-    def update(self, example: dict[str, np.ndarray]) -> None:
+    def update(self, example: dict[str, np.typing.NDArray[np.float64]]) -> None:
         """Update itself with another example.
 
         Args:
 
-          example (dict[str, np.ndarray]): Assumes that there are "trace1",
-          "key", and "plaintext".
+          example (dict[str, np.typing.NDArray[np.float64]]): Assumes that
+          there are "trace1", "key", and "plaintext".
         """
         leakage = self._leakage_model.leakage(
             plaintext=example["plaintext"],
@@ -129,11 +132,13 @@ class SNRSinglePass:
         self._value_to_mean[leakage].update(example["trace1"])
 
     @property
-    def result(self) -> np.ndarray:
+    def result(self) -> np.typing.NDArray[np.float64]:
         """Return the SNR values (in time).
         """
-        signal_var = np.var([m.result for m in self._value_to_mean.values()],
-                            axis=0)
+        signal_var = np.var(
+            np.array([m.result for m in self._value_to_mean.values()]),
+            axis=0,
+        )
 
         most_common: int = max(
             ((leak_val, var.n_seen)
@@ -141,10 +146,11 @@ class SNRSinglePass:
              if var.n_seen > 2),
             key=lambda p: p[1])[0]
         noise_var_one_point = self._value_to_variance[most_common].result
+        assert noise_var_one_point is not None
 
         result = signal_var / noise_var_one_point
 
         if self.db:
-            return 20 * np.log(result)
+            return np.array(20 * np.log(result))
 
-        return result
+        return np.array(result)

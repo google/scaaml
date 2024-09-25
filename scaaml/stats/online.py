@@ -32,46 +32,40 @@ class Sum:
     ```
     """
 
-    def __init__(self, cast_to: np.dtype = np.float64) -> None:
+    def __init__(self) -> None:
         """Initialize a sum.
-
-        Args:
-
-          cast_to (np.dtype): Cast each new element to this dtype. Defaults to
-          casting to np.float64.
         """
-        self._dtype: np.dtype = cast_to
         # Running sum.
-        self._sum: np.ndarray | None = None
+        self._sum: np.typing.NDArray[np.float64] | None = None
         # A running compensation for lost low-order bits. In infinite precision
         # this would be equal to zero.
-        self._c: np.ndarray | None = None
+        self._c: np.typing.NDArray[np.float64] | None = None
 
     @property
-    def result(self) -> np.ndarray | None:
+    def result(self) -> np.typing.NDArray[np.float64] | None:
         """Return the result (here the sum). Or None if no summation was done
         (unknown shape).
         """
         # Beware of `if not self._sum` due to zero.
         if self._sum is None:
             # Either one or both are None.
-            assert self._c is None
             return None
 
+        assert self._c is not None
         return self._sum + self._c
 
-    def update(self, value: np.ndarray) -> None:
+    def update(self, value: np.typing.NDArray[np.float64]) -> None:
         """Update by one element.
 
         Args:
 
-          value (np.ndarray): Next value to be summed.
+          value (np.typing.NDArray[np.float64]): Next value to be summed.
         """
         # Beware of `if not self._sum` due to zero.
         if self._sum is None:
             # First element.
-            self._sum = np.zeros_like(value, dtype=self._dtype)
-            self._c = np.zeros_like(value, dtype=self._dtype)
+            self._sum = np.zeros_like(value, dtype=np.float64)
+            self._c = np.zeros_like(value, dtype=np.float64)
 
         t = self._sum + value
 
@@ -92,30 +86,27 @@ class Mean:
     """Compute mean in an online fashion.
     """
 
-    def __init__(self, cast_to: np.dtype = np.float64) -> None:
+    def __init__(self) -> None:
         """Initialize the computation.
-
-        Args:
-
-          cast_to (np.dtype): Cast each new element to this dtype. Defaults to
-          casting to np.float64.
         """
         # Seen elements.
         self._elements: int = 0
-        self._sum: Sum = Sum(cast_to=cast_to)
+        self._sum: Sum = Sum()
 
-    def update(self, value: np.ndarray) -> None:
+    def update(self, value: np.typing.NDArray[np.float64]) -> None:
         """Update by the next value."""
         self._elements += 1
         self._sum.update(value)
 
     @property
-    def result(self) -> np.ndarray | None:
+    def result(self) -> np.typing.NDArray[np.float64] | None:
         """Return the arithmetic mean if some values have been added using the
         `update` method. Else return None.
         """
         if self._elements:
-            return self._sum.result / self._elements
+            sum_result = self._sum.result
+            assert sum_result is not None
+            return sum_result / self._elements
         return None
 
 
@@ -135,21 +126,17 @@ class VarianceSinglePass:
     ```
     """
 
-    def __init__(self, cast_to: np.dtype = np.float64, ddof: int = 0) -> None:
+    def __init__(self, ddof: int = 0) -> None:
         """Initialize a sum.
 
         Args:
 
-          cast_to (np.dtype): Cast each new element to this dtype. Defaults to
-          casting to np.float64.
-
           ddof (int): Degrees of freedom. Defaults to 0. For Bessel's
           correlation set to 1. For more information see `np.var`.
         """
-        self._dtype: np.dtype = cast_to
         self._ddof: int = ddof
-        self._mean: Sum = Sum(cast_to=cast_to)
-        self._msq: Sum = Sum(cast_to=cast_to)
+        self._mean: Sum = Sum()
+        self._msq: Sum = Sum()
         self._n_seen: int = 0
 
     @property
@@ -158,31 +145,37 @@ class VarianceSinglePass:
         """
         return self._n_seen
 
-    def update(self, value: np.ndarray) -> None:
+    def update(self, value: np.typing.NDArray[np.float64]) -> None:
         """Update by one element.
 
         Args:
 
-          value (np.ndarray): Next value to be used.
+          value (np.typing.NDArray[np.float64]): Next value to be used.
         """
         self._n_seen += 1
         if self._n_seen == 1:
             self._mean.update(value)
-            self._msq.update(np.zeros_like(value, dtype=self._dtype))
+            self._msq.update(np.zeros_like(value, dtype=np.float64))
             return
 
-        delta = value - self._mean.result
+        mean = self._mean.result
+        assert mean is not None
+        delta = value - mean
         self._mean.update(delta / self._n_seen)
-        self._msq.update(delta * (value - self._mean.result))
+        mean = self._mean.result
+        assert mean is not None
+        self._msq.update(delta * (value - mean))
 
     @property
-    def result(self) -> np.ndarray | None:
+    def result(self) -> np.typing.NDArray[np.float64] | None:
         """Return the result (variance). Or None if not enough data seen.
         """
         if self._n_seen < 2:
             return None
 
-        return self._msq.result / (self._n_seen - self._ddof)
+        msq = self._msq.result
+        assert msq
+        return msq / (self._n_seen - self._ddof)
 
 
 class VarianceTwoPass:
@@ -206,27 +199,23 @@ class VarianceTwoPass:
     ```
     """
 
-    def __init__(self, cast_to: np.dtype = np.float64, ddof: int = 0) -> None:
+    def __init__(self, ddof: int = 0) -> None:
         """Initialize a sum.
 
         Args:
 
-          cast_to (np.dtype): Cast each new element to this dtype. Defaults to
-          casting to np.float64.
-
           ddof (int): Degrees of freedom. Defaults to 0. For Bessel's
           correlation set to 1. For more information see `np.var`.
         """
-        self._dtype: np.dtype = cast_to
         self._ddof: int = ddof
         self._first_iteration: bool = True
         self._n_first_iteration: int = 0
         self._n_second_iteration: int = 0
-        self._mean: Mean = Mean(cast_to=cast_to)
-        self._sum_diff_square: Sum = Sum(cast_to=cast_to)
+        self._mean: Mean = Mean()
+        self._sum_diff_square: Sum = Sum()
 
     @property
-    def result(self) -> np.ndarray | None:
+    def result(self) -> np.typing.NDArray[np.float64] | None:
         """Return the result (variance). Or None if not enough data seen.
         """
         if self._n_second_iteration == 0:
@@ -234,22 +223,26 @@ class VarianceTwoPass:
         if self._n_first_iteration != self._n_second_iteration:
             return None
 
-        return self._sum_diff_square.result / (self._n_first_iteration -
-                                               self._ddof)
+        diff_squared = self._sum_diff_square.result
+        if diff_squared is None:
+            return None
+        return np.array(diff_squared / (self._n_first_iteration - self._ddof))
 
     def set_second_pass(self) -> None:
         """Start second iteration.
         """
         self._first_iteration = False
 
-        self._cached_mean_result: np.ndarray = self._mean.result
+        cached_mean = self._mean.result
+        assert cached_mean is not None
+        self._cached_mean_result = cached_mean
 
-    def update(self, value: np.ndarray) -> None:
+    def update(self, value: np.typing.NDArray[np.float64]) -> None:
         """Update by one element.
 
         Args:
 
-          value (np.ndarray): Next value to be used.
+          value (np.typing.NDArray[np.float64]): Next value to be used.
         """
         if self._first_iteration:
             self._n_first_iteration += 1
