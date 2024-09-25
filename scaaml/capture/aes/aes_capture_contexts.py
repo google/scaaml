@@ -14,9 +14,7 @@
 """Capture script for easier manipulation."""
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Type
-
-from chipwhisperer.capture.scopes.cwnano import CWNano
+from typing import Any, Dict, Literal, Optional, Sequence, Type
 
 from scaaml.aes_forward import AESSBOX
 from scaaml.io import Dataset
@@ -47,12 +45,10 @@ def capture_aes_dataset(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info: Optional[Dict[str, Any]] = None,
-        repetitions: int = 1,
-        train_keys: int = 3 * 1024,
-        train_plaintexts: int = 256,
-        holdout_keys: int = 0 * 1024,
-        holdout_plaintexts: int = 1) -> None:
+        train_iterator: Optional[dict[str, Any]] = None,
+        test_iterator: Optional[dict[str, Any]] = None,
+        holdout_iterator: Optional[dict[str, Any]] = None,
+        measurements_info: Optional[Dict[str, Any]] = None) -> Path:
     """Capture or continue capturing the dataset.
 
     Args:
@@ -93,31 +89,24 @@ def capture_aes_dataset(
       examples_per_shard: Size of a single part (for ML training purposes).
       measurements_info: Measurements info for scaaml.io.Dataset (what is
         measured, how many points are taken).
-      repetitions: Number of captures with a concrete (key, plaintext) pair.
-      train_keys: Number of different keys that are used in the train split (set
-        to zero not to capture this split), multiple of 256. Also captures
-        test split 12.5% size of train (1/8 keys).
-      train_plaintexts: Number of different plaintexts used with each key in
-        the train split.
-      holdout_keys: Number of different keys that are used in the holdout split
-        (set to zero not to capture this split), multiple of 256.
-      holdout_plaintexts: Number of different plaintexts used with each key in
-        the holdout split.
+      train_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
+      test_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
+      holdout_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
 
     Raises:
       ValueError: If something is wrong with the splits (either we are
         capturing train and holdout with the same chip, or we are capturing
         an unsupported split).
-    """
-    # If we are capturing train also capture the test split. We want the SBOX
-    # input to be balanced, thus we need at least 256 test_keys.
-    test_keys = max(train_keys // 8, 256)  # 1/8 = 0.125
-    test_plaintexts = train_plaintexts
 
-    if not train_keys and not holdout_keys and not test_keys:
+    Returns: dataset path of the created dataset.
+    """
+    if not any([train_iterator, holdout_iterator, test_iterator]):
         raise ValueError(
-            "At least one of [train_keys, holdout_keys, test_keys] should be "
-            "non-zero in order to capture at least one split.")
+            "At least one of [train_iterator, holdout_iterator, test_iterator]"
+            "should be non-empty in order to capture at least one split.")
 
     if capture_info["train_chip_id"] == capture_info["holdout_chip_id"]:
         raise ValueError("Cannot have the same chip_id for train and holdout.")
@@ -130,6 +119,8 @@ def capture_aes_dataset(
             },
         }
 
+    # Create the dataset.
+    attack_points_info = crypto_implementation.ATTACK_POINTS_INFO
     dataset = Dataset.get_dataset(
         root_path=root_path,
         shortname=shortname,
@@ -145,34 +136,38 @@ def capture_aes_dataset(
         licence=licence,
         examples_per_shard=examples_per_shard,
         measurements_info=measurements_info,
-        attack_points_info=crypto_implementation.ATTACK_POINTS_INFO,
+        attack_points_info=attack_points_info,
         capture_info=capture_info,
     )
 
-    # Generators of key-plaintext pairs for different splits.
-    crypto_algorithms: List[AbstractSCryptoAlgorithm] = []
+    # Capture splits.
+    for split, iterator_definition, chip_id in (
+        (
+            Dataset.TEST_SPLIT,
+            test_iterator,
+            "train_chip_id",  # same chip as train
+        ),
+        (
+            Dataset.TRAIN_SPLIT,
+            train_iterator,
+            "train_chip_id",
+        ),
+        (
+            Dataset.HOLDOUT_SPLIT,
+            holdout_iterator,
+            "holdout_chip_id",
+        ),
+    ):
+        if not iterator_definition:
+            # Split should not be captured.
+            continue
 
-    def add_crypto_alg(split: Dataset.SPLIT_T, keys: int, plaintexts: int,
-                       repetitions: int) -> None:
-        """Does not overwrite, safe to call multiple times.
-
-        Args:
-          split: Which split are we capturing.
-          keys: Number of different keys in this split.
-          plaintexts: Number of different plaintext captured with each key.
-          repetitions: Number of captures of each (key, plaintext) pair.
-        """
-        if split not in Dataset.SPLITS:
-            raise ValueError(
-                f"split must be one of {Dataset.SPLITS}, got {split}")
-        new_crypto_alg = SCryptoAlgorithm(
+        crypto_algorithm: SCryptoAlgorithm = SCryptoAlgorithm(
+            iterator_definition=iterator_definition,
             crypto_implementation=crypto_implementation,
             purpose=split,
             implementation=implementation,
             algorithm=algorithm,
-            keys=keys,
-            plaintexts=plaintexts,
-            repetitions=repetitions,
             examples_per_shard=examples_per_shard,
             firmware_sha256=firmware_sha256,
             full_kt_filename=str(
@@ -180,54 +175,33 @@ def capture_aes_dataset(
                 f"{split}_parameters_tuples.txt"),
             full_progress_filename=str(
                 Path(root_path) / dataset.slug /
-                f"{split}_progress_tuples.txt"))
-        crypto_algorithms.append(new_crypto_alg)
+                f"{split}_progress_tuples.txt"),
+        )
 
-    if test_keys:
-        add_crypto_alg(split=Dataset.TEST_SPLIT,
-                       keys=test_keys,
-                       plaintexts=test_plaintexts,
-                       repetitions=repetitions)
-    if train_keys:
-        add_crypto_alg(split=Dataset.TRAIN_SPLIT,
-                       keys=train_keys,
-                       plaintexts=train_plaintexts,
-                       repetitions=repetitions)
+        prefix, sep, _ = chip_id.partition("_")
+        assert prefix in ("train", "holdout")
+        current_capture_info = _get_current_capture_info(
+            capture_info,
+            prefix=prefix + sep,  # type: ignore[arg-type]
+        )
 
-    # Create context managers and capture train and test.
-    if crypto_algorithms:
-        current_capture_info = _get_current_capture_info(capture_info,
-                                                         prefix="train_")
         _capture(
             scope_class=scope_class,
             capture_info=current_capture_info,
-            chip_id=capture_info["train_chip_id"],
-            crypto_algorithms=crypto_algorithms,
+            chip_id=capture_info[chip_id],
+            crypto_algorithms=[crypto_algorithm],
             dataset=dataset,
         )
 
-    crypto_algorithms = []
-    if holdout_keys:
-        add_crypto_alg(split=Dataset.HOLDOUT_SPLIT,
-                       keys=holdout_keys,
-                       plaintexts=holdout_plaintexts,
-                       repetitions=repetitions)
-
-        current_capture_info = _get_current_capture_info(capture_info,
-                                                         prefix="holdout_")
-        # Create context managers and capture dataset.
-        _capture(
-            scope_class=scope_class,
-            capture_info=current_capture_info,
-            chip_id=capture_info["holdout_chip_id"],
-            crypto_algorithms=crypto_algorithms,
-            dataset=dataset,
-        )
+    return dataset.path
 
 
-def _get_current_capture_info(capture_info: Dict[str, Any],
-                              prefix: str) -> Dict[str, Any]:
-    """Update capture info for use of capturing train or holdout.
+def _get_current_capture_info(
+        capture_info: Dict[str, Any],
+        prefix: Literal["train_", "holdout_"]) -> Dict[str, Any]:
+    """Update capture info for use of capturing train or holdout. Fill the
+    following based on the current prefix value (train_ or holdout_): chip_id,
+    cw_scope_serial_number, trace_channel, trigger_pin.
 
     Args:
       capture_info (Dict): The old capture info.
@@ -263,8 +237,8 @@ def _capture(scope_class: Type[AbstractSScope], capture_info: Dict[str, Any],
       chip_id: Identifies the physical chip/board used. It is unique for a
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
-        generators.
+      crypto_algorithms (Sequence[SCryptoAlgorithm]): Sequence of key,
+        plaintext generators.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     with scope_class(**capture_info) as scope_context:
@@ -294,16 +268,16 @@ def _control_communication_and_capture(
         single piece of hardware. To identify datasets affected captured
         using a defective hardware.
       cwscope (CWScope): The scope to control.
-      crypto_algorithms (List[SCryptoAlgorithm]): List of key, plaintext
-        generators.
+      crypto_algorithms (Sequence[SCryptoAlgorithm]): Sequence of key,
+        plaintext generators.
       scope: The scope that does the measurements.
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     scope_parameter = cwscope.scope
-    assert isinstance(scope_parameter, CWNano)
     with CWControl(
             chip_id=chip_id,
-            scope_io=scope_parameter.io) as control:  # type: ignore[arg-type]
+            scope_io=scope_parameter.io,  # type: ignore[attr-defined]
+    ) as control:
         with CWCommunication(cwscope.scope) as target:
             capture_runner = CaptureRunner(crypto_algorithms=crypto_algorithms,
                                            scope=scope,

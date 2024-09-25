@@ -6,4 +6,5 @@ flake8
 twine
 perfCounters
 psutil
+types-cryptography
 types-tensorflow

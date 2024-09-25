@@ -13,6 +13,8 @@
 # limitations under the License.
 """Provides attack points for AES."""
 
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
 from typing import Callable, cast
 
 
@@ -71,7 +73,19 @@ class AESSBOX:
             "len": 16,
             "max_val": _MAX_VAL,
         },
+        "ciphertext": {
+            "len": 16,
+            "max_val": _MAX_VAL,
+        },
     }
+
+    @staticmethod
+    def ciphertext(key: bytearray, plaintext: bytearray) -> bytearray:
+        """Return the ciphertext. Useful for getting all attack points."""
+        assert len(key) == len(plaintext)
+        cipher = Cipher(algorithms.AES(key), modes.ECB())
+        encryptor = cipher.encryptor()
+        return bytearray(encryptor.update(plaintext) + encryptor.finalize())
 
     @staticmethod
     def key(key: bytearray, plaintext: bytearray) -> bytearray:

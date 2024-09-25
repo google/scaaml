@@ -87,6 +87,7 @@ dmypy
 dpath
 dtype
 dtypes
+encryptor
 eprint
 evenodd
 figsize
@@ -110,6 +111,7 @@ lecroy
 logit
 logits
 matplotlib
+maxsplit
 maxtraces
 mbed
 nbkeys
@@ -158,13 +160,14 @@ softmax
 softsign
 sparsed
 sparsing
-spyproject
 spyderproject
+spyproject
 sqrrelu
 subarray
 subclassing
 termcolor
 textin
+textout
 tfdata
 tfdataset
 tffeature

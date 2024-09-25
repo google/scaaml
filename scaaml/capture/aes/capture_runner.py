@@ -105,7 +105,10 @@ class CaptureRunner(AbstractCaptureRunner):
             if trace:
                 assert trace.textin == crypto_input.plaintext
                 attack_points = crypto_alg.attack_points(
-                    plaintext=crypto_input.plaintext, key=crypto_input.key)
+                    plaintext=crypto_input.plaintext,
+                    key=crypto_input.key,
+                )
+                assert trace.textout == attack_points["ciphertext"]
                 measurement = {
                     "trace1": trace.wave,
                 }
