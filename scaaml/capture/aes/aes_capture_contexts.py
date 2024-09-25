@@ -178,7 +178,7 @@ def capture_aes_dataset(
                 f"{split}_progress_tuples.txt"),
         )
 
-        prefix = chip_id.split("_", maxsplit=1) + "_"
+        prefix = chip_id.split("_", maxsplit=1)[0] + "_"
         assert prefix in ("train_", "holdout_")
         current_capture_info = _get_current_capture_info(
             capture_info,
