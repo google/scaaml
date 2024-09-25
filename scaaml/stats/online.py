@@ -13,6 +13,8 @@
 # limitations under the License.
 """Online computation of statistical values."""
 
+from typing import Optional
+
 import numpy as np
 
 
@@ -36,13 +38,13 @@ class Sum:
         """Initialize a sum.
         """
         # Running sum.
-        self._sum: np.typing.NDArray[np.float64] | None = None
+        self._sum: Optional[np.typing.NDArray[np.float64]] = None
         # A running compensation for lost low-order bits. In infinite precision
         # this would be equal to zero.
-        self._c: np.typing.NDArray[np.float64] | None = None
+        self._c: Optional[np.typing.NDArray[np.float64]] = None
 
     @property
-    def result(self) -> np.typing.NDArray[np.float64] | None:
+    def result(self) -> Optional[np.typing.NDArray[np.float64]]:
         """Return the result (here the sum). Or None if no summation was done
         (unknown shape).
         """
@@ -99,7 +101,7 @@ class Mean:
         self._sum.update(value)
 
     @property
-    def result(self) -> np.typing.NDArray[np.float64] | None:
+    def result(self) -> Optional[np.typing.NDArray[np.float64]]:
         """Return the arithmetic mean if some values have been added using the
         `update` method. Else return None.
         """
@@ -167,7 +169,7 @@ class VarianceSinglePass:
         self._msq.update(delta * (value - mean))
 
     @property
-    def result(self) -> np.typing.NDArray[np.float64] | None:
+    def result(self) -> Optional[np.typing.NDArray[np.float64]]:
         """Return the result (variance). Or None if not enough data seen.
         """
         if self._n_seen < 2:
@@ -215,7 +217,7 @@ class VarianceTwoPass:
         self._sum_diff_square: Sum = Sum()
 
     @property
-    def result(self) -> np.typing.NDArray[np.float64] | None:
+    def result(self) -> Optional[np.typing.NDArray[np.float64]]:
         """Return the result (variance). Or None if not enough data seen.
         """
         if self._n_second_iteration == 0:
@@ -252,7 +254,7 @@ class VarianceTwoPass:
             self._sum_diff_square.update((value - self._cached_mean_result)**2)
 
     @property
-    def n_seen(self) -> int | None:
+    def n_seen(self) -> Optional[int]:
         """How many examples have been seen or None if the first and second
         iteration were different length.
         """
