@@ -109,8 +109,9 @@ class SNRSinglePass:
 
         Args:
 
-          example (dict[str, np.typing.NDArray[np.float64]]): Assumes that
-          there are "trace1", "key", and "plaintext".
+          example (dict[str, Union[np.typing.NDArray[np.uint8],
+          np.typing.NDArray[np.float64]]]): Assumes that there are "trace1",
+          "key", and "plaintext".
         """
         leakage = self._leakage_model.leakage(
             plaintext=example["plaintext"],  # type: ignore[arg-type]
