@@ -3,6 +3,7 @@ ANSSI’s
 ATMEGA
 Adafactor
 BCKG
+Babuska
 Benadjila
 Bursztein
 CHES
@@ -30,6 +31,7 @@ MBEDTLS
 Masure
 Moghimi
 Momin
+Neumaier
 Picod
 Prouff
 Pylance
@@ -37,6 +39,7 @@ RDWR
 Ryad
 SBOX
 SBREV
+Spyder
 Standaert
 Strullu
 TCP
@@ -68,6 +71,7 @@ booktitle
 burszteindc
 bytelist
 calcsize
+celerybeat
 chipwhisperer
 clkgen
 cmap
@@ -78,6 +82,8 @@ cwhardware
 cwnano
 cwscope
 ddict
+ddof
+dmypy
 dpath
 dtype
 dtypes
@@ -89,6 +95,8 @@ frombuffer
 gsutil
 hardcopyarea
 howpublished
+htmlcov
+implem
 imshow
 inproceedings
 intp
@@ -107,6 +115,7 @@ mbed
 nbkeys
 ndarray
 newaxis
+nosetests
 nrst
 optim
 pbar
@@ -124,7 +133,10 @@ protver
 psutil
 pyclass
 pydantic
+pyflow
 pylance
+pypa
+pypackages
 pyplot
 pyvisa
 rearchitecting
@@ -133,6 +145,7 @@ resnet
 resumekti
 ristime
 rname
+ropeproject
 savefig
 scaaml
 scipy
@@ -145,6 +158,8 @@ softmax
 softsign
 sparsed
 sparsing
+spyproject
+spyderproject
 sqrrelu
 subarray
 subclassing
@@ -164,6 +179,7 @@ tsconfigs
 vals
 vispy
 vsintellicode
+webassets
 xlabel
 xticks
 yapf
