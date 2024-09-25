@@ -158,7 +158,7 @@ softmax
 softsign
 sparsed
 sparsing
-speproject
+spyproject
 spyderproject
 sqrrelu
 subarray
