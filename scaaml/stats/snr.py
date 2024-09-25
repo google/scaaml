@@ -1,0 +1,150 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Compute SNR. Inspired by the tutorial
+https://github.com/newaetech/chipwhisperer-jupyter/blob/master/archive/PA_Intro_3-Measuring_SNR_of_Target.ipynb
+"""
+from collections import defaultdict
+from enum import Enum
+
+import numpy as np
+
+from scaaml.aes_forward import AESSBOX
+from scaaml.stats.online import Mean, VarianceSinglePass
+
+
+class AttackPoint(Enum):
+    SUB_BYTES_IN = 0
+    SUB_BYTES_OUT = 0
+
+
+class LeakageModelAES128:
+
+    def __init__(self,
+                 byte_index: int = 0,
+                 attack_point: AttackPoint = AttackPoint.SUB_BYTES_IN,
+                 use_hamming_weight: bool = True) -> None:
+        """Gives the leakage function.
+
+        Args:
+
+          byte_index (int): Which byte to target (in range(16)).
+
+          attack_point (AttackPoint): Use either input or output of the first
+          SBOX.
+
+          use_hamming_weight (bool): Use just the Hamming weight of the value.
+        """
+        assert byte_index in range(16)
+        self._hamming_weight_table = self._precompute_hw_table()
+        self._byte_index: int = byte_index
+        self._use_hamming_weight: bool = use_hamming_weight
+        self._attack_point: AttackPoint = attack_point
+
+    @staticmethod
+    def _precompute_hw_table() -> np.ndarray:
+        """Precompute Hamming weight table for values in range(256).
+        """
+        r = []
+        for i in range(256):
+            hwi = 0
+            x = i
+            while x > 0:
+                if x % 2 == 1:
+                    hwi += 1
+                x = x // 2
+            r.append(hwi)
+        return np.array(r)
+
+    def leakage(self, plaintext: np.ndarray, key: np.ndarray) -> int:
+        """Return the leakage value.
+        """
+        # Get the byte value of the leakage.
+        byte_value: int
+        if self._attack_point == AttackPoint.SUB_BYTES_OUT:
+            byte_value = AESSBOX.sub_bytes_out(
+                key=key,
+                plaintext=plaintext,
+            )[self._byte_index]
+        elif self._attack_point == AttackPoint.SUB_BYTES_IN:
+            byte_value = AESSBOX.sub_bytes_in(
+                key=key,
+                plaintext=plaintext,
+            )[self._byte_index]
+        else:
+            raise NotImplementedError("Unknown attack point "
+                                      f"{self._attack_point}")
+
+        # Maybe convert to Hamming weight.
+        if self._use_hamming_weight:
+            return self._hamming_weight_table[byte_value]
+
+        return byte_value
+
+
+class SNRSinglePass:
+    """Single pass SNR implementation.
+    """
+
+    def __init__(self,
+                 leakage_model: LeakageModelAES128,
+                 db: bool = True) -> None:
+        """Initialize the SNR.
+
+        Args:
+
+          leakage_model (LeakageModelAES128): What do we expect to be leaking.
+
+          db (bool): If True return decibel (20 * np.log(result)).
+        """
+        self._leakage_model: LeakageModelAES128 = leakage_model
+        self._value_to_variance: defaultdict[
+            int, VarianceSinglePass] = defaultdict(VarianceSinglePass)
+        self._value_to_mean: defaultdict[int, Mean] = defaultdict(Mean)
+        self.db: bool = db
+
+    def update(self, example: dict[str, np.ndarray]) -> None:
+        """Update itself with another example.
+
+        Args:
+
+          example (dict[str, np.ndarray]): Assumes that there are "trace1",
+          "key", and "plaintext".
+        """
+        leakage = self._leakage_model.leakage(
+            plaintext=example["plaintext"],
+            key=example["key"],
+        )
+        self._value_to_variance[leakage].update(example["trace1"])
+        self._value_to_mean[leakage].update(example["trace1"])
+
+    @property
+    def result(self) -> np.ndarray:
+        """Return the SNR values (in time).
+        """
+        signal_var = np.var([m.result for m in self._value_to_mean.values()],
+                            axis=0)
+
+        most_common: int = max(
+            ((leak_val, var.n_seen)
+             for leak_val, var in self._value_to_variance.items()
+             if var.n_seen > 2),
+            key=lambda p: p[1])[0]
+        noise_var_one_point = self._value_to_variance[most_common].result
+
+        result = signal_var / noise_var_one_point
+
+        if self.db:
+            return 20 * np.log(result)
+
+        return result
