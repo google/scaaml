@@ -22,6 +22,9 @@ __pycache__/
 tmp/
 algo_arch_implem_v1_train/
 
+# Ignore swap files
+*.swp
+
 # Distribution / packaging
 .Python
 build/
