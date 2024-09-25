@@ -119,6 +119,7 @@ def capture_aes_dataset(
             },
         }
 
+    # Create the dataset.
     attack_points_info = crypto_implementation.ATTACK_POINTS_INFO
     dataset = Dataset.get_dataset(
         root_path=root_path,
@@ -139,22 +140,29 @@ def capture_aes_dataset(
         capture_info=capture_info,
     )
 
-    # Generators of key-plaintext pairs for different splits.
-    crypto_algorithms: List[AbstractSCryptoAlgorithm] = []
+    # Capture splits.
+    for split, iterator_definition, chip_id in (
+        (
+            Dataset.TEST_SPLIT,
+            test_iterator,
+            "train_chip_id",  # same chip as train
+        ),
+        (
+            Dataset.TRAIN_SPLIT,
+            train_iterator,
+            "train_chip_id",
+        ),
+        (
+            Dataset.HOLDOUT_SPLIT,
+            holdout_iterator,
+            "holdout_chip_id",
+        ),
+    ):
+        if not iterator_definition:
+            # Split should not be captured.
+            continue
 
-    def add_crypto_alg(split: Dataset.SPLIT_T,
-                       iterator_definition: dict[str, Any]) -> None:
-        """Does not overwrite, safe to call multiple times.
-
-        Args:
-          split: Which split are we capturing.
-          keys: Number of different keys in this split.
-          plaintexts: Number of different plaintext captured with each key.
-        """
-        if split not in Dataset.SPLITS:
-            raise ValueError(
-                f"split must be one of {Dataset.SPLITS}, got {split}")
-        new_crypto_alg = SCryptoAlgorithm(
+        crypto_algorithm: SCryptoAlgorithm = SCryptoAlgorithm(
             iterator_definition=iterator_definition,
             crypto_implementation=crypto_implementation,
             purpose=split,
@@ -167,41 +175,21 @@ def capture_aes_dataset(
                 f"{split}_parameters_tuples.txt"),
             full_progress_filename=str(
                 Path(root_path) / dataset.slug /
-                f"{split}_progress_tuples.txt"))
-        crypto_algorithms.append(new_crypto_alg)
-
-    if test_iterator:
-        add_crypto_alg(split=Dataset.TEST_SPLIT,
-                       iterator_definition=test_iterator)
-    if train_iterator:
-        add_crypto_alg(split=Dataset.TRAIN_SPLIT,
-                       iterator_definition=train_iterator)
-
-    # Create context managers and capture train and test.
-    if crypto_algorithms:
-        current_capture_info = _get_current_capture_info(capture_info,
-                                                         prefix="train_")
-        _capture(
-            scope_class=scope_class,
-            capture_info=current_capture_info,
-            chip_id=capture_info["train_chip_id"],
-            crypto_algorithms=crypto_algorithms,
-            dataset=dataset,
+                f"{split}_progress_tuples.txt"),
         )
 
-    crypto_algorithms = []
-    if holdout_iterator:
-        add_crypto_alg(split=Dataset.HOLDOUT_SPLIT,
-                       iterator_definition=holdout_iterator)
+        # TODO ideally remove
+        current_capture_info = _get_current_capture_info(
+            capture_info,
+            # Prefix is either "train_" or "holdout_".
+            prefix=chip_id.split("_")[0] + "_",
+        )
 
-        current_capture_info = _get_current_capture_info(capture_info,
-                                                         prefix="holdout_")
-        # Create context managers and capture dataset.
         _capture(
             scope_class=scope_class,
             capture_info=current_capture_info,
-            chip_id=capture_info["holdout_chip_id"],
-            crypto_algorithms=crypto_algorithms,
+            chip_id=capture_info[chip_id],
+            crypto_algorithms=[crypto_algorithm],
             dataset=dataset,
         )
 
@@ -230,6 +218,7 @@ def _get_current_capture_info(capture_info: Dict[str, Any],
                 raise ValueError(msg)
 
             # Provide also the short value
+            print(f">>> {current_capture_info[short_name] = } = {value}")
             current_capture_info[short_name] = value
     return current_capture_info
 
