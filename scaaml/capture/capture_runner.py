@@ -99,8 +99,7 @@ class AbstractCaptureRunner(ABC):
         Args:
           crypto_alg: The object used to get stabilization attack points.
         """
-        stabilization_iterator = crypto_alg.get_stabilization_kti()
-        crypto_input = self.get_crypto_input(next(stabilization_iterator))
+        crypto_input = self.get_crypto_input(next(crypto_alg.stabilization_kti))
         try:
             _, _ = self.get_attack_points_and_measurement(
                 crypto_alg=crypto_alg, crypto_input=crypto_input)
@@ -150,8 +149,10 @@ class AbstractCaptureRunner(ABC):
         # Context manager properly opens and closes shards.
         with DatasetFiller(
                 dataset=self._dataset,
-                plaintexts_per_key=crypto_alg.plaintexts,
-                repetitions=crypto_alg.repetitions,
+                # The values plaintexts_per_key and repetitions are used to
+                # determine the group_number which is never used.
+                plaintexts_per_key=1,
+                repetitions=1,
                 skip_examples=skip_examples,
         ) as dataset_filler:
             # Add examples, new shards are opened automatically.

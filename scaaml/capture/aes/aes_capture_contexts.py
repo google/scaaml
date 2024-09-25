@@ -47,12 +47,10 @@ def capture_aes_dataset(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info: Optional[Dict[str, Any]] = None,
-        repetitions: int = 1,
-        train_keys: int = 3 * 1024,
-        train_plaintexts: int = 256,
-        holdout_keys: int = 0 * 1024,
-        holdout_plaintexts: int = 1) -> None:
+        train_iterator: dict[str, Any] | None = None,
+        test_iterator: dict[str, Any] | None = None,
+        holdout_iterator: dict[str, Any] | None = None,
+        measurements_info: Optional[Dict[str, Any]] = None) -> Path:
     """Capture or continue capturing the dataset.
 
     Args:
@@ -93,31 +91,22 @@ def capture_aes_dataset(
       examples_per_shard: Size of a single part (for ML training purposes).
       measurements_info: Measurements info for scaaml.io.Dataset (what is
         measured, how many points are taken).
-      repetitions: Number of captures with a concrete (key, plaintext) pair.
-      train_keys: Number of different keys that are used in the train split (set
-        to zero not to capture this split), multiple of 256. Also captures
-        test split 12.5% size of train (1/8 keys).
-      train_plaintexts: Number of different plaintexts used with each key in
-        the train split.
-      holdout_keys: Number of different keys that are used in the holdout split
-        (set to zero not to capture this split), multiple of 256.
-      holdout_plaintexts: Number of different plaintexts used with each key in
-        the holdout split.
+      train_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
+      test_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
+      holdout_iterator (dict[str, Any] | None): If not None passed to
+        build_attack_points_iterator.
 
     Raises:
       ValueError: If something is wrong with the splits (either we are
         capturing train and holdout with the same chip, or we are capturing
         an unsupported split).
     """
-    # If we are capturing train also capture the test split. We want the SBOX
-    # input to be balanced, thus we need at least 256 test_keys.
-    test_keys = max(train_keys // 8, 256)  # 1/8 = 0.125
-    test_plaintexts = train_plaintexts
-
-    if not train_keys and not holdout_keys and not test_keys:
+    if not any([train_iterator, holdout_iterator, test_iterator]):
         raise ValueError(
-            "At least one of [train_keys, holdout_keys, test_keys] should be "
-            "non-zero in order to capture at least one split.")
+            "At least one of [train_iterator, holdout_iterator, test_iterator]"
+            "should be non-empty in order to capture at least one split.")
 
     if capture_info["train_chip_id"] == capture_info["holdout_chip_id"]:
         raise ValueError("Cannot have the same chip_id for train and holdout.")
@@ -130,6 +119,7 @@ def capture_aes_dataset(
             },
         }
 
+    attack_points_info = crypto_implementation.ATTACK_POINTS_INFO
     dataset = Dataset.get_dataset(
         root_path=root_path,
         shortname=shortname,
@@ -145,34 +135,31 @@ def capture_aes_dataset(
         licence=licence,
         examples_per_shard=examples_per_shard,
         measurements_info=measurements_info,
-        attack_points_info=crypto_implementation.ATTACK_POINTS_INFO,
+        attack_points_info=attack_points_info,
         capture_info=capture_info,
     )
 
     # Generators of key-plaintext pairs for different splits.
     crypto_algorithms: List[AbstractSCryptoAlgorithm] = []
 
-    def add_crypto_alg(split: Dataset.SPLIT_T, keys: int, plaintexts: int,
-                       repetitions: int) -> None:
+    def add_crypto_alg(split: Dataset.SPLIT_T,
+                       iterator_definition: dict[str, Any]) -> None:
         """Does not overwrite, safe to call multiple times.
 
         Args:
           split: Which split are we capturing.
           keys: Number of different keys in this split.
           plaintexts: Number of different plaintext captured with each key.
-          repetitions: Number of captures of each (key, plaintext) pair.
         """
         if split not in Dataset.SPLITS:
             raise ValueError(
                 f"split must be one of {Dataset.SPLITS}, got {split}")
         new_crypto_alg = SCryptoAlgorithm(
+            iterator_definition=iterator_definition,
             crypto_implementation=crypto_implementation,
             purpose=split,
             implementation=implementation,
             algorithm=algorithm,
-            keys=keys,
-            plaintexts=plaintexts,
-            repetitions=repetitions,
             examples_per_shard=examples_per_shard,
             firmware_sha256=firmware_sha256,
             full_kt_filename=str(
@@ -183,16 +170,12 @@ def capture_aes_dataset(
                 f"{split}_progress_tuples.txt"))
         crypto_algorithms.append(new_crypto_alg)
 
-    if test_keys:
+    if test_iterator:
         add_crypto_alg(split=Dataset.TEST_SPLIT,
-                       keys=test_keys,
-                       plaintexts=test_plaintexts,
-                       repetitions=repetitions)
-    if train_keys:
+                       iterator_definition=test_iterator)
+    if train_iterator:
         add_crypto_alg(split=Dataset.TRAIN_SPLIT,
-                       keys=train_keys,
-                       plaintexts=train_plaintexts,
-                       repetitions=repetitions)
+                       iterator_definition=train_iterator)
 
     # Create context managers and capture train and test.
     if crypto_algorithms:
@@ -207,11 +190,9 @@ def capture_aes_dataset(
         )
 
     crypto_algorithms = []
-    if holdout_keys:
+    if holdout_iterator:
         add_crypto_alg(split=Dataset.HOLDOUT_SPLIT,
-                       keys=holdout_keys,
-                       plaintexts=holdout_plaintexts,
-                       repetitions=repetitions)
+                       iterator_definition=holdout_iterator)
 
         current_capture_info = _get_current_capture_info(capture_info,
                                                          prefix="holdout_")
@@ -223,6 +204,8 @@ def capture_aes_dataset(
             crypto_algorithms=crypto_algorithms,
             dataset=dataset,
         )
+
+    return dataset.path
 
 
 def _get_current_capture_info(capture_info: Dict[str, Any],
@@ -300,7 +283,6 @@ def _control_communication_and_capture(
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     scope_parameter = cwscope.scope
-    assert isinstance(scope_parameter, CWNano)
     with CWControl(
             chip_id=chip_id,
             scope_io=scope_parameter.io) as control:  # type: ignore[arg-type]

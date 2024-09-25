@@ -32,9 +32,6 @@ class AbstractSCryptoAlgorithm(ABC):
                  purpose: Dataset.SPLIT_T,
                  implementation: str,
                  algorithm: str,
-                 keys: int,
-                 plaintexts: int,
-                 repetitions: int,
                  examples_per_shard: int,
                  full_kt_filename: str = "parameters_tuples.txt",
                  full_progress_filename: str = "progress_tuples.txt") -> None:
@@ -48,10 +45,6 @@ class AbstractSCryptoAlgorithm(ABC):
           purpose: Type of the dataset. Used in scaaml.io.Dataset.
           implementation: Name of the implementation that was used.
           algorithm: Algorithm name.
-          keys: Number of different keys that are used.
-          plaintexts: Number of different plaintexts used with each key.
-          repetitions: Number of captures for each concrete (key, plaintext)
-            pair.
           examples_per_shard: Size of a single part (for ML training purposes).
           kt_filename: Filename to save key, text pairs (using resume_kti).
           progress_filename: Filename to save progress (using resume_kti).
@@ -67,9 +60,7 @@ class AbstractSCryptoAlgorithm(ABC):
         self._crypto_implementation = crypto_implementation
         self._implementation = implementation
         self._algorithm = algorithm
-        self._keys = keys
-        self._plaintexts = plaintexts
-        self._repetitions = repetitions
+
         self._examples_per_shard = examples_per_shard
         self._purpose: Dataset.SPLIT_T = purpose
         self._kt_filename = full_kt_filename
@@ -80,12 +71,6 @@ class AbstractSCryptoAlgorithm(ABC):
         # Initialized in a child class.
         self._kti: Optional[Iterator[Any]] = None
         self._stabilization_ktp: Optional[Iterator[Any]] = None
-
-    @abstractmethod
-    def get_stabilization_kti(self) -> Iterator[Any]:
-        """Key-text iterator for stabilizing the capture. This is different
-        from the real kti.
-        """
 
     def attack_points_info(self) -> Dict[str, Dict[str, int]]:
         """Returns the attack points info."""
@@ -111,24 +96,16 @@ class AbstractSCryptoAlgorithm(ABC):
         return self._kti
 
     @property
+    def stabilization_kti(self) -> Iterator[Any]:
+        """Key-text iterator for stabilizing the capture. This is different
+        from the real kti.
+        """
+        return self._stabilization_ktp
+
+    @property
     def examples_per_shard(self) -> int:
         """How many traces are captured in a shard."""
         return self._examples_per_shard
-
-    @property
-    def keys(self) -> int:
-        """Number of different keys generated."""
-        return self._keys
-
-    @property
-    def plaintexts(self) -> int:
-        """Number of different plaintexts used with a single key."""
-        return self._plaintexts
-
-    @property
-    def repetitions(self) -> int:
-        """Number of times each (key,text) pair is repeated."""
-        return self._repetitions
 
     @property
     def key_len(self) -> int:

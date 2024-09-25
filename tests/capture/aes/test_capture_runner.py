@@ -18,6 +18,7 @@ from unittest.mock import MagicMock, patch
 
 import chipwhisperer as cw
 
+from scaaml.aes_forward import AESSBOX
 from scaaml.capture.aes.capture_runner import CaptureRunner
 from scaaml.capture.aes.crypto_input import CryptoInput
 
@@ -49,34 +50,6 @@ def test_capture_trace(mock_capture_trace):
                                                key=bytearray(key))
 
 
-@patch.object(CaptureRunner, "capture_trace")
-def test_get_attack_points_and_measurement(mock_capture_trace):
-    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    plaintext = [255, 254, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    crypto_input = CryptoInput(KeyTextPair(keys=key, texts=plaintext))
-    trace = MagicMock()
-    trace.textin = bytearray(plaintext)
-    mock_capture_trace.side_effect = [None, False, trace]
-    m_crypto_alg = MagicMock()
-    m_scope = MagicMock()
-    m_communication = MagicMock()
-    m_control = MagicMock()
-    m_dataset = MagicMock()
-    capture_runner = CaptureRunner(crypto_algorithms=[m_crypto_alg],
-                                   scope=m_scope,
-                                   communication=m_communication,
-                                   control=m_control,
-                                   dataset=m_dataset)
-    ap, measurement = capture_runner.get_attack_points_and_measurement(
-        crypto_alg=m_crypto_alg, crypto_input=crypto_input)
-    assert mock_capture_trace.call_count == 3
-    m_crypto_alg.attack_points.assert_called_once_with(
-        plaintext=bytearray(plaintext), key=bytearray(key))
-    assert measurement == {
-        "trace1": trace.wave,
-    }
-
-
 @patch.object(CaptureRunner, "get_attack_points_and_measurement")
 def test_stabilize_capture(mock_capture_trace):
     mock_capture_trace.return_value = (MagicMock(), MagicMock())
@@ -95,7 +68,6 @@ def test_stabilize_capture(mock_capture_trace):
                                    control=m_control,
                                    dataset=m_dataset)
     capture_runner._stabilize_capture(crypto_alg=m_crypto_alg)
-    m_crypto_alg.get_stabilization_kti.assert_called_once_with()
     assert mock_capture_trace.call_count >= 5
 
 
