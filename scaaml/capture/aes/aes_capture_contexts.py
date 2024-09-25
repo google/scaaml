@@ -281,8 +281,10 @@ def _control_communication_and_capture(
       dataset (scaaml.io.Dataset): The dataset to save examples to.
     """
     scope_parameter = cwscope.scope
-    with CWControl(chip_id=chip_id, scope_io=scope_parameter.io
-                  ) as control:  # type: ignore[attr-defined]
+    with CWControl(
+            chip_id=chip_id,
+            scope_io=scope_parameter.io,  # type: ignore[attr-defined]
+    ) as control:
         with CWCommunication(cwscope.scope) as target:
             capture_runner = CaptureRunner(crypto_algorithms=crypto_algorithms,
                                            scope=scope,
