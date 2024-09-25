@@ -31,12 +31,10 @@ def capture_ascad_default_parameters(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        measurements_info: Optional[Dict[str, Any]] = None,
-        repetitions: int = 1,
-        train_keys: int = 4 * 1024,
-        train_plaintexts: int = 256,
-        holdout_keys: int = 0 * 1024,
-        holdout_plaintexts: int = 1) -> None:
+        train_iterator: Optional[dict[str, Any]] = None,
+        test_iterator: Optional[dict[str, Any]] = None,
+        holdout_iterator: Optional[dict[str, Any]] = None,
+        measurements_info: Optional[Dict[str, Any]] = None) -> None:
     """SCAAML STM32F415 ASCAD specific defaults for capture_ascad_dataset."""
     architecture: str = "CW308_STM32F415"
     implementation: str = "ASCAD"
@@ -81,9 +79,7 @@ def capture_ascad_default_parameters(
         examples_per_shard=examples_per_shard,
         measurements_info=measurements_info,
         capture_info=capture_info,
-        repetitions=repetitions,
-        train_keys=train_keys,
-        train_plaintexts=train_plaintexts,
-        holdout_keys=holdout_keys,
-        holdout_plaintexts=holdout_plaintexts,
+        train_iterator=train_iterator,
+        test_iterator=test_iterator,
+        holdout_iterator=holdout_iterator,
     )

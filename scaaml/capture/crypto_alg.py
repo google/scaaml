@@ -100,6 +100,7 @@ class AbstractSCryptoAlgorithm(ABC):
         """Key-text iterator for stabilizing the capture. This is different
         from the real kti.
         """
+        assert self._stabilization_ktp is not None
         return self._stabilization_ktp
 
     @property

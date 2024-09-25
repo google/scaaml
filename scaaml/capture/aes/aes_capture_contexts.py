@@ -45,9 +45,9 @@ def capture_aes_dataset(
         paper_url: str = "",
         licence: str = "https://creativecommons.org/licenses/by/4.0/",
         examples_per_shard: int = 64,
-        train_iterator: dict[str, Any] | None = None,
-        test_iterator: dict[str, Any] | None = None,
-        holdout_iterator: dict[str, Any] | None = None,
+        train_iterator: Optional[dict[str, Any]] = None,
+        test_iterator: Optional[dict[str, Any]] = None,
+        holdout_iterator: Optional[dict[str, Any]] = None,
         measurements_info: Optional[Dict[str, Any]] = None) -> Path:
     """Capture or continue capturing the dataset.
 
@@ -283,7 +283,7 @@ def _control_communication_and_capture(
     scope_parameter = cwscope.scope
     with CWControl(
             chip_id=chip_id,
-            scope_io=scope_parameter.io) as control:  # type: ignore[arg-type]
+            scope_io=scope_parameter.io) as control:  # type: ignore[attr-defined]
         with CWCommunication(cwscope.scope) as target:
             capture_runner = CaptureRunner(crypto_algorithms=crypto_algorithms,
                                            scope=scope,

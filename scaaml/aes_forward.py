@@ -85,7 +85,7 @@ class AESSBOX:
         assert len(key) == len(plaintext)
         cipher = Cipher(algorithms.AES(key), modes.ECB())
         encryptor = cipher.encryptor()
-        return encryptor.update(plaintext) + encryptor.finalize()
+        return bytearray(encryptor.update(plaintext) + encryptor.finalize())
 
     @staticmethod
     def key(key: bytearray, plaintext: bytearray) -> bytearray:
