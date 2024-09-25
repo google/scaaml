@@ -176,7 +176,7 @@ class VarianceSinglePass:
             return None
 
         msq = self._msq.result
-        assert msq.all()
+        assert msq is not None
         return msq / (self._n_seen - self._ddof)
 
 
