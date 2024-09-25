@@ -16,6 +16,7 @@ https://github.com/newaetech/chipwhisperer-jupyter/blob/master/archive/PA_Intro_
 """
 from collections import defaultdict
 from enum import Enum
+from typing import Union
 
 import numpy as np
 
@@ -48,28 +49,12 @@ class LeakageModelAES128:
           use_hamming_weight (bool): Use just the Hamming weight of the value.
         """
         assert byte_index in range(16)
-        self._hamming_weight_table: list[int] = self._precompute_hw_table()
         self._byte_index: int = byte_index
         self._use_hamming_weight: bool = use_hamming_weight
         self._attack_point: AttackPoint = attack_point
 
-    @staticmethod
-    def _precompute_hw_table() -> list[int]:
-        """Precompute Hamming weight table for values in range(256).
-        """
-        r = []
-        for i in range(256):
-            hwi = 0
-            x = i
-            while x > 0:
-                if x % 2 == 1:
-                    hwi += 1
-                x = x // 2
-            r.append(hwi)
-        return r
-
-    def leakage(self, plaintext: np.typing.NDArray[np.float64],
-                key: np.typing.NDArray[np.float64]) -> int:
+    def leakage(self, plaintext: np.typing.NDArray[np.uint8],
+                key: np.typing.NDArray[np.uint8]) -> int:
         """Return the leakage value.
         """
         # Get the byte value of the leakage.
@@ -90,7 +75,7 @@ class LeakageModelAES128:
 
         # Maybe convert to Hamming weight.
         if self._use_hamming_weight:
-            return self._hamming_weight_table[byte_value]
+            return int(byte_value).bit_count()
 
         return byte_value
 
@@ -116,7 +101,10 @@ class SNRSinglePass:
         self._value_to_mean: defaultdict[int, Mean] = defaultdict(Mean)
         self.db: bool = db
 
-    def update(self, example: dict[str, np.typing.NDArray[np.float64]]) -> None:
+    def update(
+        self, example: dict[str, Union[np.typing.NDArray[np.uint8],
+                                       np.typing.NDArray[np.float64]]]
+    ) -> None:
         """Update itself with another example.
 
         Args:
@@ -125,11 +113,13 @@ class SNRSinglePass:
           there are "trace1", "key", and "plaintext".
         """
         leakage = self._leakage_model.leakage(
-            plaintext=example["plaintext"],
-            key=example["key"],
+            plaintext=example["plaintext"],  # type: ignore[arg-type]
+            key=example["key"],  # type: ignore[arg-type]
         )
-        self._value_to_variance[leakage].update(example["trace1"])
-        self._value_to_mean[leakage].update(example["trace1"])
+        trace: np.typing.NDArray[np.float64]
+        trace = example["trace1"]  # type: ignore[assignment]
+        self._value_to_variance[leakage].update(trace)
+        self._value_to_mean[leakage].update(trace)
 
     @property
     def result(self) -> np.typing.NDArray[np.float64]:
