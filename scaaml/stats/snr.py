@@ -26,7 +26,7 @@ from scaaml.stats.online import Mean, VarianceSinglePass
 
 class AttackPoint(Enum):
     SUB_BYTES_IN = 0
-    SUB_BYTES_OUT = 0
+    SUB_BYTES_OUT = 1
 
 
 class LeakageModelAES128:
@@ -53,10 +53,41 @@ class LeakageModelAES128:
         self._use_hamming_weight: bool = use_hamming_weight
         self._attack_point: AttackPoint = attack_point
 
+    @staticmethod
+    def _safe_cast(
+            value: np.typing.NDArray[np.uint8]) -> np.typing.NDArray[np.uint8]:
+        """Ideally this function does nothing. But it is very easy to pass an
+        array of larger dtype and then be surprised by results of leakage (the
+        additional bytes are zero).
+
+        Args:
+
+          value (np.typing.NDArray[np.uint8]): Try to convert this to uint8.
+
+        Raises ValueError if the values cannot be safely converted to uint8.
+        """
+        uint8_value = np.array(value, dtype=np.uint8)
+        if not (uint8_value == value).all():
+            raise ValueError("Conversion to uint8 was not successful.")
+        return uint8_value
+
     def leakage(self, plaintext: np.typing.NDArray[np.uint8],
                 key: np.typing.NDArray[np.uint8]) -> int:
         """Return the leakage value.
+
+        Args:
+
+          plaintext (np.typing.NDArray[np.uint8]): Array of byte values. The
+          method fails if there is a value which cannot be converted to uint8.
+
+          key (np.typing.NDArray[np.uint8]): Array of byte values. The method
+          fails if there is a value which cannot be converted to uint8.
+
+        Returns: An integer representing the leakage.
         """
+        plaintext = self._safe_cast(plaintext)
+        key = self._safe_cast(key)
+
         # Get the byte value of the leakage.
         byte_value: int
         if self._attack_point == AttackPoint.SUB_BYTES_OUT:
