@@ -159,7 +159,7 @@ class MeanConfidence(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
         result = super().get_config()
         if "fn" in result:
             del result["fn"]
-        return result
+        return result  # type: ignore[no-any-return]
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "MeanConfidence":
@@ -205,7 +205,7 @@ class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
         result = super().get_config()
         if "fn" in result:
             del result["fn"]
-        return result
+        return result  # type: ignore[no-any-return]
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "MeanRank":
