@@ -553,7 +553,7 @@ class Dataset:
                 max_val = data["max_val"]
                 if max_val == 2:
                     # Binary classification.
-                    v = rec[data["ap"]][data["byte"]]
+                    v = tf.cast(rec[data["ap"]][data["byte"]], dtype=tf.float32)
                 else:
                     # Multiple classes classification.
                     v = tf.one_hot(rec[data["ap"]][data["byte"]], max_val)
