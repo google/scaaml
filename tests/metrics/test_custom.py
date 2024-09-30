@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import keras
 import numpy as np
 
 from scaaml.metrics import MeanConfidence
@@ -143,22 +144,6 @@ def test_mean_rank_doc():
     assert r.result().numpy() == 0.5
 
 
-def test_mean_rank_decimals_no_rounding():
-    # No rounding
-    r = MeanRank(decimals=None)
-    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
-                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
-    assert r.result().numpy() == 0.25
-
-
-def test_mean_rank_1_decimals():
-    # One decimal
-    r = MeanRank(decimals=1)
-    r.update_state([[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
-                   [[0.1, 0.9], [0.5, 0.5], [0.8, 0.2], [1.0, 0.0]])
-    assert np.isclose(r.result().numpy(), 0.2)
-
-
 def test_max_rank_doc():
     r = MaxRank()
     r.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.5, 0.5]])
@@ -269,3 +254,60 @@ def test_h0_one_wrong():
     m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.4, 0.6]])
     assert np.isclose(m.result(), 0.75)
+
+
+def get_mnist_model():
+    """Return a CNN model.
+    """
+    input_shape = (28, 28)
+    num_classes = 10
+
+    input_data = keras.Input(shape=input_shape, name="input")
+
+    x = input_data
+    x = keras.layers.Reshape((*input_shape, 1))(x)
+    x = keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu")(x)
+    x = keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu")(x)
+    x = keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dense(num_classes, activation="softmax", name="digit")(x)
+
+    model = keras.Model(inputs=input_data, outputs=x)
+
+    model.summary()
+    model.compile(
+        loss="categorical_crossentropy",
+        optimizer="adam",
+        metrics=[
+            "accuracy",
+            MeanConfidence(),
+            MeanRank(),
+            MaxRank(),
+            #SignificanceTest(),  # need to get around np.array needed for scipy
+        ],
+    )
+    return model
+
+
+def test_load(tmp_path):
+    """Test that a model can be loaded afterwards.
+    """
+    model = get_mnist_model()
+    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+    x_train = x_train.astype("float32") / 256
+    x_test = x_test.astype("float32") / 256
+    y_train = keras.utils.to_categorical(y_train, 10)
+    y_test = keras.utils.to_categorical(y_test, 10)
+    model.fit(x_train, y_train, batch_size=128, epochs=10, validation_split=0.1)
+    score = model.evaluate(x_test, y_test, verbose=0)
+    # good accuracy is 98% or 99%:
+    assert score[1] > 0.9
+
+    # save and reaload the model
+    model.save(tmp_path / "model.keras")
+    model_loaded = keras.models.load_model(tmp_path / "model.keras")
+    score = model_loaded.evaluate(x_test, y_test, verbose=0)
+    # good accuracy is 98% or 99%:
+    assert score[1] > 0.9

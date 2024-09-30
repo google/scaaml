@@ -15,19 +15,17 @@
 
 Related metrics:
   MinRank: Is zero as soon as accuracy is non-zero.
-  tf.keras.metrics.TopKCategoricalAccuracy: How often the correct class
+  keras.metrics.TopKCategoricalAccuracy: How often the correct class
     is in the top K predictions (how often is rank less than K).
 """
 from typing import Any, Optional
 
 import numpy as np
-import tensorflow as tf
 import keras
 from keras.metrics import Metric, MeanMetricWrapper, categorical_accuracy
 import scipy
 
 
-@tf.function  # type: ignore[misc]
 def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
     """Calculates the rank of the correct class (counted from 0). If the
     prediction is correct, the rank is equal to zero. If the correct class is
@@ -69,12 +67,12 @@ def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
     # correct class and subtract 1.
     #
     # mul[argmax(y_true)] == y_pred[argmax(y_true)] and zero elsewhere.
-    mul = tf.math.multiply(y_true, y_pred)
+    mul = keras.ops.multiply(y_true, y_pred)
     # mul is of shape (None, N)
 
     # We get the predicted probability for the correct class (keeping the
     # dimension, so we can compare with y_pred).
-    predicted_pr = tf.math.reduce_max(mul, axis=-1, keepdims=True)
+    predicted_pr = keras.ops.max(mul, axis=-1, keepdims=True)
     # predicted_pr is of shape (None, 1)
 
     # Boolean array where y_pred >= predicted_pr (True values denote the
@@ -82,13 +80,13 @@ def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
     # class). If we are optimistic we count only y_pred > predicted_pr (break
     # ties in favor of the target).
     if optimistic:
-        preferred = tf.math.greater(y_pred, predicted_pr)
+        preferred = keras.ops.greater(y_pred, predicted_pr)
     else:
-        preferred = tf.math.greater_equal(y_pred, predicted_pr)
+        preferred = keras.ops.greater_equal(y_pred, predicted_pr)
     # preferred is of shape (None, N)
 
     # A scalar, summing a 1. for each True and 0. for each False.
-    ranks = tf.reduce_sum(tf.cast(preferred, "float32"), axis=-1)
+    ranks = keras.ops.sum(keras.ops.cast(preferred, "float32"), axis=-1)
     # ranks is of shape (None,)
     # Do not count the correct class itself (rank is counted from 0).
     if optimistic:
@@ -96,7 +94,6 @@ def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
     return ranks - 1
 
 
-@tf.function  # type: ignore[misc]
 def confidence(y_true: Any, y_pred: Any) -> Any:
     """Return the confidence of the prediction, that is the difference of the
     highest value and the second highest value. A prediction contributes to
@@ -119,7 +116,7 @@ def confidence(y_true: Any, y_pred: Any) -> Any:
 
     # Take the first two predictions, top_two.values are their values,
     # top_two.indices are their indexes.
-    top_two = tf.math.top_k(y_pred, k=2)
+    top_two = keras.ops.top_k(y_pred, k=2)
 
     # Compute the difference of the top and the second prediction (regardless
     # if the prediction is correct or not).
@@ -157,6 +154,18 @@ class MeanConfidence(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
                  dtype: Optional[np.generic] = None) -> None:
         super().__init__(confidence, name, dtype=dtype)
 
+    def get_config(self) -> dict[str, Any]:
+        """Dictionary representation of this layer."""
+        result = super().get_config()
+        if "fn" in result:
+            del result["fn"]
+        return result
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> "MeanConfidence":
+        """Deserialize from a config."""
+        return cls(**config)
+
 
 @keras.utils.register_keras_serializable(package="SCAAML")
 class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
@@ -169,8 +178,6 @@ class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
     Args:
       name (Optional): String name of the metric instance.
       dtype (Optional): Data type of the metric result.
-      decimals (Optional[int]): How many decimals to show. If None no
-        rounding. Behaves as in np.round. Defaults to None.
 
     Standalone usage:
 
@@ -190,26 +197,20 @@ class MeanRank(MeanMetricWrapper):  # type: ignore[no-any-unimported,misc]
 
     def __init__(self,
                  name: str = "mean_rank",
-                 dtype: Optional[np.generic] = None,
-                 decimals: Optional[int] = None) -> None:
+                 dtype: Optional[np.generic] = None) -> None:
         super().__init__(rank, name, dtype=dtype)
-        self._decimals = decimals
 
-    def result(self) -> Any:
-        """Return the result, possibly rounded to the right number of digits.
-        See the decimals parameter of the constructor.
-        """
-        # Get the result.
-        res = super().result()
+    def get_config(self) -> dict[str, Any]:
+        """Dictionary representation of this layer."""
+        result = super().get_config()
+        if "fn" in result:
+            del result["fn"]
+        return result
 
-        # Check if rounding is necessary.
-        if self._decimals is None:
-            return res
-
-        # Get numpy scalar and round.
-        rounded = np.round(res.numpy(), self._decimals)
-        # Cast back to tensor.
-        return tf.convert_to_tensor(rounded, dtype=res.dtype)
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> "MeanRank":
+        """Deserialize from a config."""
+        return cls(**config)
 
 
 @keras.utils.register_keras_serializable(package="SCAAML")
@@ -258,12 +259,12 @@ class MaxRank(Metric):  # type: ignore[no-any-unimported,misc]
         """
         del sample_weight  # unused
         rank_update = rank(y_true=y_true, y_pred=y_pred)
-        rank_update = tf.math.reduce_max(rank_update)
-        self.max_rank.assign(tf.math.maximum(self.max_rank, rank_update))
+        rank_update = keras.ops.max(rank_update)
+        self.max_rank.assign(keras.ops.maximum(self.max_rank, rank_update))
 
     def result(self) -> Any:
         """Return the result."""
-        return tf.cast(self.max_rank, dtype=tf.int32)
+        return keras.ops.cast(self.max_rank, dtype="int32")
 
     def reset_state(self) -> None:
         """Reset the state for new measurement."""
@@ -320,14 +321,14 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
         del sample_weight  # unused
 
         # Make into tensors.
-        y_true = tf.constant(y_true)
-        y_pred = tf.constant(y_pred)
+        y_true = np.array(y_true, dtype=np.float32)
+        y_pred = np.array(y_pred, dtype=np.float32)
 
         # Update the number of seen examples.
         self.seen.assign(self.seen + y_true.shape[0])
 
         # Update the number of correctly predicted examples.
-        correct_now = tf.reduce_sum(categorical_accuracy(y_true, y_pred))
+        correct_now = keras.ops.sum(categorical_accuracy(y_true, y_pred))
         self.correct.assign(self.correct + correct_now)
 
         # Update the number of possibilities.
