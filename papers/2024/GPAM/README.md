@@ -82,6 +82,9 @@ python -m pip install "tensorflow==2.12"
 ```python
 import tensorflow as tf
 
+from scaaml.metrics import MeanRank
+
+
 print(tf.__version__)
 loaded_model = tf.keras.models.load_model(
     # path to the model, e.g.,
@@ -91,6 +94,7 @@ loaded_model = tf.keras.models.load_model(
         # No need to pass a learning rate schedule since we are not
         # training.
         "CosineDecayWithWarmupSchedule": lambda *args, **kwargs: 0.001,
+        "MeanRank": MeanRank,
     },
 )
 ```
