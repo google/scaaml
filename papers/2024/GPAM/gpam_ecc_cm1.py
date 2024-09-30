@@ -413,7 +413,7 @@ def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
         relations = ingoing_relations.get(name, [])
 
         # Get parameters for head creation.
-        dim = outputs[name]['max_val']
+        dim = outputs[name]['max_val'] if outputs[name]['max_val'] > 2 else 1
         head = _make_head(x, heads, name, relations, dim)
         heads[name] = head
 
