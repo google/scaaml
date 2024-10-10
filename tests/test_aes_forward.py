@@ -117,8 +117,16 @@ def test_inverse():
                                       'sub_bytes_out') == k_cat).all()
 
 
+def test_ciphertext():
+    assert AESSBOX.get_attack_point(
+        "ciphertext",
+        key=bytearray(range(16)),
+        plaintext=bytearray(range(16)),
+    ) == bytearray(b'\n\x94\x0b\xb5An\xf0E\xf1\xc3\x94X\xc6S\xeaZ')
+
+
 def test_attack_points():
-    """test getting different attack points using AESSBOX.get_attack_point"""
+    """Test getting different attack points using AESSBOX.get_attack_point."""
     key = bytearray([
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b
     ])
