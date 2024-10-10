@@ -114,7 +114,7 @@ def test_inverse():
             num_classes=256,
         )
         assert (ap_preds_to_key_preds(sb_cat, text,
-                                      'sub_bytes_out') == k_cat).all()
+                                      "sub_bytes_out") == k_cat).all()
 
 
 def test_ciphertext():
@@ -122,7 +122,7 @@ def test_ciphertext():
         "ciphertext",
         key=bytearray(range(16)),
         plaintext=bytearray(range(16)),
-    ) == bytearray(b'\n\x94\x0b\xb5An\xf0E\xf1\xc3\x94X\xc6S\xeaZ')
+    ) == bytearray(b"\n\x94\x0b\xb5An\xf0E\xf1\xc3\x94X\xc6S\xeaZ")
 
 
 def test_attack_points():
@@ -137,14 +137,14 @@ def test_attack_points():
         0x7b, 0x63, 0x6f, 0x77, 0x7c, 0xfe, 0xf2, 0x7c, 0x2b, 0x30, 0xd7, 0x2b
     ])
 
-    assert AESSBOX.get_attack_point('key', key=key, plaintext=text) == key
-    assert AESSBOX.get_attack_point('sub_bytes_in', key=key,
+    assert AESSBOX.get_attack_point("key", key=key, plaintext=text) == key
+    assert AESSBOX.get_attack_point("sub_bytes_in", key=key,
                                     plaintext=text) == AESSBOX.sub_bytes_in(
                                         key=key, plaintext=text)
-    assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
+    assert AESSBOX.get_attack_point("sub_bytes_out", key=key,
                                     plaintext=text) == AESSBOX.sub_bytes_out(
                                         key=key, plaintext=text)
-    assert AESSBOX.get_attack_point('sub_bytes_out', key=key,
+    assert AESSBOX.get_attack_point("sub_bytes_out", key=key,
                                     plaintext=text) == sub_bytes_out
-    assert AESSBOX.get_attack_point('plaintext', key=key,
+    assert AESSBOX.get_attack_point("plaintext", key=key,
                                     plaintext=text) == text
