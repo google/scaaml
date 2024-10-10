@@ -1,6 +1,7 @@
 Pillow
 chipwhisperer
 colorama
+cryptography
 matplotlib
 numpy
 pandas
