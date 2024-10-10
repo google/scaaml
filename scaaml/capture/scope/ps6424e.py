@@ -621,11 +621,12 @@ class Pico6424E(ScopeTemplate):
             representation of the trace. Defaults to False meaning return
             np.array of dtype np.float32.
 
-        Returns: np array representing the last captured trace.
+        Returns: np array representing the last captured trace in mV unless
+        `as_int` is set to `True` in which case it returns the ADC values
+        directly.
         """
         if as_int:
-            msg = "Returning trace as integers is not implemented."
-            raise NotImplementedError(msg)
+            return np.array(self._trace_buffer[:], dtype=np.int32)
 
         return np.array(self._buffer_trace[:], dtype=np.float32)
 
