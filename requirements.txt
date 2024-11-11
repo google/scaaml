@@ -1282,9 +1282,9 @@ termcolor==2.5.0 \
     # via
     #   -r requirements.in
     #   tensorflow
-tqdm==4.66.5 \
-    --hash=sha256:90279a3770753eafc9194a0364852159802111925aa30eb3f9d85b0e805ac7cd \
-    --hash=sha256:e1020aef2e5096702d8a025ac7d16b1577279c9d63f8375b63083e9a5f0fcbad
+tqdm==4.67.0 \
+    --hash=sha256:0cd8af9d56911acab92182e88d763100d4788bdf421d251616040cc4d44863be \
+    --hash=sha256:fe5a6f95e6fe0b9755e9469b77b9c3cf850048224ecaa8293d7d2d31f97d869a
     # via
     #   -r requirements.in
     #   chipwhisperer
