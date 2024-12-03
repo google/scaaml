@@ -7,7 +7,7 @@ where = ["."]
 
 [project]
 name = "scaaml"
-version = "2.0.2"
+version = "2.0.3"
 authors = [
    { name="Elie Bursztein"},
    { name="Luca Invernizzi"},
