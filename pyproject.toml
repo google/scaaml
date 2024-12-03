@@ -7,7 +7,6 @@ where = ["."]
 
 [project]
 name = "scaaml"
-version = "2.0.3"
 authors = [
    { name="Elie Bursztein"},
    { name="Luca Invernizzi"},
@@ -28,7 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-dynamic = []
+dynamic = ["version"]
 dependencies = [
     "chipwhisperer",
     "colorama",
@@ -51,6 +50,9 @@ dependencies = [
     "tqdm",
     "wheel",
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "scaaml.__version__"}
 
 [project.optional-dependencies]
 
