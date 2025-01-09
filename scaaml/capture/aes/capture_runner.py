@@ -57,7 +57,6 @@ class CaptureRunner(AbstractCaptureRunner):
           AssertionError: If the textin in the trace is different from
             plaintext.
         """
-        # Convert to cw bytearray, which has nicer __str__ and __repr__.
         plaintext = bytearray(crypto_input.plaintext)
         key = bytearray(crypto_input.key)
 
