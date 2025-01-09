@@ -20,7 +20,6 @@ import numpy.typing as npt
 
 import chipwhisperer as cw
 from chipwhisperer.common.traces import Trace
-from chipwhisperer.common.utils import util as cw_util
 
 from scaaml.capture.capture_runner import AbstractCaptureRunner
 from scaaml.capture.crypto_input import AbstractCryptoInput
@@ -59,8 +58,8 @@ class CaptureRunner(AbstractCaptureRunner):
             plaintext.
         """
         # Convert to cw bytearray, which has nicer __str__ and __repr__.
-        plaintext = cw_util.bytearray(crypto_input.plaintext)
-        key = cw_util.bytearray(crypto_input.key)
+        plaintext = bytearray(crypto_input.plaintext)
+        key = bytearray(crypto_input.key)
 
         # Get the scope object.
         scope = self._scope.scope
