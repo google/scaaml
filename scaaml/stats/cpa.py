@@ -15,6 +15,7 @@
 """
 
 import math
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,14 +107,14 @@ class CPA:
             i: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] for _ in range(256)]
             for i in range(16)
         }
-        self.real_key: npt.NDArray[np.uint8] | None = None
+        self.real_key: Optional[npt.NDArray[np.uint8]] = None
         self.r: list[R] = [R() for _ in range(16)]
 
     def update(self,
                trace: npt.NDArray[np.float32],
                plaintext: npt.NDArray[np.uint8],
                ciphertext: npt.NDArray[np.uint8],
-               real_key: npt.NDArray[np.uint8] | None = None) -> None:
+               real_key: Optional[npt.NDArray[np.uint8]] = None) -> None:
         """Update with a new example.
 
         Args:
@@ -192,7 +193,7 @@ class CPA:
               f"{security = }")
         print(tabulate(statistics))
 
-    def plot_cpas(self,
+    def plot_cpa(self,
                   real_key: npt.NDArray[np.uint8],
                   plaintext: npt.NDArray[np.uint8],
                   experiment_name: str = "cpa.png",

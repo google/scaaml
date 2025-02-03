@@ -14,14 +14,11 @@
 """Attack points.
 """
 from abc import abstractmethod, ABC
-from collections import defaultdict
-from enum import Enum
-from typing import Union
 
 import numpy as np
 import numpy.typing as npt
 
-from scaaml.stats.attack_points.aes_128.full_aes import *
+from scaaml.stats.attack_points.aes_128.full_aes import key_schedule, SBOX, SBOX_INV
 from scaaml.aes_forward import AESSBOX
 
 
@@ -168,7 +165,7 @@ class LastRoundStateDiff(AttackPointAES128):
     def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
                                 plaintext: npt.NDArray[np.uint8],
                                 byte_index: int) -> int:
-        INVSHIFT_undo = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11]
+        invshift_undo = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11]
         ciphertext = AESSBOX.ciphertext(
             key=bytearray(key),
             plaintext=bytearray(plaintext),
@@ -178,7 +175,7 @@ class LastRoundStateDiff(AttackPointAES128):
         correct_k = last_key_schedule[-4:].reshape(-1)
         guess = correct_k[byte_index]
 
-        st10 = ciphertext[INVSHIFT_undo[byte_index]]
+        st10 = ciphertext[invshift_undo[byte_index]]
         st9 = SBOX_INV[ciphertext[byte_index] ^ guess]
         byte_value = st9 ^ st10
 
@@ -190,9 +187,9 @@ class LastRoundStateDiff(AttackPointAES128):
                            byte_index: int) -> int:
         assert 0 <= guess < 256
 
-        INVSHIFT_undo = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11]
+        invshift_undo = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11]
 
-        st10 = ciphertext[INVSHIFT_undo[byte_index]]
+        st10 = ciphertext[invshift_undo[byte_index]]
         st9 = SBOX_INV[ciphertext[byte_index] ^ guess]
         byte_value = st9 ^ st10
 

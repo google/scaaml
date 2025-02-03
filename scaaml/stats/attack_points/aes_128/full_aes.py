@@ -14,7 +14,6 @@
 """Full AES128 implementation.
 """
 
-import math
 from typing_extensions import TypeAlias  # from typing since 3.10
 
 import numpy as np
@@ -139,8 +138,8 @@ def get_words(key: npt.NDArray[np.uint8]) -> AESStateT:
 def key_schedule(key: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     """Return the columns of key schedule.
     """
-    N = 4
-    R = 11
+    n = 4
+    r = 11
     rcon_0 = np.array([
         [0x01, 0, 0, 0],
         [0x02, 0, 0, 0],
@@ -155,25 +154,25 @@ def key_schedule(key: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     ],
                       dtype=np.uint8)
     key_words = get_words(key)
-    W = np.zeros((44, 4), dtype=np.uint8)
+    w = np.zeros((44, 4), dtype=np.uint8)
 
-    for i in range(4 * R):
-        if i < N:
-            W[i] = key_words[i]
-        elif i % N == 0:
-            W[i] = W[i - N] ^ sub_word(rot_word(
-                W[i - 1])) ^ rcon_0[(i // N) - 1]
+    for i in range(4 * r):
+        if i < n:
+            w[i] = key_words[i]
+        elif i % n == 0:
+            w[i] = w[i - n] ^ sub_word(rot_word(
+                w[i - 1])) ^ rcon_0[(i // n) - 1]
         else:
-            W[i] = W[i - N] ^ W[i - 1]
+            w[i] = w[i - n] ^ w[i - 1]
 
-    return W
+    return w
 
 
 def key_schedule_inv(last_key: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     """Return the columns of key schedule given the last round key.
     """
-    N = 4
-    R = 11
+    n = 4
+    r = 11
     rcon_0 = np.array([
         [0x01, 0, 0, 0],
         [0x02, 0, 0, 0],
@@ -188,16 +187,16 @@ def key_schedule_inv(last_key: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     ],
                       dtype=np.uint8)
     key_words = get_words(last_key)
-    W = np.zeros((44, 4), dtype=np.uint8)
-    W[-4:] = key_words
+    w = np.zeros((44, 4), dtype=np.uint8)
+    w[-4:] = key_words
 
-    for i in reversed(range(4 * R - N)):
-        if i % N == 0:
-            W[i] = W[i + N] ^ sub_word(rot_word(W[i + N - 1])) ^ rcon_0[i // N]
+    for i in reversed(range(4 * r - n)):
+        if i % n == 0:
+            w[i] = w[i + n] ^ sub_word(rot_word(w[i + n - 1])) ^ rcon_0[i // n]
         else:
-            W[i] = W[i + N] ^ W[i + N - 1]
+            w[i] = w[i + n] ^ w[i + n - 1]
 
-    return W
+    return w
 
 
 def add_round_key(state: AESStateT, scheduled: AESStateT) -> AESStateT:
