@@ -14,5 +14,3 @@
 """Attack points.
 """
 from scaaml.stats.attack_points import aes_128
-
-__all__ = []

@@ -20,6 +20,7 @@ APCounter counts how many times does each value of an attack point occur.
 """
 from scaaml.stats.ap_checker import APChecker
 from scaaml.stats.ap_counter import APCounter
+from scaaml.stats.cpa import CPA
 from scaaml.stats.example_iterator import ExampleIterator
 from scaaml.stats.print_stats import PrintStats
 from scaaml.stats.trace_stddev_of_stat import STDDEVofAVGofTraces
@@ -28,7 +29,13 @@ from scaaml.stats.trace_stddev_of_stat import STDDEVofMINofTraces
 from scaaml.stats.trace_stddev_of_stat import STDDEVofSTATofTraces
 
 __all__ = [
-    "APChecker", "APCounter", "ExampleIterator", "PrintStats",
-    "STDDEVofAVGofTraces", "STDDEVofMAXofTraces", "STDDEVofMINofTraces",
-    "STDDEVofSTATofTraces"
+    "APChecker",
+    "APCounter",
+    "CPA",
+    "ExampleIterator",
+    "PrintStats",
+    "STDDEVofAVGofTraces",
+    "STDDEVofMAXofTraces",
+    "STDDEVofMINofTraces",
+    "STDDEVofSTATofTraces",
 ]

@@ -15,12 +15,14 @@
 """
 
 import math
-from typing import Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from tabulate import tabulate
+
+from scaaml.stats.attack_points.aes import LeakageModelAES128
 
 
 class R:
@@ -41,7 +43,7 @@ class R:
         self.sum_tt: npt.NDArray[np.float64]
 
     def update(self, trace: npt.NDArray[np.float64],
-               hypothesis: list[int]) -> None:
+               hypothesis: npt.NDArray[np.int32]) -> None:
         """Update with another trace.
 
         Args:
@@ -51,7 +53,7 @@ class R:
           hypothesis (list[int]): Hypothetical leakage for each possible secret
           value.
         """
-        trace = np.array(trace)
+        trace = np.array(trace, dtype=np.float64)
         hypothesis = np.array(hypothesis)
         assert len(trace.shape) == 1
         assert len(hypothesis.shape) == 1
@@ -74,7 +76,7 @@ class R:
         self.sum_hh += hypothesis**2
         self.sum_tt += trace**2
 
-    def guess(self):
+    def guess(self) -> npt.NDArray[np.float64]:
         """Return how much each possible guess value corresponds to the
         observed values.
         """
@@ -87,7 +89,7 @@ class R:
         den_b = (self.sum_t**2) - (self.d * self.sum_tt)  # j
 
         r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
-        return np.abs(r)
+        return np.array(np.abs(r), dtype=np.float64)
 
 
 class CPA:
@@ -98,10 +100,12 @@ class CPA:
     good idea to use one of the well established implementations.
     """
 
-    def __init__(self, get_model) -> None:
-        self.models = [
-            get_model(byte_index=byte_index) for byte_index in range(16)
-        ]
+    def __init__(  # type: ignore[no-any-unimported]
+            self, get_model: Callable[[int], LeakageModelAES128]) -> None:
+        self.models: list[  # type: ignore[no-any-unimported]
+            LeakageModelAES128] = [
+                get_model(byte_index) for byte_index in range(16)
+            ]
         self.result: dict[int, list[list[float]]] = {
             # So that combined traces index from 1
             i: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] for _ in range(256)]
@@ -135,7 +139,7 @@ class CPA:
             assert all(self.real_key == real_key)
 
         for byte in range(16):
-            hypothesis = [
+            hypothesis: list[int] = [
                 self.models[byte].leakage_from_guess(
                     plaintext=plaintext,
                     ciphertext=ciphertext,
@@ -143,8 +147,8 @@ class CPA:
                 ) for i in range(self.models[byte].different_target_secrets)
             ]
             self.r[byte].update(
-                trace=trace,
-                hypothesis=hypothesis,
+                trace=trace.astype(np.float64),
+                hypothesis=np.array(hypothesis, dtype=np.int32),
             )
 
             res = self.r[byte].guess()
@@ -168,7 +172,7 @@ class CPA:
 
           plaintext (npt.NDArray[np.uint8]): The input of AES.
         """
-        statistics = [["byte"], ["real"], ["guessed"], ["rank"]]
+        statistics: list[list[int]] = [[], [], [], []]
         iteration = len(next(iter(self.result.values()))[0])
         for byte in range(16):
             target_value = self.models[byte].target_secret(
@@ -179,7 +183,7 @@ class CPA:
             statistics[1].append(target_value)
             res = np.max(self.r[byte].guess(), axis=1)
             assert res.shape == (self.models[byte].different_target_secrets,)
-            statistics[2].append(np.argmax(res))
+            statistics[2].append(int(np.argmax(res)))
             # Compute rank
             statistics[3].append(int(np.sum(res >= res[target_value])))
 
@@ -191,13 +195,13 @@ class CPA:
         security = math.log2(math.prod(current_ranks))
         print(f"Traces: {iteration + 1} mean_rank {np.mean(current_ranks)} "
               f"{security = }")
-        print(tabulate(statistics))
+        print(tabulate(statistics, headers=["byte", "real", "guessed", "rank"]))
 
     def plot_cpa(self,
-                  real_key: npt.NDArray[np.uint8],
-                  plaintext: npt.NDArray[np.uint8],
-                  experiment_name: str = "cpa.png",
-                  logscale: bool = True) -> None:
+                 real_key: npt.NDArray[np.uint8],
+                 plaintext: npt.NDArray[np.uint8],
+                 experiment_name: str = "cpa.png",
+                 logscale: bool = True) -> None:
         """Plot how does the real secret value change position among
         predictions when adding more examples.
 

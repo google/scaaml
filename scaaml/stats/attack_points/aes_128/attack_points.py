@@ -94,19 +94,19 @@ class Plaintext(AttackPointAES128):
     def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
                                 plaintext: npt.NDArray[np.uint8],
                                 byte_index: int) -> int:
-        return plaintext[byte_index]
+        return int(plaintext[byte_index])
 
     @staticmethod
     def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
-        return guess
+        return int(guess)
 
     @staticmethod
     def target_secret(key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
-        return plaintext[byte_index]
+        return int(plaintext[byte_index])
 
 
 class SubBytesIn(AttackPointAES128):
@@ -117,19 +117,19 @@ class SubBytesIn(AttackPointAES128):
     def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
                                 plaintext: npt.NDArray[np.uint8],
                                 byte_index: int) -> int:
-        return key[byte_index] ^ plaintext[byte_index]
+        return int(key[byte_index] ^ plaintext[byte_index])
 
     @staticmethod
     def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
-        return guess ^ plaintext[byte_index]
+        return int(guess ^ plaintext[byte_index])
 
     @staticmethod
     def target_secret(key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
-        return key[byte_index]
+        return int(key[byte_index])
 
 
 class SubBytesOut(AttackPointAES128):
@@ -140,19 +140,19 @@ class SubBytesOut(AttackPointAES128):
     def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
                                 plaintext: npt.NDArray[np.uint8],
                                 byte_index: int) -> int:
-        return SBOX[key[byte_index] ^ plaintext[byte_index]]
+        return int(SBOX[key[byte_index] ^ plaintext[byte_index]])
 
     @staticmethod
     def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
-        return SBOX[guess ^ plaintext[byte_index]]
+        return int(SBOX[guess ^ plaintext[byte_index]])
 
     @staticmethod
     def target_secret(key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
-        return key[byte_index]
+        return int(key[byte_index])
 
 
 class LastRoundStateDiff(AttackPointAES128):
@@ -179,7 +179,7 @@ class LastRoundStateDiff(AttackPointAES128):
         st9 = SBOX_INV[ciphertext[byte_index] ^ guess]
         byte_value = st9 ^ st10
 
-        return byte_value
+        return int(byte_value)
 
     @staticmethod
     def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
@@ -193,7 +193,7 @@ class LastRoundStateDiff(AttackPointAES128):
         st9 = SBOX_INV[ciphertext[byte_index] ^ guess]
         byte_value = st9 ^ st10
 
-        return byte_value
+        return int(byte_value)
 
     @staticmethod
     def target_secret(key: npt.NDArray[np.uint8],
@@ -202,7 +202,7 @@ class LastRoundStateDiff(AttackPointAES128):
         correct_k = last_key_schedule[-4:].reshape(-1)
         guess = correct_k[byte_index]
 
-        return guess
+        return int(guess)
 
 
 class LeakageModelAES128:
