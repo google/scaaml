@@ -22,7 +22,7 @@ import numpy as np
 import numpy.typing as npt
 from tabulate import tabulate
 
-from scaaml.stats.attack_points.aes import LeakageModelAES128
+from scaaml.stats.attack_points.aes_128 import LeakageModelAES128
 
 
 class R:
@@ -100,12 +100,10 @@ class CPA:
     good idea to use one of the well established implementations.
     """
 
-    def __init__(  # type: ignore[no-any-unimported]
-            self, get_model: Callable[[int], LeakageModelAES128]) -> None:
-        self.models: list[  # type: ignore[no-any-unimported]
-            LeakageModelAES128] = [
-                get_model(byte_index) for byte_index in range(16)
-            ]
+    def __init__(self, get_model: Callable[[int], LeakageModelAES128]) -> None:
+        self.models: list[LeakageModelAES128] = [
+            get_model(byte_index) for byte_index in range(16)
+        ]
         self.result: dict[int, list[list[float]]] = {
             # So that combined traces index from 1
             i: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] for _ in range(256)]
