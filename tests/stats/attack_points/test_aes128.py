@@ -126,3 +126,56 @@ def test_target_secret_docstring_promise(cls):
             byte_index=byte_index,
         )
         assert a == b
+
+        # Always targetting a byte.
+        assert cls.different_target_secrets() == 256
+
+
+@pytest.mark.parametrize("ap_cls", AttackPointAES128.__subclasses__())
+def test_leakage_model_id(ap_cls):
+    leakage_model = LeakageModelAES128(
+        byte_index=0,
+        attack_point=ap_cls(),
+        use_hamming_weight=False,
+    )
+
+    assert leakage_model.different_target_secrets == 256
+    assert leakage_model.different_leakage_values == 256
+
+
+@pytest.mark.parametrize("ap_cls", AttackPointAES128.__subclasses__())
+def test_leakage_model_hw(ap_cls):
+    byte_index: int = 0
+    leakage_model = LeakageModelAES128(
+        byte_index=byte_index,
+        attack_point=ap_cls(),
+        use_hamming_weight=True,
+    )
+
+    assert leakage_model.different_target_secrets == 256
+    assert leakage_model.different_leakage_values == 9
+
+    plaintext = np.array(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], dtype=np.uint8)
+    key = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                   dtype=np.uint8)
+
+    assert leakage_model.leakage_knowing_secrets(
+        plaintext=plaintext,
+        key=key,
+    ) in range(leakage_model.different_leakage_values)
+    assert leakage_model.leakage_from_guess(
+        plaintext=plaintext,
+        ciphertext=encrypt(plaintext=plaintext, key=key),
+        guess=0,
+    ) in range(leakage_model.different_leakage_values)
+
+    target = leakage_model.target_secret(plaintext=plaintext, key=key)
+    assert leakage_model.leakage_knowing_secrets(
+        plaintext=plaintext,
+        key=key,
+    ) == leakage_model.leakage_from_guess(
+        plaintext=plaintext,
+        ciphertext=encrypt(plaintext=plaintext, key=key),
+        guess=target,
+    )

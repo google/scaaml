@@ -14,6 +14,7 @@
 """Attack points.
 """
 from abc import abstractmethod, ABC
+import math
 
 import numpy as np
 import numpy.typing as npt
@@ -78,8 +79,8 @@ class AttackPointAES128(ABC):
         ```
         """
 
-    @property
-    def different_target_secrets(self) -> int:
+    @staticmethod
+    def different_target_secrets() -> int:
         """How many different secret possibilities there are to guess. Since we
         are targetting a byte value the result is 256.
         """
@@ -234,7 +235,7 @@ class LeakageModelAES128:
     def different_target_secrets(self) -> int:
         """How many different values does the secret attain.
         """
-        return self._attack_point.different_target_secrets
+        return self._attack_point.different_target_secrets()
 
     @property
     def different_leakage_values(self) -> int:
@@ -242,10 +243,11 @@ class LeakageModelAES128:
         """
         if self._use_hamming_weight:
             # 0, 1, 2, ..., 8 bits can be set in a byte.
-            return 9
+            return int(1 +
+                       math.log2(self._attack_point.different_target_secrets()))
         else:
             # Full byte.
-            return 256
+            return self._attack_point.different_target_secrets()
 
     @staticmethod
     def _safe_cast(value: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:

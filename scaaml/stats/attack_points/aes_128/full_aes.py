@@ -322,7 +322,7 @@ def encrypt(key: npt.NDArray[np.uint8],
     round_keys = key_schedule(key)
     assert round_keys.dtype == np.uint8
     assert round_keys.shape == (44, 4)
-    state = plaintext.copy().reshape((4, 4), order="F")
+    state = np.array(plaintext.copy().reshape((4, 4), order="F"))
 
     state = add_round_key(state, round_keys[:4])
 
@@ -342,16 +342,24 @@ def encrypt(key: npt.NDArray[np.uint8],
     return state.reshape(16, order="F")
 
 
+def _my_flatten(state: npt.NDArray[np.uint8]) -> list[int]:
+    """Reimplement flatten to ensure mypy is not confused.
+    """
+    return [int(s) for s in state.reshape(16, order="F")]
+
+
 def encrypt_with_states(
         key: npt.NDArray[np.uint8],
         plaintext: npt.NDArray[np.uint8]) -> dict[str, npt.NDArray[np.uint8]]:
     """Run AES128 on 16 byte plaintext and return all intermediate states.
     """
-    intermediates = {
+    intermediates: dict[str, list[int]] = {
         "state": [],
         "key_schedule": [],
-        "key": key.tolist(),
-        "plaintext": plaintext.tolist(),
+        # Be explicit since mypy is confused by tolist which can return a
+        # scalar.
+        "key": [int(k) for k in key],
+        "plaintext": [int(p) for p in plaintext],
     }
 
     round_keys = key_schedule(key)
@@ -361,38 +369,38 @@ def encrypt_with_states(
     for r in round_keys:
         intermediates["key_schedule"].extend(r.tolist())
 
-    state = plaintext.copy().reshape((4, 4), order="F")
-    intermediates["state"].extend(state.reshape(16, order="F").tolist())  # 0
+    state = np.array(plaintext.copy().reshape((4, 4), order="F"))
+    intermediates["state"].extend(_my_flatten(state))  # 0
 
     state = add_round_key(state, round_keys[:4])
-    intermediates["state"].extend(state.reshape(16, order="F").tolist())  # 1
+    intermediates["state"].extend(_my_flatten(state))  # 1
 
     for i in range(1, 10):
         state = sub_bytes(state)
-        intermediates["state"].extend(state.reshape(
-            16, order="F").tolist())  # 2, 6, 10, 14, 18, 22, 26, 30, 34
+        intermediates["state"].extend(
+            _my_flatten(state))  # 2, 6, 10, 14, 18, 22, 26, 30, 34
         state = shift_rows(state)
-        intermediates["state"].extend(state.reshape(
-            16, order="F").tolist())  # 3, 7, 11, 15, 19, 23, 27, 31, 35
+        intermediates["state"].extend(
+            _my_flatten(state))  # 3, 7, 11, 15, 19, 23, 27, 31, 35
         state = mix_columns(state)
-        intermediates["state"].extend(state.reshape(
-            16, order="F").tolist())  # 4, 8, 12, 16, 20, 24, 28, 32, 36
+        intermediates["state"].extend(
+            _my_flatten(state))  # 4, 8, 12, 16, 20, 24, 28, 32, 36
         state = add_round_key(
             state=state,
             scheduled=round_keys[4 * i:4 * (i + 1)],
         )
-        intermediates["state"].extend(state.reshape(
-            16, order="F").tolist())  # 5, 9, 13, 17, 21, 25, 29, 33, 37
+        intermediates["state"].extend(
+            _my_flatten(state))  # 5, 9, 13, 17, 21, 25, 29, 33, 37
 
     state = sub_bytes(state)
-    intermediates["state"].extend(state.reshape(16, order="F").tolist())  # 38
+    intermediates["state"].extend(_my_flatten(state))  # 38
     state = shift_rows(state)
-    intermediates["state"].extend(state.reshape(16, order="F").tolist())  # 39
+    intermediates["state"].extend(_my_flatten(state))  # 39
     state = add_round_key(state=state, scheduled=round_keys[-4:])
-    intermediates["state"].extend(state.reshape(16, order="F").tolist())  # 40
+    intermediates["state"].extend(_my_flatten(state))  # 40
 
     ciphertext = state.reshape(16, order="F")
-    intermediates["ciphertext"] = ciphertext
+    intermediates["ciphertext"] = ciphertext.tolist()
 
     return {k: np.array(v, dtype=np.uint8) for k, v in intermediates.items()}
 
@@ -404,7 +412,7 @@ def decrypt(key: npt.NDArray[np.uint8],
     round_keys = key_schedule(key)
     assert round_keys.dtype == np.uint8
     assert round_keys.shape == (44, 4)
-    state = ciphertext.copy().reshape((4, 4), order="F")
+    state = np.array(ciphertext.copy().reshape((4, 4), order="F"))
 
     state = add_round_key(state=state, scheduled=round_keys[-4:])
     state = shift_rows_inv(state)
