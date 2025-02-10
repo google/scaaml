@@ -39,7 +39,7 @@ create_resume_kti(
   An error could happen while saving the file.
   We thus restart at the lowest multiple of `shard_length` to ensure that data have been saved.
   One can set `shard_length=1` so that we do not repeat successful captures.
-- Note that it is not necessary for the `keys` and `plaintexts` to have the same lenght.
+- Note that it is not necessary for the `keys` and `plaintexts` to have the same length.
   The only condition we require is that there is the same number of those.
   That is we need to `assert keys.shape[0] == plaintexts.shape[0]`.
 - If we wanted to save more values in `parameters` we could.
@@ -50,7 +50,7 @@ create_resume_kti(
 ```python
 from scaaml.io.resume_kti import ResumeKTI
 
-# Load the savepoint (all the tuples + the index where to continue) at the
+# Load the save point (all the tuples + the index where to continue) at the
 # start or resume of the experiment.
 resume_kti = ResumeKTI(
   kt_filename="parameters_tuples.txt",

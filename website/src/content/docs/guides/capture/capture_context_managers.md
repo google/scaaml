@@ -8,7 +8,7 @@ Python context-managers (see a [tutorial on context-managers](https://book.pytho
 
 # Automation Scripts
 
-When using a JupyterLab notebook we can allways ensure `scope.dis()` is called.
+When using a JupyterLab notebook we can always ensure `scope.dis()` is called.
 However when a Python script crashes we no longer hold the `scope` variable and resuming capture is much more complicated.
 We could wrap everything by `try-finally` blocks.
 One of the advantages of using context managers is they prevent us from forgetting to add the `finally` block.

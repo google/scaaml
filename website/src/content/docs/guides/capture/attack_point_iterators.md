@@ -10,7 +10,7 @@ If the classes were balanced (roughly 50% of cat and roughly 50% of dog images) 
 
 During profiling attacks we have a full control over the algorithm inputs.
 SCAAML provides support for generators inspired by [latin squares](https://en.wikipedia.org/wiki/Latin_square).
-In combinatorics a latin square is an `n` by `n` array filled with `n` different symbols, each occuring exactly once in each column and exactly once in each row.
+In combinatorics a latin square is an `n` by `n` array filled with `n` different symbols, each occurring exactly once in each column and exactly once in each row.
 An example of a latin square where `n = 3` is the following:
 $$
 \begin{matrix}
@@ -23,7 +23,7 @@ $$
 In the case of AES128 we work with states of 16 bytes.
 Let us imagine that we want to generate balanced plaintexts.
 Each byte of a plaintext can have 256 different values.
-Our goal is genrating 256 different plaintexts such that each plaintext has uniformly and independently selected byte values.
+Our goal is generating 256 different plaintexts such that each plaintext has uniformly and independently selected byte values.
 That is for each plaintext we have:
 - Each byte value is chosen uniformly at random (probability that is has value `x` is always 1/256).
 - A single byte value is [independent](https://en.wikipedia.org/wiki/Independence_(probability_theory)) of other byte values.
