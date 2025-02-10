@@ -26,4 +26,4 @@ Usage:
 
   semver.compare is used to compare two versions of the SCAAML library.
 """
-__version__ = "3.0.2"
+__version__ = "3.0.3"
