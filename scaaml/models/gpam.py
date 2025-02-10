@@ -315,7 +315,8 @@ def _make_head(  # type: ignore[no-any-unimported]
 
       x (Tensor): Stem of the neural network.
 
-      heads (dict[str, keras.layers.Layer]): List of previous heads.
+      heads (dict[str, keras.layers.Layer]): A dictionary of previous heads
+      (those that are sooner in the topologically sorted outputs).
 
       name (str): Name of this output.
 
@@ -358,16 +359,16 @@ def get_dag(
 ) -> Any:
     """Return graph of output relation dependencies.
 
-    Both outputs and output_relations are needed to have even the outputs which
-    are not a part of any relation.
+    Both `outputs` and `output_relations` are needed to have even the outputs
+    which are not a part of any relation.
 
     Args:
       outputs (dict[str, dict]): Description of outputs as returned by
         scaaml.io.Dataset.as_tfdataset.
       output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
         attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
+        second one. When `(ap_1, ap_2)` is present the interpretation is that
+        `ap_2` depends on the value of `ap_1`.
 
     Returns: A networkx.DiGraph representation of relations.
     """
@@ -416,7 +417,7 @@ def create_heads_outputs(  # type: ignore[no-any-unimported]
     outputs: dict[str, dict[str, int]],
     output_relations: list[tuple[str, str]],
 ) -> dict[str, keras.layers.Layer]:
-    """Make a list of all heads.
+    """Make a mapping of all heads (name to Layer).
 
     Args:
 
@@ -430,7 +431,7 @@ def create_heads_outputs(  # type: ignore[no-any-unimported]
       second one. When (ap_1, ap_2) is present the interpretation is that ap_2
       depends on the value of ap_1.
 
-    Returns: A list of all head outputs.
+    Returns: A mapping of all head outputs (name to Layer).
     """
     # Create relations represented by lists of ingoing edges (attack points:
     # list of all attack points it depends on).
@@ -458,7 +459,7 @@ def create_heads_outputs(  # type: ignore[no-any-unimported]
         head = _make_head(x, heads, name, relations, dim)
         heads[name] = head
 
-    # Return all head outputs in a list.
+    # Return all head outputs in a dict.
     heads_outputs = {name: heads[name] for name in outputs.keys()}
     return heads_outputs
 
@@ -513,6 +514,8 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
     ```
     """
     # Constants:
+    if trace_len % patch_size:
+        raise ValueError(f"{trace_len = } is not divisible by {patch_size = }")
     steps: int = trace_len // patch_size
     combine_kernel_size: int = 3
     activation: str = "swish"
