@@ -2,6 +2,8 @@
 
 ![SCAAML banner](https://storage.googleapis.com/scaaml-public/visuals/scaaml-banner.png)
 
+[Documentation](https://google.github.io/scaaml/)
+
 SCAAML (Side Channel Attacks Assisted with Machine Learning) is a deep learning
 framework dedicated to side-channel attacks. It is written in python and run on
 top of TensorFlow 2.x.

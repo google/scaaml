@@ -117,6 +117,9 @@ an update, open an issue or just send us an email.
 @article{bursztein2023generic,
   title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
   author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
-  journal={arXiv preprint arXiv:2306.07249},
-  year={2023}
+  journal={IACR Transactions on Cryptographic Hardware and Embedded Systems},
+  volume={2024},
+  number={3},
+  pages={472--499},
+  year={2024}
 }
