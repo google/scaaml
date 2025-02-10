@@ -1,0 +1,6 @@
+/* Starlight styles all images in Markdown with `display: block` forcing
+ * MathJax's inline SVG on new lines. Fix by:
+ */
+mjx-container svg {
+  display: inline !important;
+}

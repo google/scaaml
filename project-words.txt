@@ -19,6 +19,7 @@ GPIO
 GRIDAREAONLY
 Gaëtan
 HWAES
+IACR
 Invernizzi
 Junwei
 Karel
@@ -42,6 +43,7 @@ SBREV
 Spyder
 Standaert
 Strullu
+TCHES
 TCP
 TCPIP
 TMPL
@@ -90,6 +92,7 @@ dtypes
 encryptor
 eprint
 evenodd
+explainability
 figsize
 firstrow
 frombuffer
@@ -108,8 +111,10 @@ keras
 kidx
 kidxs
 lecroy
+libps
 logit
 logits
+mathjax
 matplotlib
 maxsplit
 maxtraces
@@ -179,6 +184,8 @@ toeplitz
 tqdm
 trigtime
 tsconfigs
+udevadm
+usbutils
 vals
 vispy
 vsintellicode
