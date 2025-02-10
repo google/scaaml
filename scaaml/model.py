@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A model utilities as a part of the
-[DEF CON 27](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/) presentation.
-See `scaaml_intro/` for that code. See `scaaml/models` for more modern code.
+"""A model utilities as a part of the [DEF CON
+27](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/)
+presentation.  See `scaaml_intro/` for that code. See `scaaml/models` for more
+modern code.
 """
 
 from collections import defaultdict

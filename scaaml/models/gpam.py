@@ -17,24 +17,22 @@ version see /papers/2024/GPAM/gpam_ecc_cm1.py.
 GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
 
 @article{bursztein2023generic,
-  title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
-  author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+  title={Generalized Power Attacks against Crypto Hardware using Long-Range
+  Deep Learning},
+  author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi,
+  Daniel and Picod, Jean-Michel and Zhang, Marina},
   journal={arXiv preprint arXiv:2306.07249},
   year={2023}
 }
 """
 
-import argparse
 from collections import defaultdict
-import math
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import networkx as nx
-import numpy as np
 import tensorflow as tf
 import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import Model
 from tensorflow import Tensor
 
 
@@ -114,6 +112,7 @@ class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
     """
 
     def __init__(self,
+                 *,  # key-word only arguments
                  dim: int,
                  max_len: int = 128,
                  shared_dim: int = 128,
@@ -188,16 +187,16 @@ class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
             self.attention_activation)
 
         # setting up position encoding
-        self.a = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.a = tf.Variable(lambda: self.weight_initializer(
             shape=[self.max_len], dtype=tf.float32))
-        self.b = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.b = tf.Variable(lambda: self.weight_initializer(
             shape=[self.max_len], dtype=tf.float32))
 
         # offset scaling values
-        self.gamma = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.gamma = tf.Variable(lambda: self.weight_initializer(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
-        self.beta = tf.Variable(lambda: self.ZEROS_INITIALIZER(
+        self.beta = tf.Variable(lambda: self.zeros_initializer(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
     def call(self, x: Any, training: bool = False) -> Any:
@@ -256,11 +255,11 @@ class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
         return config  # type: ignore[no-any-return]
 
     @property
-    def WEIGHT_INITIALIZER(self) -> Any:
+    def weight_initializer(self) -> Any:
         return clone_initializer(tf.random_normal_initializer(stddev=0.02))
 
     @property
-    def ZEROS_INITIALIZER(self) -> Any:
+    def zeros_initializer(self) -> Any:
         return clone_initializer(tf.initializers.zeros())
 
 
@@ -342,7 +341,6 @@ def _make_head(  # type: ignore[no-any-unimported]
     head = layers.Dropout(dense_dropout, name=f"{name}_dropout")(head)
 
     # Dense block
-    block_name = f"{name}_dense_1"
     head = layers.Dense(dim)(head)
     head = layers.Dropout(dense_dropout)(head)
     head = layers.Activation(activation)(head)
@@ -463,6 +461,7 @@ def create_heads_outputs(  # type: ignore[no-any-unimported]
 
 
 def get_gpam_model(  # type: ignore[no-any-unimported]
+    *,  # key-word only arguments
     inputs: dict[str, dict[str, float]],
     outputs: dict[str, dict[str, int]],
     output_relations: list[tuple[str, str]],
@@ -501,8 +500,10 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
 
     ```
     @article{bursztein2023generic,
-      title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
-      author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+      title={Generalized Power Attacks against Crypto Hardware using Long-Range
+      Deep Learning},
+      author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and
+      Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
       journal={arXiv preprint arXiv:2306.07249},
       year={2023}
     }
@@ -516,8 +517,8 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
     filters: int = 192
 
     # Input
-    input = layers.Input(shape=(trace_len,), name="trace1")
-    x = input
+    model_input = layers.Input(shape=(trace_len,), name="trace1")
+    x = model_input
 
     # Reshape the trace.
     x = layers.Reshape((steps, patch_size))(x)
@@ -578,5 +579,5 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
         output_relations=output_relations,
     )
 
-    model = keras.models.Model(input, heads_outputs)
+    model = keras.models.Model(model_input, heads_outputs)
     return model

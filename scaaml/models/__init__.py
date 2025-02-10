@@ -19,7 +19,7 @@ reasonably up to date. For the original model (archived) see papers/2024/GPAM/
 For the [DEF CON
 27](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks/)
 presentation see scaaml_intro/ for historical code.
-"""
+"""  # pylint: disable=line-too-long
 
 from scaaml.models.gpam import get_gpam_model
 
