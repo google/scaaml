@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
+
+"""This is the GPAM model version which can be imported. For the archived
+version see /papers/2024/GPAM/gpam_ecc_cm1.py.
+
+GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
 
 @article{bursztein2023generic,
   title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
@@ -19,14 +23,6 @@
   journal={arXiv preprint arXiv:2306.07249},
   year={2023}
 }
-
-Hyperparameters are identified by a comment # hyperparameter
-
-We found that CosineDecayWithWarmupSchedule is not necessary and one can use
-Adafactor instead to get the same results with much fewer parameters to set.
-
-This is the archived version. For an importable version use:
-```from scaaml.models import get_gpam_model```
 """
 
 import argparse
@@ -34,8 +30,6 @@ from collections import defaultdict
 import math
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-# Doing topological sort on the relational outputs. One can do it by hand if
-# they don't wish to install this package.
 import networkx as nx
 import numpy as np
 import tensorflow as tf
@@ -43,9 +37,6 @@ import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow import Tensor
-
-from scaaml.io import Dataset
-from scaaml.metrics.custom import MeanRank
 
 
 def clone_initializer(initializer: tf.keras.initializers.Initializer):
@@ -83,18 +74,18 @@ def rope(x: Tensor, axis: Union[List[int], int]) -> Tensor:
         position = tf.reshape(
             tf.cast(tf.range(total_len, delta=1.0), tf.float32), spatial_shape)
     else:
-        raise ValueError(f'Unsupported shape: {shape}')
+        raise ValueError(f"Unsupported shape: {shape}")
 
     # we assume that the axis can not be negative (e.g., -1)
     if any(dim < 0 for dim in axis):
-        raise ValueError(f'Unsupported axis: {axis}')
+        raise ValueError(f"Unsupported axis: {axis}")
     for i in range(axis[-1] + 1, len(shape) - 1, 1):
         position = tf.expand_dims(position, axis=-1)
 
     half_size = shape[-1] // 2
     freq_seq = tf.cast(tf.range(half_size), tf.float32) / float(half_size)
     inv_freq = 10000**-freq_seq
-    sinusoid = tf.einsum('...,d->...d', position, inv_freq)
+    sinusoid = tf.einsum("...,d->...d", position, inv_freq)
     sin = tf.cast(tf.sin(sinusoid), dtype=x.dtype)
     cos = tf.cast(tf.cos(sinusoid), dtype=x.dtype)
     x1, x2 = tf.split(x, 2, axis=-1)
@@ -120,8 +111,8 @@ class GAU(layers.Layer):
                  max_len: int = 128,
                  shared_dim: int = 128,
                  expansion_factor: int = 2,
-                 activation: str = 'swish',
-                 attention_activation: str = 'sqrrelu',
+                 activation: str = "swish",
+                 attention_activation: str = "sqrrelu",
                  dropout_rate: float = 0.0,
                  attention_dropout_rate: float = 0.0,
                  spatial_dropout_rate: float = 0.0,
@@ -221,11 +212,11 @@ class GAU(layers.Layer):
             uv, [self.expand_dim, self.expand_dim, self.shared_dim], axis=-1)
 
         # generate q, k by scaled offset
-        base = tf.einsum('bnr,hr->bnhr', base, self.gamma) + self.beta
+        base = tf.einsum("bnr,hr->bnhr", base, self.gamma) + self.beta
         q, k = tf.unstack(base, axis=-2)
 
         # compute key-query scores
-        qk = tf.einsum('bnd,bmd->bnm', q, k)
+        qk = tf.einsum("bnd,bmd->bnm", q, k)
         qk = qk / self.max_len
 
         # add relative position bias for attention
@@ -238,7 +229,7 @@ class GAU(layers.Layer):
             kernel = self.attention_dropout(kernel)
 
         # apply values and project
-        x = u * tf.einsum('bnm,bme->bne', kernel, v)
+        x = u * tf.einsum("bnm,bme->bne", kernel, v)
 
         x = self.proj2(x)
         return x + shortcut
@@ -246,14 +237,14 @@ class GAU(layers.Layer):
     def get_config(self):
         config = super().get_config()
         config.update({
-            'dim': self.dim,
-            'max_len': self.max_len,
-            'shared_dim': self.shared_dim,
-            'expansion_factor': self.expansion_factor,
-            'activation': self.activation,
-            'attention_activation': self.attention_activation,
-            'dropout_rate': self.dropout_rate,
-            'spatial_dropout_rate': self.spatial_dropout_rate
+            "dim": self.dim,
+            "max_len": self.max_len,
+            "shared_dim": self.shared_dim,
+            "expansion_factor": self.expansion_factor,
+            "activation": self.activation,
+            "attention_activation": self.attention_activation,
+            "dropout_rate": self.dropout_rate,
+            "spatial_dropout_rate": self.spatial_dropout_rate
         })
         return config
 
@@ -267,6 +258,8 @@ class GAU(layers.Layer):
 
 
 class StopGradient(keras.layers.Layer):
+    """Stop gradient as a Keras layer.
+    """
 
     def __init__(self, stop_gradient: bool = False, **kwargs):
         """Stop gradient, or not, depending on the configuration.
@@ -324,7 +317,7 @@ def _make_head(x, heads, name, relations, dim):
     head = layers.Activation(activation)(head)
 
     # Prediction
-    return layers.Dense(dim, activation='softmax', name=name)(head)
+    return layers.Dense(dim, activation="softmax", name=name)(head)
 
 
 def get_dag(outputs: Dict[str, Dict],
@@ -416,7 +409,7 @@ def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
         relations = ingoing_relations.get(name, [])
 
         # Get parameters for head creation.
-        dim = outputs[name]['max_val'] if outputs[name]['max_val'] > 2 else 1
+        dim = outputs[name]["max_val"] if outputs[name]["max_val"] > 2 else 1
         head = _make_head(x, heads, name, relations, dim)
         heads[name] = head
 
@@ -425,9 +418,45 @@ def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
     return heads_outputs
 
 
-def get_model(inputs, outputs, output_relations, trace_len: int,
-              merge_filter_1: int, merge_filter_2: int, patch_size: int,
-              target_lr: float):
+def get_gpam_model(inputs, outputs, output_relations, trace_len: int,
+                   merge_filter_1: int, merge_filter_2: int, patch_size: int):
+    """Get a GPAM model instance.
+
+    Args:
+
+      inputs (dict[str, dict[str, float]]): The following dictionary:
+      {"trace1": {"min": MIN, "delta": MAX}} where `MIN` is the minimum value
+      across all traces and time and `MAX` is the maximum value.
+
+      outputs (dict[str, dict[str, int]]): A dictionary with output name and
+      "max_val" being the number of possible classes. Example:
+      `outputs={"sub_bytes_in_0": {"max_val": 256}}`.
+
+      output_relations (list[list[str]]): A list of related inputs. Each
+      relation is a list where the output of the first is fed to the second.
+      Must form a directed acyclic graph.
+
+      trace_len (int): The trace is assumed to be one-dimensional of length
+      `trace_len`. Must be divisible by `patch_size`.
+
+      merge_filter_1 (int): The number of filters in the first layer of
+      convolutions.
+
+      merge_filter_2 (int): The number of filters in the second layer of
+      convolutions.
+
+      patch_size (int): Cut the trace into patches of this length. Must divide
+      `trace_len`.
+
+    ```
+    @article{bursztein2023generic,
+      title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
+      author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+      journal={arXiv preprint arXiv:2306.07249},
+      year={2023}
+    }
+    ```
+    """
     # Constants:
     steps: int = trace_len // patch_size
     combine_kernel_size: int = 3
@@ -436,7 +465,7 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     filters: int = 192
 
     # Input
-    input = layers.Input(shape=(trace_len,), name='trace1')
+    input = layers.Input(shape=(trace_len,), name="trace1")
     x = input
 
     # Reshape the trace.
@@ -486,7 +515,7 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     x = layers.Dropout(0.1)(x)
 
     # flattening
-    x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
+    x = layers.GlobalAveragePooling1D(data_format="channels_first")(x)
 
     # Normalizing
     x = layers.BatchNormalization()(x)
@@ -499,110 +528,4 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     )
 
     model = Model(input, heads_outputs)
-
-    # Compile model
-    optimizer = keras.optimizers.Adafactor(target_lr)
-    model.compile(
-        optimizer,
-        loss=["categorical_crossentropy" for _ in range(len(outputs))],
-        metrics={name: ["acc", MeanRank()] for name in outputs},
-    )
     return model
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Train GPAM model for ECC CM1")
-    parser.add_argument(
-        "--dataset_path",
-        "-d",
-        help=
-        "Dataset path, download info: https://github.com/google/scaaml/tree/main/papers/2024/GPAM",
-        required=True)
-    args = parser.parse_args()
-
-    # Block of hyperparameters.
-    # Length of the trace. For technical reasons patch_size should divide trace_len.
-    batch_size: int = 64  # hyperparameter
-    steps_per_epoch: int = 200  # hyperparameter
-    epochs: int = 500  # hyperparameter
-    target_lr: float = 0.006  # hyperparameter
-    merge_filter_1: int = 16  # hyperparameter
-    merge_filter_2: int = 8  # hyperparameter
-    trace_len: int = 4_194_304  # hyperparameter
-    patch_size: int = 2_048  # hyperparameter
-
-    # Definition of outputs.
-    attack_points = [
-        {
-            "name": "k",
-            "index": 0,
-            "type": "byte"
-        },
-        {
-            "name": "km",
-            "index": 0,
-            "type": "byte"
-        },
-        {
-            "name": "r",
-            "index": 0,
-            "type": "byte"
-        },
-    ]
-    # Configuration driven definition of relational outputs, as described in
-    # Section 5.2.3 point 2.
-    output_relations = [
-        ["km_0", "k_0"],
-        ["r_0", "k_0"],
-    ]
-
-    traces = ["trace1"]
-    trace_start: int = 0
-    shuffle_size: int = 512
-    val_steps: int = 16
-
-    # loading dataset
-    train_ds, inputs, outputs = Dataset.as_tfdataset(
-        dataset_path=args.dataset_path,
-        split="train",
-        attack_points=attack_points,
-        traces=traces,
-        trace_start=trace_start,
-        trace_len=trace_len,
-        batch_size=batch_size,
-        shuffle=shuffle_size,
-    )
-    test_ds, _, _ = Dataset.as_tfdataset(
-        dataset_path=args.dataset_path,
-        split="test",
-        attack_points=attack_points,
-        traces=traces,
-        trace_start=trace_start,
-        trace_len=trace_len,
-        batch_size=batch_size,
-        shuffle=0,
-    )
-
-    model = get_model(
-        inputs=inputs,
-        outputs=outputs,
-        output_relations=output_relations,
-        trace_len=trace_len,
-        merge_filter_1=merge_filter_1,
-        merge_filter_2=merge_filter_2,
-        patch_size=patch_size,
-        target_lr=target_lr,
-    )
-
-    model.summary()
-
-    # Train the model.
-    history = model.fit(train_ds,
-                        steps_per_epoch=steps_per_epoch,
-                        epochs=epochs,
-                        validation_data=test_ds,
-                        validation_steps=val_steps)
-
-
-if __name__ == "__main__":
-    main()
