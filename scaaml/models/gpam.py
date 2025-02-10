@@ -36,8 +36,7 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
-def clone_initializer(
-    initializer: tf.keras.initializers.Initializer) -> Any:
+def clone_initializer(initializer: tf.keras.initializers.Initializer) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
     """
