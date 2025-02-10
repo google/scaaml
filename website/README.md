@@ -6,8 +6,8 @@ Website available at [google.github.io/scaaml](https://google.github.io/scaaml)
 
 Local development preparation:
 
-- Install requirements: `sudo apt-get install nodejs npm`
-- Install project: `cd website/ ; npm install`
+-   Install requirements: `sudo apt-get install nodejs npm`
+-   Install project: `cd website/ ; npm install`
 
 Run local server: `npm run dev`
 

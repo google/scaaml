@@ -3,17 +3,21 @@ title: Capture Context Managers
 description: Capture Context Managers
 ---
 
-After a crash of a capture campaign we might need to release resources (e.g., call `scope.dis()`).
-Python context-managers (see a [tutorial on context-managers](https://book.pythontips.com/en/latest/context_managers.html)) help us to ensure resources are always released even in the case of capture in a script running on remote computer.
+After a crash of a capture campaign we might need to release resources (e.g.,
+call `scope.dis()`).  Python context-managers (see a [tutorial on
+context-managers](https://book.pythontips.com/en/latest/context_managers.html))
+help us to ensure resources are always released even in the case of capture in
+a script running on remote computer.
 
-# Automation Scripts
+## Automation Scripts
 
 When using a JupyterLab notebook we can always ensure `scope.dis()` is called.
-However when a Python script crashes we no longer hold the `scope` variable and resuming capture is much more complicated.
-We could wrap everything by `try-finally` blocks.
-One of the advantages of using context managers is they prevent us from forgetting to add the `finally` block.
+However when a Python script crashes we no longer hold the `scope` variable and
+resuming capture is much more complicated.  We could wrap everything by
+`try-finally` blocks.  One of the advantages of using context managers is they
+prevent us from forgetting to add the `finally` block.
 
-## Try-Finally Solution
+### Try-Finally Solution
 
 ```python
 import time
@@ -47,6 +51,6 @@ if __name__ == "__main__":
     main()
 ```
 
-## Context-Managers Solution
+### Context-Managers Solution
 
 TODO
