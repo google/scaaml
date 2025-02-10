@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This is the GPAM model version which can be imported. For the archived
 version see /papers/2024/GPAM/gpam_ecc_cm1.py.
 
@@ -28,7 +27,7 @@ GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
 import argparse
 from collections import defaultdict
 import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import networkx as nx
 import numpy as np
@@ -39,7 +38,8 @@ from tensorflow.keras.models import Model
 from tensorflow import Tensor
 
 
-def clone_initializer(initializer: tf.keras.initializers.Initializer):
+def clone_initializer(  # type: ignore[no-any-unimported]
+    initializer: tf.keras.initializers.Initializer) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
     """
@@ -48,7 +48,10 @@ def clone_initializer(initializer: tf.keras.initializers.Initializer):
     return initializer
 
 
-def rope(x: Tensor, axis: Union[List[int], int]) -> Tensor:
+def rope(  # type: ignore[no-any-unimported]
+    x: Tensor,
+    axis: Union[list[int], int],
+) -> Tensor:
     """RoPE positional encoding.
 
       Implementation of the Rotary Position Embedding proposed in
@@ -92,14 +95,18 @@ def rope(x: Tensor, axis: Union[List[int], int]) -> Tensor:
     return tf.concat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], axis=-1)
 
 
-def toeplitz_matrix_rope(n: int, a: Tensor, b: Tensor) -> Tensor:
+def toeplitz_matrix_rope(  # type: ignore[no-any-unimported]
+        n: int,
+        a: Tensor,
+        b: Tensor,
+) -> Tensor:
     """Obtain Toeplitz matrix using rope."""
     a = rope(tf.tile(a[None, :], [n, 1]), axis=0)
     b = rope(tf.tile(b[None, :], [n, 1]), axis=0)
     return tf.einsum("mk,nk->mn", a, b)
 
 
-class GAU(layers.Layer):
+class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
 
@@ -116,7 +123,7 @@ class GAU(layers.Layer):
                  dropout_rate: float = 0.0,
                  attention_dropout_rate: float = 0.0,
                  spatial_dropout_rate: float = 0.0,
-                 **kwargs) -> None:
+                 **kwargs: Any) -> None:
         """
         Initialize a GAU layer.
 
@@ -193,7 +200,7 @@ class GAU(layers.Layer):
         self.beta = tf.Variable(lambda: self.ZEROS_INITIALIZER(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
-    def call(self, x, training=False):
+    def call(self, x: Any, training: bool = False) -> Any:
 
         shortcut = x
         x = self.norm(x)
@@ -234,7 +241,7 @@ class GAU(layers.Layer):
         x = self.proj2(x)
         return x + shortcut
 
-    def get_config(self):
+    def get_config(self) -> dict[str, Any]:
         config = super().get_config()
         config.update({
             "dim": self.dim,
@@ -246,22 +253,26 @@ class GAU(layers.Layer):
             "dropout_rate": self.dropout_rate,
             "spatial_dropout_rate": self.spatial_dropout_rate
         })
-        return config
+        return config  # type: ignore[no-any-return]
 
     @property
-    def WEIGHT_INITIALIZER(self):
+    def WEIGHT_INITIALIZER(self) -> Any:
         return clone_initializer(tf.random_normal_initializer(stddev=0.02))
 
     @property
-    def ZEROS_INITIALIZER(self):
+    def ZEROS_INITIALIZER(self) -> Any:
         return clone_initializer(tf.initializers.zeros())
 
 
-class StopGradient(keras.layers.Layer):
+class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
     """Stop gradient as a Keras layer.
     """
 
-    def __init__(self, stop_gradient: bool = False, **kwargs):
+    def __init__(
+        self,
+        stop_gradient: bool = False,
+        **kwargs: Any,
+    ) -> None:
         """Stop gradient, or not, depending on the configuration.
 
         Args:
@@ -274,23 +285,43 @@ class StopGradient(keras.layers.Layer):
         super().__init__(**kwargs)
         self._stop_gradient = stop_gradient
 
-    def call(self, inputs):
+    def call(self, inputs):  # type: ignore[no-untyped-def]
         if self._stop_gradient:
             # Stopping gradient.
             return keras.ops.stop_gradient(inputs)
 
         return inputs
 
-    def get_config(self):
+    def get_config(self) -> dict[str, Any]:
         config = super().get_config()
         config.update({
             "stop_gradient": self._stop_gradient,
         })
-        return config
+        return config  # type: ignore[no-any-return]
 
 
-def _make_head(x, heads, name, relations, dim):
-    """Make a single head."""
+def _make_head(  # type: ignore[no-any-unimported]
+    x: keras.layers.Layer,
+    heads: dict[str, keras.layers.Layer],
+    name: str,
+    relations: list[str],
+    dim: int,
+) -> keras.layers.Layer:
+    """Make a single head.
+
+    Args:
+
+      x (Tensor): Stem of the neural network.
+
+      heads (dict[str, keras.layers.Layer]): List of previous heads.
+
+      name (str): Name of this output.
+
+      relations (list[str]): Which outputs should be routed to this one. All of
+      these must be already constructed and present in `heads`.
+
+      dim (int): Number of classes of this output.
+    """
     activation: str = "swish"
     dense_dropout: float = 0.05
 
@@ -320,17 +351,19 @@ def _make_head(x, heads, name, relations, dim):
     return layers.Dense(dim, activation="softmax", name=name)(head)
 
 
-def get_dag(outputs: Dict[str, Dict],
-            output_relations: List[Tuple[str, str]]) -> nx.DiGraph:
+def get_dag(  # type: ignore [no-any-unimported]
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> nx.DiGraph:
     """Return graph of output relation dependencies.
 
     Both outputs and output_relations are needed to have even the outputs which
     are not a part of any relation.
 
     Args:
-      outputs (Dict[str, Dict]): Description of outputs as returned by
+      outputs (dict[str, dict]): Description of outputs as returned by
         scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
         attack point name (full -- with the index) which is required for the
         second one. When (ap_1, ap_2) is present the interpretation is that
         ap_2 depends on the value of ap_1.
@@ -352,8 +385,10 @@ def get_dag(outputs: Dict[str, Dict],
     return relation_graph
 
 
-def get_topological_order(outputs: Dict[str, Dict],
-                          output_relations: List[Tuple[str, str]]):
+def get_topological_order(
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> list[str]:
     """Return iterator of vertices in topological order (if attack point ap_2
     depends on ap_1 then ap_1 appears before ap_2).
 
@@ -361,42 +396,51 @@ def get_topological_order(outputs: Dict[str, Dict],
     are not a part of any relation.
 
     Args:
-      outputs (Dict[str, Dict]): Description of outputs as returned by
-        scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
-        attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
+
+      outputs (dict[str, dict[str, int]]): Description of outputs as returned
+      by scaaml.io.Dataset.as_tfdataset.
+
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
+      attack point name (full -- with the index) which is required for the
+      second one. When (ap_1, ap_2) is present the interpretation is that ap_2
+      depends on the value of ap_1.
+
     """
-    return nx.topological_sort(
+    return nx.topological_sort(  # type: ignore[no-any-return]
         get_dag(outputs=outputs, output_relations=output_relations))
 
 
-def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
-                         output_relations: List[Tuple[str, str]]) -> List:
+def create_heads_outputs(  # type: ignore[no-any-unimported]
+    x: Tensor,
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> dict[str, keras.layers.Layer]:
     """Make a list of all heads.
 
     Args:
+
       x (FloatTensor): The trunk.
-      outputs (Dict[str, Dict]): Description of outputs as returned by
-        scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
-        attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
+
+      outputs (dict[str, dict[str, int]]): Description of outputs as returned
+      by scaaml.io.Dataset.as_tfdataset.
+
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
+      attack point name (full -- with the index) which is required for the
+      second one. When (ap_1, ap_2) is present the interpretation is that ap_2
+      depends on the value of ap_1.
 
     Returns: A list of all head outputs.
     """
     # Create relations represented by lists of ingoing edges (attack points:
     # list of all attack points it depends on).
-    ingoing_relations = defaultdict(list)
+    ingoing_relations: dict[str, list[str]] = defaultdict(list)
     for ap_1, ap_2 in output_relations:
         ingoing_relations[ap_2].append(ap_1)
     # Freeze the dict
     ingoing_relations = dict(ingoing_relations)
 
     # Dictionary containing the actual network heads
-    heads = {}
+    heads: dict[str, keras.layers.Layer] = {}  # type: ignore[no-any-unimported]
 
     # Get iterator of outputs that are in topological order (if ap_2 depends on
     # ap_1 then ap_1 appears before ap_2).
@@ -414,12 +458,19 @@ def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
         heads[name] = head
 
     # Return all head outputs in a list.
-    heads_outputs = [heads[name] for name in outputs.keys()]
+    heads_outputs = {name: heads[name] for name in outputs.keys()}
     return heads_outputs
 
 
-def get_gpam_model(inputs, outputs, output_relations, trace_len: int,
-                   merge_filter_1: int, merge_filter_2: int, patch_size: int):
+def get_gpam_model(  # type: ignore[no-any-unimported]
+    inputs: dict[str, dict[str, float]],
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+    trace_len: int,
+    merge_filter_1: int,
+    merge_filter_2: int,
+    patch_size: int,
+) -> keras.models.Model:
     """Get a GPAM model instance.
 
     Args:
@@ -432,7 +483,7 @@ def get_gpam_model(inputs, outputs, output_relations, trace_len: int,
       "max_val" being the number of possible classes. Example:
       `outputs={"sub_bytes_in_0": {"max_val": 256}}`.
 
-      output_relations (list[list[str]]): A list of related inputs. Each
+      output_relations (list[tuple[str, str]]): A list of related inputs. Each
       relation is a list where the output of the first is fed to the second.
       Must form a directed acyclic graph.
 
@@ -527,5 +578,5 @@ def get_gpam_model(inputs, outputs, output_relations, trace_len: int,
         output_relations=output_relations,
     )
 
-    model = Model(input, heads_outputs)
+    model = keras.models.Model(input, heads_outputs)
     return model
