@@ -36,17 +36,17 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
-def clone_initializer(  # type: ignore[no-any-unimported]
+def clone_initializer(
     initializer: tf.keras.initializers.Initializer) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
     """
     if isinstance(initializer, tf.keras.initializers.Initializer):
         return initializer.__class__.from_config(initializer.get_config())
-    return initializer
+    return initializer  # type: ignore[unreachable]
 
 
-def rope(  # type: ignore[no-any-unimported]
+def rope(
     x: Tensor,
     axis: Union[list[int], int],
 ) -> Tensor:
@@ -71,7 +71,7 @@ def rope(  # type: ignore[no-any-unimported]
         spatial_shape = [shape[i] for i in axis]
         total_len = 1
         for i in spatial_shape:
-            total_len *= i
+            total_len *= i  # type: ignore[operator]
         position = tf.reshape(
             tf.cast(tf.range(total_len, delta=1.0), tf.float32), spatial_shape)
     else:
@@ -83,28 +83,31 @@ def rope(  # type: ignore[no-any-unimported]
     for i in range(axis[-1] + 1, len(shape) - 1, 1):
         position = tf.expand_dims(position, axis=-1)
 
-    half_size = shape[-1] // 2
+    half_size = shape[-1] // 2  # type: ignore[operator]
     freq_seq = tf.cast(tf.range(half_size), tf.float32) / float(half_size)
     inv_freq = 10000**-freq_seq
     sinusoid = tf.einsum("...,d->...d", position, inv_freq)
     sin = tf.cast(tf.sin(sinusoid), dtype=x.dtype)
     cos = tf.cast(tf.cos(sinusoid), dtype=x.dtype)
     x1, x2 = tf.split(x, 2, axis=-1)
-    return tf.concat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], axis=-1)
+    return tf.concat(  # type: ignore[no-any-return]
+        [x1 * cos - x2 * sin, x2 * cos + x1 * sin],
+        axis=-1,
+    )
 
 
-def toeplitz_matrix_rope(  # type: ignore[no-any-unimported]
-        n: int,
-        a: Tensor,
-        b: Tensor,
+def toeplitz_matrix_rope(
+    n: int,
+    a: Tensor,
+    b: Tensor,
 ) -> Tensor:
     """Obtain Toeplitz matrix using rope."""
     a = rope(tf.tile(a[None, :], [n, 1]), axis=0)
     b = rope(tf.tile(b[None, :], [n, 1]), axis=0)
-    return tf.einsum("mk,nk->mn", a, b)
+    return tf.einsum("mk,nk->mn", a, b)  # type: ignore[no-any-return]
 
 
-class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
+class GAU(layers.Layer):  # type: ignore[type-arg]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
 
@@ -253,7 +256,7 @@ class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
             "dropout_rate": self.dropout_rate,
             "spatial_dropout_rate": self.spatial_dropout_rate
         })
-        return config  # type: ignore[no-any-return]
+        return config
 
     @property
     def weight_initializer(self) -> Any:
@@ -350,10 +353,10 @@ def _make_head(  # type: ignore[no-any-unimported]
     return layers.Dense(dim, activation="softmax", name=name)(head)
 
 
-def get_dag(  # type: ignore [no-any-unimported]
+def get_dag(
     outputs: dict[str, dict[str, int]],
     output_relations: list[tuple[str, str]],
-) -> nx.DiGraph:
+) -> nx.DiGraph[str]:
     """Return graph of output relation dependencies.
 
     Both outputs and output_relations are needed to have even the outputs which
@@ -371,7 +374,7 @@ def get_dag(  # type: ignore [no-any-unimported]
     """
     # Create graph of relations that will be topologically sorted and contains
     # all head names.
-    relation_graph = nx.DiGraph()
+    relation_graph: nx.DiGraph[str] = nx.DiGraph()
     # Add all output names into the relation_graph (even if they appear in no
     # relations).
     for name in outputs:
@@ -405,7 +408,7 @@ def get_topological_order(
       depends on the value of ap_1.
 
     """
-    return nx.topological_sort(  # type: ignore[no-any-return]
+    return nx.topological_sort(  # type: ignore[return-value]
         get_dag(outputs=outputs, output_relations=output_relations))
 
 
