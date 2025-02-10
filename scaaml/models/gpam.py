@@ -355,7 +355,7 @@ def _make_head(  # type: ignore[no-any-unimported]
 def get_dag(
     outputs: dict[str, dict[str, int]],
     output_relations: list[tuple[str, str]],
-) -> nx.DiGraph[str]:
+) -> Any:
     """Return graph of output relation dependencies.
 
     Both outputs and output_relations are needed to have even the outputs which
