@@ -111,18 +111,19 @@ class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
     Paper reference: https://arxiv.org/abs/2202.10447
     """
 
-    def __init__(self,
-                 *,  # key-word only arguments
-                 dim: int,
-                 max_len: int = 128,
-                 shared_dim: int = 128,
-                 expansion_factor: int = 2,
-                 activation: str = "swish",
-                 attention_activation: str = "sqrrelu",
-                 dropout_rate: float = 0.0,
-                 attention_dropout_rate: float = 0.0,
-                 spatial_dropout_rate: float = 0.0,
-                 **kwargs: Any) -> None:
+    def __init__(
+            self,
+            *,  # key-word only arguments
+            dim: int,
+            max_len: int = 128,
+            shared_dim: int = 128,
+            expansion_factor: int = 2,
+            activation: str = "swish",
+            attention_activation: str = "sqrrelu",
+            dropout_rate: float = 0.0,
+            attention_dropout_rate: float = 0.0,
+            spatial_dropout_rate: float = 0.0,
+            **kwargs: Any) -> None:
         """
         Initialize a GAU layer.
 
