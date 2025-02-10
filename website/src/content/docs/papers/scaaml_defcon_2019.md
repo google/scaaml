@@ -8,7 +8,7 @@ Learning) project was at Defcon 27 (2019).  The talk is recorded at the
 blogpost [A Hacker Guide To Deep Learning Based Side Channel
 Attacks](https://elie.net/talk/a-hackerguide-to-deep-learning-based-side-channel-attacks)
 (talk recording and slides).
-Two additional blogposts are a walktrough the code:
+Two additional blogposts are a walkthrough the code:
 
 -   [Hacker's guide to deep-learning side-channel attacks: the
     theory](https://elie.net/blog/security/hacker-guide-to-deep-learning-side-channel-attacks-the-theory)
