@@ -154,6 +154,9 @@ blocks to ease the use.  These can be combined using human readable
 One can rewrite the previous code as follows:
 
 ```python
+from scaaml.capture.input_generators import build_attack_points_iterator
+
+
 train_config = {
     "operation": "cartesian_product",
     "operands": [

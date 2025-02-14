@@ -12,7 +12,7 @@ iterate those while automatically saving progress.
 
 ## Resume Capture Overview
 
-First we save all we create all input values.  Save those.  Then we load and
+First we create all input values.  Then we save those.  Then we load and
 iterate and in case of an error or a crash we just reload where we stopped.
 Let us go through the code with the concrete case of AES128.
 
@@ -46,6 +46,10 @@ create_resume_kti(
     plaintexts.shape[0]`.
 -   If we wanted to save more values in `parameters` we could.  The only
     condition is that all of them have the same `len`.
+-   In case you are using attack point iterators provided by
+    `scaaml.capture.input_generators` be sure to check `len` of what you
+    generated to ensure the length is not infinite (in which case
+    `LengthIsInfiniteException` is thrown).
 
 ### Load the Saved Inputs
 
@@ -72,7 +76,7 @@ from tqdm import tqdm
 
 # Loop with a progress-bar (progress bar has always the same length, but when
 # restarted the progress is not lost). One could avoid having the progress-bar
-# by `for current_parameters in resume_kti:`
+# by using `for current_parameters in resume_kti:` instead
 for key, text in tqdm(resume_kti, initial=resume_kti.initial_index):
   print(f"TODO capture with {key = } {plaintext = }")
   # An error can happen when capturing or saving
@@ -84,14 +88,18 @@ iterated key.  `current_parameters = { "keys": keys[i], "texts": texts[i] }`
 
 ## File Format
 
-Parameter tuples file is a binary file with numpy scalar and arrays.  The
-contents are shard length, array of strings with parameter names and then
-arrays of parameters in the same order.  The array of parameter values are
-interpreted in the way that (`parameter1[i], parameter2[i], ...`) is a single
-key-text tuple for any `i in range(len(parameter1))`, thus all have the same
-length.  This is done in order to allow different data type of key and text
-(for instance AES256 where key is 256 bits) and different number of saved
-parameters (saving masks...).
+The iterated values are stored in the parameter tuples file.  This is a binary
+file with numpy scalar and arrays.  The contents are
+
+-   the shard length (restart at an integer multiple of this number),
+-   an array of strings containing the parameter names,
+-   and arrays of parameters in the order given by the array of parameter names.
+
+The array of parameter values are interpreted in the way that (`parameter1[i],
+parameter2[i], ...`) is a single tuple of values for any `i in
+range(len(parameter1))`, thus all have the same length.  This is done in order
+to allow different data type of key and text (for instance AES256 where key is
+256 bits) and different number of saved parameters (saving masks...).
 
 Progress file is a text file with a single integer -- the number of traces
 captured so far. The number in it is a multiple of the shard length. This file

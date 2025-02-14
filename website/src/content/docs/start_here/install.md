@@ -12,19 +12,9 @@ Installation of the SCAAML Python package.
 To use the Python oscilloscope control of a [PicoScope
 &reg;](https://www.picotech.com/products/oscilloscope) 6424E one needs to
 install the corresponding libraries.  If you do not plan to use this the only
-downside of no having these libraries is some failing unit-tests.  Follow the
-official guide
-[https://www.picotech.com/downloads/linux](https://www.picotech.com/downloads/linux)
-or on a Debian based system one can just:
-
-```bash
-sh -c 'wget -qO - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -'
-sudo sh -c 'echo "deb https://labs.picotech.com/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
-apt-get update && apt-get install -y udev usbutils
-mv /sbin/udevadm /sbin/udevadm.bin ; echo '#!/bin/bash' > /sbin/udevadm && chmod a+x /sbin/udevadm
-apt-get update && apt-get install -y libps6000a
-# apt-get update && apt-get install -y picoscope  # Full install with GUI and mono
-```
+downside of not having these libraries is that some unit-tests will fail.
+Follow the official guide
+[https://www.picotech.com/downloads/linux](https://www.picotech.com/downloads/linux).
 
 ## Python Package Index
 
