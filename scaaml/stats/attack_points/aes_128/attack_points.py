@@ -37,7 +37,13 @@ class AttackPointAES128(ABC):
             plaintext=plaintext,
             byte_index=byte_index,
         )
-        ciphertext = AESSBOX.ciphertext(key=key, plaintext=plaintext)
+        ciphertext = np.array(
+            AESSBOX.ciphertext(
+                key=bytearray(np.array(key, dtype=np.uint8)),
+                plaintext=bytearray(np.array(plaintext, dtype=np.uint8)),
+            ),
+            dtype=np.uint8,
+        )
         return cls.leakage_from_guess(
             plaintext=plaintext,
             ciphertext=ciphertext,
