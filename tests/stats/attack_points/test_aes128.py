@@ -111,7 +111,8 @@ def test_target_secret_docstring_promise(cls):
 
         cipher = Cipher(algorithms.AES(key), modes.ECB())
         encryptor = cipher.encryptor()
-        ciphertext = bytearray(encryptor.update(plaintext) + encryptor.finalize())
+        ciphertext = bytearray(
+            encryptor.update(plaintext) + encryptor.finalize())
 
         guess: int = cls.target_secret(
             key=key,
