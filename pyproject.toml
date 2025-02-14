@@ -37,6 +37,7 @@ dependencies = [
     "networkx[default]",
     "numpy",
     "pandas",
+    "picosdk",
     "pip",
     "pygments",
     "pytest",
