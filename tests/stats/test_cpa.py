@@ -32,8 +32,9 @@ def test_cpa(tmp_path):
         plaintext = np.random.randint(0, 256, size=16, dtype=np.uint8)
 
         # Simulate a trace
-        trace = np.bitwise_count(key ^ plaintext) + np.random.normal(scale=1.5,
-                                                                     size=16)
+        bit_counts = [int(x).bit_count() for x in key ^ plaintext]
+        trace = bit_counts + np.random.normal(scale=1.5, size=16)
+        # np.bitwise_count requires NumPy>=2, CW requires <2
 
         cpa.update(
             trace=trace,
