@@ -105,8 +105,7 @@ class CPA:
             get_model(byte_index) for byte_index in range(16)
         ]
         self.result: dict[int, list[list[float]]] = {
-            # So that combined traces index from 1
-            i: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] for _ in range(256)]
+            i: [[] for _ in range(256)]
             for i in range(16)
         }
         self.real_key: Optional[npt.NDArray[np.uint8]] = None

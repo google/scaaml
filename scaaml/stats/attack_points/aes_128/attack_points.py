@@ -199,7 +199,7 @@ class LeakageModelAES128:
 
           use_hamming_weight (bool): Use just the Hamming weight of the value.
         """
-        assert byte_index in range(16)
+        assert 0 <= byte_index < 16
         self._byte_index: int = byte_index
         self._use_hamming_weight: bool = use_hamming_weight
         self._attack_point: AttackPointAES128 = attack_point
@@ -215,12 +215,9 @@ class LeakageModelAES128:
         """How many possible values of the leakage there are.
         """
         if self._use_hamming_weight:
-            # 0, 1, 2, ..., 8 bits can be set in a byte.
-            return int(1 +
-                       math.log2(self._attack_point.different_target_secrets()))
-        else:
-            # Full byte.
-            return self._attack_point.different_target_secrets()
+            return 9
+        # Full byte.
+        return 256
 
     @staticmethod
     def _safe_cast(value: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:

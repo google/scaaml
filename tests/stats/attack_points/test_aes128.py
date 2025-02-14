@@ -13,6 +13,7 @@
 # limitations under the License.
 """Test AES128 attack points."""
 
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import pytest
 
 import chipwhisperer.analyzer.attacks.models as cw_models
@@ -107,7 +108,10 @@ def test_target_secret_docstring_promise(cls):
         byte_index = np.random.randint(0, 16)
         key = np.random.randint(0, 256, 16).astype(np.uint8)
         plaintext = np.random.randint(0, 256, 16).astype(np.uint8)
-        ciphertext = AESSBOX.ciphertext(key=key, plaintext=plaintext)
+
+        cipher = Cipher(algorithms.AES(key), modes.ECB())
+        encryptor = cipher.encryptor()
+        ciphertext = bytearray(encryptor.update(plaintext) + encryptor.finalize())
 
         guess: int = cls.target_secret(
             key=key,
@@ -155,10 +159,8 @@ def test_leakage_model_hw(ap_cls):
     assert leakage_model.different_target_secrets == 256
     assert leakage_model.different_leakage_values == 9
 
-    plaintext = np.array(
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], dtype=np.uint8)
-    key = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-                   dtype=np.uint8)
+    plaintext = np.arange(1, 17, dtype=np.uint8)
+    key = np.arange(16, dtype=np.uint8)
 
     assert leakage_model.leakage_knowing_secrets(
         plaintext=plaintext,
