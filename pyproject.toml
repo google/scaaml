@@ -29,13 +29,15 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "Pillow",
     "chipwhisperer",
     "colorama",
     "cryptography",
     "matplotlib",
+    "networkx[default]",
     "numpy",
     "pandas",
-    "Pillow",
+    "picosdk",
     "pip",
     "pygments",
     "pytest",

@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,53 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
+"""This is the GPAM model version which can be imported. For the archived
+version see /papers/2024/GPAM/gpam_ecc_cm1.py.
+
+GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
 
 @article{bursztein2023generic,
-  title={Generalized Power Attacks against Crypto Hardware using Long-Range Deep Learning},
-  author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+  title={Generalized Power Attacks against Crypto Hardware using Long-Range
+  Deep Learning},
+  author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and Moghimi,
+  Daniel and Picod, Jean-Michel and Zhang, Marina},
   journal={arXiv preprint arXiv:2306.07249},
   year={2023}
 }
-
-Hyperparameters are identified by a comment # hyperparameter
-
-We found that CosineDecayWithWarmupSchedule is not necessary and one can use
-Adafactor instead to get the same results with much fewer parameters to set.
-
-This is the archived version. For an importable version use:
-```from scaaml.models import get_gpam_model```
 """
 
-import argparse
 from collections import defaultdict
-import math
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Union
 
-# Doing topological sort on the relational outputs. One can do it by hand if
-# they don't wish to install this package.
 import networkx as nx
-import numpy as np
 import tensorflow as tf
 import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import Model
 from tensorflow import Tensor
 
-from scaaml.io import Dataset
-from scaaml.metrics.custom import MeanRank
 
-
-def clone_initializer(initializer: tf.keras.initializers.Initializer):
+def clone_initializer(initializer: tf.keras.initializers.Initializer) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
     """
     if isinstance(initializer, tf.keras.initializers.Initializer):
         return initializer.__class__.from_config(initializer.get_config())
-    return initializer
+    return initializer  # type: ignore[unreachable]
 
 
-def rope(x: Tensor, axis: Union[List[int], int]) -> Tensor:
+def rope(
+    x: Tensor,
+    axis: Union[list[int], int],
+) -> Tensor:
     """RoPE positional encoding.
 
       Implementation of the Rotary Position Embedding proposed in
@@ -79,53 +70,62 @@ def rope(x: Tensor, axis: Union[List[int], int]) -> Tensor:
         spatial_shape = [shape[i] for i in axis]
         total_len = 1
         for i in spatial_shape:
-            total_len *= i
+            total_len *= i  # type: ignore[operator]
         position = tf.reshape(
             tf.cast(tf.range(total_len, delta=1.0), tf.float32), spatial_shape)
     else:
-        raise ValueError(f'Unsupported shape: {shape}')
+        raise ValueError(f"Unsupported shape: {shape}")
 
     # we assume that the axis can not be negative (e.g., -1)
     if any(dim < 0 for dim in axis):
-        raise ValueError(f'Unsupported axis: {axis}')
+        raise ValueError(f"Unsupported axis: {axis}")
     for i in range(axis[-1] + 1, len(shape) - 1, 1):
         position = tf.expand_dims(position, axis=-1)
 
-    half_size = shape[-1] // 2
+    half_size = shape[-1] // 2  # type: ignore[operator]
     freq_seq = tf.cast(tf.range(half_size), tf.float32) / float(half_size)
     inv_freq = 10000**-freq_seq
-    sinusoid = tf.einsum('...,d->...d', position, inv_freq)
+    sinusoid = tf.einsum("...,d->...d", position, inv_freq)
     sin = tf.cast(tf.sin(sinusoid), dtype=x.dtype)
     cos = tf.cast(tf.cos(sinusoid), dtype=x.dtype)
     x1, x2 = tf.split(x, 2, axis=-1)
-    return tf.concat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], axis=-1)
+    return tf.concat(  # type: ignore[no-any-return]
+        [x1 * cos - x2 * sin, x2 * cos + x1 * sin],
+        axis=-1,
+    )
 
 
-def toeplitz_matrix_rope(n: int, a: Tensor, b: Tensor) -> Tensor:
+def toeplitz_matrix_rope(
+    n: int,
+    a: Tensor,
+    b: Tensor,
+) -> Tensor:
     """Obtain Toeplitz matrix using rope."""
     a = rope(tf.tile(a[None, :], [n, 1]), axis=0)
     b = rope(tf.tile(b[None, :], [n, 1]), axis=0)
-    return tf.einsum("mk,nk->mn", a, b)
+    return tf.einsum("mk,nk->mn", a, b)  # type: ignore[no-any-return]
 
 
-class GAU(layers.Layer):
+class GAU(layers.Layer):  # type: ignore[type-arg]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
 
     Paper reference: https://arxiv.org/abs/2202.10447
     """
 
-    def __init__(self,
-                 dim: int,
-                 max_len: int = 128,
-                 shared_dim: int = 128,
-                 expansion_factor: int = 2,
-                 activation: str = 'swish',
-                 attention_activation: str = 'sqrrelu',
-                 dropout_rate: float = 0.0,
-                 attention_dropout_rate: float = 0.0,
-                 spatial_dropout_rate: float = 0.0,
-                 **kwargs) -> None:
+    def __init__(
+            self,
+            *,  # key-word only arguments
+            dim: int,
+            max_len: int = 128,
+            shared_dim: int = 128,
+            expansion_factor: int = 2,
+            activation: str = "swish",
+            attention_activation: str = "sqrrelu",
+            dropout_rate: float = 0.0,
+            attention_dropout_rate: float = 0.0,
+            spatial_dropout_rate: float = 0.0,
+            **kwargs: Any) -> None:
         """
         Initialize a GAU layer.
 
@@ -190,19 +190,19 @@ class GAU(layers.Layer):
             self.attention_activation)
 
         # setting up position encoding
-        self.a = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.a = tf.Variable(lambda: self.weight_initializer(
             shape=[self.max_len], dtype=tf.float32))
-        self.b = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.b = tf.Variable(lambda: self.weight_initializer(
             shape=[self.max_len], dtype=tf.float32))
 
         # offset scaling values
-        self.gamma = tf.Variable(lambda: self.WEIGHT_INITIALIZER(
+        self.gamma = tf.Variable(lambda: self.weight_initializer(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
-        self.beta = tf.Variable(lambda: self.ZEROS_INITIALIZER(
+        self.beta = tf.Variable(lambda: self.zeros_initializer(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
-    def call(self, x, training=False):
+    def call(self, x: Any, training: bool = False) -> Any:
 
         shortcut = x
         x = self.norm(x)
@@ -221,11 +221,11 @@ class GAU(layers.Layer):
             uv, [self.expand_dim, self.expand_dim, self.shared_dim], axis=-1)
 
         # generate q, k by scaled offset
-        base = tf.einsum('bnr,hr->bnhr', base, self.gamma) + self.beta
+        base = tf.einsum("bnr,hr->bnhr", base, self.gamma) + self.beta
         q, k = tf.unstack(base, axis=-2)
 
         # compute key-query scores
-        qk = tf.einsum('bnd,bmd->bnm', q, k)
+        qk = tf.einsum("bnd,bmd->bnm", q, k)
         qk = qk / self.max_len
 
         # add relative position bias for attention
@@ -238,37 +238,43 @@ class GAU(layers.Layer):
             kernel = self.attention_dropout(kernel)
 
         # apply values and project
-        x = u * tf.einsum('bnm,bme->bne', kernel, v)
+        x = u * tf.einsum("bnm,bme->bne", kernel, v)
 
         x = self.proj2(x)
         return x + shortcut
 
-    def get_config(self):
+    def get_config(self) -> dict[str, Any]:
         config = super().get_config()
         config.update({
-            'dim': self.dim,
-            'max_len': self.max_len,
-            'shared_dim': self.shared_dim,
-            'expansion_factor': self.expansion_factor,
-            'activation': self.activation,
-            'attention_activation': self.attention_activation,
-            'dropout_rate': self.dropout_rate,
-            'spatial_dropout_rate': self.spatial_dropout_rate
+            "dim": self.dim,
+            "max_len": self.max_len,
+            "shared_dim": self.shared_dim,
+            "expansion_factor": self.expansion_factor,
+            "activation": self.activation,
+            "attention_activation": self.attention_activation,
+            "dropout_rate": self.dropout_rate,
+            "spatial_dropout_rate": self.spatial_dropout_rate
         })
         return config
 
     @property
-    def WEIGHT_INITIALIZER(self):
+    def weight_initializer(self) -> Any:
         return clone_initializer(tf.random_normal_initializer(stddev=0.02))
 
     @property
-    def ZEROS_INITIALIZER(self):
+    def zeros_initializer(self) -> Any:
         return clone_initializer(tf.initializers.zeros())
 
 
-class StopGradient(keras.layers.Layer):
+class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
+    """Stop gradient as a Keras layer.
+    """
 
-    def __init__(self, stop_gradient: bool = False, **kwargs):
+    def __init__(
+        self,
+        stop_gradient: bool = False,
+        **kwargs: Any,
+    ) -> None:
         """Stop gradient, or not, depending on the configuration.
 
         Args:
@@ -281,23 +287,44 @@ class StopGradient(keras.layers.Layer):
         super().__init__(**kwargs)
         self._stop_gradient = stop_gradient
 
-    def call(self, inputs):
+    def call(self, inputs):  # type: ignore[no-untyped-def]
         if self._stop_gradient:
             # Stopping gradient.
             return keras.ops.stop_gradient(inputs)
 
         return inputs
 
-    def get_config(self):
+    def get_config(self) -> dict[str, Any]:
         config = super().get_config()
         config.update({
             "stop_gradient": self._stop_gradient,
         })
-        return config
+        return config  # type: ignore[no-any-return]
 
 
-def _make_head(x, heads, name, relations, dim):
-    """Make a single head."""
+def _make_head(  # type: ignore[no-any-unimported]
+    x: keras.layers.Layer,
+    heads: dict[str, keras.layers.Layer],
+    name: str,
+    relations: list[str],
+    dim: int,
+) -> keras.layers.Layer:
+    """Make a single head.
+
+    Args:
+
+      x (Tensor): Stem of the neural network.
+
+      heads (dict[str, keras.layers.Layer]): A dictionary of previous heads
+      (those that are sooner in the topologically sorted outputs).
+
+      name (str): Name of this output.
+
+      relations (list[str]): Which outputs should be routed to this one. All of
+      these must be already constructed and present in `heads`.
+
+      dim (int): Number of classes of this output.
+    """
     activation: str = "swish"
     dense_dropout: float = 0.05
 
@@ -318,35 +345,36 @@ def _make_head(x, heads, name, relations, dim):
     head = layers.Dropout(dense_dropout, name=f"{name}_dropout")(head)
 
     # Dense block
-    block_name = f"{name}_dense_1"
     head = layers.Dense(dim)(head)
     head = layers.Dropout(dense_dropout)(head)
     head = layers.Activation(activation)(head)
 
     # Prediction
-    return layers.Dense(dim, activation='softmax', name=name)(head)
+    return layers.Dense(dim, activation="softmax", name=name)(head)
 
 
-def get_dag(outputs: Dict[str, Dict],
-            output_relations: List[Tuple[str, str]]) -> nx.DiGraph:
+def get_dag(
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> Any:
     """Return graph of output relation dependencies.
 
-    Both outputs and output_relations are needed to have even the outputs which
-    are not a part of any relation.
+    Both `outputs` and `output_relations` are needed to have even the outputs
+    which are not a part of any relation.
 
     Args:
-      outputs (Dict[str, Dict]): Description of outputs as returned by
+      outputs (dict[str, dict]): Description of outputs as returned by
         scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
         attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
+        second one. When `(ap_1, ap_2)` is present the interpretation is that
+        `ap_2` depends on the value of `ap_1`.
 
     Returns: A networkx.DiGraph representation of relations.
     """
     # Create graph of relations that will be topologically sorted and contains
     # all head names.
-    relation_graph = nx.DiGraph()
+    relation_graph: nx.DiGraph[str] = nx.DiGraph()
     # Add all output names into the relation_graph (even if they appear in no
     # relations).
     for name in outputs:
@@ -359,8 +387,10 @@ def get_dag(outputs: Dict[str, Dict],
     return relation_graph
 
 
-def get_topological_order(outputs: Dict[str, Dict],
-                          output_relations: List[Tuple[str, str]]):
+def get_topological_order(
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> list[str]:
     """Return iterator of vertices in topological order (if attack point ap_2
     depends on ap_1 then ap_1 appears before ap_2).
 
@@ -368,42 +398,51 @@ def get_topological_order(outputs: Dict[str, Dict],
     are not a part of any relation.
 
     Args:
-      outputs (Dict[str, Dict]): Description of outputs as returned by
-        scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
-        attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
+
+      outputs (dict[str, dict[str, int]]): Description of outputs as returned
+      by scaaml.io.Dataset.as_tfdataset.
+
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
+      attack point name (full -- with the index) which is required for the
+      second one. When (ap_1, ap_2) is present the interpretation is that ap_2
+      depends on the value of ap_1.
+
     """
-    return nx.topological_sort(
+    return nx.topological_sort(  # type: ignore[return-value]
         get_dag(outputs=outputs, output_relations=output_relations))
 
 
-def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
-                         output_relations: List[Tuple[str, str]]) -> List:
-    """Make a list of all heads.
+def create_heads_outputs(  # type: ignore[no-any-unimported]
+    x: Tensor,
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+) -> dict[str, keras.layers.Layer]:
+    """Make a mapping of all heads (name to Layer).
 
     Args:
-      x (FloatTensor): The trunk.
-      outputs (Dict[str, Dict]): Description of outputs as returned by
-        scaaml.io.Dataset.as_tfdataset.
-      output_relations (List[Tuple[str, str]]): List of arcs (oriented edges)
-        attack point name (full -- with the index) which is required for the
-        second one. When (ap_1, ap_2) is present the interpretation is that
-        ap_2 depends on the value of ap_1.
 
-    Returns: A list of all head outputs.
+      x (FloatTensor): The trunk.
+
+      outputs (dict[str, dict[str, int]]): Description of outputs as returned
+      by scaaml.io.Dataset.as_tfdataset.
+
+      output_relations (list[tuple[str, str]]): List of arcs (oriented edges)
+      attack point name (full -- with the index) which is required for the
+      second one. When (ap_1, ap_2) is present the interpretation is that ap_2
+      depends on the value of ap_1.
+
+    Returns: A mapping of all head outputs (name to Layer).
     """
     # Create relations represented by lists of ingoing edges (attack points:
     # list of all attack points it depends on).
-    ingoing_relations = defaultdict(list)
+    ingoing_relations: dict[str, list[str]] = defaultdict(list)
     for ap_1, ap_2 in output_relations:
         ingoing_relations[ap_2].append(ap_1)
     # Freeze the dict
     ingoing_relations = dict(ingoing_relations)
 
     # Dictionary containing the actual network heads
-    heads = {}
+    heads: dict[str, keras.layers.Layer] = {}  # type: ignore[no-any-unimported]
 
     # Get iterator of outputs that are in topological order (if ap_2 depends on
     # ap_1 then ap_1 appears before ap_2).
@@ -416,19 +455,67 @@ def create_heads_outputs(x: Tensor, outputs: Dict[str, Dict],
         relations = ingoing_relations.get(name, [])
 
         # Get parameters for head creation.
-        dim = outputs[name]['max_val'] if outputs[name]['max_val'] > 2 else 1
+        dim = outputs[name]["max_val"] if outputs[name]["max_val"] > 2 else 1
         head = _make_head(x, heads, name, relations, dim)
         heads[name] = head
 
-    # Return all head outputs in a list.
-    heads_outputs = [heads[name] for name in outputs.keys()]
+    # Return all head outputs in a dict.
+    heads_outputs = {name: heads[name] for name in outputs.keys()}
     return heads_outputs
 
 
-def get_model(inputs, outputs, output_relations, trace_len: int,
-              merge_filter_1: int, merge_filter_2: int, patch_size: int,
-              target_lr: float):
+def get_gpam_model(  # type: ignore[no-any-unimported]
+    *,  # key-word only arguments
+    inputs: dict[str, dict[str, float]],
+    outputs: dict[str, dict[str, int]],
+    output_relations: list[tuple[str, str]],
+    trace_len: int,
+    merge_filter_1: int,
+    merge_filter_2: int,
+    patch_size: int,
+) -> keras.models.Model:
+    """Get a GPAM model instance.
+
+    Args:
+
+      inputs (dict[str, dict[str, float]]): The following dictionary:
+      {"trace1": {"min": MIN, "delta": MAX}} where `MIN` is the minimum value
+      across all traces and time and `MAX` is the maximum value.
+
+      outputs (dict[str, dict[str, int]]): A dictionary with output name and
+      "max_val" being the number of possible classes. Example:
+      `outputs={"sub_bytes_in_0": {"max_val": 256}}`.
+
+      output_relations (list[tuple[str, str]]): A list of related inputs. Each
+      relation is a list where the output of the first is fed to the second.
+      Must form a directed acyclic graph.
+
+      trace_len (int): The trace is assumed to be one-dimensional of length
+      `trace_len`. Must be divisible by `patch_size`.
+
+      merge_filter_1 (int): The number of filters in the first layer of
+      convolutions.
+
+      merge_filter_2 (int): The number of filters in the second layer of
+      convolutions.
+
+      patch_size (int): Cut the trace into patches of this length. Must divide
+      `trace_len`.
+
+    ```
+    @article{bursztein2023generic,
+      title={Generalized Power Attacks against Crypto Hardware using Long-Range
+      Deep Learning},
+      author={Bursztein, Elie and Invernizzi, Luca and Kr{\'a}l, Karel and
+      Moghimi, Daniel and Picod, Jean-Michel and Zhang, Marina},
+      journal={arXiv preprint arXiv:2306.07249},
+      year={2023}
+    }
+    ```
+    """
     # Constants:
+    if trace_len % patch_size:
+        raise ValueError(f"{trace_len = } is not divisible by {patch_size = }")
     steps: int = trace_len // patch_size
     combine_kernel_size: int = 3
     activation: str = "swish"
@@ -436,8 +523,8 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     filters: int = 192
 
     # Input
-    input = layers.Input(shape=(trace_len,), name='trace1')
-    x = input
+    model_input = layers.Input(shape=(trace_len,), name="trace1")
+    x = model_input
 
     # Reshape the trace.
     x = layers.Reshape((steps, patch_size))(x)
@@ -486,7 +573,7 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     x = layers.Dropout(0.1)(x)
 
     # flattening
-    x = layers.GlobalAveragePooling1D(data_format='channels_first')(x)
+    x = layers.GlobalAveragePooling1D(data_format="channels_first")(x)
 
     # Normalizing
     x = layers.BatchNormalization()(x)
@@ -498,111 +585,5 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
         output_relations=output_relations,
     )
 
-    model = Model(input, heads_outputs)
-
-    # Compile model
-    optimizer = keras.optimizers.Adafactor(target_lr)
-    model.compile(
-        optimizer,
-        loss=["categorical_crossentropy" for _ in range(len(outputs))],
-        metrics={name: ["acc", MeanRank()] for name in outputs},
-    )
+    model = keras.models.Model(model_input, heads_outputs)
     return model
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Train GPAM model for ECC CM1")
-    parser.add_argument(
-        "--dataset_path",
-        "-d",
-        help=
-        "Dataset path, download info: https://github.com/google/scaaml/tree/main/papers/2024/GPAM",
-        required=True)
-    args = parser.parse_args()
-
-    # Block of hyperparameters.
-    # Length of the trace. For technical reasons patch_size should divide trace_len.
-    batch_size: int = 64  # hyperparameter
-    steps_per_epoch: int = 200  # hyperparameter
-    epochs: int = 500  # hyperparameter
-    target_lr: float = 0.006  # hyperparameter
-    merge_filter_1: int = 16  # hyperparameter
-    merge_filter_2: int = 8  # hyperparameter
-    trace_len: int = 4_194_304  # hyperparameter
-    patch_size: int = 2_048  # hyperparameter
-
-    # Definition of outputs.
-    attack_points = [
-        {
-            "name": "k",
-            "index": 0,
-            "type": "byte"
-        },
-        {
-            "name": "km",
-            "index": 0,
-            "type": "byte"
-        },
-        {
-            "name": "r",
-            "index": 0,
-            "type": "byte"
-        },
-    ]
-    # Configuration driven definition of relational outputs, as described in
-    # Section 5.2.3 point 2.
-    output_relations = [
-        ["km_0", "k_0"],
-        ["r_0", "k_0"],
-    ]
-
-    traces = ["trace1"]
-    trace_start: int = 0
-    shuffle_size: int = 512
-    val_steps: int = 16
-
-    # loading dataset
-    train_ds, inputs, outputs = Dataset.as_tfdataset(
-        dataset_path=args.dataset_path,
-        split="train",
-        attack_points=attack_points,
-        traces=traces,
-        trace_start=trace_start,
-        trace_len=trace_len,
-        batch_size=batch_size,
-        shuffle=shuffle_size,
-    )
-    test_ds, _, _ = Dataset.as_tfdataset(
-        dataset_path=args.dataset_path,
-        split="test",
-        attack_points=attack_points,
-        traces=traces,
-        trace_start=trace_start,
-        trace_len=trace_len,
-        batch_size=batch_size,
-        shuffle=0,
-    )
-
-    model = get_model(
-        inputs=inputs,
-        outputs=outputs,
-        output_relations=output_relations,
-        trace_len=trace_len,
-        merge_filter_1=merge_filter_1,
-        merge_filter_2=merge_filter_2,
-        patch_size=patch_size,
-        target_lr=target_lr,
-    )
-
-    model.summary()
-
-    # Train the model.
-    history = model.fit(train_ds,
-                        steps_per_epoch=steps_per_epoch,
-                        epochs=epochs,
-                        validation_data=test_ds,
-                        validation_steps=val_steps)
-
-
-if __name__ == "__main__":
-    main()
