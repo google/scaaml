@@ -27,25 +27,36 @@ class AttackPointAES128(ABC):
     """AES128 attack point.
     """
 
-    @staticmethod
-    @abstractmethod
-    def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
+    @classmethod
+    def leakage_knowing_secrets(cls, key: npt.NDArray[np.uint8],
                                 plaintext: npt.NDArray[np.uint8],
                                 byte_index: int) -> int:
         """When we know all the information.
         """
+        guess = cls.target_secret(
+            key=key,
+            plaintext=plaintext,
+            byte_index=byte_index,
+        )
+        ciphertext = AESSBOX.ciphertext(key=key, plaintext=plaintext)
+        return cls.leakage_from_guess(
+            plaintext=plaintext,
+            ciphertext=ciphertext,
+            guess=guess,
+            byte_index=byte_index,
+        )
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
+    def leakage_from_guess(cls, plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         """We know only public information and a guess of the hidden value.
         """
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def target_secret(key: npt.NDArray[np.uint8],
+    def target_secret(cls, key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
         """When we know all the information. Return the hidden value we are
         trying to guess. For instance we could be guessing the last key
@@ -91,21 +102,15 @@ class Plaintext(AttackPointAES128):
     """The plaintext value is leaking.
     """
 
-    @staticmethod
-    def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
-                                plaintext: npt.NDArray[np.uint8],
-                                byte_index: int) -> int:
-        return int(plaintext[byte_index])
-
-    @staticmethod
-    def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
+    @classmethod
+    def leakage_from_guess(cls, plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
         return int(guess)
 
-    @staticmethod
-    def target_secret(key: npt.NDArray[np.uint8],
+    @classmethod
+    def target_secret(cls, key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
         return int(plaintext[byte_index])
 
@@ -114,21 +119,15 @@ class SubBytesIn(AttackPointAES128):
     """Input of the first S-BOX is leaking.
     """
 
-    @staticmethod
-    def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
-                                plaintext: npt.NDArray[np.uint8],
-                                byte_index: int) -> int:
-        return int(key[byte_index] ^ plaintext[byte_index])
-
-    @staticmethod
-    def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
+    @classmethod
+    def leakage_from_guess(cls, plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
         return int(guess ^ plaintext[byte_index])
 
-    @staticmethod
-    def target_secret(key: npt.NDArray[np.uint8],
+    @classmethod
+    def target_secret(cls, key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
         return int(key[byte_index])
 
@@ -137,21 +136,15 @@ class SubBytesOut(AttackPointAES128):
     """Output of the first S-BOX is leaking.
     """
 
-    @staticmethod
-    def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
-                                plaintext: npt.NDArray[np.uint8],
-                                byte_index: int) -> int:
-        return int(SBOX[key[byte_index] ^ plaintext[byte_index]])
-
-    @staticmethod
-    def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
+    @classmethod
+    def leakage_from_guess(cls, plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
         return int(SBOX[guess ^ plaintext[byte_index]])
 
-    @staticmethod
-    def target_secret(key: npt.NDArray[np.uint8],
+    @classmethod
+    def target_secret(cls, key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
         return int(key[byte_index])
 
@@ -162,28 +155,8 @@ class LastRoundStateDiff(AttackPointAES128):
     `courses/sca201/Lab 2_2 - CPA on Hardware AES Implementation.ipynb`)
     """
 
-    @staticmethod
-    def leakage_knowing_secrets(key: npt.NDArray[np.uint8],
-                                plaintext: npt.NDArray[np.uint8],
-                                byte_index: int) -> int:
-        invshift_undo = [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11]
-        ciphertext = AESSBOX.ciphertext(
-            key=bytearray(key),
-            plaintext=bytearray(plaintext),
-        )
-
-        last_key_schedule = key_schedule(key)
-        correct_k = last_key_schedule[-4:].reshape(-1)
-        guess = correct_k[byte_index]
-
-        st10 = ciphertext[invshift_undo[byte_index]]
-        st9 = SBOX_INV[ciphertext[byte_index] ^ guess]
-        byte_value = st9 ^ st10
-
-        return int(byte_value)
-
-    @staticmethod
-    def leakage_from_guess(plaintext: npt.NDArray[np.uint8],
+    @classmethod
+    def leakage_from_guess(cls, plaintext: npt.NDArray[np.uint8],
                            ciphertext: npt.NDArray[np.uint8], guess: int,
                            byte_index: int) -> int:
         assert 0 <= guess < 256
@@ -196,8 +169,8 @@ class LastRoundStateDiff(AttackPointAES128):
 
         return int(byte_value)
 
-    @staticmethod
-    def target_secret(key: npt.NDArray[np.uint8],
+    @classmethod
+    def target_secret(cls, key: npt.NDArray[np.uint8],
                       plaintext: npt.NDArray[np.uint8], byte_index: int) -> int:
         last_key_schedule = key_schedule(key)
         correct_k = last_key_schedule[-4:].reshape(-1)
