@@ -15,100 +15,12 @@
 https://github.com/newaetech/chipwhisperer-jupyter/blob/master/archive/PA_Intro_3-Measuring_SNR_of_Target.ipynb
 """
 from collections import defaultdict
-from enum import Enum
 from typing import Union
 
 import numpy as np
 
-from scaaml.aes_forward import AESSBOX
+from scaaml.stats.attack_points.aes_128.attack_points import LeakageModelAES128
 from scaaml.stats.online import Mean, VarianceSinglePass
-
-
-class AttackPoint(Enum):
-    SUB_BYTES_IN = 0
-    SUB_BYTES_OUT = 1
-
-
-class LeakageModelAES128:
-    """The value that might be correlated with value(s) in the trace.
-    """
-
-    def __init__(self,
-                 byte_index: int = 0,
-                 attack_point: AttackPoint = AttackPoint.SUB_BYTES_IN,
-                 use_hamming_weight: bool = True) -> None:
-        """Gives the leakage function.
-
-        Args:
-
-          byte_index (int): Which byte to target (in range(16)).
-
-          attack_point (AttackPoint): Use either input or output of the first
-          SBOX.
-
-          use_hamming_weight (bool): Use just the Hamming weight of the value.
-        """
-        assert byte_index in range(16)
-        self._byte_index: int = byte_index
-        self._use_hamming_weight: bool = use_hamming_weight
-        self._attack_point: AttackPoint = attack_point
-
-    @staticmethod
-    def _safe_cast(
-            value: np.typing.NDArray[np.uint8]) -> np.typing.NDArray[np.uint8]:
-        """Ideally this function does nothing. But it is very easy to pass an
-        array of larger dtype and then be surprised by results of leakage (the
-        additional bytes are zero).
-
-        Args:
-
-          value (np.typing.NDArray[np.uint8]): Try to convert this to uint8.
-
-        Raises ValueError if the values cannot be safely converted to uint8.
-        """
-        uint8_value = np.array(value, dtype=np.uint8)
-        if not (uint8_value == value).all():
-            raise ValueError("Conversion to uint8 was not successful.")
-        return uint8_value
-
-    def leakage(self, plaintext: np.typing.NDArray[np.uint8],
-                key: np.typing.NDArray[np.uint8]) -> int:
-        """Return the leakage value.
-
-        Args:
-
-          plaintext (np.typing.NDArray[np.uint8]): Array of byte values. The
-          method fails if there is a value which cannot be converted to uint8.
-
-          key (np.typing.NDArray[np.uint8]): Array of byte values. The method
-          fails if there is a value which cannot be converted to uint8.
-
-        Returns: An integer representing the leakage.
-        """
-        plaintext = self._safe_cast(plaintext)
-        key = self._safe_cast(key)
-
-        # Get the byte value of the leakage.
-        byte_value: int
-        if self._attack_point == AttackPoint.SUB_BYTES_OUT:
-            byte_value = AESSBOX.sub_bytes_out(
-                key=bytearray(key),
-                plaintext=bytearray(plaintext),
-            )[self._byte_index]
-        elif self._attack_point == AttackPoint.SUB_BYTES_IN:
-            byte_value = AESSBOX.sub_bytes_in(
-                key=bytearray(key),
-                plaintext=bytearray(plaintext),
-            )[self._byte_index]
-        else:
-            raise NotImplementedError("Unknown attack point "
-                                      f"{self._attack_point}")
-
-        # Maybe convert to Hamming weight.
-        if self._use_hamming_weight:
-            return int(byte_value).bit_count()
-
-        return byte_value
 
 
 class SNRSinglePass:
@@ -144,7 +56,7 @@ class SNRSinglePass:
           np.typing.NDArray[np.float64]]]): Assumes that there are "trace1",
           "key", and "plaintext".
         """
-        leakage = self._leakage_model.leakage(
+        leakage = self._leakage_model.leakage_knowing_secrets(
             plaintext=example["plaintext"],  # type: ignore[arg-type]
             key=example["key"],  # type: ignore[arg-type]
         )

@@ -19,6 +19,7 @@ GPIO
 GRIDAREAONLY
 Gaëtan
 HWAES
+INVSHIFT
 IACR
 Invernizzi
 Junwei
@@ -50,6 +51,8 @@ TMPL
 TRFL
 TRMD
 Tensorboard
+Unmix
+Unshift
 VICP
 WAVEDESC
 acqktp
@@ -114,6 +117,7 @@ lecroy
 libps
 logit
 logits
+logscale
 mathjax
 matplotlib
 maxsplit
@@ -146,6 +150,7 @@ pypa
 pypackages
 pyplot
 pyvisa
+rcon
 rearchitecting
 relu
 resnet
@@ -191,8 +196,10 @@ vispy
 vsintellicode
 webassets
 xlabel
+xscale
 xticks
 yapf
 ylabel
+yscale
 yticks
 Łukasz
