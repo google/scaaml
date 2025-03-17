@@ -891,6 +891,10 @@ class Pico6424E(ScopeTemplate):
         ret["ignore_overflow"] = self.ignore_overflow
         return ret
 
+    def dict_repr(self) -> dict[str, Any]:
+        """Human readable representation as a key value dictionary."""
+        return self._dict_repr()
+
     def __repr__(self) -> str:
         """Return device name, connected status and dict representation as
         multi-line string."""

@@ -47,4 +47,5 @@ def test_coveralls_happiness():
             trigger_coupling="AC",
             resolution="PICO_DR_8BIT",
     ) as pico_scope:
-        pass
+        s = str(pico_scope)
+        d = pico_scope.dict_repr()

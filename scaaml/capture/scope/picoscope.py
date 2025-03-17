@@ -220,3 +220,13 @@ class PicoScope(AbstractSScope):
             return
         self._scope.dis()
         self._scope = None
+
+    def dict_repr(self) -> dict[str, Any]:
+        """Return dictionary representation of this scope.
+        """
+        return self._scope.dict_repr()
+
+    def __str__(self) -> str:
+        """Representation of this scope.
+        """
+        return str(self._scope)
