@@ -427,12 +427,7 @@ class Pico6424E(ScopeTemplate):
             self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
                 "PICO_RATIO_MODE_AVERAGE"]
 
-    @property
-    def resolution(self) -> int:
-        return self._resolution
-
-    @resolution.setter
-    def resolution(self, value: str) -> None:
+    def set_resolution(self, value: str) -> None:
         """Set resolution. If the scope is connected it will reconnect. Higher
         resolution is not available for very high sampling frequencies. In such
         case PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION will be

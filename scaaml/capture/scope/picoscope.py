@@ -175,7 +175,7 @@ class PicoScope(AbstractSScope):
 
         # Connect to the oscilloscope.
         self._scope = PicoScope6424E()
-        self._scope.resolution = self._resolution
+        self._scope.set_resolution(self._resolution)
         self._scope.con()
 
         # Trace channel settings.
