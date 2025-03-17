@@ -387,9 +387,6 @@ class Pico6424E(ScopeTemplate):
     """Class that interacts with the Picoscope 6424E oscilloscope."""
     _name = "Picoscope 6424E series 6000a (picosdk)"
     _NUM_CHANNELS: int = 4  # Number of analog channels
-    #  Resolutions 8bit and 10bit work, but 12bit does not seem to be working
-    #  (PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION)
-    _RESOLUTION: int = picoEnum.PICO_DEVICE_RESOLUTION["PICO_DR_10BIT"]
 
     DOWNSAMPLING_RATIO: int = 1
 
@@ -397,6 +394,8 @@ class Pico6424E(ScopeTemplate):
         del args  # unused
         del kwargs  # unused
         self.ps_handle: ctypes.c_int16 = ctypes.c_int16()
+
+        self._resolution: int = picoEnum.PICO_DEVICE_RESOLUTION["PICO_DR_10BIT"]
 
         self.trace = CaptureSettings()
         self.trigger = TriggerSettings()
@@ -427,6 +426,30 @@ class Pico6424E(ScopeTemplate):
         if self.DOWNSAMPLING_RATIO > 1:
             self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
                 "PICO_RATIO_MODE_AVERAGE"]
+
+    def set_resolution(self, value: str) -> None:
+        """Set resolution. If the scope is connected it will reconnect. Higher
+        resolution is not available for very high sampling frequencies. In such
+        case PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION will be
+        raised.
+
+        Args:
+
+          value (str): The resolution value. See
+          `picosdk.PicoDeviceEnums.PICO_DEVICE_RESOLUTION`.
+        """
+        if value not in picoEnum.PICO_DEVICE_RESOLUTION:
+            raise ValueError(f"{value} not in supported values: "
+                             f"{picoEnum.PICO_DEVICE_RESOLUTION.keys()}")
+
+        reconnect: bool = self.connectStatus
+        if reconnect:
+            self.dis()
+
+        self._resolution = picoEnum.PICO_DEVICE_RESOLUTION[value]
+
+        if reconnect:
+            self.con()
 
     @staticmethod
     def _get_timebase(sample_rate: float) -> ctypes.c_uint32:
@@ -480,7 +503,7 @@ class Pico6424E(ScopeTemplate):
                 ps.ps6000aOpenUnit(
                     ctypes.byref(self.ps_handle),  # handle
                     None,  # serial, open the first scope found
-                    self._RESOLUTION,  # resolution
+                    self._resolution,  # resolution
                 ))
             # ps6000aOpenUnit could return an indication of a needed firmware
             # update, but picosdk.constants.PICO_STATUS raises KeyError on
@@ -490,7 +513,7 @@ class Pico6424E(ScopeTemplate):
             assert_ok(
                 ps.ps6000aGetAdcLimits(
                     self.ps_handle,  # handle
-                    self._RESOLUTION,  # resolution
+                    self._resolution,  # resolution
                     ctypes.byref(ctypes.c_int16()),  # minADC
                     ctypes.byref(self._max_adc),  # maxADC
                 ))
@@ -867,6 +890,10 @@ class Pico6424E(ScopeTemplate):
         ret["sample_offset"] = self.sample_offset
         ret["ignore_overflow"] = self.ignore_overflow
         return ret
+
+    def dict_repr(self) -> dict[str, Any]:
+        """Human readable representation as a key value dictionary."""
+        return self._dict_repr()
 
     def __repr__(self) -> str:
         """Return device name, connected status and dict representation as
