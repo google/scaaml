@@ -142,7 +142,7 @@ class PicoScope(AbstractSScope):
         super().__init__(samples=samples, offset=offset)
         self._sample_rate = sample_rate
 
-        self._resolution: RESOLUTION_T = resolution
+        self._resolution: PicoScope.RESOLUTION_T = resolution
 
         # Trace settings
         self._trace_channel: PicoScope.CHANNEL_T = trace_channel
