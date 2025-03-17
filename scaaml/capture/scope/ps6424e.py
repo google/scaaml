@@ -431,7 +431,8 @@ class Pico6424E(ScopeTemplate):
     def resolution(self) -> int:
         return self._resolution
 
-    def set_resolution(self, value: str) -> None:
+    @resolution.setter
+    def resolution(self, value: str) -> None:
         """Set resolution. If the scope is connected it will reconnect. Higher
         resolution is not available for very high sampling frequencies. In such
         case PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION will be
@@ -442,6 +443,10 @@ class Pico6424E(ScopeTemplate):
           value (str): The resolution value. See
           `picosdk.PicoDeviceEnums.PICO_DEVICE_RESOLUTION`.
         """
+        if value not in picoEnum.PICO_DEVICE_RESOLUTION:
+            raise ValueError(f"{value} not in supported values: "
+                             f"{picoEnum.PICO_DEVICE_RESOLUTION.keys()}")
+
         reconnect: bool = self.connectStatus
         if reconnect:
             self.dis()
