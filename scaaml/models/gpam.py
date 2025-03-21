@@ -36,11 +36,12 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
-class Rescale(layers.Layer):
+class Rescale(layers.Layer[Any]):
     """Rescale input to the interval [-1, 1].
     """
 
-    def __init__(self, trace_min: float, trace_delta: float, **kwargs) -> None:
+    def __init__(self, trace_min: float, trace_delta: float,
+                 **kwargs: Any) -> None:
         """Information for trace rescaling.
 
         Args:
@@ -53,8 +54,9 @@ class Rescale(layers.Layer):
         self.trace_min: float = trace_min
         self.trace_delta: float = trace_delta
 
-    def call(self, inputs: Tensor, **kwargs) -> Tensor:
+    def call(self, inputs: Tensor, **kwargs: Any) -> Tensor:
         """Rescale to the interval [-1, 1]."""
+        del kwargs  # unused
         x = inputs
         x = 2 * ((x - self.trace_min) / self.trace_delta) - 1
         return x
@@ -70,7 +72,7 @@ class Rescale(layers.Layer):
         return config
 
 
-class ScaledNorm(layers.Layer):
+class ScaledNorm(layers.Layer[Any]):
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
@@ -81,7 +83,7 @@ class ScaledNorm(layers.Layer):
     def __init__(self,
                  begin_axis: int = -1,
                  epsilon: float = 1e-5,
-                 **kwargs) -> None:
+                 **kwargs: Any) -> None:
         """Initialize a ScaledNorm Layer.
 
         Args:
@@ -94,7 +96,7 @@ class ScaledNorm(layers.Layer):
         self._begin_axis = begin_axis
         self._epsilon = epsilon
         self._scale = self.add_weight(
-            name='norm_scale',
+            name="norm_scale",
             shape=(),
             initializer=tf.constant_initializer(value=1.0),
             trainable=True,
