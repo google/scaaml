@@ -36,7 +36,7 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
-class Rescale(layers.Layer[Any]):
+class Rescale(layers.Layer[Any, Any]):
     """Rescale input to the interval [-1, 1].
     """
 
@@ -72,7 +72,7 @@ class Rescale(layers.Layer[Any]):
         return config
 
 
-class ScaledNorm(layers.Layer[Any]):
+class ScaledNorm(layers.Layer[Any, Any]):
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
