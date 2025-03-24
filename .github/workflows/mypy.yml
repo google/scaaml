@@ -26,4 +26,4 @@ jobs:
       - name: Running mypy
         run: |
           mkdir -p .mypy_cache
-          mypy --no-color-output --install-types --non-interactive scaaml
+          mypy --no-color-output --install-types --non-interactive --verbose scaaml

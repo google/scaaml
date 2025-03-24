@@ -29,7 +29,6 @@ from scaaml.io import DatasetFiller
 from scaaml.io.shard import Shard
 from scaaml.io import utils as siutils
 from scaaml.io.errors import DatasetExistsError
-from scaaml.io.reshape import reshape_into_new_dataset
 from scaaml.stats import ExampleIterator
 
 
