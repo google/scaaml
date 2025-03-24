@@ -30,7 +30,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     labels:
-      - "depedencies"
+      - "dependencies"
       - "CI"
     # Run every Monday
     schedule:
