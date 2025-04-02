@@ -288,7 +288,7 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         self.attention_activation_layer = tf.keras.layers.Activation(
             self.attention_activation)
 
-    def build(self, input_shape):
+    def build(self, input_shape: tuple[int, ...]) -> None:
         del input_shape  # unused
 
         # setting up position encoding
@@ -393,8 +393,9 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
 
 
 @keras.saving.register_keras_serializable()
-class StopGradient(  # type: ignore[misc,no-any-unimported,type-arg]
-        keras.layers.Layer):
+class StopGradient(
+        keras.layers.Layer,  # type: ignore[misc,no-any-unimported,type-arg]
+):
     """Stop gradient as a Keras layer.
     """
 
