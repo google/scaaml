@@ -36,7 +36,8 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
-class Rescale(layers.Layer[Any, Any]):
+@keras.saving.register_keras_serializable()
+class Rescale(layers.Layer):
     """Rescale input to the interval [-1, 1].
     """
 
@@ -71,8 +72,13 @@ class Rescale(layers.Layer[Any, Any]):
         })
         return config
 
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Any:
+        return cls(**config)
 
-class ScaledNorm(layers.Layer[Any, Any]):
+
+@keras.saving.register_keras_serializable()
+class ScaledNorm(layers.Layer):
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
@@ -120,6 +126,10 @@ class ScaledNorm(layers.Layer[Any, Any]):
             "epsilon": self._epsilon
         })
         return config
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Any:
+        return cls(**config)
 
 
 def clone_initializer(initializer: tf.keras.initializers.Initializer) -> Any:
@@ -192,6 +202,7 @@ def toeplitz_matrix_rope(
     return tf.einsum("mk,nk->mn", a, b)  # type: ignore[no-any-return]
 
 
+@keras.saving.register_keras_serializable()
 class GAU(layers.Layer):  # type: ignore[type-arg]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
@@ -255,9 +266,11 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
 
         # define layers
         self.norm = layers.LayerNormalization()
-        self.proj1 = layers.Dense(self.proj_dim,
-                                  use_bias=True,
-                                  activation=self.activation)
+        self.proj1 = layers.Dense(
+            self.proj_dim,
+            use_bias=True,
+            activation=self.activation,
+        )
         self.proj2 = layers.Dense(self.dim, use_bias=True)
 
         # dropout layers
@@ -275,18 +288,34 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         self.attention_activation_layer = tf.keras.layers.Activation(
             self.attention_activation)
 
+    def build(self, input_shape):
         # setting up position encoding
-        self.a = tf.Variable(lambda: self.weight_initializer(
-            shape=[self.max_len], dtype=tf.float32))
-        self.b = tf.Variable(lambda: self.weight_initializer(
-            shape=[self.max_len], dtype=tf.float32))
+        self.a = self.add_weight(
+            name="a",
+            shape=(self.max_len,),
+            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[self.max_len]),
+            trainable=True,
+        )
+        self.b = self.add_weight(
+            name="b",
+            shape=(self.max_len,),
+            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[self.max_len]),
+            trainable=True,
+        )
 
         # offset scaling values
-        self.gamma = tf.Variable(lambda: self.weight_initializer(
-            shape=[2, self.shared_dim], dtype=tf.float32))
-
-        self.beta = tf.Variable(lambda: self.zeros_initializer(
-            shape=[2, self.shared_dim], dtype=tf.float32))
+        self.gamma = self.add_weight(
+            name="gamma",
+            shape=(2, self.shared_dim),
+            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[2, self.shared_dim]),
+            trainable=True,
+        )
+        self.beta = self.add_weight(
+            name="beta",
+            shape=(2, self.shared_dim),
+            initializer=lambda *args, **kwargs: self.zeros_initializer(shape=[2, self.shared_dim]),
+            trainable=True,
+        )
 
     def call(self, x: Any, training: bool = False) -> Any:
 
@@ -339,9 +368,14 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
             "activation": self.activation,
             "attention_activation": self.attention_activation,
             "dropout_rate": self.dropout_rate,
-            "spatial_dropout_rate": self.spatial_dropout_rate
+            "spatial_dropout_rate": self.spatial_dropout_rate,
+            "attention_dropout_rate": self.attention_dropout_rate,
         })
         return config
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Any:
+        return cls(**config)
 
     @property
     def weight_initializer(self) -> Any:
@@ -352,6 +386,7 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         return clone_initializer(tf.initializers.zeros())
 
 
+@keras.saving.register_keras_serializable()
 class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
     """Stop gradient as a Keras layer.
     """
@@ -386,6 +421,10 @@ class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
             "stop_gradient": self._stop_gradient,
         })
         return config  # type: ignore[no-any-return]
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Any:
+        return cls(**config)
 
 
 def _make_head(  # type: ignore[no-any-unimported]
