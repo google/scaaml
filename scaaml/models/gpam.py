@@ -394,7 +394,7 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
 
 @keras.saving.register_keras_serializable()
 class StopGradient(
-        keras.layers.Layer,  # type: ignore[misc,no-any-unimported,type-arg]
+        keras.layers.Layer,  # type: ignore[misc,no-any-unimported]
 ):
     """Stop gradient as a Keras layer.
     """
