@@ -293,13 +293,15 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         self.a = self.add_weight(
             name="a",
             shape=(self.max_len,),
-            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[self.max_len]),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[self.max_len]),
             trainable=True,
         )
         self.b = self.add_weight(
             name="b",
             shape=(self.max_len,),
-            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[self.max_len]),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[self.max_len]),
             trainable=True,
         )
 
@@ -307,13 +309,15 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         self.gamma = self.add_weight(
             name="gamma",
             shape=(2, self.shared_dim),
-            initializer=lambda *args, **kwargs: self.weight_initializer(shape=[2, self.shared_dim]),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[2, self.shared_dim]),
             trainable=True,
         )
         self.beta = self.add_weight(
             name="beta",
             shape=(2, self.shared_dim),
-            initializer=lambda *args, **kwargs: self.zeros_initializer(shape=[2, self.shared_dim]),
+            initializer=lambda *args, **kwargs: self.zeros_initializer(
+                shape=[2, self.shared_dim]),
             trainable=True,
         )
 
