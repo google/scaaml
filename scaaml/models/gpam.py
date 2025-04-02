@@ -37,7 +37,7 @@ from tensorflow import Tensor
 
 
 @keras.saving.register_keras_serializable()
-class Rescale(layers.Layer):
+class Rescale(layers.Layer):  # type: ignore[type-arg]
     """Rescale input to the interval [-1, 1].
     """
 
@@ -78,7 +78,7 @@ class Rescale(layers.Layer):
 
 
 @keras.saving.register_keras_serializable()
-class ScaledNorm(layers.Layer):
+class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
@@ -393,7 +393,7 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
 
 
 @keras.saving.register_keras_serializable()
-class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
+class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported,type-arg]
     """Stop gradient as a Keras layer.
     """
 
