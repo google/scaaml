@@ -12,23 +12,90 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+import numpy as np
+import keras
+
+from scaaml.models import get_gpam_model
 
 
 def test_train_save_load(tmp_path):
-    model_save = tmp_path / "mnist.keras"
+    save_path = str(tmp_path / "mnist.keras")
 
-    # Call these as separate scripts to ensure everything is saved (and we do
-    # not have to load additional stuff).
+    outputs = {"label": {"max_val": 10}}
+    model = get_gpam_model(
+        inputs={"trace1": {
+            "min": 0,
+            "delta": 256
+        }},
+        outputs=outputs,
+        output_relations=[],
+        trace_len=28 * 28,
+        merge_filter_1=0,
+        merge_filter_2=0,
+        patch_size=28,
+    )
+    # Compile model
+    model.compile(
+        optimizer=keras.optimizers.Adafactor(0.01),
+        loss=["categorical_crossentropy" for _ in range(len(outputs))],
+        metrics={name: ["acc"] for name in outputs},
+    )
+    model.summary()
 
-    subprocess.check_call([
-        "python3",
-        "tests/models/train_mnist.py",
-        str(model_save),
-    ])
+    (x_train, y_train), _ = keras.datasets.mnist.load_data()
+    x_train = x_train.reshape(-1, 28 * 28)
+    y_train = keras.utils.to_categorical(y_train, 10)
 
-    subprocess.check_call([
-        "python3",
-        "tests/models/load_mnist.py",
-        str(model_save),
-    ])
+    _ = model.fit(
+        x_train,
+        y_train,
+        batch_size=32,
+        epochs=10,
+        validation_split=0.1,
+    )
+
+    model.save(save_path)
+
+    _, (x_test, y_test) = keras.datasets.mnist.load_data()
+    x_test = x_test.reshape(-1, 28 * 28)
+    y_test = keras.utils.to_categorical(y_test, 10)
+    score = model.evaluate(x_test, y_test)
+    print("[orig] Test loss:", score[0])
+    print("[orig] Test accuracy:", score[1])
+    assert score[1] > 0.9
+
+    loaded_model = keras.models.load_model(save_path)
+    loaded_model.summary()
+    _, (x_test, y_test) = keras.datasets.mnist.load_data()
+    x_test = x_test.reshape(-1, 28 * 28)
+    y_test = keras.utils.to_categorical(y_test, 10)
+    score = loaded_model.evaluate(x_test, y_test)
+    print("[loaded] Test loss:", score[0])
+    print("[loaded] Test accuracy:", score[1])
+    assert score[1] > 0.97
+
+    # Make sure the loaded model is the same layer by layer.
+    def match(i, x):
+        print(f"model.layers[{i}].name = {model.layers[i].name}")
+        np.testing.assert_allclose(
+            model.layers[i](x),
+            loaded_model.layers[i](x),
+        )
+
+    match(1, np.random.uniform(size=(1, 28 * 28)))
+    match(2, np.random.uniform(size=(1, 28, 28)))
+    match(3, np.random.uniform(size=(1, 28, 28)))
+    match(4, np.random.uniform(size=(1, 28, 192)))
+    match(5, np.random.uniform(size=(1, 28, 192)))
+    match(6, np.random.uniform(size=(1, 28, 192)))
+    match(7, np.random.uniform(size=(1, 28, 192)))
+    match(10, np.random.uniform(size=(1, 28, 576)))
+    match(11, np.random.uniform(size=(1, 28, 576)))
+    match(12, np.random.uniform(size=(1, 28)))
+    match(13, np.random.uniform(size=(1, 28)))
+    match(14, np.random.uniform(size=(1, 28)))
+    match(15, np.random.uniform(size=(1, 10)))
+    match(16, np.random.uniform(size=(1, 10)))
+    match(17, np.random.uniform(size=(1, 10)))
+    match(18, np.random.uniform(size=(1, 10)))
+    match(19, np.random.uniform(size=(1, 10)))
