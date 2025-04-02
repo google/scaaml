@@ -289,6 +289,8 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
             self.attention_activation)
 
     def build(self, input_shape):
+        del input_shape  # unused
+
         # setting up position encoding
         self.a = self.add_weight(
             name="a",
