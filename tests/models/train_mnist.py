@@ -25,7 +25,10 @@ from scaaml.models import get_gpam_model
 def main():
     outputs = {"label": {"max_val": 10}}
     model = get_gpam_model(
-        inputs={"trace1": {"min": 0, "delta": 256}},
+        inputs={"trace1": {
+            "min": 0,
+            "delta": 256
+        }},
         outputs=outputs,
         output_relations=[],
         trace_len=28 * 28,
@@ -62,7 +65,6 @@ def main():
     print("[orig] Test loss:", score[0])
     print("[orig] Test accuracy:", score[1])
     assert score[1] > 0.9
-
 
     loaded_model = keras.models.load_model(sys.argv[1])
     loaded_model.summary()
