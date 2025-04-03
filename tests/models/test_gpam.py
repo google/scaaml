@@ -36,43 +36,48 @@ def test_train_save_load(tmp_path):
     )
     # Compile model
     model.compile(
-        optimizer=keras.optimizers.Adafactor(0.01),
+        optimizer=keras.optimizers.Adafactor(0.1),
         loss=["categorical_crossentropy" for _ in range(len(outputs))],
         metrics={name: ["acc"] for name in outputs},
     )
     model.summary()
 
-    (x_train, y_train), _ = keras.datasets.mnist.load_data()
+    # Work with a subset of data
+    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+    n_train: int = 1_000
+    x_train = x_train[:n_train]
+    y_train = y_train[:n_train]
+    n_test: int = 1_000
+    x_test = x_test[:n_test]
+    y_test = y_test[:n_test]
+
     x_train = x_train.reshape(-1, 28 * 28)
     y_train = keras.utils.to_categorical(y_train, 10)
+    x_test = x_test.reshape(-1, 28 * 28)
+    y_test = keras.utils.to_categorical(y_test, 10)
 
+    # Train only a little bit to ensure trainable weights were changed (as
+    # opposed to initialized).
     _ = model.fit(
         x_train,
         y_train,
-        batch_size=32,
-        epochs=10,
-        validation_split=0.1,
+        batch_size=10,
+        epochs=1,
     )
 
     model.save(save_path)
 
-    _, (x_test, y_test) = keras.datasets.mnist.load_data()
-    x_test = x_test.reshape(-1, 28 * 28)
-    y_test = keras.utils.to_categorical(y_test, 10)
     score = model.evaluate(x_test, y_test)
     print("[orig] Test loss:", score[0])
     print("[orig] Test accuracy:", score[1])
-    assert score[1] > 0.9
+    assert score[1] > 0.25
 
     loaded_model = keras.models.load_model(save_path)
     loaded_model.summary()
-    _, (x_test, y_test) = keras.datasets.mnist.load_data()
-    x_test = x_test.reshape(-1, 28 * 28)
-    y_test = keras.utils.to_categorical(y_test, 10)
     score = loaded_model.evaluate(x_test, y_test)
     print("[loaded] Test loss:", score[0])
     print("[loaded] Test accuracy:", score[1])
-    assert score[1] > 0.97
+    assert score[1] > 0.25
 
     # Make sure the loaded model is the same layer by layer.
     def match(i, x):
