@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import numpy as np
-import keras
 import tensorflow as tf
+import keras
 
 from scaaml.models import get_gpam_model
 
