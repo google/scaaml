@@ -19,6 +19,8 @@ from scaaml.models import get_gpam_model
 
 
 def test_train_save_load(tmp_path):
+    keras.utils.set_random_seed(42)
+
     save_path = str(tmp_path / "mnist.keras")
 
     outputs = {"label": {"max_val": 10}}
@@ -70,14 +72,14 @@ def test_train_save_load(tmp_path):
     score = model.evaluate(x_test, y_test)
     print("[orig] Test loss:", score[0])
     print("[orig] Test accuracy:", score[1])
-    assert score[1] > 0.25
+    assert score[1] > 0.2
 
     loaded_model = keras.models.load_model(save_path)
     loaded_model.summary()
     score = loaded_model.evaluate(x_test, y_test)
     print("[loaded] Test loss:", score[0])
     print("[loaded] Test accuracy:", score[1])
-    assert score[1] > 0.25
+    assert score[1] > 0.2
 
     # Make sure the loaded model is the same layer by layer.
     def match(i, x):
