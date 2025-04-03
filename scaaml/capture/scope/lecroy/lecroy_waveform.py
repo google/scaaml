@@ -150,7 +150,8 @@ class LecroyWaveform:
         wave: ScopeTraceType = np.array(self.get_raw_wave1(), dtype=np.float32)
         gain = self._wave_description.vertical_gain
         offset = self._wave_description.vertical_offset
-        scaled_wave: ScopeTraceType = wave * gain - offset
+        scaled_wave: ScopeTraceType = np.array(wave * gain - offset,
+                                               dtype=np.float32)
         end = scaled_wave.size
         if length > 0:
             end = min(end, length + first_sample)
