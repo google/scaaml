@@ -72,10 +72,6 @@ class Rescale(layers.Layer):  # type: ignore[type-arg]
         })
         return config
 
-    @classmethod
-    def from_config(cls, config: dict[str, Any]) -> Any:
-        return cls(**config)
-
 
 @keras.saving.register_keras_serializable()
 class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
@@ -126,10 +122,6 @@ class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
             "epsilon": self._epsilon
         })
         return config
-
-    @classmethod
-    def from_config(cls, config: dict[str, Any]) -> Any:
-        return cls(**config)
 
 
 def clone_initializer(initializer: tf.keras.initializers.Initializer) -> Any:
@@ -379,10 +371,6 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         })
         return config
 
-    @classmethod
-    def from_config(cls, config: dict[str, Any]) -> Any:
-        return cls(**config)
-
     @property
     def weight_initializer(self) -> Any:
         return clone_initializer(tf.random_normal_initializer(stddev=0.02))
@@ -429,10 +417,6 @@ class StopGradient(
             "stop_gradient": self._stop_gradient,
         })
         return config  # type: ignore[no-any-return]
-
-    @classmethod
-    def from_config(cls, config: dict[str, Any]) -> Any:
-        return cls(**config)
 
 
 def _make_head(  # type: ignore[no-any-unimported]
