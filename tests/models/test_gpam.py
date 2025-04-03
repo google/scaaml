@@ -46,7 +46,7 @@ def test_train_save_load(tmp_path):
 
     # Work with a subset of data
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    n_train: int = 1_000
+    n_train: int = 5_000
     x_train = x_train[:n_train]
     y_train = y_train[:n_train]
     n_test: int = 1_000
