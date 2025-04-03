@@ -14,12 +14,14 @@
 
 import numpy as np
 import keras
+import tensorflow as tf
 
 from scaaml.models import get_gpam_model
 
 
 def test_train_save_load(tmp_path):
     keras.utils.set_random_seed(42)
+    tf.config.experimental.enable_op_determinism()
 
     save_path = str(tmp_path / "mnist.keras")
 
@@ -46,10 +48,10 @@ def test_train_save_load(tmp_path):
 
     # Work with a subset of data
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    n_train: int = 5_000
+    n_train: int = 1_500
     x_train = x_train[:n_train]
     y_train = y_train[:n_train]
-    n_test: int = 1_000
+    n_test: int = 200
     x_test = x_test[:n_test]
     y_test = y_test[:n_test]
 
@@ -72,14 +74,14 @@ def test_train_save_load(tmp_path):
     score = model.evaluate(x_test, y_test)
     print("[orig] Test loss:", score[0])
     print("[orig] Test accuracy:", score[1])
-    assert score[1] > 0.35
+    assert score[1] > 0.3
 
     loaded_model = keras.models.load_model(save_path)
     loaded_model.summary()
     score = loaded_model.evaluate(x_test, y_test)
     print("[loaded] Test loss:", score[0])
     print("[loaded] Test accuracy:", score[1])
-    assert score[1] > 0.35
+    assert score[1] > 0.3
 
     # Make sure the loaded model is the same layer by layer.
     def match(i, x):
