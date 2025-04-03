@@ -32,8 +32,8 @@ def test_train_save_load(tmp_path):
         outputs=outputs,
         output_relations=[],
         trace_len=28 * 28,
-        merge_filter_1=0,
-        merge_filter_2=0,
+        merge_filter_1=28,
+        merge_filter_2=14,
         patch_size=28,
     )
     # Compile model
@@ -72,14 +72,14 @@ def test_train_save_load(tmp_path):
     score = model.evaluate(x_test, y_test)
     print("[orig] Test loss:", score[0])
     print("[orig] Test accuracy:", score[1])
-    assert score[1] > 0.2
+    assert score[1] > 0.35
 
     loaded_model = keras.models.load_model(save_path)
     loaded_model.summary()
     score = loaded_model.evaluate(x_test, y_test)
     print("[loaded] Test loss:", score[0])
     print("[loaded] Test accuracy:", score[1])
-    assert score[1] > 0.2
+    assert score[1] > 0.35
 
     # Make sure the loaded model is the same layer by layer.
     def match(i, x):
@@ -96,13 +96,18 @@ def test_train_save_load(tmp_path):
     match(5, np.random.uniform(size=(1, 28, 192)))
     match(6, np.random.uniform(size=(1, 28, 192)))
     match(7, np.random.uniform(size=(1, 28, 192)))
+    match(9, np.random.uniform(size=(1, 28, 576)))
     match(10, np.random.uniform(size=(1, 28, 576)))
-    match(11, np.random.uniform(size=(1, 28, 576)))
-    match(12, np.random.uniform(size=(1, 28)))
-    match(13, np.random.uniform(size=(1, 28)))
-    match(14, np.random.uniform(size=(1, 28)))
-    match(15, np.random.uniform(size=(1, 10)))
-    match(16, np.random.uniform(size=(1, 10)))
-    match(17, np.random.uniform(size=(1, 10)))
-    match(18, np.random.uniform(size=(1, 10)))
+    match(11, np.random.uniform(size=(1, 26, 28)))
+    match(12, np.random.uniform(size=(1, 13, 28)))
+    match(13, np.random.uniform(size=(1, 13, 28)))
+    match(14, np.random.uniform(size=(1, 11, 14)))
+    match(15, np.random.uniform(size=(1, 11, 14)))
+    match(16, np.random.uniform(size=(1, 11)))
+    match(17, np.random.uniform(size=(1, 11)))
+    match(18, np.random.uniform(size=(1, 11)))
     match(19, np.random.uniform(size=(1, 10)))
+    match(20, np.random.uniform(size=(1, 10)))
+    match(21, np.random.uniform(size=(1, 10)))
+    match(22, np.random.uniform(size=(1, 10)))
+    match(23, np.random.uniform(size=(1, 10)))
