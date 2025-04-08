@@ -36,6 +36,94 @@ from tensorflow.keras import layers
 from tensorflow import Tensor
 
 
+@keras.saving.register_keras_serializable()
+class Rescale(layers.Layer):  # type: ignore[type-arg]
+    """Rescale input to the interval [-1, 1].
+    """
+
+    def __init__(self, trace_min: float, trace_delta: float,
+                 **kwargs: Any) -> None:
+        """Information for trace rescaling.
+
+        Args:
+
+          trace_min (float): Minimum over all traces.
+
+          trace_delta (float): Maximum over all traces minus `trace_min`.
+        """
+        super().__init__(**kwargs)
+        self.trace_min: float = trace_min
+        self.trace_delta: float = trace_delta
+
+    def call(self, inputs: Tensor, **kwargs: Any) -> Tensor:
+        """Rescale to the interval [-1, 1]."""
+        del kwargs  # unused
+        x = inputs
+        x = 2 * ((x - self.trace_min) / self.trace_delta) - 1
+        return x
+
+    def get_config(self) -> dict[str, Any]:
+        """Return the config to allow saving and loading of the model.
+        """
+        config = super().get_config()
+        config.update({
+            "trace_min": self.trace_min,
+            "trace_delta": self.trace_delta,
+        })
+        return config
+
+
+@keras.saving.register_keras_serializable()
+class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
+    """ScaledNorm layer.
+
+    Transformers without Tears: Improving the Normalization of Self-Attention
+    Toan Q. Nguyen, Julian Salazar
+    https://arxiv.org/abs/1910.05895
+    """
+
+    def __init__(self,
+                 begin_axis: int = -1,
+                 epsilon: float = 1e-5,
+                 **kwargs: Any) -> None:
+        """Initialize a ScaledNorm Layer.
+
+        Args:
+
+            begin_axis (int): Axis along which to apply norm. Defaults to -1.
+
+            epsilon (float): Norm epsilon value. Defaults to 1e-5.
+        """
+        super().__init__(**kwargs)
+        self._begin_axis = begin_axis
+        self._epsilon = epsilon
+        self._scale = self.add_weight(
+            name="norm_scale",
+            shape=(),
+            initializer=tf.constant_initializer(value=1.0),
+            trainable=True,
+        )
+
+    def call(self, inputs: Tensor) -> Tensor:
+        """Return the output of this layer.
+        """
+        x = inputs
+        axes = list(range(len(x.shape)))[self._begin_axis:]
+        mean_square = tf.reduce_mean(tf.math.square(x), axes, keepdims=True)
+        x = x * tf.math.rsqrt(mean_square + self._epsilon)
+        return x * self._scale
+
+    def get_config(self) -> dict[str, Any]:
+        """Return the config to allow saving and loading of the model.
+        """
+        config = super().get_config()
+        config.update({
+            "begin_axis": self._begin_axis,
+            "epsilon": self._epsilon
+        })
+        return config
+
+
 def clone_initializer(initializer: tf.keras.initializers.Initializer) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
@@ -101,11 +189,12 @@ def toeplitz_matrix_rope(
     b: Tensor,
 ) -> Tensor:
     """Obtain Toeplitz matrix using rope."""
-    a = rope(tf.tile(a[None, :], [n, 1]), axis=0)
-    b = rope(tf.tile(b[None, :], [n, 1]), axis=0)
+    a = rope(tf.tile(a[None, :], [n, 1]), axis=[0])
+    b = rope(tf.tile(b[None, :], [n, 1]), axis=[0])
     return tf.einsum("mk,nk->mn", a, b)  # type: ignore[no-any-return]
 
 
+@keras.saving.register_keras_serializable()
 class GAU(layers.Layer):  # type: ignore[type-arg]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
@@ -169,9 +258,11 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
 
         # define layers
         self.norm = layers.LayerNormalization()
-        self.proj1 = layers.Dense(self.proj_dim,
-                                  use_bias=True,
-                                  activation=self.activation)
+        self.proj1 = layers.Dense(
+            self.proj_dim,
+            use_bias=True,
+            activation=self.activation,
+        )
         self.proj2 = layers.Dense(self.dim, use_bias=True)
 
         # dropout layers
@@ -189,18 +280,40 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         self.attention_activation_layer = tf.keras.layers.Activation(
             self.attention_activation)
 
+    def build(self, input_shape: tuple[int, ...]) -> None:
+        del input_shape  # unused
+
         # setting up position encoding
-        self.a = tf.Variable(lambda: self.weight_initializer(
-            shape=[self.max_len], dtype=tf.float32))
-        self.b = tf.Variable(lambda: self.weight_initializer(
-            shape=[self.max_len], dtype=tf.float32))
+        self.a = self.add_weight(
+            name="a",
+            shape=(self.max_len,),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[self.max_len]),
+            trainable=True,
+        )
+        self.b = self.add_weight(
+            name="b",
+            shape=(self.max_len,),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[self.max_len]),
+            trainable=True,
+        )
 
         # offset scaling values
-        self.gamma = tf.Variable(lambda: self.weight_initializer(
-            shape=[2, self.shared_dim], dtype=tf.float32))
-
-        self.beta = tf.Variable(lambda: self.zeros_initializer(
-            shape=[2, self.shared_dim], dtype=tf.float32))
+        self.gamma = self.add_weight(
+            name="gamma",
+            shape=(2, self.shared_dim),
+            initializer=lambda *args, **kwargs: self.weight_initializer(
+                shape=[2, self.shared_dim]),
+            trainable=True,
+        )
+        self.beta = self.add_weight(
+            name="beta",
+            shape=(2, self.shared_dim),
+            initializer=lambda *args, **kwargs: self.zeros_initializer(
+                shape=[2, self.shared_dim]),
+            trainable=True,
+        )
 
     def call(self, x: Any, training: bool = False) -> Any:
 
@@ -253,7 +366,8 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
             "activation": self.activation,
             "attention_activation": self.attention_activation,
             "dropout_rate": self.dropout_rate,
-            "spatial_dropout_rate": self.spatial_dropout_rate
+            "spatial_dropout_rate": self.spatial_dropout_rate,
+            "attention_dropout_rate": self.attention_dropout_rate,
         })
         return config
 
@@ -266,7 +380,10 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         return clone_initializer(tf.initializers.zeros())
 
 
-class StopGradient(keras.layers.Layer):  # type: ignore[misc,no-any-unimported]
+@keras.saving.register_keras_serializable()
+class StopGradient(
+        keras.layers.Layer,  # type: ignore[misc,no-any-unimported]
+):
     """Stop gradient as a Keras layer.
     """
 
@@ -345,9 +462,11 @@ def _make_head(  # type: ignore[no-any-unimported]
     head = layers.Dropout(dense_dropout, name=f"{name}_dropout")(head)
 
     # Dense block
-    head = layers.Dense(dim)(head)
+    head = layers.Dense(dim, activation=activation)(head)
+    head = layers.Dense(dim, activation=activation)(head)
+    head = layers.Dense(dim, activation=activation)(head)
     head = layers.Dropout(dense_dropout)(head)
-    head = layers.Activation(activation)(head)
+    head = layers.Dense(dim, activation=activation)(head)
 
     # Prediction
     return layers.Dense(dim, activation="softmax", name=name)(head)
@@ -528,8 +647,10 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
 
     # Reshape the trace.
     x = layers.Reshape((steps, patch_size))(x)
-    # Rescale to the interval [-1, 1].
-    x = 2 * ((x - inputs["trace1"]["min"]) / inputs["trace1"]["delta"]) - 1
+    x = Rescale(  # to the interval [-1, 1].
+        trace_min=inputs["trace1"]["min"],
+        trace_delta=inputs["trace1"]["delta"],
+    )(x)
 
     # Single dense after preprocess.
     x = layers.Dense(filters)(x)
@@ -563,7 +684,7 @@ def get_gpam_model(  # type: ignore[no-any-unimported]
         x = layers.MaxPool1D(pool_size=2)(x)
         # Second merge block
         if merge_filter_2:
-            x = layers.BatchNormalization()(x)
+            x = ScaledNorm()(x)
             x = layers.Conv1D(merge_filter_2,
                               combine_kernel_size,
                               activation=activation,
