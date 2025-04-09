@@ -74,3 +74,17 @@ jobs:
         with:
           file: coverage.xml
 
+  piptest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Installing package
+        run: |
+          pip install scaaml
+      - name: Running unit tests
+        run: python -m pytest tests/io
