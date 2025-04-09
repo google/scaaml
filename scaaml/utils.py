@@ -20,7 +20,6 @@ import time
 
 from glob import glob
 from termcolor import cprint
-from termcolor._types import Color
 from tqdm.auto import tqdm
 from chipwhisperer.common.traces import Trace
 import numpy as np
@@ -47,7 +46,7 @@ def bytelist_to_hex(lst: Sequence[int], spacer: str = " ") -> str:
 
 def hex_display(lst: Sequence[int],
                 prefix: str = "",
-                color: Color = "green") -> None:
+                color: str = "green") -> None:
     "display a list of int as colored hex"
     h = []
     if len(prefix) > 0:
@@ -146,7 +145,7 @@ def display_config(config_name: str, config: Dict[str, str]) -> None:
     cprint(f"[{config_name}]", "magenta")
     cnt = 1
     for k, v in config.items():
-        color: Color = "yellow"
+        color: str = "yellow"
         if cnt % 2:
             color = "cyan"
         cprint(f"{k}:{v}", color)
