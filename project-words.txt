@@ -19,8 +19,8 @@ GPIO
 GRIDAREAONLY
 Gaëtan
 HWAES
-INVSHIFT
 IACR
+INVSHIFT
 Invernizzi
 Junwei
 Karel
@@ -51,6 +51,7 @@ TMPL
 TRFL
 TRMD
 Tensorboard
+Toan
 Unmix
 Unshift
 VICP
