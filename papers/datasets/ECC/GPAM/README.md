@@ -67,3 +67,22 @@ Multiplicative blinding using a 128-bit long random mask.
 
 Combination of CM1 and CM2 (CM1 where each scalar multiplication in CM1 is
 protected by an independent CM2).
+
+## ECC Firmware
+
+A firmware equivalent to the one used for the GPAM paper has been merged to the
+ChipWhisperer repository
+[simpleserial-ecc.c](https://github.com/newaetech/chipwhisperer/blob/develop/firmware/mcu/simpleserial-ecc-notrace/simpleserial-ecc.c)
+([commit
+6f0b3e0b0bc3f8423c6ee0428ae9712ad5412454](https://github.com/newaetech/chipwhisperer/commit/6f0b3e0b0bc3f8423c6ee0428ae9712ad5412454)).
+Note that we have not tested 1:1 compatibility with the pre-trained models.
+Notable differences:
+
+-   Use of the ChipWhisperer firmware stack vs bare-metal dedicated firmware
+    used in the paper. Impact should be negligible when the trigger is high but
+    there could be timing differences when implementing a countermeasure (e.g.,
+    CM1 with two multiplications and one addition orchestrated by a Python
+    code).
+-   K82F target chip clocked at 7.37MHz is the same as in the paper.
+-   Serial communication is at 38400 bauds with ChipWhisperer whereas our paper
+    had 115200 bauds.
