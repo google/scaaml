@@ -1,0 +1,96 @@
+{
+    "batch_size": 128,
+    "steps_per_epoch": 200,
+    "epochs": 25,
+    "target_lr": 0.006,
+    "merge_filter_1": 16,
+    "merge_filter_2": 8,
+    "trace_len": 1620000,
+    "patch_size": 1200,
+    "attack_points": [
+        {
+            "name": "k",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 1,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 2,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 3,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 4,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 5,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 6,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 7,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 8,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 9,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 10,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 11,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 12,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 13,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 14,
+            "type": "byte"
+        },
+        {
+            "name": "k",
+            "index": 15,
+            "type": "byte"
+        }
+    ],
+    "output_relations": [],
+    "trace_start": 0,
+    "shuffle_size": 512,
+    "val_steps": 16
+}

@@ -1,0 +1,76 @@
+{
+    "batch_size": 32,
+    "steps_per_epoch": 400,
+    "epochs": 500,
+    "target_lr": 0.003,
+    "merge_filter_1": 16,
+    "merge_filter_2": 8,
+    "trace_len": 16777216,
+    "patch_size": 4096,
+    "attack_points": [
+        {
+            "name": "k",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "r1",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "r2a",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "r2b",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "km1",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "km2a",
+            "index": 16,
+            "type": "byte"
+        },
+        {
+            "name": "km2b",
+            "index": 16,
+            "type": "byte"
+        }
+    ],
+    "output_relations": [
+        [
+            "r1_0",
+            "k_0"
+        ],
+        [
+            "km1_0",
+            "k_0"
+        ],
+        [
+            "km2a_16",
+            "km1_0"
+        ],
+        [
+            "r2a_0",
+            "km1_0"
+        ],
+        [
+            "km2b_16",
+            "r1_0"
+        ],
+        [
+            "r2b_0",
+            "r1_0"
+        ]
+    ],
+    "trace_start": 0,
+    "shuffle_size": 128,
+    "val_steps": 16
+}
