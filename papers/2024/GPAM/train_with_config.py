@@ -19,8 +19,8 @@ Example use:
 ```bash
 python train_with_config.py \
 	--dataset_path K82F_ECC_CM2_ECC-FR256_CW308/ \
-	--config configurations/ECC_CM2_blackbox.json \
-	--result_file configurations/ECC_CM2_blackbox_result.json
+	--config configurations/ECC_CM2_black_box.json \
+	--result_file configurations/ECC_CM2_black_box_result.json
 ```
 """
 import argparse
@@ -61,7 +61,7 @@ def main() -> None:
     parser.add_argument(
         "--result_file",
         "-r",
-        help="Where to write the result (standad output if not picked)",
+        help="Where to write the result (standard output if not picked)",
         type=Path,
         default=None,
     )
