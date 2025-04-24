@@ -128,9 +128,9 @@ an update, open an issue or just send us an email.
 }
 ```
 
-## Errata
+## List of Errata
 
-### April 2025
+### Erratum -- April 2025 (last update 24 April 2025)
 
 We thank an anonymous source (we asked for permission to publish their
 name(-s)) for pointing us that the ECC CM2 result was not working as expected.
