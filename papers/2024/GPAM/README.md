@@ -160,8 +160,9 @@ described under Weight Initialization Influence). The differences are that the
 learning rate is set ten times higher that what is reported in Table 1. One
 could try to combine `Adafactor` with learning rate schedule to achieve more
 precise results. Namely the non-protected ECC CM0 achieves better results with
-learning rate decay. See [Keras Learning rate schedules API
-](https://keras.io/api/optimizers/learning_rate_schedules/) for more details.
+learning rate decay. See
+[Keras Learning rate schedules API](https://keras.io/api/optimizers/learning_rate_schedules/)
+for more details.
 
 The results are still work in progress. Note that these were run on an older
 computer so the runtime is longer.  Results (accuracy in percent) compared to
@@ -169,10 +170,10 @@ Table 4 and 5 (holdout) and Figure 3 (validation) of [Generalized Power Attacks
 against Crypto Hardware using Long-Range Deep
 Learning](https://arxiv.org/pdf/2306.07249):
 
-| Experiment          | Table 4 and 5 (holdout) | Figure 3 (validation) | Here (validation) |
-| ------------------- | ----------------------- | --------------------- | ----------------- |
-| ECC CM0 k0          |          100%           |          100%         |       100%        |     
-| ECC CM1 k0          |           79%           |           86%         |        85%        |     
-| ECC CM2 k0          |           66%           |           66%         |        54%        |
-| ECC CM2 k0 blackbox |           23%           |       (not shown)     |       TODO        |
-| ECC CM3 k0          |            9%           |            9%         |       TODO        |
+| Experiment           | Table 4 and 5 (holdout) | Figure 3 (validation) | Here (validation) |
+| -------------------- | ----------------------- | --------------------- | ----------------- |
+| ECC CM0 k0           |          100%           |          100%         |       100%        |
+| ECC CM1 k0           |           79%           |           86%         |        85%        |
+| ECC CM2 k0           |           66%           |           66%         |        54%        |
+| ECC CM2 k0 black box |           23%           |       (not shown)     |       TODO        |
+| ECC CM3 k0           |            9%           |            9%         |       TODO        |
