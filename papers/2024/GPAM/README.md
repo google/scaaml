@@ -130,6 +130,8 @@ an update, open an issue or just send us an email.
 
 ## Errata
 
+### April 2025
+
 We thank an anonymous source (we asked for permission to publish their
 name(-s)) for pointing us that the ECC CM2 result was not working as expected.
 Namely the published model achieved just 2% accuracy as opposed to 20%. This
