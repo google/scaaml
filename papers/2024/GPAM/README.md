@@ -177,5 +177,5 @@ Learning](https://arxiv.org/pdf/2306.07249):
 | ECC CM0 k0           |          100%           |          100%         |       100%        |
 | ECC CM1 k0           |           79%           |           86%         |        85%        |
 | ECC CM2 k0           |           66%           |           66%         |        54%        |
-| ECC CM2 k0 black box |           23%           |       (not shown)     |       TODO        |
-| ECC CM3 k0           |            9%           |            9%         |       TODO        |
+| ECC CM2 k0 black box |           23%           |       (not shown)     |        56%        |
+| ECC CM3 k0           |            9%           |            9%         |        10%        |
