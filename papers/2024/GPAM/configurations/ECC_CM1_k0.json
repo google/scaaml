@@ -1,0 +1,40 @@
+{
+    "batch_size": 64,
+    "steps_per_epoch": 200,
+    "epochs": 500,
+    "target_lr": 0.006,
+    "merge_filter_1": 16,
+    "merge_filter_2": 8,
+    "trace_len": 4194304,
+    "patch_size": 2048,
+    "attack_points": [
+        {
+            "name": "k",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "km",
+            "index": 0,
+            "type": "byte"
+        },
+        {
+            "name": "r",
+            "index": 0,
+            "type": "byte"
+        }
+    ],
+    "output_relations": [
+        [
+            "km_0",
+            "k_0"
+        ],
+        [
+            "r_0",
+            "k_0"
+        ]
+    ],
+    "trace_start": 0,
+    "shuffle_size": 512,
+    "val_steps": 16
+}

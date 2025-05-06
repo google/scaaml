@@ -106,6 +106,9 @@ you already downloaded the datasets four small json files per dataset will be
 needed, if you used `gsutil rsync` to download, these will be downloaded very
 fast).
 
+For now see the tutorial
+[https://google.github.io/sedpack/tutorials/sca/gpam/](https://google.github.io/sedpack/tutorials/sca/gpam/).
+
 ## List of citations and followup work
 
 This section is best effort. We will be happy if you send us a pull request with
@@ -123,3 +126,56 @@ an update, open an issue or just send us an email.
   pages={472--499},
   year={2024}
 }
+```
+
+## List of Errata
+
+### Erratum -- April 2025 (last update 24 April 2025)
+
+We thank an anonymous source (we asked for permission to publish their
+name(-s)) for pointing us that the ECC CM2 result was not working as expected.
+Namely the published model achieved just 2% accuracy as opposed to 20%. This
+has been caused by our mistake during publishing the internal version. The fix
+is available in [pull request 354](https://github.com/google/scaaml/pull/354).
+
+The changes:
+
+-   Fewer dense layers in the head.
+-   BatchNorm instead of ScaledNorm.
+
+The fix has been applied to the current version of GPAM model and one can just
+
+```python
+from scaaml.models import get_gpam_model
+```
+
+The code of `papers/2024/GPAM/gpam_ecc_cm1.py` has not been modified yet and we
+will modify it after we repeat all experiments.
+
+To make sure all main results are repeatable we provide the following script:
+`papers/2024/GPAM/train_with_config.py` and configurations based on Table 1 of
+[Generalized Power Attacks against Crypto Hardware using Long-Range Deep
+Learning](https://arxiv.org/pdf/2306.07249). The main difference is that here
+we are using the `Adafactor` optimizer in place of `Adam` with learning rate
+schedule. This seems to help to make the training more stable (problem
+described under Weight Initialization Influence). The differences are that the
+learning rate is set ten times higher that what is reported in Table 1. One
+could try to combine `Adafactor` with learning rate schedule to achieve more
+precise results. Namely the non-protected ECC CM0 achieves better results with
+learning rate decay. See
+[Keras Learning rate schedules API](https://keras.io/api/optimizers/learning_rate_schedules/)
+for more details.
+
+The results are still work in progress. Note that these were run on an older
+computer so the runtime is longer.  Results (accuracy in percent) compared to
+Table 4 and 5 (holdout) and Figure 3 (validation) of [Generalized Power Attacks
+against Crypto Hardware using Long-Range Deep
+Learning](https://arxiv.org/pdf/2306.07249):
+
+| Experiment           | Table 4 and 5 (holdout) | Figure 3 (validation) | Here (validation) |
+| -------------------- | ----------------------- | --------------------- | ----------------- |
+| ECC CM0 k0           |          100%           |          100%         |       100%        |
+| ECC CM1 k0           |           79%           |           86%         |        85%        |
+| ECC CM2 k0           |           66%           |           66%         |        54%        |
+| ECC CM2 k0 black box |           23%           |       (not shown)     |        56%        |
+| ECC CM3 k0           |            9%           |            9%         |        10%        |
