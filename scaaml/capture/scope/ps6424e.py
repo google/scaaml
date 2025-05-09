@@ -555,7 +555,9 @@ class Pico6424E(ScopeTemplate):
 
     def con(self, sn: Optional[str] = None) -> bool:  # pragma: no cover
         try:
-            sn_bytes: Optional[bytes] = bytes(sn, encoding="ascii") if sn else sn
+            sn_bytes: Optional[bytes] = None
+            if sn:
+                sn_bytes = bytes(sn, encoding="ascii")
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit
             assert_ok(
