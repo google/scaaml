@@ -78,7 +78,7 @@ class PicoScope(AbstractSScope):
         trigger_level: float,
         trigger_coupling: COUPLING_T,
         resolution: RESOLUTION_T = "PICO_DR_10BIT",
-        serial_number: str | None = None,
+        serial_number: Optional[str] = None,
         **_: Any,
     ) -> None:
         """Create scope context.
@@ -137,7 +137,7 @@ class PicoScope(AbstractSScope):
           PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION is raised.
 
           serial_number (str | None): The serial number of the oscilloscope to
-          connect to. Defualts to None -- the first enumerated non-connected
+          connect to. Defaults to None -- the first enumerated non-connected
           oscilloscope. One can use `PicoScope6424E.enumerate_units` to get a
           list of non-connected oscilloscopes.
 
@@ -147,7 +147,7 @@ class PicoScope(AbstractSScope):
         """
         super().__init__(samples=samples, offset=offset)
         self._sample_rate = sample_rate
-        self._serial_number: str | None = serial_number
+        self._serial_number: Optional[str] = serial_number
 
         self._resolution: PicoScope.RESOLUTION_T = resolution
 

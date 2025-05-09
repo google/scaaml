@@ -450,19 +450,19 @@ class Pico6424E(ScopeTemplate):
         """
         # First figure out how many oscilloscopes there are to allocate long
         # enough string for their serial numbers.
+        # int16_t * count, (number of units found)
         count: ctypes.c_int16 = ctypes.c_int16()
+        # int8_t * serials, (string serial numbers)
         serials = ctypes.create_string_buffer(b"")
-        serialLth: ctypes.c_int16 = ctypes.c_int16(len(serials))
+        # int16_t * serialLth (length of the string)
+        serial_len: ctypes.c_int16 = ctypes.c_int16(len(serials))
 
         # Find out the count.
         assert_ok(
             ps.ps6000aEnumerateUnits(
-                # int16_t * count, (number of units found)
                 ctypes.byref(count),
-                # int8_t * serials, (string serial numbers)
                 ctypes.cast(serials, ctypes.c_char_p),
-                # int16_t * serialLth (length of the string)
-                ctypes.byref(serialLth),
+                ctypes.byref(serial_len),
             ))
 
         # At least 42 characters per oscilloscope with full info, better safe
@@ -471,7 +471,7 @@ class Pico6424E(ScopeTemplate):
         serials = ctypes.create_string_buffer(
             bytes(requested_info, encoding="ascii") +
             ((serial_number_characters * count.value) * b" "))
-        serialLth = ctypes.c_int16(len(serials))
+        serial_len = ctypes.c_int16(len(serials))
 
         # Get serial numbers.
         assert_ok(
@@ -480,12 +480,11 @@ class Pico6424E(ScopeTemplate):
                 ctypes.byref(count),
                 # int8_t * serials, (string serial numbers)
                 ctypes.cast(serials, ctypes.c_char_p),
-                # int16_t * serialLth (length of the string)
-                ctypes.byref(serialLth),
+                ctypes.byref(serial_len),
             ))
 
         # To string and split.
-        return (serials.value[:serialLth.value]).decode('ascii').split(",")
+        return (serials.value[:serial_len.value]).decode("ascii").split(",")
 
     def set_resolution(self, value: str) -> None:
         """Set resolution. If the scope is connected it will reconnect. Higher
@@ -556,7 +555,7 @@ class Pico6424E(ScopeTemplate):
 
     def con(self, sn: Optional[str] = None) -> bool:  # pragma: no cover
         try:
-            sn_bytes: bytes | None = bytes(sn, encoding="ascii") if sn else sn
+            sn_bytes: Optional[bytes] = bytes(sn, encoding="ascii") if sn else sn
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit
             assert_ok(
