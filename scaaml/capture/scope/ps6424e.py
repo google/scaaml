@@ -427,6 +427,65 @@ class Pico6424E(ScopeTemplate):
             self._downsampling_mode = picoEnum.PICO_RATIO_MODE[
                 "PICO_RATIO_MODE_AVERAGE"]
 
+    @staticmethod
+    def enumerate_units(requested_info: str = "") -> list[str]:
+        """Enumerate PicoScope units which are not open yet (controlled by
+        another program).
+
+        Args:
+
+          requested_info (str): What information about the oscilloscopes is
+          requested. Defaults to empty string -- just the serial number.
+          Possible info (colon separated).
+              -v: model number
+              -c: calibration date
+              -h: hardware version
+              -u: USB version
+              -f: firmware version
+          Example for all info: "-v:-c:-h:-u:-f"
+
+        Returns: a list of serial numbers. If `requested_info` is not empty
+        then each serial number is followed by comma-separated values in square
+        brackets.
+        """
+        # First figure out how many oscilloscopes there are to allocate long
+        # enough string for their serial numbers.
+        # int16_t * count, (number of units found)
+        count: ctypes.c_int16 = ctypes.c_int16()
+        # int8_t * serials, (string serial numbers)
+        serials = ctypes.create_string_buffer(b"")
+        # int16_t * serialLth (length of the string)
+        serial_len: ctypes.c_int16 = ctypes.c_int16(len(serials))
+
+        # Find out the count.
+        assert_ok(
+            ps.ps6000aEnumerateUnits(
+                ctypes.byref(count),
+                ctypes.cast(serials, ctypes.c_char_p),
+                ctypes.byref(serial_len),
+            ))
+
+        # At least 42 characters per oscilloscope with full info, better safe
+        # than sorry -> 50.
+        serial_number_characters: int = 50
+        serials = ctypes.create_string_buffer(
+            bytes(requested_info, encoding="ascii") +
+            ((serial_number_characters * count.value) * b" "))
+        serial_len = ctypes.c_int16(len(serials))
+
+        # Get serial numbers.
+        assert_ok(
+            ps.ps6000aEnumerateUnits(
+                # int16_t * count, (number of units found)
+                ctypes.byref(count),
+                # int8_t * serials, (string serial numbers)
+                ctypes.cast(serials, ctypes.c_char_p),
+                ctypes.byref(serial_len),
+            ))
+
+        # To string and split.
+        return (serials.value[:serial_len.value]).decode("ascii").split(",")
+
     def set_resolution(self, value: str) -> None:
         """Set resolution. If the scope is connected it will reconnect. Higher
         resolution is not available for very high sampling frequencies. In such
@@ -495,14 +554,16 @@ class Pico6424E(ScopeTemplate):
         raise ValueError("Couldn't find a supported timebase")
 
     def con(self, sn: Optional[str] = None) -> bool:  # pragma: no cover
-        del sn  # unused
         try:
+            sn_bytes: Optional[bytes] = None
+            if sn:
+                sn_bytes = bytes(sn, encoding="ascii")
             # Open the scope and get the corresponding handle self.ps_handle.
             # resolution 8, 10, 12 bit
             assert_ok(
                 ps.ps6000aOpenUnit(
                     ctypes.byref(self.ps_handle),  # handle
-                    None,  # serial, open the first scope found
+                    sn_bytes,  # serial number
                     self._resolution,  # resolution
                 ))
             # ps6000aOpenUnit could return an indication of a needed firmware

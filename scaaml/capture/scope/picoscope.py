@@ -78,6 +78,7 @@ class PicoScope(AbstractSScope):
         trigger_level: float,
         trigger_coupling: COUPLING_T,
         resolution: RESOLUTION_T = "PICO_DR_10BIT",
+        serial_number: Optional[str] = None,
         **_: Any,
     ) -> None:
         """Create scope context.
@@ -135,12 +136,18 @@ class PicoScope(AbstractSScope):
           supported. But if too high sample_rate is chosen
           PICO_CHANNEL_COMBINATION_NOT_VALID_IN_THIS_RESOLUTION is raised.
 
+          serial_number (str | None): The serial number of the oscilloscope to
+          connect to. Defaults to None -- the first enumerated non-connected
+          oscilloscope. One can use `PicoScope6424E.enumerate_units` to get a
+          list of non-connected oscilloscopes.
+
           _: PicoScope is expected to be initialized using capture_info
           dictionary, this parameter allows to have additional information
           there and initialize as PicoScope(**capture_info).
         """
         super().__init__(samples=samples, offset=offset)
         self._sample_rate = sample_rate
+        self._serial_number: Optional[str] = serial_number
 
         self._resolution: PicoScope.RESOLUTION_T = resolution
 
@@ -176,7 +183,7 @@ class PicoScope(AbstractSScope):
         # Connect to the oscilloscope.
         self._scope = PicoScope6424E()
         self._scope.set_resolution(self._resolution)
-        self._scope.con()
+        self._scope.con(sn=self._serial_number)
 
         # Trace channel settings.
         self._scope.trace.channel = self._trace_channel
