@@ -23,6 +23,27 @@ from scaaml.aes_forward import AESSBOX
 
 
 class AttackPointAES128(ABC):
+
+    @classmethod
+    def _all_subclasses(cls):
+        """Recursively get all subclasses of the class."""
+        subclasses = set(cls.__subclasses__())
+        for subclass in cls.__subclasses__():
+            subclasses.update(subclass._all_subclasses())
+        return subclasses
+
+    @classmethod
+    def subclass_names(cls):
+        """Return a list of all subclass names (as strings)."""
+        return [subclass.__name__ for subclass in cls._all_subclasses()]
+
+    @classmethod
+    def from_name(cls, name: str):
+        """Return the subclass of AttackPointAES128 with the given name."""
+        for subclass in cls._all_subclasses():
+            if subclass.__name__ == name:
+                return subclass
+        raise ValueError(f"No subclass of {cls.__name__} with name '{name}' found.")
     """AES128 attack point.
     """
 
