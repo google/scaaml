@@ -1,3 +1,19 @@
+def test_attack_point_aes128_subclass_names_and_lookup():
+    # All subclasses should be listed
+    names = set(AttackPointAES128.subclass_names())
+    classes = set(cls.__name__ for cls in AttackPointAES128.__subclasses__())
+    assert names == classes
+
+    # from_name should return the correct class
+    for name in names:
+        subclass = AttackPointAES128.from_name(name)
+        assert subclass.__name__ == name
+        assert issubclass(subclass, AttackPointAES128)
+
+    # from_name should raise ValueError for a bad name
+    import pytest
+    with pytest.raises(ValueError):
+        AttackPointAES128.from_name("NotARealSubclass")
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
