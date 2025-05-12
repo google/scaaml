@@ -22,30 +22,33 @@ from scaaml.stats.attack_points.aes_128.full_aes import key_schedule, SBOX, SBOX
 from scaaml.aes_forward import AESSBOX
 
 
+
 class AttackPointAES128(ABC):
+    """AES128 attack point base class. Provides utilities for listing and retrieving subclasses by name."""
+
 
     @classmethod
-    def _all_subclasses(cls):
+    def all_subclasses(cls) -> set[type]:
         """Recursively get all subclasses of the class."""
-        subclasses = set(cls.__subclasses__())
+        subclasses: set[type] = set(cls.__subclasses__())
         for subclass in cls.__subclasses__():
-            subclasses.update(subclass._all_subclasses())
+            subclasses.update(subclass.all_subclasses())
         return subclasses
 
-    @classmethod
-    def subclass_names(cls):
-        """Return a list of all subclass names (as strings)."""
-        return [subclass.__name__ for subclass in cls._all_subclasses()]
 
     @classmethod
-    def from_name(cls, name: str):
+    def subclass_names(cls) -> list[str]:
+        """Return a list of all subclass names (as strings)."""
+        return [subclass.__name__ for subclass in cls.all_subclasses()]
+
+
+    @classmethod
+    def from_name(cls, name: str) -> type["AttackPointAES128"]:
         """Return the subclass of AttackPointAES128 with the given name."""
-        for subclass in cls._all_subclasses():
+        for subclass in cls.all_subclasses():
             if subclass.__name__ == name:
                 return subclass
         raise ValueError(f"No subclass of {cls.__name__} with name '{name}' found.")
-    """AES128 attack point.
-    """
 
     @classmethod
     def leakage_knowing_secrets(cls, key: npt.NDArray[np.uint8],
