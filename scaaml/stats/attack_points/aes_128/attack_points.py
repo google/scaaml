@@ -21,13 +21,7 @@ import numpy.typing as npt
 from scaaml.stats.attack_points.aes_128.full_aes import key_schedule, SBOX, SBOX_INV
 from scaaml.aes_forward import AESSBOX
 
-
-
 class AttackPointAES128(ABC):
-    """AES128 attack point base class. 
-    Provides utilities for listing 
-    and retrieving subclasses by name."""
-
 
     @classmethod
     def all_subclasses(cls) -> set[type]:
@@ -50,7 +44,8 @@ class AttackPointAES128(ABC):
         for subclass in cls.all_subclasses():
             if subclass.__name__ == name:
                 return subclass
-        raise ValueError(f"No subclass {cls.__name__}w/'{name}' found.")
+        raise ValueError(f"No subclass {cls.__name__} with the name"
+                         f"'{name}' found.")
 
     @classmethod
     def leakage_knowing_secrets(cls, key: npt.NDArray[np.uint8],
