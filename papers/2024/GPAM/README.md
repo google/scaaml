@@ -40,7 +40,7 @@ the community to independently replicate our results and build on them.
 -   REASSURE (H2020 731591) ECC Dataset
     Łukasz Chmielewski
 
-    [link](https://zenodo.org/records/3609789)
+    [download](https://zenodo.org/records/3609789)
 
 -   ASCADv2
     Loïc Masure and Rémi Strullu.
@@ -50,19 +50,19 @@ the community to independently replicate our results and build on them.
 
     Journal of Cryptographic Engineering, 2023. [https://eprint.iacr.org/2021/592.pdf]
 
-    [link](https://www.data.gouv.fr/en/datasets/ascadv2/)
+    [download](https://www.data.gouv.fr/en/datasets/ascadv2/)
 
 -   ASCADv1
     Ryad Benadjila, Prouff Emmanuel, and Junwei Wang.
 
     ATMEGA boolean masked AES variable key
 
-    [link](https://github.com/ANSSI-FR/ASCAD)
+    [implementation and download from GitHub](https://github.com/ANSSI-FR/ASCAD)
 
 -   CHES 2023 SMAesH challenge
     Gaëtan Cassiers, Charles Momin, and François-Xavier Standaert.
 
-    [link](https://smaesh-challenge.simple-crypto.org/)
+    [SMAesH website](https://smaesh-challenge.simple-crypto.org/)
 
 ## Models
 
