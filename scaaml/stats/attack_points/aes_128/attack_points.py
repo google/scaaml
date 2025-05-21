@@ -21,6 +21,7 @@ import numpy.typing as npt
 from scaaml.stats.attack_points.aes_128.full_aes import key_schedule, SBOX, SBOX_INV
 from scaaml.aes_forward import AESSBOX
 
+
 class AttackPointAES128(ABC):
 
     @classmethod
@@ -31,12 +32,10 @@ class AttackPointAES128(ABC):
             subclasses.update(subclass.all_subclasses())
         return subclasses
 
-
     @classmethod
     def subclass_names(cls) -> list[str]:
         """Return a list of all subclass names (as strings)."""
         return [subclass.__name__ for subclass in cls.all_subclasses()]
-
 
     @classmethod
     def from_name(cls, name: str) -> type["AttackPointAES128"]:
