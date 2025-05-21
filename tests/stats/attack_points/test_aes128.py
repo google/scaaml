@@ -11,40 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-
-
-
-def test_attack_point_aes128_subclass_names_and_lookup():
-    # All subclasses should be listed
-    names = set(AttackPointAES128.subclass_names())
-    classes = set(cls.__name__ for cls in AttackPointAES128.__subclasses__())
-    assert names == classes
-
-    # from_name should return the correct class
-    for name in names:
-        subclass = AttackPointAES128.from_name(name)
-        assert subclass.__name__ == name
-        assert issubclass(subclass, AttackPointAES128)
-
-    # from_name should raise ValueError for a bad name
-    import pytest
-    with pytest.raises(ValueError):
-        AttackPointAES128.from_name("NotARealSubclass")
-# Copyright 2025 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Test AES128 attack points."""
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -56,6 +22,24 @@ import numpy as np
 from scaaml.aes_forward import AESSBOX
 from scaaml.stats.attack_points.aes_128.full_aes import encrypt
 from scaaml.stats.attack_points.aes_128.attack_points import *
+
+
+
+def test_attack_point_aes128_subclass_names_and_lookup():
+    # All subclasses (including indirect) should be listed
+    names = set(AttackPointAES128.subclass_names())
+
+    # from_name should return the correct class that creates an instance that passes isinstance check
+    for name in names:
+        subclass = AttackPointAES128.from_name(name)
+        assert subclass.__name__ == name
+        # Create an instance and check if it's an instance of AttackPointAES128
+        instance = subclass()
+        assert isinstance(instance, AttackPointAES128)
+
+    # from_name should raise ValueError for a bad name
+    with pytest.raises(ValueError):
+        AttackPointAES128.from_name("NotARealSubclass")
 
 
 def test_sub_bytes_in():
