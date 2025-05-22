@@ -35,7 +35,8 @@ class AttackPointAES128(ABC):
        operate on parameters central to AES and side-channel attacks, such as):
       key (npt.NDArray[np.uint8]): The AES secret key.
       plaintext (npt.NDArray[np.uint8]): Plaintext input to AES.
-      ciphertext (npt.NDArray[np.uint8]): Ciphertext output from AES (relevant for some models).
+      ciphertext (npt.NDArray[np.uint8]): Ciphertext output from AES
+          (relevant for some models).
       guess (int): A hypothesized byte value for the targeted secret.
       byte_index (int): Index of the byte (0-15) being analyzed.
 
