@@ -24,7 +24,6 @@ from scaaml.stats.attack_points.aes_128.full_aes import encrypt
 from scaaml.stats.attack_points.aes_128.attack_points import *
 
 
-
 def test_attack_point_aes128_subclass_names_and_lookup():
     # All subclasses (including indirect) should be listed
     names = set(AttackPointAES128.subclass_names())

@@ -21,6 +21,7 @@ import numpy.typing as npt
 from scaaml.stats.attack_points.aes_128.full_aes import key_schedule, SBOX, SBOX_INV
 from scaaml.aes_forward import AESSBOX
 
+
 class AttackPointAES128(ABC):
     """Abstract base class for defining and modeling AES-128 attack points.
 
