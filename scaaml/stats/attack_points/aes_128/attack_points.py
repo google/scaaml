@@ -23,8 +23,59 @@ from scaaml.aes_forward import AESSBOX
 
 
 class AttackPointAES128(ABC):
-    """AES128 attack point.
+    """Abstract base class for defining and modeling AES-128 attack points.
+
+    This class provides an interface for specifying different intermediate
+    values or operations within the AES-128 algorithm that can be targeted
+    in side-channel analysis. Subclasses implement the specific logic for
+    leakage models (e.g., `leakage_from_guess`) and identifying the
+    targeted secret (e.g., `target_secret`).
+
+    Args:
+      (While the base class is abstract, its methods and subclass methods
+       operate on parameters central to AES and side-channel attacks, such as):
+      key (npt.NDArray[np.uint8]): The AES secret key.
+      plaintext (npt.NDArray[np.uint8]): Plaintext input to AES.
+      ciphertext (npt.NDArray[np.uint8]): Ciphertext output from AES
+          (relevant for some models).
+      guess (int): A hypothesized byte value for the targeted secret.
+      byte_index (int): Index of the byte (0-15) being analyzed.
+
+    Example use:
+      # # Conceptual: 'SubBytesOut' is a concrete subclass.
+      # SBOAttackPoint = AttackPointAES128.from_name("SubBytesOut")
+      # sbo_instance = SBOAttackPoint() # If instantiation is part of the design
+      #
+      # # Call a method, e.g., to calculate leakage based on a guess:
+      # leakage = sbo_instance.leakage_from_guess(
+      #     plaintext=pt_array,
+      #     ciphertext=ct_array, # If needed by this specific attack point
+      #     guess=guessed_val,
+      #     byte_index=idx
+      # )
     """
+
+    @classmethod
+    def all_subclasses(cls) -> set[type]:
+        """Recursively get all subclasses of the class."""
+        subclasses: set[type] = set(cls.__subclasses__())
+        for subclass in cls.__subclasses__():
+            subclasses.update(subclass.all_subclasses())
+        return subclasses
+
+    @classmethod
+    def subclass_names(cls) -> list[str]:
+        """Return a list of all subclass names (as strings)."""
+        return [subclass.__name__ for subclass in cls.all_subclasses()]
+
+    @classmethod
+    def from_name(cls, name: str) -> type["AttackPointAES128"]:
+        """Return the subclass of AttackPointAES128 with the given name."""
+        for subclass in cls.all_subclasses():
+            if subclass.__name__ == name:
+                return subclass
+        raise ValueError(f"No subclass {cls.__name__} with the name"
+                         f"'{name}' found.")
 
     @classmethod
     def leakage_knowing_secrets(cls, key: npt.NDArray[np.uint8],
