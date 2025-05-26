@@ -23,8 +23,30 @@ from scaaml.aes_forward import AESSBOX
 
 
 class AttackPointAES128(ABC):
-    """AES128 attack point.
+    """Base class for AES-128 attack points
     """
+
+    @classmethod
+    def all_subclasses(cls) -> set[type]:
+        """Recursively get all subclasses of the class."""
+        subclasses: set[type] = set(cls.__subclasses__())
+        for subclass in cls.__subclasses__():
+            subclasses.update(subclass.all_subclasses())
+        return subclasses
+
+    @classmethod
+    def subclass_names(cls) -> list[str]:
+        """Return a list of all subclass names (as strings)."""
+        return [subclass.__name__ for subclass in cls.all_subclasses()]
+
+    @classmethod
+    def from_name(cls, name: str) -> type["AttackPointAES128"]:
+        """Return the subclass of AttackPointAES128 with the given name."""
+        for subclass in cls.all_subclasses():
+            if subclass.__name__ == name:
+                return subclass
+        raise ValueError(f"No subclass {cls.__name__} with the name"
+                         f"'{name}' found.")
 
     @classmethod
     def leakage_knowing_secrets(cls, key: npt.NDArray[np.uint8],
