@@ -18,6 +18,9 @@ import numpy as np
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 
 
+# TODO parsing of calibration analog & digital waveform with different offsets... use: https://docs.pytest.org/en/7.1.x/how-to/parametrize.html#basic-pytest-generate-tests-example
+
+
 def test_parse_waveform():
     with open("tests/capture/scope/lecroy/raw_waveform.bin", "rb") as f:
         raw_waveform = f.read()

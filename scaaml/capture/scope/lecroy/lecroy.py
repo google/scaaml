@@ -15,6 +15,7 @@
 
 import base64
 from copy import deepcopy
+import logging
 from pathlib import Path
 import time
 
@@ -32,7 +33,13 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationSocket
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
-from scaaml.capture.scope.lecroy.types import LECROY_CAPTURE_AREA, LECROY_CHANNEL_NAME_T, LECROY_COMMUNICATION_CLASS_NAME
+from scaaml.capture.scope.lecroy.lecroy_waveform import DigitalChannelWaveform
+from scaaml.capture.scope.lecroy.types import (
+    LECROY_CAPTURE_AREA,
+    LECROY_CHANNEL_NAME_T,
+    LECROY_COMMUNICATION_CLASS_NAME,
+    LECROY_DIG_LINE_T,
+)
 from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceType
 from scaaml.io import Dataset
 
@@ -52,26 +59,38 @@ class LeCroy(AbstractSScope):
                  scope_setup_commands: List[Dict[str, Any]],
                  communication_class_name:
                  LECROY_COMMUNICATION_CLASS_NAME = "LeCroyCommunicationVisa",
+                 trigger_line: LECROY_DIG_LINE_T | None = None,
                  **_: Any) -> None:
         """Create scope context.
 
         Args:
+
           samples (int): How many points to sample (length of the capture).
+
           offset (int): How many samples to discard.
+
           ip_address (str): IP address or hostname of the oscilloscope.
+
           trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+
           trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
+
           communication_timeout (float): Timeout communication after
             `communication_timeout` seconds.
+
           trigger_timeout (float): Number of seconds before the trigger times
             out (in seconds).
+
           scope_setup_commands (List[Dict[str, Any]]): List of commands used
             to set up the scope. There are three possible actions taken in
             the order (command, method, query):
 
             - { "command": "command string" } The "command string" is sent to
-              the scope after being formatted with
-              `trace_channel=trace_channel, trigger_channel=trigger_channel`.
+              the scope after being formatted with the following wildcards:
+              - `trace_channel=trace_channel`,
+              - `trigger_channel=trigger_channel`,
+              - `trigger_line=trigger_line`.
+              - `samples=samples`.
 
             - { "method": "method_name", "kwargs": {} } The method is called
               with given kwargs. The supported methods are: `set_trig_delay`.
@@ -93,7 +112,7 @@ class LeCroy(AbstractSScope):
               },
               { "command": "TRMD SINGLE", },  # Trigger mode
               { "command": "AUTO_CALIBRATE OFF", },
-              { "command": "OFFSET 0", },  # Center the trace vertically
+              { "command": "{trace_channel}:OFFSET 0", },  # Center the trace vertically
             and the following is appended:
               {"command": "STOP"}  # Stop any signal acquisition
 
@@ -101,18 +120,29 @@ class LeCroy(AbstractSScope):
             https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf
 
           communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
-            class to use for communication with the scope. Defaults to
-            LeCroyCommunicationVisa, the other possibility is
-            LeCroyCommunicationSocket.
+          class to use for communication with the scope. Defaults to
+          LeCroyCommunicationVisa, the other possibility is
+          LeCroyCommunicationSocket.
+
+          trigger_line (LECROY_DIG_LINE_T | None): If trigger channel is
+          digital (in LECROY_DIG_CHANNEL_NAME_T) then one also needs to specify
+          which line ("D0", "D1", ... "D15" if there are 16 lines). Checked
+          against `trigger_channel`.
+
           _: LeCroy is expected to be initialized using capture_info
-            dictionary, this parameter allows to have additional information
-            there and initialize as LeCroy(**capture_info).
+          dictionary, this parameter allows to have additional information
+          there and initialize as LeCroy(**capture_info).
         """
         super().__init__(samples=samples, offset=offset)
 
         self._ip_address = ip_address
         self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
         self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
+
+        if trigger_line is None and trigger_channel.startswith("D"):
+            raise ValueError(f"No digital line selected")
+
+        self._trigger_line: LECROY_DIG_LINE_T | None = trigger_line
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
         # pylint:disable=C0301
@@ -145,6 +175,7 @@ class LeCroy(AbstractSScope):
             trigger_timeout=self._trigger_timeout,
             communication_class_name=self._communication_class_name,
             scope_setup_commands=self._scope_setup_commands,
+            trigger_line=self._trigger_line,
         )
         assert self._scope is not None
         self._scope.con()
@@ -192,9 +223,11 @@ class LeCroy(AbstractSScope):
         """Take a print screen and transfer it to this computer.
 
         Args:
+
           file_path (Path): Where to save the print screen file.
+
           capture_area (LECROY_CAPTURE_AREA): Capture the trace area, full
-            window, or full screen. Defaults to the trace area.
+          window, or full screen. Defaults to the trace area.
         """
         assert isinstance(self._scope, LeCroyScope)
         source_file_path: str = self._scope.call_print_screen(
@@ -208,34 +241,56 @@ class LeCroyScope(ScopeTemplate):
     """Scope."""
 
     def __init__(
-            self, *, samples: int, offset: int, ip_address: str,
-            trace_channel: LECROY_CHANNEL_NAME_T,
-            trigger_channel: LECROY_CHANNEL_NAME_T,
-            communication_timeout: float, trigger_timeout: float,
-            scope_setup_commands: List[Dict[str, Any]],
-            communication_class_name: LECROY_COMMUNICATION_CLASS_NAME) -> None:
+        self,
+        *,
+        samples: int,
+        offset: int,
+        ip_address: str,
+        trace_channel: LECROY_CHANNEL_NAME_T,
+        trigger_channel: LECROY_CHANNEL_NAME_T,
+        communication_timeout: float,
+        trigger_timeout: float,
+        scope_setup_commands: List[Dict[str, Any]],
+        communication_class_name: LECROY_COMMUNICATION_CLASS_NAME,
+        trigger_line: LECROY_DIG_LINE_T | None,
+    ) -> None:
         """Create scope context.
 
         Args:
+
           samples (int): How many points to sample (length of the capture).
+
           offset (int): How many samples to discard.
+
           ip_address (str): IP address or hostname of the oscilloscope.
+
           trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+
           trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
+
           communication_timeout (float): Timeout communication after
-            `communication_timeout` seconds.
+          `communication_timeout` seconds.
+
           trigger_timeout (float): Number of seconds before the trigger times
-            out (in seconds).
+          out (in seconds).
+
           scope_setup_commands (List[Dict[str, Any]]): See docstring of
-            `LeCroy`.
+          `LeCroy`.
+
           communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
-            class to use for communication with the scope.
+          class to use for communication with the scope.
+
+          trigger_line (LECROY_DIG_LINE_T | None): If trigger channel is
+          digital (in LECROY_DIG_CHANNEL_NAME_T) then one also needs to specify
+          which line ("D0", "D1", ... "D15" if there are 16 lines). Checked
+          against `trigger_channel`.
         """
         self._samples = samples
         self._offset = offset
         self._ip_address = ip_address
         self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
         self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
+        self._trigger_line: LECROY_DIG_LINE_T | None = trigger_line
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
         self._communication_class_name = communication_class_name
@@ -256,7 +311,11 @@ class LeCroyScope(ScopeTemplate):
             },
             { "command": "TRMD SINGLE", },  # Trigger mode
             { "command": "AUTO_CALIBRATE OFF", },
-            { "command": "OFFSET 0", },  # Center the trace vertically
+            { "command": "{trace_channel}:OFFSET 0", },  # Center the trace vertically
+            {
+                "command": f"WAVEFORM_SETUP SP,1,NP,{self._samples},FP,{self._offset},SN,0",
+                "query": "WAVEFORM_SETUP?",
+            }
         ]
         commands.extend(deepcopy(scope_setup_commands))  # Custom commands
         commands.append({"command": "STOP"})  # Stop any signal acquisition
@@ -265,8 +324,33 @@ class LeCroyScope(ScopeTemplate):
         # Actual settings of the scope
         self._scope_answers: Dict[str, str] = {}
 
-    def con(self, sn: Optional[str] = None) -> bool:
-        """Set the scope for capture."""
+        # When using digital trigger then we need to interpolate it (since the
+        # sampling rate might be different, we might be cutting the trace,
+        # sparsing, ...).
+        self._last_trace_wave: LecroyWaveform | None = None
+
+        self._logger = logging.getLogger("scaaml.capture.scope.lecroy."
+                                         "lecroy_scope")
+
+    def con(self,
+            sn: Optional[str] = None,
+            sleep_after_command: float = 1.0) -> bool:
+        """Set the scope for capture.
+
+        Args:
+
+          sn (str | None): The serial number of the probe. Ignored for LeCroy
+          scope (but left for compatibility with ChipWhisperer. Defaults to
+          None. Use `ip_address` instead to identify the correct oscilloscope.
+          Technically it is possible to check the serial number but listing all
+          available oscilloscopes is not supported by our library.
+
+          sleep_after_command (float): Sleep interval length in seconds after
+          each command (see `scope_setup_commands`). This is to let the
+          physical changes to happen. Defaults to 1.0 second.
+        """
+        del sn  # unused
+
         communication_cls = {
             "LeCroyCommunicationVisa": LeCroyCommunicationVisa,
             "LeCroyCommunicationSocket": LeCroyCommunicationSocket,
@@ -285,6 +369,7 @@ class LeCroyScope(ScopeTemplate):
         # Run all setup commands
         for command in self._scope_setup_commands:
             self._run_command(command)
+            time.sleep(sleep_after_command)
 
         # Success
         return True
@@ -324,19 +409,27 @@ class LeCroyScope(ScopeTemplate):
                 status = self._scope_communication.query("TRMD?")
                 if status == "STOP":
                     break
-            assert self._scope_communication.query("TRMD?") == "STOP"
+            trigger_mode: str = self._scope_communication.query("TRMD?")
+            if trigger_mode != "STOP":
+                self.logger.error(
+                    f"Expected STOP, got %s probably a timeout",
+                    trigger_mode,
+                )
+                return True
 
             # Get trace
             wave = self._scope_communication.get_waveform(
-                channel=self._trace_channel)
+                channel=self._trace_channel,)
             self._last_trace = wave.get_wave1(
-                first_sample=self._offset,
-                length=self._samples,
+                first_sample=0,  # This was set by WAVEFORM_SETUP
+                length=-1,  # This was set by WAVEFORM_SETUP
             )
+            self._last_trace_wave = wave
 
             return False  # No need to recapture.
         except LeCroyCommunicationError:
             # Reconnect and return True (need to be recaptured).
+            self._last_trace_wave = None
             self.dis()
             time.sleep(1)
             self.con()
@@ -368,31 +461,65 @@ class LeCroyScope(ScopeTemplate):
         if self._trigger_channel.startswith("C"):
             # Get analog trigger:
             waveform = self._scope_communication.get_waveform(
-                channel=self._trigger_channel)
+                channel=self._trigger_channel,)
             return waveform.get_wave1(
-                first_sample=self._offset,
-                length=self._samples,
+                first_sample=0,  # This was set by WAVEFORM_SETUP
+                length=-1,  # This was set by WAVEFORM_SETUP
             )
 
-        # Get digital trigger:
-        trigger = self._scope_communication.query_binary_values(
-            f"{self._trigger_channel}:WF?",
-            datatype="B",
-            container=bytearray,
+        # Return digital trigger wave.
+        xml_data: str = self._scope_communication.get_xml_dig_data(
+            channel=self._trigger_channel)
+        digital_wave = DigitalChannelWaveform(xml_data=xml_data)
+
+        # Interpolation to match digital wave time with analog (sampling rates
+        # could be different, ...).
+        assert self._trigger_line is not None
+        trigger = digital_wave.traces[self._trigger_line]
+
+        # Interpolate to full trace length.
+        assert self._last_trace_wave
+        wave_description = self._last_trace_wave._wave_description
+
+        # Only supported options.
+        assert wave_description.segment_index == 0
+        assert wave_description.subarray_count == 1
+        assert wave_description.sweeps_per_acq == 1
+        assert wave_description.record_type == "single_sweep"
+        assert wave_description.ris_sweeps == 1
+
+        # Full trace is wave_array_count, but we do FP and SP:
+        trace_stretch = wave_description.points_per_screen
+        trigger = np.interp(
+            x=np.arange(trace_stretch) / trace_stretch,  # Resulting times
+            xp=np.arange(len(trigger)) / len(trigger),  # We have
+            fp=trigger,
         )
 
-        assert isinstance(trigger, bytearray)
-        root = ET.fromstring(bytes(trigger).decode("ascii"))
-        # Find the binary data (BinaryData is present)
-        binary_data = root.findall(".//BinaryData")[0].text
-        if binary_data is not None:
-            decoded = base64.b64decode(binary_data)
-        else:
-            # No trigger array
-            return np.array([], dtype=np.bool_)
+        # These values could have been changed by running hard-coded
+        # WAVEFORM_SETUP command and setting different samples / offset.
+        if self._samples != wave_description.wave_array_count:
+            self._logger.error(
+                "The expected number of samples %s != the actual number %s",
+                self._samples,
+                wave_description.wave_array_count,
+            )
+        if self._offset != wave_description.first_point:
+            self._logger.error(
+                "The expected offset %s != the actual offset %s",
+                self._offset,
+                wave_description.first_point,
+            )
 
-        np_trigger = np.frombuffer(decoded, dtype=np.bool_)
-        return np_trigger
+        # Cut the correct part out of the whole screen trigger line signal. We
+        # could use self._offset and self._samples but those might not be up to
+        # date -> prefer to use parsed values.
+        trigger = trigger[wave_description.first_point::wave_description.
+                          sparsing_factor][:wave_description.wave_array_count]
+        # Digital trigger is expected to be binary but we have interpolated.
+        trigger = np.round(trigger)
+
+        return trigger
 
     def __repr__(self) -> str:
         """Return string representation of self.
@@ -460,6 +587,9 @@ class LeCroyScope(ScopeTemplate):
         wildcards = {
             "trace_channel": self._trace_channel,
             "trigger_channel": self._trigger_channel,
+            "trigger_line": self._trigger_line,
+            "samples": self._samples,
+            "offset": self._offset,
         }
 
         # First run a command
@@ -507,7 +637,8 @@ class LeCroyScope(ScopeTemplate):
         # crc is the 32-bit CRC plus 8-byte CRC trailer
         ans = self._scope_communication.query_binary_values(
             f"TRANSFER_FILE? DISK,HDD,FILE,'{source_file_path}'",
-            container=bytearray)
+            container=bytearray,
+        )
 
         # With socket we need to strip the header (if there is no header we are
         # using pyvisa).
