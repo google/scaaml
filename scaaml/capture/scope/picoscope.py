@@ -188,7 +188,7 @@ class PicoScope(AbstractSScope):
         # Trace channel settings.
         self._scope.trace.channel = self._trace_channel
         # pylint: disable=line-too-long
-        self._scope.trace.range = self._trace_probe_range  # type: ignore[assignment]
+        self._scope.trace.range = self._trace_probe_range
         # pylint: enable=line-too-long
         self._scope.trace.coupling = self._trace_coupling
         self._scope.trace.probe_attenuation = self._trace_attenuation
@@ -203,7 +203,7 @@ class PicoScope(AbstractSScope):
         self._scope.trigger.coupling = self._trigger_coupling
         self._scope.trigger.probe_attenuation = "1:1"
         # pylint: disable=line-too-long
-        self._scope.trigger.range = self._trigger_range  # type: ignore[assignment]
+        self._scope.trigger.range = self._trigger_range
         # pylint: enable=line-too-long
 
         # Number of samples settings.
