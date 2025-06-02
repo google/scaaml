@@ -28,23 +28,19 @@ LECROY_CAPTURE_AREA: TypeAlias = Literal[
     "DSOWINDOW",
 ]
 
-LECROY_CHANNEL_NAME_T: TypeAlias = Literal[
-    "C1",
-    "C2",
-    "C3",
-    "C4",
-    "DIGITAL1",
-    "DIGITAL2",
-    "DIGITAL3",
-    "DIGITAL4",
-]
-
 LECROY_DIG_CHANNEL_NAME_T: TypeAlias = Literal[
     "DIGITAL1",
     "DIGITAL2",
     "DIGITAL3",
     "DIGITAL4",
 ]
+
+LECROY_CHANNEL_NAME_T: TypeAlias = Literal[
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+] | LECROY_DIG_CHANNEL_NAME_T
 
 LECROY_DIG_LINE_T: TypeAlias = Literal[
     "D0",
