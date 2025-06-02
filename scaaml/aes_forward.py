@@ -85,9 +85,8 @@ class AESSBOX:
         key_b: bytes = bytes(key)
         plaintext_b: bytes = bytes(plaintext)
         assert len(key) == len(plaintext)
-        # Since the plaintext is the same length as the key the mode is
-        # effectively ECB but CodeQL is complaining in such a case.
-        cipher = Cipher(algorithms.AES(key_b), modes.CBC())
+        # Yes ECB is insecure but it is what we want for SCA.
+        cipher = Cipher(algorithms.AES(key_b), modes.ECB())
         encryptor = cipher.encryptor()
         return bytearray(encryptor.update(plaintext_b) + encryptor.finalize())
 
