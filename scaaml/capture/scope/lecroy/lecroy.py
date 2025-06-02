@@ -493,11 +493,13 @@ class LeCroyScope(ScopeTemplate):
 
         # Full trace is wave_array_count, but we do FP and SP:
         trace_stretch = wave_description.points_per_screen
-        trigger = np.array(np.interp(
-            x=np.arange(trace_stretch) / trace_stretch,  # Resulting times
-            xp=np.arange(len(trigger)) / len(trigger),  # We have
-            fp=np.array(trigger, dtype=np.float32),
-        ), dtype=np.float32)
+        trigger = np.array(
+            np.interp(
+                x=np.arange(trace_stretch) / trace_stretch,  # Resulting times
+                xp=np.arange(len(trigger)) / len(trigger),  # We have
+                fp=np.array(trigger, dtype=np.float32),
+            ),
+            dtype=np.float32)
 
         # These values could have been changed by running hard-coded
         # WAVEFORM_SETUP command and setting different samples / offset.

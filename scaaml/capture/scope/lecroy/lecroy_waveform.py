@@ -65,7 +65,7 @@ class LecroyWaveform:
         self.parse()
 
     @property
-    def wave_description(self) -> WaveDesc:
+    def wave_description(self) -> "WaveDesc":
         """Return a copy of the wave description.
         """
         return copy.deepcopy(self._wave_description)
