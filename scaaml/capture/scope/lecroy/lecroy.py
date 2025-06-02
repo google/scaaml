@@ -313,11 +313,11 @@ class LeCroyScope(ScopeTemplate):
             { "command": "TRMD SINGLE", },  # Trigger mode
             { "command": "AUTO_CALIBRATE OFF", },
             # Center the trace vertically
-            { "command": "{trace_channel}:OFFSET 0", },
+            { "command": f"{trace_channel}:OFFSET 0", },
             {
                 "command": f"WAVEFORM_SETUP {waveform_setup}",
                 "query": "WAVEFORM_SETUP?",
-            }
+            },
         ]
         commands.extend(deepcopy(scope_setup_commands))  # Custom commands
         commands.append({"command": "STOP"})  # Stop any signal acquisition
