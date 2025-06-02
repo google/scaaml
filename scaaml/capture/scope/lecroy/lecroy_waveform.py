@@ -632,6 +632,7 @@ class DigitalChannelWaveform:
         digital_result_info: ET.Element | None = None
         for child in header:
             if child.tag in self.generic_info:
+                assert child.text is not None
                 self.generic_info[child.tag] = child.text
                 continue
 
@@ -662,6 +663,7 @@ class DigitalChannelWaveform:
                       "LabelForState"):
                     pass
                 case "StatusDescription":
+                    assert child.text is not None
                     assert child.text.startswith(
                         "internal:NumInputLines=16|internal:SelectedLines=")
                     assert child.text.endswith("|internal:DisplayMode=Lines")
@@ -681,10 +683,12 @@ class DigitalChannelWaveform:
                             case "Name" | "HasSymbolic":
                                 pass
                             case "NumLevels":
+                                assert bus_info.text is not None
                                 assert int(
                                     bus_info.text
                                 ) == 2, "Wrong number of binary levels"
                             case "NumLines":
+                                assert bus_info.text is not None
                                 self.num_lines = int(bus_info.text)
                 case "LineInfo":
                     line_infos = [
@@ -692,6 +696,7 @@ class DigitalChannelWaveform:
                         for line_element in child
                     ]
                 case "HorUnit":
+                    assert child.text is not None
                     self.horizontal_unit = child.text
                 case "HorScale":
                     for scale_info in child:
@@ -701,16 +706,22 @@ class DigitalChannelWaveform:
                             case "HorStart":
                                 pass
                             case "HorPerStep":
+                                assert scale_info.text is not None
                                 self.horizontal_per_step = float(
                                     scale_info.text)
                             case "HorResolution":
-                                self.horizontal_resolution: float = float(
+                                assert scale_info.text is not None
+                                self.horizontal_resolution = float(
                                     scale_info.text)
                             case _:
                                 raise ValueError(
                                     f"Unknown HorScale {scale_info.tag}")
                 case "NumSamples":
-                    self.num_samples = int(child.text)
+                    if child.text:
+                        self.num_samples = int(child.text)
+                    else:
+                        # child.text could be None, default
+                        self.num_samples = 0
                 case _:
                     raise ValueError(f"Unknown ILecDigitalResult: {child.tag}")
 
@@ -735,15 +746,16 @@ class DigitalChannelWaveform:
         #    </Segment>
 
         # Find the binary data (BinaryData is present)
-        list_binary_data: list[str] = root.findall(".//BinaryData")
+        list_binary_data = root.findall(".//BinaryData")
         assert len(list_binary_data) == 1
+        assert list_binary_data[0].text is not None
         binary_data: str = list_binary_data[0].text
         decoded = base64.b64decode(binary_data)
 
         # Split the array into line traces.
         np_trigger = np.frombuffer(decoded, dtype=bool)
         self.trace_infos: dict[str, DigitalChannelWaveform.Line] = {}
-        self.traces: dict[str, npt.NDArray[bool]] = {}
+        self.traces: dict[str, npt.NDArray[np.bool_]] = {}
         for line in line_infos:
             self.trace_infos[line.sub_bus_name] = line
             begin: int = line.index * self.num_samples
@@ -780,19 +792,26 @@ class DigitalChannelWaveform:
         weight: int
 
         @staticmethod
-        def parse(line_element: ET.Element) -> "Line":
+        def parse(line_element: ET.Element) -> "DigitalChannelWaveform.Line":
             assert len(line_element) == 4, "Expecting 4 attributes"
+            line = DigitalChannelWaveform.Line(
+                index=0,
+                name="",
+                sub_bus_name="",
+                weight=0,
+            )
 
-            data = {}
             for child in line_element:
+                if child.text is None:
+                    continue
                 match child.tag:
                     case "Idx":
-                        data["index"] = int(child.text)
+                        line.index = int(child.text)
                     case "Name":
-                        data["name"] = child.text
+                        line.name = child.text
                     case "SubBusName":
-                        data["sub_bus_name"] = child.text
+                        line.sub_bus_name = child.text
                     case "Weight":
-                        data["weight"] = int(child.text)
+                        line.weight = int(child.text)
 
-            return DigitalChannelWaveform.Line(**data)
+            return line

@@ -472,7 +472,8 @@ class LeCroyScope(ScopeTemplate):
         # Return digital trigger wave.
         assert self._trigger_channel in get_args(LECROY_DIG_CHANNEL_NAME_T)
         xml_data: str = self._scope_communication.get_xml_dig_data(
-            channel=self._trigger_channel)
+                channel=self._trigger_channel,  # type: ignore[arg-type]
+        )
         digital_wave = DigitalChannelWaveform(xml_data=xml_data)
 
         # Interpolation to match digital wave time with analog (sampling rates
