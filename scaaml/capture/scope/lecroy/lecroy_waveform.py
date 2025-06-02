@@ -15,6 +15,7 @@
 """
 
 import base64
+import copy
 import dataclasses
 import datetime
 import struct
@@ -62,6 +63,12 @@ class LecroyWaveform:
         self._ofs = 0
         self._wave_description = WaveDesc()
         self.parse()
+
+    @property
+    def wave_description(self) -> WaveDesc:
+        """Return a copy of the wave description.
+        """
+        return copy.deepcopy(self._wave_description)
 
     def get_string(self, max_size: int = 16) -> str:
         """Parse a string from self.raw_data.

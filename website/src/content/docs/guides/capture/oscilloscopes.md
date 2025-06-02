@@ -103,8 +103,8 @@ and needs `libps6000a` (see
 [https://www.picotech.com/downloads](https://www.picotech.com/downloads)).
 There is support for:
 
-- analog or digital trigger (MSO pod)
-- setting resolution (where supported)
+-   analog or digital trigger (MSO pod)
+-   setting resolution (where supported)
 
 For detailed documentation of the used API see:
 [https://www.picotech.com/download/manuals/picoscope-6000-series-a-api-programmers-guide.pdf](https://www.picotech.com/download/manuals/picoscope-6000-series-a-api-programmers-guide.pdf).
@@ -238,7 +238,7 @@ We provide wrappers over automation API.
     [https://www.teledynelecroy.com/doc/docview.aspx?id=14960](https://www.teledynelecroy.com/doc/docview.aspx?id=14960).
 -   For detailed documentation of the API see the official documentation
     [https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf](https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf).
--   And automation commnad reference manual (using VBS API)
+-   And automation commmad reference manual (using VBS API)
     [https://cdn.teledynelecroy.com/files/manuals/automation_command_ref_manual_wr.pdf](https://cdn.teledynelecroy.com/files/manuals/automation_command_ref_manual_wr.pdf).
 
 ### Additional Features of the LeCroy API

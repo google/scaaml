@@ -110,6 +110,7 @@ htmlcov
 implem
 imshow
 inproceedings
+interp
 intp
 ipynb
 ipython

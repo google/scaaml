@@ -13,7 +13,6 @@
 # limitations under the License.
 """Context manager for the scope."""
 
-import base64
 from copy import deepcopy
 import logging
 from pathlib import Path
@@ -22,8 +21,6 @@ import time
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Tuple
 from typing_extensions import Self
-
-import xml.etree.ElementTree as ET
 
 from chipwhisperer.common.utils import util
 import numpy as np
@@ -34,6 +31,7 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationSocket
 from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunicationVisa
 from scaaml.capture.scope.lecroy.lecroy_waveform import DigitalChannelWaveform
+from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import (
     LECROY_CAPTURE_AREA,
     LECROY_CHANNEL_NAME_T,
@@ -112,7 +110,8 @@ class LeCroy(AbstractSScope):
               },
               { "command": "TRMD SINGLE", },  # Trigger mode
               { "command": "AUTO_CALIBRATE OFF", },
-              { "command": "{trace_channel}:OFFSET 0", },  # Center the trace vertically
+              # Center the trace vertically
+              { "command": "{trace_channel}:OFFSET 0", },
             and the following is appended:
               {"command": "STOP"}  # Stop any signal acquisition
 
@@ -140,7 +139,7 @@ class LeCroy(AbstractSScope):
         self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
 
         if trigger_line is None and trigger_channel.startswith("D"):
-            raise ValueError(f"No digital line selected")
+            raise ValueError("No digital line selected")
 
         self._trigger_line: LECROY_DIG_LINE_T | None = trigger_line
         self._communication_timeout = communication_timeout
@@ -303,6 +302,7 @@ class LeCroyScope(ScopeTemplate):
 
         # Desired settings of the scope
         # Wrap default commands around the custom ones
+        waveform_setup: str = f"SP,1,NP,{self._samples},FP,{self._offset},SN,0"
         commands = [
             { "command": "COMM_HEADER OFF", },
             {  # Use full precision of measurements
@@ -311,9 +311,10 @@ class LeCroyScope(ScopeTemplate):
             },
             { "command": "TRMD SINGLE", },  # Trigger mode
             { "command": "AUTO_CALIBRATE OFF", },
-            { "command": "{trace_channel}:OFFSET 0", },  # Center the trace vertically
+            # Center the trace vertically
+            { "command": "{trace_channel}:OFFSET 0", },
             {
-                "command": f"WAVEFORM_SETUP SP,1,NP,{self._samples},FP,{self._offset},SN,0",
+                "command": f"WAVEFORM_SETUP {waveform_setup}",
                 "query": "WAVEFORM_SETUP?",
             }
         ]
@@ -412,7 +413,7 @@ class LeCroyScope(ScopeTemplate):
             trigger_mode: str = self._scope_communication.query("TRMD?")
             if trigger_mode != "STOP":
                 self.logger.error(
-                    f"Expected STOP, got %s probably a timeout",
+                    "Expected STOP, got %s probably a timeout",
                     trigger_mode,
                 )
                 return True
@@ -479,7 +480,7 @@ class LeCroyScope(ScopeTemplate):
 
         # Interpolate to full trace length.
         assert self._last_trace_wave
-        wave_description = self._last_trace_wave._wave_description
+        wave_description = self._last_trace_wave.wave_description
 
         # Only supported options.
         assert wave_description.segment_index == 0
@@ -518,6 +519,7 @@ class LeCroyScope(ScopeTemplate):
                           sparsing_factor][:wave_description.wave_array_count]
         # Digital trigger is expected to be binary but we have interpolated.
         trigger = np.round(trigger)
+        trigger = np.array(trigger, dtype=bool)
 
         return trigger
 
