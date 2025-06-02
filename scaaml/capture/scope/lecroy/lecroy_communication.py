@@ -335,10 +335,7 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """
         assert self._socket
         del datatype  # ignored
-        allowed_containers = [bytes, bytearray]
-        if container not in allowed_containers:
-            raise ValueError(f"Container {container = } expected one of "
-                             f"{allowed_containers}")
+        del container  # ignored
 
         self._logger.debug("query_binary_values(\"%s\")", message)
 

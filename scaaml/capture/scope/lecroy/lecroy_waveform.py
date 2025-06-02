@@ -574,7 +574,8 @@ class DigitalChannelWaveform:
 
     Attributes:
 
-        generic_info (dict[str, str]): Information about the oscilloscope and bus:
+        generic_info (dict[str, str]): Information about the oscilloscope and
+        bus:
         -   InstrumentId: Name, type, serial number, software version.
         -   SerialNumber: The serial number of the oscilloscope.
         -   FirmwareVersion: The firmware version (verbose with build).
@@ -590,7 +591,8 @@ class DigitalChannelWaveform:
         This is reported. Also the reciprocal of sampling rate (sampling_rate
         in samples per second is: 1 / horizontal_per_step).
 
-        sampling_rate (float): Computed samples per second (1 / horizontal_resolution).
+        sampling_rate (float): Computed samples per second (1 /
+        horizontal_resolution).
 
         trace_infos (dict[str, DigitalChannelWaveform.Line]): A dictionary of
         line sub_bus_name (the line name -- "D0", "D1", ..., "D15" if there are
@@ -626,7 +628,7 @@ class DigitalChannelWaveform:
             "FirmwareVersion": "",
             "Source": "",
         }
-        # Infromation about the digital result.
+        # Information about the digital result.
         digital_result_info: ET.Element | None = None
         for child in header:
             if child.tag in self.generic_info:
@@ -656,7 +658,8 @@ class DigitalChannelWaveform:
 
         for child in digital_result_info:
             match child.tag:
-                case "Times" | "Details" | "Status" | "FrameInfo" | "LabelForState":
+                case ("Times" | "Details" | "Status" | "FrameInfo" |
+                      "LabelForState"):
                     pass
                 case "StatusDescription":
                     assert child.text.startswith(

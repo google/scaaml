@@ -19,7 +19,7 @@ from pathlib import Path
 import time
 
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, get_args, Optional, Tuple
 from typing_extensions import Self
 
 from chipwhisperer.common.utils import util
@@ -54,7 +54,7 @@ class LeCroy(AbstractSScope):
                  trigger_channel: LECROY_CHANNEL_NAME_T,
                  communication_timeout: float,
                  trigger_timeout: float,
-                 scope_setup_commands: List[Dict[str, Any]],
+                 scope_setup_commands: list[dict[str, Any]],
                  communication_class_name:
                  LECROY_COMMUNICATION_CLASS_NAME = "LeCroyCommunicationVisa",
                  trigger_line: LECROY_DIG_LINE_T | None = None,
@@ -79,7 +79,7 @@ class LeCroy(AbstractSScope):
           trigger_timeout (float): Number of seconds before the trigger times
             out (in seconds).
 
-          scope_setup_commands (List[Dict[str, Any]]): List of commands used
+          scope_setup_commands (list[dict[str, Any]]): List of commands used
             to set up the scope. There are three possible actions taken in
             the order (command, method, query):
 
@@ -249,7 +249,7 @@ class LeCroyScope(ScopeTemplate):
         trigger_channel: LECROY_CHANNEL_NAME_T,
         communication_timeout: float,
         trigger_timeout: float,
-        scope_setup_commands: List[Dict[str, Any]],
+        scope_setup_commands: list[dict[str, Any]],
         communication_class_name: LECROY_COMMUNICATION_CLASS_NAME,
         trigger_line: LECROY_DIG_LINE_T | None,
     ) -> None:
@@ -273,7 +273,7 @@ class LeCroyScope(ScopeTemplate):
           trigger_timeout (float): Number of seconds before the trigger times
           out (in seconds).
 
-          scope_setup_commands (List[Dict[str, Any]]): See docstring of
+          scope_setup_commands (list[dict[str, Any]]): See docstring of
           `LeCroy`.
 
           communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
@@ -320,10 +320,10 @@ class LeCroyScope(ScopeTemplate):
         ]
         commands.extend(deepcopy(scope_setup_commands))  # Custom commands
         commands.append({"command": "STOP"})  # Stop any signal acquisition
-        self._scope_setup_commands: Tuple[Dict[str, Any], ...] = tuple(commands)
+        self._scope_setup_commands: Tuple[dict[str, Any], ...] = tuple(commands)
 
         # Actual settings of the scope
-        self._scope_answers: Dict[str, str] = {}
+        self._scope_answers: dict[str, str] = {}
 
         # When using digital trigger then we need to interpolate it (since the
         # sampling rate might be different, we might be cutting the trace,
@@ -412,7 +412,7 @@ class LeCroyScope(ScopeTemplate):
                     break
             trigger_mode: str = self._scope_communication.query("TRMD?")
             if trigger_mode != "STOP":
-                self.logger.error(
+                self._logger.error(
                     "Expected STOP, got %s probably a timeout",
                     trigger_mode,
                 )
@@ -469,6 +469,7 @@ class LeCroyScope(ScopeTemplate):
             )
 
         # Return digital trigger wave.
+        assert self._trigger_channel in get_args(LECROY_DIG_CHANNEL_NAME_T)
         xml_data: str = self._scope_communication.get_xml_dig_data(
             channel=self._trigger_channel)
         digital_wave = DigitalChannelWaveform(xml_data=xml_data)
@@ -491,11 +492,11 @@ class LeCroyScope(ScopeTemplate):
 
         # Full trace is wave_array_count, but we do FP and SP:
         trace_stretch = wave_description.points_per_screen
-        trigger = np.interp(
+        trigger = np.array(np.interp(
             x=np.arange(trace_stretch) / trace_stretch,  # Resulting times
             xp=np.arange(len(trigger)) / len(trigger),  # We have
-            fp=trigger,
-        )
+            fp=np.array(trigger, dtype=np.float32),
+        ), dtype=np.float32)
 
         # These values could have been changed by running hard-coded
         # WAVEFORM_SETUP command and setting different samples / offset.
@@ -518,10 +519,7 @@ class LeCroyScope(ScopeTemplate):
         trigger = trigger[wave_description.first_point::wave_description.
                           sparsing_factor][:wave_description.wave_array_count]
         # Digital trigger is expected to be binary but we have interpolated.
-        trigger = np.round(trigger)
-        trigger = np.array(trigger, dtype=bool)
-
-        return trigger
+        return np.array(np.round(trigger), dtype=bool)
 
     def __repr__(self) -> str:
         """Return string representation of self.
@@ -542,7 +540,7 @@ class LeCroyScope(ScopeTemplate):
         """
         return self.__repr__()
 
-    def get_identity_info(self) -> Dict[str, str]:
+    def get_identity_info(self) -> dict[str, str]:
         """Get information about the oscilloscope identity.
 
         Returns: a dictionary containing the model, serial_number, and
@@ -558,7 +556,7 @@ class LeCroyScope(ScopeTemplate):
             "lecroy_firmware_level": firmware_level,
         }
 
-    def get_scope_answers(self) -> Dict[str, str]:
+    def get_scope_answers(self) -> dict[str, str]:
         """Return actual scope settings. When adding a scope setting the closes
         valid value is used or the setting is ignored. These are results of
         "query" in `scope_setup_commands` (see the init of `LeCroy`).
@@ -580,7 +578,7 @@ class LeCroyScope(ScopeTemplate):
         trig_position = divs_left * timebase
         self._scope_communication.write(f"TRIG_DELAY {trig_position}")
 
-    def _run_command(self, setup_command: Dict[str, Any]) -> None:
+    def _run_command(self, setup_command: dict[str, Any]) -> None:
         """For description see init of `LeCroy`.
         """
         assert self._scope_communication

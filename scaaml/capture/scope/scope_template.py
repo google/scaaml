@@ -20,7 +20,7 @@ import numpy as np
 import numpy.typing as npt
 
 ScopeTraceType = npt.NDArray[np.float32]
-ScopeDigitalTraceType = npt.NDArray[np.bool_]
+ScopeDigitalTraceType = npt.NDArray[bool]
 ScopeTriggerTraceType = ScopeTraceType | ScopeDigitalTraceType
 
 
