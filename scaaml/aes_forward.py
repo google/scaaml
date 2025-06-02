@@ -82,12 +82,12 @@ class AESSBOX:
     @staticmethod
     def ciphertext(key: bytearray, plaintext: bytearray) -> bytearray:
         """Return the ciphertext. Useful for getting all attack points."""
-        key = bytes(key)
-        plaintext = bytes(plaintext)
+        key_b: bytes = bytes(key)
+        plaintext_b: bytes = bytes(plaintext)
         assert len(key) == len(plaintext)
-        cipher = Cipher(algorithms.AES(key), modes.ECB())
+        cipher = Cipher(algorithms.AES(key_b), modes.ECB())
         encryptor = cipher.encryptor()
-        return bytearray(encryptor.update(plaintext) + encryptor.finalize())
+        return bytearray(encryptor.update(plaintext_b) + encryptor.finalize())
 
     @staticmethod
     def key(key: bytearray, plaintext: bytearray) -> bytearray:
