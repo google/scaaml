@@ -238,7 +238,7 @@ We provide wrappers over automation API.
     [https://www.teledynelecroy.com/doc/docview.aspx?id=14960](https://www.teledynelecroy.com/doc/docview.aspx?id=14960).
 -   For detailed documentation of the API see the official documentation
     [https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf](https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf).
--   And automation commmand reference manual (using VBS API)
+-   And automation command reference manual (using VBS API)
     [https://cdn.teledynelecroy.com/files/manuals/automation_command_ref_manual_wr.pdf](https://cdn.teledynelecroy.com/files/manuals/automation_command_ref_manual_wr.pdf).
 
 ### Additional Features of the LeCroy API

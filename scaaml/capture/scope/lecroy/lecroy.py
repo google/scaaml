@@ -36,6 +36,7 @@ from scaaml.capture.scope.lecroy.types import (
     LECROY_CAPTURE_AREA,
     LECROY_CHANNEL_NAME_T,
     LECROY_COMMUNICATION_CLASS_NAME,
+    LECROY_DIG_CHANNEL_NAME_T,
     LECROY_DIG_LINE_T,
 )
 from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceType
