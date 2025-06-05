@@ -436,11 +436,11 @@ if __name__ == "__main__":
 A list of features currently not supported. Beware that these lists are
 probably lacking a lot of features.
 
-### PicoScope&reg;
+### PicoScope&reg; TODO
 
 -   Just one model is supported.
 
-### LeCroy
+### LeCroy TODO
 
 -   Segmented capture is currently not supported.
 -   Compression for digital trace data (they can be rather lage but well
