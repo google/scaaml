@@ -26,7 +26,7 @@ import numpy.typing as npt
 # [b3  b7  b11 b15]
 # For NumPy that is order="F" (indexing state[row][column]).
 
-AESStateT: TypeAlias = npt.NDArray[np.uint8]
+AesStateType: TypeAlias = npt.NDArray[np.uint8]
 
 
 def mul(a: int, b: int) -> int:
@@ -126,7 +126,7 @@ def sub_word_inv(w: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     return np.array([SBOX_INV[x] for x in w], dtype=np.uint8)
 
 
-def get_words(key: npt.NDArray[np.uint8]) -> AESStateT:
+def get_words(key: npt.NDArray[np.uint8]) -> AesStateType:
     """Turn 16 bytes into a state (reshape in the correct way from an array
     of shape (16,) to state (4, 4)).
     """
@@ -199,7 +199,7 @@ def key_schedule_inv(last_key: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
     return w
 
 
-def add_round_key(state: AESStateT, scheduled: AESStateT) -> AESStateT:
+def add_round_key(state: AesStateType, scheduled: AesStateType) -> AesStateType:
     """Round keys are columns which need to be transposed.
     """
     assert state.shape == (4, 4)
@@ -210,7 +210,7 @@ def add_round_key(state: AESStateT, scheduled: AESStateT) -> AESStateT:
     return state ^ scheduled.transpose()
 
 
-def sub_bytes(state: AESStateT) -> AESStateT:
+def sub_bytes(state: AesStateType) -> AesStateType:
     """Apply S-BOX to the whole state.
     """
     assert state.shape == (4, 4)
@@ -218,7 +218,7 @@ def sub_bytes(state: AESStateT) -> AESStateT:
     return np.array([sub_word(w) for w in state], dtype=np.uint8)
 
 
-def sub_bytes_inv(state: AESStateT) -> AESStateT:
+def sub_bytes_inv(state: AesStateType) -> AesStateType:
     """Apply inverse S-BOX to the whole state.
     """
     assert state.shape == (4, 4)
@@ -226,7 +226,7 @@ def sub_bytes_inv(state: AESStateT) -> AESStateT:
     return np.array([sub_word_inv(w) for w in state], dtype=np.uint8)
 
 
-def shift_rows(state: AESStateT) -> AESStateT:
+def shift_rows(state: AesStateType) -> AesStateType:
     """Shift rows in the state.
     """
     assert state.shape == (4, 4)
@@ -236,7 +236,7 @@ def shift_rows(state: AESStateT) -> AESStateT:
     return state
 
 
-def shift_rows_inv(state: AESStateT) -> AESStateT:
+def shift_rows_inv(state: AesStateType) -> AesStateType:
     """Unshift rows in the state.
     """
     assert state.shape == (4, 4)
@@ -246,7 +246,7 @@ def shift_rows_inv(state: AESStateT) -> AESStateT:
     return state
 
 
-def mix_columns(state: AESStateT) -> AESStateT:
+def mix_columns(state: AesStateType) -> AesStateType:
     """Mix columns of the state.
     """
     assert state.shape == (4, 4)
@@ -255,7 +255,7 @@ def mix_columns(state: AESStateT) -> AESStateT:
                     dtype=np.uint8).transpose()
 
 
-def mix_columns_inverse(state: AESStateT) -> AESStateT:
+def mix_columns_inverse(state: AesStateType) -> AesStateType:
     """Unmix columns of the state.
     """
     assert state.shape == (4, 4)

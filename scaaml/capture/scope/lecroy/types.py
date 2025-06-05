@@ -17,32 +17,33 @@
 from typing import Literal
 from typing_extensions import TypeAlias
 
-LECROY_COMMUNICATION_CLASS_NAME: TypeAlias = Literal[
+
+LeCroyCommunicationClassName: TypeAlias = Literal[
     "LeCroyCommunicationVisa",
     "LeCroyCommunicationSocket",
 ]
 
-LECROY_CAPTURE_AREA: TypeAlias = Literal[
+LeCroyCaptureArea: TypeAlias = Literal[
     "FULLSCREEN",
     "GRIDAREAONLY",
     "DSOWINDOW",
 ]
 
-LECROY_DIG_CHANNEL_NAME_T: TypeAlias = Literal[
+LeCroyDigChannelName: TypeAlias = Literal[
     "DIGITAL1",
     "DIGITAL2",
     "DIGITAL3",
     "DIGITAL4",
 ]
 
-LECROY_CHANNEL_NAME_T: TypeAlias = Literal[
+LeCroyChannelName: TypeAlias = Literal[
     "C1",
     "C2",
     "C3",
     "C4",
-] | LECROY_DIG_CHANNEL_NAME_T
+] | LeCroyDigChannelName
 
-LECROY_DIG_LINE_T: TypeAlias = Literal[
+LeCroyDigLine: TypeAlias = Literal[
     "D0",
     "D1",
     "D2",

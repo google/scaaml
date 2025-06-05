@@ -443,5 +443,5 @@ probably lacking a lot of features.
 ### LeCroy TODO
 
 -   Segmented capture is currently not supported.
--   Compression for digital trace data (they can be rather lage but well
+-   Compression for digital trace data (they can be rather large but well
     compressible).

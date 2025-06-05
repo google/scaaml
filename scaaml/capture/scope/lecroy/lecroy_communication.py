@@ -29,8 +29,8 @@ from pyvisa.util import BINARY_DATATYPES
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import (
-    LECROY_CHANNEL_NAME_T,
-    LECROY_DIG_CHANNEL_NAME_T,
+    LeCroyChannelName,
+    LeCroyDigChannelName,
 )
 
 T = TypeVar("T")
@@ -75,7 +75,7 @@ class LeCroyCommunication(ABC):
         """
 
     @abstractmethod
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(self, channel: LeCroyChannelName) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
 
@@ -108,12 +108,12 @@ class LeCroyCommunication(ABC):
                 raise ValueError("Please check the template version, expected"
                                  f" LECROY_2_3 in {template}")
 
-    def get_xml_dig_data(self, channel: LECROY_DIG_CHANNEL_NAME_T) -> str:
+    def get_xml_dig_data(self, channel: LeCroyDigChannelName) -> str:
         """Return the XML dig data of a digital bus.
 
         Args:
 
-          channel (LECROY_DIG_CHANNEL_NAME_T): Which digital channel to use.
+          channel (LeCroyDigChannelName): Which digital channel to use.
 
         Returns: String representation of the XML data describing digital
         channel wave. See
@@ -211,7 +211,7 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
 
     @make_custom_exception
     def get_waveform(
-            self, channel: LECROY_CHANNEL_NAME_T
+            self, channel: LeCroyChannelName
     ) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
@@ -302,11 +302,11 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         return response
 
     @make_custom_exception
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(self, channel: LeCroyChannelName) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
 
         Args:
-          channel (LECROY_CHANNEL_NAME_T): The name of queried channel.
+          channel (LeCroyChannelName): The name of queried channel.
         """
         raw_data = self.query_binary_values(f"{channel}:WAVEFORM?",
                                             container=bytes)

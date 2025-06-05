@@ -33,11 +33,11 @@ from scaaml.capture.scope.lecroy.lecroy_communication import LeCroyCommunication
 from scaaml.capture.scope.lecroy.lecroy_waveform import DigitalChannelWaveform
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
 from scaaml.capture.scope.lecroy.types import (
-    LECROY_CAPTURE_AREA,
-    LECROY_CHANNEL_NAME_T,
-    LECROY_COMMUNICATION_CLASS_NAME,
-    LECROY_DIG_CHANNEL_NAME_T,
-    LECROY_DIG_LINE_T,
+    LeCroyCaptureArea,
+    LeCroyChannelName,
+    LeCroyCommunicationClassName,
+    LeCroyDigChannelName,
+    LeCroyDigLine,
 )
 from scaaml.capture.scope.scope_template import ScopeTemplate, ScopeTraceType, ScopeTriggerTraceType
 from scaaml.io import Dataset
@@ -51,14 +51,14 @@ class LeCroy(AbstractSScope):
                  samples: int,
                  offset: int,
                  ip_address: str,
-                 trace_channel: LECROY_CHANNEL_NAME_T,
-                 trigger_channel: LECROY_CHANNEL_NAME_T,
+                 trace_channel: LeCroyChannelName,
+                 trigger_channel: LeCroyChannelName,
                  communication_timeout: float,
                  trigger_timeout: float,
                  scope_setup_commands: list[dict[str, Any]],
                  communication_class_name:
-                 LECROY_COMMUNICATION_CLASS_NAME = "LeCroyCommunicationVisa",
-                 trigger_line: LECROY_DIG_LINE_T | None = None,
+                 LeCroyCommunicationClassName = "LeCroyCommunicationVisa",
+                 trigger_line: LeCroyDigLine | None = None,
                  **_: Any) -> None:
         """Create scope context.
 
@@ -70,9 +70,9 @@ class LeCroy(AbstractSScope):
 
           ip_address (str): IP address or hostname of the oscilloscope.
 
-          trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trace_channel (LeCroyChannelName): Channel name.
 
-          trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trigger_channel (LeCroyChannelName): Channel name.
 
           communication_timeout (float): Timeout communication after
             `communication_timeout` seconds.
@@ -119,13 +119,13 @@ class LeCroy(AbstractSScope):
             For a description of possible commands and queries see
             https://cdn.teledynelecroy.com/files/manuals/maui-remote-control-and-automation-manual.pdf
 
-          communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
+          communication_class_name (LeCroyCommunicationClassName): Which
           class to use for communication with the scope. Defaults to
           LeCroyCommunicationVisa, the other possibility is
           LeCroyCommunicationSocket.
 
-          trigger_line (LECROY_DIG_LINE_T | None): If trigger channel is
-          digital (in LECROY_DIG_CHANNEL_NAME_T) then one also needs to specify
+          trigger_line (LeCroyDigLine | None): If trigger channel is
+          digital (in LeCroyDigChannelName) then one also needs to specify
           which line ("D0", "D1", ... "D15" if there are 16 lines). Checked
           against `trigger_channel`.
 
@@ -136,17 +136,17 @@ class LeCroy(AbstractSScope):
         super().__init__(samples=samples, offset=offset)
 
         self._ip_address = ip_address
-        self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
-        self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
+        self._trace_channel: LeCroyChannelName = trace_channel
+        self._trigger_channel: LeCroyChannelName = trigger_channel
 
         if trigger_line is None and trigger_channel.startswith("D"):
             raise ValueError("No digital line selected")
 
-        self._trigger_line: LECROY_DIG_LINE_T | None = trigger_line
+        self._trigger_line: LeCroyDigLine | None = trigger_line
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
         # pylint:disable=C0301
-        self._communication_class_name: LECROY_COMMUNICATION_CLASS_NAME = communication_class_name
+        self._communication_class_name: LeCroyCommunicationClassName = communication_class_name
 
         self._scope_setup_commands = deepcopy(scope_setup_commands)
 
@@ -219,14 +219,14 @@ class LeCroy(AbstractSScope):
     def print_screen(
             self,
             file_path: Path,
-            capture_area: LECROY_CAPTURE_AREA = "GRIDAREAONLY") -> None:
+            capture_area: LeCroyCaptureArea = "GRIDAREAONLY") -> None:
         """Take a print screen and transfer it to this computer.
 
         Args:
 
           file_path (Path): Where to save the print screen file.
 
-          capture_area (LECROY_CAPTURE_AREA): Capture the trace area, full
+          capture_area (LeCroyCaptureArea): Capture the trace area, full
           window, or full screen. Defaults to the trace area.
         """
         assert isinstance(self._scope, LeCroyScope)
@@ -246,13 +246,13 @@ class LeCroyScope(ScopeTemplate):
         samples: int,
         offset: int,
         ip_address: str,
-        trace_channel: LECROY_CHANNEL_NAME_T,
-        trigger_channel: LECROY_CHANNEL_NAME_T,
+        trace_channel: LeCroyChannelName,
+        trigger_channel: LeCroyChannelName,
         communication_timeout: float,
         trigger_timeout: float,
         scope_setup_commands: list[dict[str, Any]],
-        communication_class_name: LECROY_COMMUNICATION_CLASS_NAME,
-        trigger_line: LECROY_DIG_LINE_T | None,
+        communication_class_name: LeCroyCommunicationClassName,
+        trigger_line: LeCroyDigLine | None,
     ) -> None:
         """Create scope context.
 
@@ -264,9 +264,9 @@ class LeCroyScope(ScopeTemplate):
 
           ip_address (str): IP address or hostname of the oscilloscope.
 
-          trace_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trace_channel (LeCroyChannelName): Channel name.
 
-          trigger_channel (LECROY_CHANNEL_NAME_T): Channel name.
+          trigger_channel (LeCroyChannelName): Channel name.
 
           communication_timeout (float): Timeout communication after
           `communication_timeout` seconds.
@@ -277,20 +277,20 @@ class LeCroyScope(ScopeTemplate):
           scope_setup_commands (list[dict[str, Any]]): See docstring of
           `LeCroy`.
 
-          communication_class_name (LECROY_COMMUNICATION_CLASS_NAME): Which
+          communication_class_name (LeCroyCommunicationClassName): Which
           class to use for communication with the scope.
 
-          trigger_line (LECROY_DIG_LINE_T | None): If trigger channel is
-          digital (in LECROY_DIG_CHANNEL_NAME_T) then one also needs to specify
+          trigger_line (LeCroyDigLine | None): If trigger channel is
+          digital (in LeCroyDigChannelName) then one also needs to specify
           which line ("D0", "D1", ... "D15" if there are 16 lines). Checked
           against `trigger_channel`.
         """
         self._samples = samples
         self._offset = offset
         self._ip_address = ip_address
-        self._trace_channel: LECROY_CHANNEL_NAME_T = trace_channel
-        self._trigger_channel: LECROY_CHANNEL_NAME_T = trigger_channel
-        self._trigger_line: LECROY_DIG_LINE_T | None = trigger_line
+        self._trace_channel: LeCroyChannelName = trace_channel
+        self._trigger_channel: LeCroyChannelName = trigger_channel
+        self._trigger_line: LeCroyDigLine | None = trigger_line
         self._communication_timeout = communication_timeout
         self._trigger_timeout = trigger_timeout
         self._communication_class_name = communication_class_name
@@ -470,7 +470,7 @@ class LeCroyScope(ScopeTemplate):
             )
 
         # Return digital trigger wave.
-        assert self._trigger_channel in get_args(LECROY_DIG_CHANNEL_NAME_T)
+        assert self._trigger_channel in get_args(LeCroyDigChannelName)
         xml_data: str = self._scope_communication.get_xml_dig_data(
             channel=self._trigger_channel,  # type: ignore[arg-type]
         )
@@ -679,11 +679,11 @@ class LeCroyScope(ScopeTemplate):
 
         return file_size
 
-    def call_print_screen(self, capture_area: LECROY_CAPTURE_AREA) -> str:
+    def call_print_screen(self, capture_area: LeCroyCaptureArea) -> str:
         """Set the HARDCOPY_SETUP variable and call SCREEN_DUMP.
 
         Args:
-          capture_area (LECROY_CAPTURE_AREA): Capture the whole screen
+          capture_area (LeCroyCaptureArea): Capture the whole screen
             (resp., window) or just the grid with trace.
 
         Returns: The file path on the scope.
