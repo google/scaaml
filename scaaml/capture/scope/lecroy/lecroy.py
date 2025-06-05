@@ -216,10 +216,9 @@ class LeCroy(AbstractSScope):
         dataset.capture_info["scope_answers"] = self._scope.get_scope_answers()
         dataset.write_config()
 
-    def print_screen(
-            self,
-            file_path: Path,
-            capture_area: LeCroyCaptureArea = "GRIDAREAONLY") -> None:
+    def print_screen(self,
+                     file_path: Path,
+                     capture_area: LeCroyCaptureArea = "GRIDAREAONLY") -> None:
         """Take a print screen and transfer it to this computer.
 
         Args:

@@ -17,7 +17,6 @@
 from typing import Literal
 from typing_extensions import TypeAlias
 
-
 LeCroyCommunicationClassName: TypeAlias = Literal[
     "LeCroyCommunicationVisa",
     "LeCroyCommunicationSocket",

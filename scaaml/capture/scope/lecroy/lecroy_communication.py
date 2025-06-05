@@ -211,8 +211,8 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
 
     @make_custom_exception
     def get_waveform(
-            self, channel: LeCroyChannelName
-    ) -> LecroyWaveform:  # pragma: no cover
+            self,
+            channel: LeCroyChannelName) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
         return self.query_binary_values(f"{channel}:WAVEFORM?",
