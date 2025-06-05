@@ -592,7 +592,7 @@ class DigitalChannelWaveform:
         in samples per second is: 1 / horizontal_per_step).
 
         sampling_rate (float): Computed samples per second (1 /
-        horizontal_resolution).
+        horizontal_per_step).
 
         trace_infos (dict[str, DigitalChannelWaveform.Line]): A dictionary of
         line sub_bus_name (the line name -- "D0", "D1", ..., "D15" if there are

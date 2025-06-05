@@ -474,6 +474,12 @@ class LeCroyScope(ScopeTemplate):
         xml_data: str = self._scope_communication.get_xml_dig_data(
             channel=self._trigger_channel,  # type: ignore[arg-type]
         )
+        return self._compute_digital_trigger(xml_data=xml_data)
+
+    def _compute_digital_trigger(self, xml_data: str) -> ScopeTriggerTraceType:
+        """Compute the necessary adjustments to match timing of an analog
+        trace.
+        """
         digital_wave = DigitalChannelWaveform(xml_data=xml_data)
 
         # Interpolation to match digital wave time with analog (sampling rates
