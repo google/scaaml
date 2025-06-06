@@ -19,6 +19,7 @@ GPIB
 GPIO
 GRIDAREAONLY
 Gaëtan
+HORIZ
 HWAES
 IACR
 INVSHIFT
@@ -54,6 +55,7 @@ TRFL
 TRMD
 Tensorboard
 Toan
+USERTEXT
 Unmix
 Unshift
 VICP
@@ -110,6 +112,7 @@ htmlcov
 implem
 imshow
 inproceedings
+interp
 intp
 ipynb
 ipython

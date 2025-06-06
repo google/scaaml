@@ -14,24 +14,28 @@
 """Base class for a scope handle. An object that can be passed as a scope to
 chipwhisperer API."""
 
-from typing import Optional, Protocol, Union
+from typing import Protocol
 
 import numpy as np
 import numpy.typing as npt
 
 ScopeTraceType = npt.NDArray[np.float32]
 ScopeDigitalTraceType = npt.NDArray[np.bool_]
-ScopeTriggerTraceType = Union[ScopeTraceType, ScopeDigitalTraceType]
+ScopeTriggerTraceType = ScopeTraceType | ScopeDigitalTraceType
 
 
 class ScopeTemplate(Protocol):
     """A base class for scope objects that can be passed as a scope to
     chipwhisperer API (such as Pico6424E)."""
 
-    def con(self, sn: Optional[str] = None) -> bool:
+    def con(self, sn: str | None = None) -> bool:
         """Connect to the attached hardware. Trying to keep compatibility with
-        cw.capture.scopes.OpenADC and being able to pass as `scope` argument to
-        `cw.capture_trace`.
+        `cw.capture.scopes.OpenADC` and being able to pass as `scope` argument
+        to `cw.capture_trace`.
+
+        Args:
+
+          sn (str | None): The serial number of the scope.
 
         Returns: True if the connection was successful, False otherwise.
         """
@@ -49,12 +53,23 @@ class ScopeTemplate(Protocol):
         """Capture trace (must be armed first). Same signature as
         cw.capture.scopes.OpenADC.
 
+        Args:
+
+          poll_done (bool): Poll if the capture has finished. Not supported
+          everywhere.
+
         Returns: True if the capture timed out, False if it did not.
         """
 
     def get_last_trace(self, as_int: bool = False) -> ScopeTraceType:
-        """Return the last trace. Same signature as cw.capture.scopes.OpenADC.
-        """
+        """Return the last trace. Same signature as
+        `cw.capture.scopes.OpenADC.get_last_trace`.
+
+        Args:
+
+          as_int (bool): Scope dependent. Could be either not implemented or
+          checked to be False.
+      """
 
     def __str__(self) -> str:
         """Return string representation of this object."""
