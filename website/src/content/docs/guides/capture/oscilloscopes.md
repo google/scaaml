@@ -158,7 +158,7 @@ Communication with the oscilloscope is supported by both:
 Our choice of protocol is usually the TCPIP for it has automatic recovery
 properties for long lasting capture campaigns. This being said the LXI protocol
 has been used to capture the
-[GPAM](https://cdn.teledynelecroy.com/files/manuals/automation_command_ref_manual_wr.pdf)
+[GPAM](https://google.github.io/scaaml/papers/gpam_ches_2024/)
 ECC datasets and is more tested.
 
 ```python
