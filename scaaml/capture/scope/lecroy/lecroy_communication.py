@@ -97,13 +97,15 @@ class LeCroyCommunication(ABC):
 
         template_hash = hashlib.sha256(template.encode("utf8")).hexdigest()
         if template_hash not in LecroyWaveform.SUPPORTED_PROTOCOL_TEMPLATE_SHAS:
-            # This is not 100% after a restart probably due to the response
-            # header -> just log.
+            # Checking the template hash can have false negatives (a different
+            # hash when the template is still the same). This is probably due
+            # to the response header -> just log.
             self._logger.error(
                 "Template description hash is different the expected value. "
                 "Template:\n%s",
                 template,
             )
+            # The supported template version is 2_3.
             if "LECROY_2_3" not in template:
                 raise ValueError("Please check the template version, expected"
                                  f" LECROY_2_3 in {template}")

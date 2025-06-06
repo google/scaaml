@@ -728,8 +728,7 @@ class DigitalChannelWaveform:
         # Check consistency of selected lines:
         # - their number is the same
         assert len(line_infos) == sum(
-            1 if x else 0 for x in self.selected_lines_mask
-        ), "Number of selected lines does not match"
+            self.selected_lines_mask), "Number of selected lines does not match"
         # - their indexes are correct (no Line is repeated)
         for line in line_infos:
             assert self.selected_lines_mask[

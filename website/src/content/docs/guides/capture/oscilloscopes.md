@@ -126,7 +126,7 @@ target = cw.target(cw_scope)
 
 with PicoScope(
         samples=5_000,
-        sample_rate=7_000_000,  # Hz
+        sample_rate=7_000_000,  # samples/s
         offset=0,  # pre-trigger samples
         trace_channel="A",
         trace_probe_range=0.5,  # V
@@ -149,11 +149,12 @@ with PicoScope(
 
 Communication with the oscilloscope is supported by both:
 
--   LXI protocol over TCP using
+-   LeCroyCommunicationVisa: LXI protocol over TCP using
     [PyVISA](https://pyvisa.readthedocs.io/en/latest/) when the oscilloscope is
-    set "Utilities > Utilities Setup > Remote" to LXI.
--   Python socket over TCP/IP using VICP when the oscilloscopes is set
-    "Utilities > Utilities Setup > Remote" to TCPIP.
+    set "Utilities > Utilities Setup > Remote" to "LXI (VXI11)".
+-   LeCroyCommunicationSocket: Python socket over TCP/IP using VICP when the
+    oscilloscopes is set "Utilities > Utilities Setup > Remote" to "TCPIP
+    (VICP)".
 
 Our choice of protocol is usually the TCPIP for it has automatic recovery
 properties for long lasting capture campaigns. This being said the LXI protocol
