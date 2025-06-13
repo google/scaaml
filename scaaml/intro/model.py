@@ -125,7 +125,7 @@ def stack(x: Tensor,
 # pylint: disable=C0103
 def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
              mdl_cfg: Dict[str, Any], optim_cfg: Dict[str,
-                                                      Any]) -> Model[Any, Any]:
+                                                      Any]) :
     del attack_point  # unused
 
     pool_size = mdl_cfg["initial_pool_size"]
@@ -174,11 +174,12 @@ def Resnet1D(input_shape: Tuple[int, ...], attack_point: str,
     model.compile(loss=["categorical_crossentropy"],
                   metrics=["acc"],
                   optimizer=Adam(lr))
+    print("model here",model)
     return model
 
 
 def get_model(input_shape: Tuple[int, ...], attack_point: str,
-              config: Dict[str, Any]) -> Model[Any, Any]:
+              config: Dict[str, Any]) :
     """Return an instantiated model based of the config provided.
 
     Args:
