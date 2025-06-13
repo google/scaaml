@@ -18,9 +18,13 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'SCAAML documentation',
-      social: {
-        github: 'https://github.com/google/scaaml',
-      },
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/google/scaaml',
+        }
+      ],
       // Custom CSS to style MathJax equations
       customCss: ['./src/mathjax.css'],
       sidebar: [

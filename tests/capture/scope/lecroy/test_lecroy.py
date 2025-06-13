@@ -47,7 +47,7 @@ def test_get_identity_info(mock_connect, mock_write, mock_query, mock_close):
     with LeCroy(samples=10,
                 offset=0,
                 ip_address="127.0.0.1",
-                trace_channel="C1",
+                trace_channel=TRACE_CHANNEL,
                 trigger_channel="C2",
                 communication_timeout=1.0,
                 scope_setup_commands=[],
@@ -60,6 +60,7 @@ def test_get_identity_info(mock_connect, mock_write, mock_query, mock_close):
         }
 
 
+TRACE_CHANNEL = "C1"
 PRE_COMMANDS = [
     call({
         "command": "COMM_HEADER OFF",
@@ -75,7 +76,11 @@ PRE_COMMANDS = [
         "command": "AUTO_CALIBRATE OFF",
     }),
     call({
-        "command": "OFFSET 0",
+        "command": f"{TRACE_CHANNEL}:OFFSET 0",
+    }),
+    call({
+        "command": f"WAVEFORM_SETUP SP,1,NP,10,FP,0,SN,0",
+        "query": "WAVEFORM_SETUP?",
     }),
 ]
 POST_COMMANDS = [
@@ -98,14 +103,17 @@ POST_COMMANDS = [
 @patch.object(scaaml.capture.scope.lecroy.lecroy.LeCroyScope, "_run_command")
 def test_scope_setup_commands_empty(mock_run_command, mock_connect, mock_write,
                                     mock_query, mock_close):
-    with LeCroy(samples=10,
-                offset=0,
-                ip_address="127.0.0.1",
-                trace_channel="C1",
-                trigger_channel="C2",
-                communication_timeout=1.0,
-                scope_setup_commands=[],
-                trigger_timeout=0.1) as _:
+    with LeCroy(
+            samples=10,
+            offset=0,
+            ip_address="127.0.0.1",
+            trace_channel=TRACE_CHANNEL,
+            trigger_channel="C2",
+            communication_timeout=1.0,
+            scope_setup_commands=[],
+            trigger_timeout=0.1,
+            trigger_line=None,
+    ) as _:
         assert mock_run_command.call_args_list == PRE_COMMANDS + POST_COMMANDS
 
 
@@ -129,11 +137,13 @@ def test_scope_setup_commands_non_empty(mock_run_command, mock_connect,
             samples=10,
             offset=0,
             ip_address="127.0.0.1",
-            trace_channel="C1",
+            trace_channel=TRACE_CHANNEL,
             trigger_channel="C2",
             communication_timeout=1.0,
             scope_setup_commands=scope_setup_commands,  # type: ignore[arg-type]
-            trigger_timeout=0.1) as _:
+            trigger_timeout=0.1,
+            trigger_line=None,
+    ) as _:
         assert mock_run_command.call_args_list == PRE_COMMANDS + list(
             map(call, scope_setup_commands)) + POST_COMMANDS
 
@@ -155,12 +165,13 @@ def test_run_command_empty(mock_connect, mock_write, mock_query, mock_close):
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="C1",
+        trace_channel=TRACE_CHANNEL,
         trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
         scope_setup_commands=[],
+        trigger_line=None,
     )
     scope.con()
 
@@ -185,17 +196,21 @@ def test_run_command_command_then_query(mock_connect, mock_write, mock_query,
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="C1",
+        trace_channel=TRACE_CHANNEL,
         trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
         scope_setup_commands=[],
+        trigger_line=None,
     )
     scope.con()
 
     def query_not_called(*args, **kwargs):
-        assert mock_query.call_args_list == [call("COMM_FORMAT?")]
+        assert mock_query.call_args_list == [
+            call("COMM_FORMAT?"),
+            call("WAVEFORM_SETUP?"),
+        ]
 
     mock_write.side_effect = query_not_called
 
@@ -228,12 +243,13 @@ def test_run_command_command_query_updates_scope_answers(
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="C1",
+        trace_channel=TRACE_CHANNEL,
         trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
         scope_setup_commands=[],
+        trigger_line=None,
     )
     scope.con()
 
@@ -243,7 +259,8 @@ def test_run_command_command_query_updates_scope_answers(
 
     assert scope.get_scope_answers() == {
         "COMM_FORMAT?": query_response + "0",
-        "query_question": query_response + "1",
+        "WAVEFORM_SETUP?": query_response + "1",
+        "query_question": query_response + "2",
     }
 
 
@@ -266,12 +283,13 @@ def test_run_command_method(mock_set_trig_delay, mock_connect, mock_write,
         samples=42,
         offset=0,
         ip_address="127.0.0.1",
-        trace_channel="C1",
+        trace_channel=TRACE_CHANNEL,
         trigger_channel="C2",
         communication_timeout=5.0,
         trigger_timeout=1.0,
         communication_class_name="LeCroyCommunicationVisa",
         scope_setup_commands=[],
+        trigger_line=None,
     )
     scope.con()
 

@@ -55,7 +55,7 @@ class FakeTqdm(Generic[_T]):
         return iter(self.iterable)
 
 
-ProgressBarT: TypeAlias = Union[
+ProgressBarType: TypeAlias = Union[
     Type[tqdm],  # type: ignore[type-arg]
     Type[FakeTqdm[_T]]]
 
@@ -724,7 +724,7 @@ class Dataset:
         """
         if key_ap not in self.attack_points_info:
             raise ValueError(f"{key_ap} is not an attack point.")
-        pbar: ProgressBarT[Any]
+        pbar: ProgressBarType[Any]
         if show_progressbar:
             pbar = tqdm
         else:
@@ -777,7 +777,7 @@ class Dataset:
                                      f"{Dataset.HOLDOUT_SPLIT}")
 
     def _check_disjoint_keys(self,
-                             pbar: ProgressBarT[Any],
+                             pbar: ProgressBarType[Any],
                              key_ap: str,
                              deep_check: bool = True) -> None:
         """Check that no key in the train split is present in the test split.
@@ -817,7 +817,7 @@ class Dataset:
 
     @staticmethod
     def _check_sha256sums(shards_list: Dict[str, List[Any]], dpath: Path,
-                          pbar: ProgressBarT[Any]) -> None:
+                          pbar: ProgressBarType[Any]) -> None:
         """Check the metadata of this dataset.
 
         Args:
@@ -963,7 +963,7 @@ class Dataset:
 
     @staticmethod
     def _shallow_check(seen_keys: Set[bytes], train_shards: List[Any],
-                       pbar: ProgressBarT[Any]) -> None:
+                       pbar: ProgressBarType[Any]) -> None:
         """Check just what is in self.shards_list info (do not parse all
         shards).
 
@@ -984,7 +984,7 @@ class Dataset:
 
     @staticmethod
     def _deep_check(*, seen_keys: Set[bytes], dpath: Path,
-                    train_shards: List[Any], pbar: ProgressBarT[Any],
+                    train_shards: List[Any], pbar: ProgressBarType[Any],
                     examples_per_shard: int, key_ap: str) -> None:
         """Check all keys from all shards (parse all shards in the train split).
 

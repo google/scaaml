@@ -28,7 +28,10 @@ import pyvisa
 from pyvisa.util import BINARY_DATATYPES
 
 from scaaml.capture.scope.lecroy.lecroy_waveform import LecroyWaveform
-from scaaml.capture.scope.lecroy.types import LECROY_CHANNEL_NAME_T
+from scaaml.capture.scope.lecroy.types import (
+    LeCroyChannelName,
+    LeCroyDigChannelName,
+)
 
 T = TypeVar("T")
 Param = ParamSpec("Param")
@@ -72,7 +75,7 @@ class LeCroyCommunication(ABC):
         """
 
     @abstractmethod
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(self, channel: LeCroyChannelName) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
         """
 
@@ -91,12 +94,48 @@ class LeCroyCommunication(ABC):
         https://github.com/google/scaaml/issues/130
         """
         template = self.query("TMPL?")
+
         template_hash = hashlib.sha256(template.encode("utf8")).hexdigest()
-        if template_hash != LecroyWaveform.SUPPORTED_PROTOCOL_TEMPLATE_SHA:
+        if template_hash not in LecroyWaveform.SUPPORTED_PROTOCOL_TEMPLATE_SHAS:
+            # Checking the template hash can have false negatives (a different
+            # hash when the template is still the same). This is probably due
+            # to the response header -> just log.
             self._logger.error(
                 "Template description hash is different the expected value. "
-                "Template:\n%s", template)
-            raise ValueError("Unsupported waveform template description.")
+                "Template:\n%s",
+                template,
+            )
+            # The supported template version is 2_3.
+            if "LECROY_2_3" not in template:
+                raise ValueError("Please check the template version, expected"
+                                 f" LECROY_2_3 in {template}")
+
+    def get_xml_dig_data(self, channel: LeCroyDigChannelName) -> str:
+        """Return the XML dig data of a digital bus.
+
+        Args:
+
+          channel (LeCroyDigChannelName): Which digital channel to use.
+
+        Returns: String representation of the XML data describing digital
+        channel wave. See
+        scaaml.capture.scope.lecroy_waveform.DigitalChannelWaveform for
+        parsing.
+        """
+        # Get digital data.
+        data = self.query_binary_values(
+            f"{channel}:WF?",
+            datatype="B",
+            container=bytearray,
+        )
+        assert isinstance(data, bytes | bytearray)
+        ascii_xml_data: str = bytes(data).decode("ascii")
+
+        # Strip all non-XML characters.
+        ascii_xml_data = ascii_xml_data[ascii_xml_data.find("<"):]
+        ascii_xml_data = ascii_xml_data[:ascii_xml_data.rfind(">") + 1]
+
+        return ascii_xml_data
 
 
 class LeCroyCommunicationError(Exception):
@@ -168,13 +207,14 @@ class LeCroyCommunicationVisa(LeCroyCommunication):
         string).
         """
         assert self._scope
-        self._logger.debug("query(message=\"%s\")", message)
-        return self._scope.query(message).strip()
+        response = self._scope.query(message).strip()
+        self._logger.debug("query(message=\"%s\") = \"%s\"", message, response)
+        return response
 
     @make_custom_exception
     def get_waveform(
-            self, channel: LECROY_CHANNEL_NAME_T
-    ) -> LecroyWaveform:  # pragma: no cover
+            self,
+            channel: LeCroyChannelName) -> LecroyWaveform:  # pragma: no cover
         """Get a LecroyWaveform object representing a single waveform.
         """
         return self.query_binary_values(f"{channel}:WAVEFORM?",
@@ -242,21 +282,33 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """Write a message to the oscilloscope.
         """
         assert self._socket
+        self._logger.debug("write(message=\"%s\")", message)
         self._socket.send(self._format_command(message))
 
     @make_custom_exception
-    def query(self, message: str) -> str:
+    def query(self, message: str, strip: bool = True) -> str:
         """Query the oscilloscope (write, read, and decode the answer as a
         string).
+
+        Args:
+
+          message (str): The query question.
+
+          strip (bool): Whether to call strip to get rid of newlines. Defaults
+          to True.
         """
-        return self.query_binary_values(message, container=bytes).decode()
+        response = self.query_binary_values(message, container=bytes).decode()
+        if strip:
+            response = response.strip()
+        self._logger.debug("query(message=\"%s\") = \"%s\"", message, response)
+        return response
 
     @make_custom_exception
-    def get_waveform(self, channel: LECROY_CHANNEL_NAME_T) -> LecroyWaveform:
+    def get_waveform(self, channel: LeCroyChannelName) -> LecroyWaveform:
         """Get a LecroyWaveform object representing a single waveform.
 
         Args:
-          channel (LECROY_CHANNEL_NAME_T): The name of queried channel.
+          channel (LeCroyChannelName): The name of queried channel.
         """
         raw_data = self.query_binary_values(f"{channel}:WAVEFORM?",
                                             container=bytes)
@@ -285,9 +337,9 @@ class LeCroyCommunicationSocket(LeCroyCommunication):
         """
         assert self._socket
         del datatype  # ignored
-        assert container == bytes
+        del container  # ignored
 
-        self._logger.debug("\"%s\"", message)
+        self._logger.debug("query_binary_values(\"%s\")", message)
 
         # Send message
         self.write(message)
