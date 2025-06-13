@@ -102,7 +102,7 @@ def train_model(config):
             
             cb = [
                 ModelCheckpoint(monitor="val_loss",
-                                filepath=f"models/{stub}.keras",
+                                filepath=f"/kaggle/working/scaaml/models/{stub}.keras",
                                 save_best_only=True),
                 TensorBoard(log_dir="logs/" + stub, update_freq="batch")
             ]
