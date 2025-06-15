@@ -48,7 +48,7 @@ def get_models_by_attack_point(
         status[attack_point] = "complete"
         for attack_byte in range(16):
             stub = get_model_stub(attack_point, attack_byte, config)
-            model_path = Path("models") / stub
+            model_path = Path("/kaggle/working/scaaml/scaaml_intro/models") / stub
             if not model_path.exists():
                 status[str(attack_byte)] = "incomplete"
                 models[attack_point].append(None)
