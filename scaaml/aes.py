@@ -41,12 +41,9 @@ def ap_preds_to_key_preds(preds: npt.NDArray[np.generic],
                           plaintexts: npt.NDArray[np.generic],
                           attack_point: str) -> npt.NDArray[np.generic]:
     "Convert attack points predictions to key byte prediction"
-    #print("HI",preds) 
 
-   
     preds = np.array(preds)
-    
-    #print("HELLLLLLLLLLLLLLLL",preds,preds.shape)
+
     if attack_point == "key":
         return preds
 
