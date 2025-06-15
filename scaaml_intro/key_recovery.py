@@ -16,7 +16,7 @@ from scaaml.utils import hex_display, bytelist_to_hex
 
 target = 'stm32f415_tinyaes'
 tf_cap_memory()
-target_config = json.loads(open("/content/drive/MyDrive/scaaml/scaaml_intro/config/" + target + '.json').read())
+target_config = json.loads(open("/kaggle/working/scaaml/scaaml_intro/config/" + target + '.json').read())
 BATCH_SIZE = target_config['batch_size']
 TRACE_LEN = target_config['max_trace_len']
 
@@ -25,7 +25,7 @@ TRACE_LEN = target_config['max_trace_len']
 available_models = get_models_by_attack_point(target_config)
 
 
-DATASET_GLOB = "/content/drive/MyDrive/scaaml/scaaml_intro/datasets/%s/test/*" % target_config['algorithm']
+DATASET_GLOB = "/kaggle/working/scaaml/scaaml_intro/datasets/%s/test/*" % target_config['algorithm']
 shard_paths  = list_shards(DATASET_GLOB, 256)
 
 #let's select an attack point that have all the needed models -- Key is not a good target: it doesn't work
@@ -37,7 +37,7 @@ ATTACK_BYTE = 2
 # load model
 #print(available_models)
 #model = load_model_from_disk(available_models[ATTACK_POINT][ATTACK_BYTE])
-model=load_model_from_disk("/home/sanju/scaaml/models/stm32f415-tinyaes-cnn-v10-ap_sub_bytes_out-byte_2-len_20000.keras")
+model=load_model_from_disk("/kaggle/working/scaaml/models/stm32f415-tinyaes-cnn-v10-ap_sub_bytes_out-byte_2-len_20000.keras")
 #model=tf.keras.layers.TFSMLayer("/home/sanju/scaaml/models/stm32f415-tinyaes-cnn-v10-ap_sub_bytes_out-byte_0-len_20000.keras", call_endpoint='serving_default')
 
  #tf.keras.models.load_model
