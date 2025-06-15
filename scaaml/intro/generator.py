@@ -38,9 +38,7 @@ def create_dataset(file_pattern: str,
     del is_training  # unused
     del batch_size  # unused
 
-    shards = list_shards(file_pattern, num_shards) #path probem
-    # for j in range(50):    
-    #     print("hi",shards[j])
+    shards = list_shards(file_pattern, num_shards)
     attack_byte = int(attack_byte)
 
     if attack_point not in ["key", "sub_bytes_in", "sub_bytes_out"]:
@@ -51,9 +49,7 @@ def create_dataset(file_pattern: str,
     y_list: List[Tensor] = []
     pb = tqdm(total=num_shards, desc="loading shards")
     with tf.device("/cpu:0"):
-        #print("jityhoy")
         for idx, shard_fname in enumerate(shards):
-            #print("ktoiyhoy6db")
             x_shard, y_shard = load_shard(shard_fname, attack_byte,
                                           attack_point, max_trace_length,
                                           num_traces_per_shard)
@@ -67,7 +63,6 @@ def create_dataset(file_pattern: str,
             #     y = tf.concat([y, y_shard], axis=0)
             x_list.append(x_shard)
             y_list.append(y_shard)
-            #print("hiii",x_list,y_list)
             pb.update()
         pb.close()
         x: Tensor = tf.concat(x_list, axis=0)
@@ -90,7 +85,7 @@ def create_dataset(file_pattern: str,
     # dataset = dataset.batch(batch_size).prefetch(
     #     tf.data.experimental.AUTOTUNE
     # )
-    return (x,y)
+    return (x, y)
 
 
 def list_shards(file_pattern: str, num_shards: int) -> List[str]:
