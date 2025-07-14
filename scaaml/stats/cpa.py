@@ -110,6 +110,9 @@ class CPA:
         self.real_key: Optional[npt.NDArray[np.uint8]] = None
         self.r: list[R] = [R() for _ in range(16)]
 
+        # Store complete history.
+        self.ranks_vs_ntraces = []
+
     def update(self,
                trace: npt.NDArray[np.float32],
                plaintext: npt.NDArray[np.uint8],
@@ -157,6 +160,17 @@ class CPA:
             for value in range(self.models[byte].different_target_secrets):
                 self.result[byte][value].append(float(res[value]))
 
+        # Update ranks vs traces.
+        current_ranks = []
+        for byte in range(16):
+            res = np.max(self.r[byte].guess(), axis=1)
+            target_value = self.models[byte].target_secret(
+                key=real_key,
+                plaintext=plaintext,
+            )
+            current_ranks.append(int(np.sum(res >= res[target_value])))
+        self.ranks_vs_ntraces.append(float(np.mean(current_ranks)))
+
     def print_predictions(self, real_key: npt.NDArray[np.uint8],
                           plaintext: npt.NDArray[np.uint8]) -> None:
         """Print a short prediction summary.
@@ -168,7 +182,12 @@ class CPA:
 
           plaintext (npt.NDArray[np.uint8]): The input of AES.
         """
-        statistics: list[list[int]] = [[], [], [], []]
+        statistics: list[list[int]] = [
+            [],
+            [],
+            [],
+            [],
+        ]
         iteration = len(next(iter(self.result.values()))[0])
         for byte in range(16):
             target_value = self.models[byte].target_secret(
@@ -185,13 +204,24 @@ class CPA:
 
         # Print intermediate result
         print()
-        current_ranks = statistics[3][1:]
+        current_ranks = statistics[3]
         # Estimate of log2 of how many keys we need to try to get the correct
         # one.
         security = math.log2(math.prod(current_ranks))
         print(f"Traces: {iteration + 1} mean_rank {np.mean(current_ranks)} "
               f"{security = }")
-        print(tabulate(statistics, headers=["byte", "real", "guessed", "rank"]))
+
+        assert len(statistics) == 4
+        printed_statistics = [[name] + s for name, s in zip(
+            [
+                "byte",
+                "real",
+                "guessed",
+                "rank",
+            ],
+            statistics,
+        )]
+        print(tabulate(printed_statistics))
 
     def plot_cpa(self,
                  real_key: npt.NDArray[np.uint8],
