@@ -60,9 +60,9 @@ def test_cpa(tmp_path):
         res = np.max(cpa.r[byte].guess(), axis=1)
         if int(np.sum(res >= res[target_value])) > 2:
             cpa.plot_cpa(
-                 real_key=key,
-                 plaintext=plaintext,
-                 experiment_name="cpa_unittest.png",
+                real_key=key,
+                plaintext=plaintext,
+                experiment_name="cpa_unittest.png",
             )
             raise ValueError()
 
