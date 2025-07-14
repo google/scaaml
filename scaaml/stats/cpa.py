@@ -168,46 +168,36 @@ class CPA:
 
           plaintext (npt.NDArray[np.uint8]): The input of AES.
         """
-        statistics: list[list[int]] = [
-            [],
-            [],
-            [],
-            [],
-        ]
+        statistics: dict[str, list[int]] = {
+            "byte": [],
+            "real": [],
+            "guessed": [],
+            "rank": [],
+        }
         iteration = len(next(iter(self.result.values()))[0])
         for byte in range(16):
             target_value = self.models[byte].target_secret(
                 key=real_key,
                 plaintext=plaintext,
             )
-            statistics[0].append(byte)
-            statistics[1].append(target_value)
+            statistics["byte"].append(byte)
+            statistics["real"].append(target_value)
             res = np.max(self.r[byte].guess(), axis=1)
             assert res.shape == (self.models[byte].different_target_secrets,)
-            statistics[2].append(int(np.argmax(res)))
+            statistics["guessed"].append(int(np.argmax(res)))
             # Compute rank
-            statistics[3].append(int(np.sum(res >= res[target_value])))
+            statistics["rank"].append(int(np.sum(res >= res[target_value])))
 
         # Print intermediate result
         print()
-        current_ranks = statistics[3]
+        current_ranks = statistics["rank"]
         # Estimate of log2 of how many keys we need to try to get the correct
         # one.
         security = math.log2(math.prod(current_ranks))
         print(f"Traces: {iteration + 1} mean_rank {np.mean(current_ranks)} "
               f"{security = }")
 
-        assert len(statistics) == 4
-        printed_statistics = [[name] + s for name, s in zip(
-            [
-                "byte",
-                "real",
-                "guessed",
-                "rank",
-            ],
-            statistics,
-        )]
-        print(tabulate(printed_statistics))
+        print(tabulate([name] + values for name, values in statistics.items()))
 
     def plot_cpa(self,
                  real_key: npt.NDArray[np.uint8],
