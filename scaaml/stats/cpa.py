@@ -111,7 +111,7 @@ class CPA:
         self.r: list[R] = [R() for _ in range(16)]
 
         # Store complete history.
-        self.ranks_vs_ntraces = []
+        self.ranks_vs_n_traces = []
 
     def update(self,
                trace: npt.NDArray[np.float32],
@@ -169,7 +169,7 @@ class CPA:
                 plaintext=plaintext,
             )
             current_ranks.append(int(np.sum(res >= res[target_value])))
-        self.ranks_vs_ntraces.append(float(np.mean(current_ranks)))
+        self.ranks_vs_n_traces.append(float(np.mean(current_ranks)))
 
     def print_predictions(self, real_key: npt.NDArray[np.uint8],
                           plaintext: npt.NDArray[np.uint8]) -> None:
