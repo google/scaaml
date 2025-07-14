@@ -110,9 +110,6 @@ class CPA:
         self.real_key: Optional[npt.NDArray[np.uint8]] = None
         self.r: list[R] = [R() for _ in range(16)]
 
-        # Store complete history.
-        self.ranks_vs_n_traces = []
-
     def update(self,
                trace: npt.NDArray[np.float32],
                plaintext: npt.NDArray[np.uint8],
@@ -159,17 +156,6 @@ class CPA:
             # Fill in the result
             for value in range(self.models[byte].different_target_secrets):
                 self.result[byte][value].append(float(res[value]))
-
-        # Update ranks vs traces.
-        current_ranks = []
-        for byte in range(16):
-            res = np.max(self.r[byte].guess(), axis=1)
-            target_value = self.models[byte].target_secret(
-                key=real_key,
-                plaintext=plaintext,
-            )
-            current_ranks.append(int(np.sum(res >= res[target_value])))
-        self.ranks_vs_n_traces.append(float(np.mean(current_ranks)))
 
     def print_predictions(self, real_key: npt.NDArray[np.uint8],
                           plaintext: npt.NDArray[np.uint8]) -> None:
