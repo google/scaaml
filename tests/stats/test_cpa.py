@@ -28,13 +28,18 @@ def test_cpa(tmp_path):
 
     key = np.random.randint(0, 256, size=16, dtype=np.uint8)
 
-    for _ in range(150):
+    # Make sure that both positive and negative correlation works (might give
+    # 2* worse ranks).
+    random_signs = np.random.choice(2, 16) * 2 - 1
+
+    for _ in range(100):
         plaintext = np.random.randint(0, 256, size=16, dtype=np.uint8)
 
         # Simulate a trace
         bit_counts = [int(x).bit_count() for x in key ^ plaintext]
         trace = bit_counts + np.random.normal(scale=1.5, size=16)
         # np.bitwise_count requires NumPy>=2, CW requires <2
+        trace *= random_signs
 
         cpa.update(
             trace=trace,
@@ -53,7 +58,7 @@ def test_cpa(tmp_path):
             plaintext=plaintext,
         )
         res = np.max(cpa.r[byte].guess(), axis=1)
-        assert int(np.sum(res >= res[target_value])) <= 5
+        assert int(np.sum(res >= res[target_value])) <= 2
 
     cpa.plot_cpa(
         real_key=key,
