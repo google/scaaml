@@ -99,9 +99,9 @@ class R:
         r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
 
         if self.return_absolute_value:
-            return np.abs(r)
+            return np.array(np.abs(r), dtype=np.float64)
         else:
-            return r
+            return np.array(r, dtype=np.float64)
 
 
 class CPA:
@@ -129,6 +129,12 @@ class CPA:
 
         Example use:
         ```python
+        import numpy as np
+
+        from scaaml.stats.cpa import CPA
+        from scaaml.stats.attack_points.aes_128.full_aes import encrypt
+        from scaaml.stats.attack_points.aes_128.attack_points import *
+
         cpa = CPA(get_model=lambda i: LeakageModelAES128(
             byte_index=i,
             attack_point=SubBytesIn(),
