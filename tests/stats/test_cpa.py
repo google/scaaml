@@ -14,23 +14,31 @@
 
 import numpy as np
 
+import pytest
+
 from scaaml.stats.cpa import CPA
 from scaaml.stats.attack_points.aes_128.full_aes import encrypt
 from scaaml.stats.attack_points.aes_128.attack_points import *
 
 
-def test_cpa(tmp_path):
-    cpa = CPA(get_model=lambda i: LeakageModelAES128(
-        byte_index=i,
-        attack_point=SubBytesIn(),
-        use_hamming_weight=True,
-    ))
+def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
+    cpa = CPA(
+        get_model=lambda i: LeakageModelAES128(
+            byte_index=i,
+            attack_point=SubBytesIn(),
+            use_hamming_weight=True,
+        ),
+        return_absolute_value=return_absolute_value,
+    )
 
     key = np.random.randint(0, 256, size=16, dtype=np.uint8)
 
     # Make sure that both positive and negative correlation works (might give
     # 2* worse ranks).
-    random_signs = np.random.choice(2, 16) * 2 - 1
+    if random_correlation_sign:
+        random_signs = np.random.choice(2, 16) * 2 - 1
+    else:
+        random_signs = np.ones(shape=16)
 
     for _ in range(100):
         plaintext = np.random.randint(0, 256, size=16, dtype=np.uint8)
@@ -63,5 +71,33 @@ def test_cpa(tmp_path):
     cpa.plot_cpa(
         real_key=key,
         plaintext=plaintext,
-        experiment_name=str(tmp_path),
+        experiment_name=str(figure_path),
     )
+
+
+def test_cpa(tmp_path):
+    # This shall pass no matter the correlation sign.
+    cpa_try(
+        figure_path=tmp_path,
+        return_absolute_value=True,
+        random_correlation_sign=True,
+    )
+
+
+def test_cpa_positive_correlation(tmp_path):
+    # This shall pass since there are both positive and negative correlation.
+    cpa_try(
+        figure_path=tmp_path,
+        return_absolute_value=False,
+        random_correlation_sign=False,
+    )
+
+
+def test_cpa_wrong_correlation(tmp_path):
+    # This shall fail since some correlation is likely to be negative.
+    with pytest.raises(AssertionError):
+        cpa_try(
+            figure_path=tmp_path,
+            return_absolute_value=False,
+            random_correlation_sign=True,
+        )
