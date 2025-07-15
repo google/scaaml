@@ -29,10 +29,17 @@ class R:
     """Holds and updates intermediate values.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, return_absolute_value: bool) -> None:
         """Initialize the computation.
+
+        Args:
+
+          return_absolute_value (bool): If set to True then negative
+          correlation is also detected. If set to False only positive
+          correlation is detected.
         """
         self.d: int = 0
+        self.return_absolute_value: bool = return_absolute_value
 
         # The following variables are initialized lazily when we know the
         # dimensions of the traces.
@@ -78,7 +85,8 @@ class R:
 
     def guess(self) -> npt.NDArray[np.float64]:
         """Return how much each possible guess value corresponds to the
-        observed values.
+        observed values. The expected shape is (different_target_secrets,
+        trace_len).
         """
         # nominator
         nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
@@ -89,7 +97,11 @@ class R:
         den_b = (self.sum_t**2) - (self.d * self.sum_tt)  # j
 
         r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
-        return np.array(np.abs(r), dtype=np.float64)
+
+        if self.return_absolute_value:
+            return np.abs(r)
+        else:
+            return r
 
 
 class CPA:
@@ -100,7 +112,61 @@ class CPA:
     good idea to use one of the well established implementations.
     """
 
-    def __init__(self, get_model: Callable[[int], LeakageModelAES128]) -> None:
+    def __init__(self,
+                 get_model: Callable[[int], LeakageModelAES128],
+                 return_absolute_value: bool = True) -> None:
+        """Initialize the CPA computation.
+
+        Args:
+
+          get_model (Callable[[int], LeakageModelAES128]): A function for
+          turning an index into a leakage model.
+
+          return_absolute_value (bool): If set to True then negative
+          correlation is also detected. If set to False only positive
+          correlation is detected. The cost is larger ranks (up to twice).
+          Defaults to True.
+
+        Example use:
+        ```python
+        cpa = CPA(get_model=lambda i: LeakageModelAES128(
+            byte_index=i,
+            attack_point=SubBytesIn(),
+            use_hamming_weight=True,
+        ))
+
+        key = np.random.randint(0, 256, size=16, dtype=np.uint8)
+
+        # Make sure that both positive and negative correlation works.
+        random_signs = np.random.choice(2, 16) * 2 - 1
+
+        for _ in range(100):
+            plaintext = np.random.randint(0, 256, size=16, dtype=np.uint8)
+
+            # Simulate a trace
+            bit_counts = [int(x).bit_count() for x in key ^ plaintext]
+            trace = bit_counts + np.random.normal(scale=1.5, size=16)
+            trace *= random_signs
+
+            cpa.update(
+                trace=trace,
+                plaintext=plaintext,
+                ciphertext=encrypt(plaintext=plaintext, key=key),
+                real_key=key,  # Just to check that the key is constant
+            )
+
+        cpa.print_predictions(
+            real_key=key,
+            plaintext=plaintext,
+        )
+
+        cpa.plot_cpa(
+            real_key=key,
+            plaintext=plaintext,
+            experiment_name="cpa_graphs.png",
+        )
+        ```
+        """
         self.models: list[LeakageModelAES128] = [
             get_model(byte_index) for byte_index in range(16)
         ]
@@ -108,7 +174,9 @@ class CPA:
             i: [[] for _ in range(256)] for i in range(16)
         }
         self.real_key: Optional[npt.NDArray[np.uint8]] = None
-        self.r: list[R] = [R() for _ in range(16)]
+        self.r: list[R] = [
+            R(return_absolute_value=return_absolute_value) for _ in range(16)
+        ]
 
     def update(self,
                trace: npt.NDArray[np.float32],
