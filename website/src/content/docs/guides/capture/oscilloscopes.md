@@ -147,7 +147,7 @@ with PicoScope(
 
 The class `PicoScope` takes an optional string argument `serial_number` to be
 used when multiple oscilloscopes are connected. One can use the following code
-to get a list of serail numbers of available but non-connected (not used at the
+to get a list of serial numbers of available but non-connected (not used at the
 moment) oscilloscopes.
 
 ```python
