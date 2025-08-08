@@ -145,6 +145,16 @@ with PicoScope(
     trace = cw.capture_trace(oscilloscope.scope, target, pt, key)
 ```
 
+The class `PicoScope` takes an optional string argument `serial_number` to be
+used when multiple oscilloscopes are connected. One can use the following code
+to get a list of serial numbers of available but non-connected (not used at the
+moment) oscilloscopes.
+
+```python
+from scaaml.capture.scope.ps6424e import Pico6424E
+Pico6424E.enumerate_units()
+```
+
 ## LeCroy
 
 Communication with the oscilloscope is supported by both:

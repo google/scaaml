@@ -138,8 +138,8 @@ class PicoScope(AbstractSScope):
 
           serial_number (str | None): The serial number of the oscilloscope to
           connect to. Defaults to None -- the first enumerated non-connected
-          oscilloscope. One can use `PicoScope6424E.enumerate_units` to get a
-          list of non-connected oscilloscopes.
+          oscilloscope. One can use `Pico6424E.enumerate_units` to get a list
+          of non-connected oscilloscopes.
 
           _: PicoScope is expected to be initialized using capture_info
           dictionary, this parameter allows to have additional information
