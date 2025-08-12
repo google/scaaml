@@ -112,9 +112,12 @@ class CPA:
     good idea to use one of the well established implementations.
     """
 
-    def __init__(self,
-                 get_model: Callable[[int], LeakageModelAES128],
-                 return_absolute_value: bool = True) -> None:
+    def __init__(
+        self,
+        get_model: Callable[[int], LeakageModelAES128],
+        return_absolute_value: bool = True,
+        subsample: int = 1,
+    ) -> None:
         """Initialize the CPA computation.
 
         Args:
@@ -126,6 +129,9 @@ class CPA:
           correlation is also detected. If set to False only positive
           correlation is detected. The cost is larger ranks (up to twice).
           Defaults to True.
+
+          subsample (int): Update `self.result` only each `subsample` updates
+          to save RAM. Defaults to 1 (remember everything).
 
         Example use:
         ```python
@@ -184,6 +190,10 @@ class CPA:
             R(return_absolute_value=return_absolute_value) for _ in range(16)
         ]
 
+        # Sample each `self.subsample` updates.
+        self.subsample: int = subsample
+        self.update_counter: int = 0
+
     def update(self,
                trace: npt.NDArray[np.float32],
                plaintext: npt.NDArray[np.uint8],
@@ -228,8 +238,11 @@ class CPA:
             assert res.shape == (self.models[byte].different_target_secrets,)
 
             # Fill in the result
-            for value in range(self.models[byte].different_target_secrets):
-                self.result[byte][value].append(float(res[value]))
+            if self.update_counter % self.subsample == 0:
+                for value in range(self.models[byte].different_target_secrets):
+                    self.result[byte][value].append(float(res[value]))
+
+        self.update_counter += 1
 
     def print_predictions(self, real_key: npt.NDArray[np.uint8],
                           plaintext: npt.NDArray[np.uint8]) -> None:
@@ -248,7 +261,6 @@ class CPA:
             "guessed": [],
             "rank": [],
         }
-        iteration = len(next(iter(self.result.values()))[0])
         for byte in range(16):
             target_value = self.models[byte].target_secret(
                 key=real_key,
@@ -268,8 +280,9 @@ class CPA:
         # Estimate of log2 of how many keys we need to try to get the correct
         # one.
         security = math.log2(math.prod(current_ranks))
-        print(f"Traces: {iteration + 1} mean_rank {np.mean(current_ranks)} "
-              f"{security = }")
+        print(
+            f"Traces: {self.update_counter} mean_rank {np.mean(current_ranks)} "
+            f"{security = }")
 
         print(tabulate([name] + values for name, values in statistics.items()))
 
