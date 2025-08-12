@@ -191,6 +191,8 @@ class CPA:
         ]
 
         # Sample each `self.subsample` updates.
+        if subsample < 1:
+            raise ValueError("subsample must be a positive integer.")
         self.subsample: int = subsample
         self.update_counter: int = 0
 
