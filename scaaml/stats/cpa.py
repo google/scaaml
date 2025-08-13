@@ -38,7 +38,9 @@ class R:
           correlation is also detected. If set to False only positive
           correlation is detected.
         """
+        # Number of seen traces D
         self.d: int = 0
+
         self.return_absolute_value: bool = return_absolute_value
 
         # The following variables are initialized lazily when we know the
@@ -69,6 +71,7 @@ class R:
             # Lazy initialize.
             trace_len: int = len(trace)
             hypothesis_possibilities: int = hypothesis.shape[0]
+
             self.sum_h_t = np.zeros((hypothesis_possibilities, trace_len),
                                     dtype=np.float64)
             self.sum_h = np.zeros(hypothesis_possibilities, dtype=np.float64)
@@ -76,11 +79,24 @@ class R:
             self.sum_hh = np.zeros(hypothesis_possibilities, dtype=np.float64)
             self.sum_tt = np.zeros(trace_len, dtype=np.float64)
 
+        # D (so far)
         self.d += 1
+        # i indexes the hypothesis possible values
+        # j indexes the time dimension
+
+        # \sum_{d=1}^{D} h_{d,i} t_{d,j}
         self.sum_h_t += np.einsum("i,j->ij", hypothesis, trace)
+
+        # \sum_{d=1}^{D} h_{d, i}
         self.sum_h += hypothesis
+
+        # \sum_{d=1}^{D} t_{d, j}
         self.sum_t += trace
+
+        # \sum_{d=1}^{D} h_{d, i}^2
         self.sum_hh += hypothesis**2
+
+        # \sum_{d=1}^{D} t_{d, j}^2
         self.sum_tt += trace**2
 
     def guess(self) -> npt.NDArray[np.float64]:
@@ -88,7 +104,22 @@ class R:
         observed values. The expected shape is (different_target_secrets,
         trace_len).
         """
-        # nominator
+        # http://wiki.newae.com/Correlation_Power_Analysis
+        # r_{i, j} = \frac{
+        #    D \sum_{d=1}^{D} h_{d,i} t_{d,j}
+        #    - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
+        # }{
+        #    \sqrt{
+        #        \left( (\sum_{d=1}^{D} h_{d,i} )^2
+        #               - D \sum_{d=1}^{D} h_{d,i}^2 \right)
+        #        \cdot
+        #        \left( (\sum_{d=1}^{D} t_{d,j} )^2
+        #               - D \sum_{d=1}^{D} t_{d,j}^2 \right)
+        #    }
+        # }
+
+        # nom_{i,j} = D self.sum_h_t
+        #             - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
         nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
                                                   self.sum_t)
 
@@ -112,9 +143,12 @@ class CPA:
     good idea to use one of the well established implementations.
     """
 
-    def __init__(self,
-                 get_model: Callable[[int], LeakageModelAES128],
-                 return_absolute_value: bool = True) -> None:
+    def __init__(
+        self,
+        get_model: Callable[[int], LeakageModelAES128],
+        return_absolute_value: bool = True,
+        subsample: int = 1,
+    ) -> None:
         """Initialize the CPA computation.
 
         Args:
@@ -126,6 +160,9 @@ class CPA:
           correlation is also detected. If set to False only positive
           correlation is detected. The cost is larger ranks (up to twice).
           Defaults to True.
+
+          subsample (int): Update `self.result` only each `subsample` updates
+          to save RAM. Defaults to 1 (remember everything).
 
         Example use:
         ```python
@@ -184,6 +221,12 @@ class CPA:
             R(return_absolute_value=return_absolute_value) for _ in range(16)
         ]
 
+        # Sample each `self.subsample` updates.
+        if subsample < 1:
+            raise ValueError("subsample must be a positive integer.")
+        self.subsample: int = subsample
+        self.update_counter: int = 0
+
     def update(self,
                trace: npt.NDArray[np.float32],
                plaintext: npt.NDArray[np.uint8],
@@ -228,8 +271,11 @@ class CPA:
             assert res.shape == (self.models[byte].different_target_secrets,)
 
             # Fill in the result
-            for value in range(self.models[byte].different_target_secrets):
-                self.result[byte][value].append(float(res[value]))
+            if self.update_counter % self.subsample == 0:
+                for value in range(self.models[byte].different_target_secrets):
+                    self.result[byte][value].append(float(res[value]))
+
+        self.update_counter += 1
 
     def print_predictions(self, real_key: npt.NDArray[np.uint8],
                           plaintext: npt.NDArray[np.uint8]) -> None:
@@ -248,7 +294,6 @@ class CPA:
             "guessed": [],
             "rank": [],
         }
-        iteration = len(next(iter(self.result.values()))[0])
         for byte in range(16):
             target_value = self.models[byte].target_secret(
                 key=real_key,
@@ -268,8 +313,9 @@ class CPA:
         # Estimate of log2 of how many keys we need to try to get the correct
         # one.
         security = math.log2(math.prod(current_ranks))
-        print(f"Traces: {iteration + 1} mean_rank {np.mean(current_ranks)} "
-              f"{security = }")
+        print(
+            f"Traces: {self.update_counter} mean_rank {np.mean(current_ranks)} "
+            f"{security = }")
 
         print(tabulate([name] + values for name, values in statistics.items()))
 
@@ -302,20 +348,31 @@ class CPA:
         f.set_size_inches(16, 16, forward=True)
         f.set_dpi(100)
         for byte_i in range(16):
+            # Indexes into the 4 by 4 grid.
+            row: int = byte_i // 4
+            column: int = byte_i % 4
+
             if logscale:
-                arr[byte_i // 4, byte_i % 4].set_yscale("log")
+                arr[row, column].set_yscale("log")
+
+            x_values = range(1, self.update_counter + 1, self.subsample)
 
             for value in range(256):
                 # skip the correct value
                 if value == target_values[byte_i]:
                     continue
-                arr[byte_i // 4, byte_i % 4].plot(self.result[byte_i][value],
-                                                  "gray")
-            arr[byte_i // 4,
-                byte_i % 4].plot(self.result[byte_i][target_values[byte_i]],
-                                 "red")
-            arr[byte_i // 4,
-                byte_i % 4].set_xlabel(f"Traces combined for byte_{byte_i:02d}")
+                arr[row, column].plot(
+                    x_values,
+                    self.result[byte_i][value],
+                    "gray",
+                )
+            arr[row, column].plot(
+                x_values,
+                self.result[byte_i][target_values[byte_i]],
+                "red",
+            )
+            arr[row,
+                column].set_xlabel(f"Traces combined for byte_{byte_i:02d}")
         plt.savefig(experiment_name)
         f.clear()
         plt.close(f)
