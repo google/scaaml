@@ -36,13 +36,11 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    # Reason why we skipped the slow tests.
-    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
-    # --runslow given in cli: do not skip slow tests
-    should_skip_slow: bool = not bool(config.getoption("--runslow"))
+    if config.getoption("--runslow"):
+        # --runslow given in cli: do not skip slow tests
+        return
 
-    # Still loop to allow adding more markers.
+    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
     for item in items:
-        # Skip slow tests.
-        if "slow" in item.keywords and should_skip_slow:
+        if "slow" in item.keywords:
             item.add_marker(skip_slow)
