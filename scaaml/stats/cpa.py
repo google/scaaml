@@ -41,9 +41,7 @@ class R:
         # Number of seen traces D
         self.d: int = 0
         # i indexes the hypothesis possible values
-        self.hypothesis_possibilities: int
         # j indexes the time dimension
-        self.trace_len: int
 
         self.return_absolute_value: bool = return_absolute_value
 
@@ -74,9 +72,7 @@ class R:
         if self.d == 0:
             # Lazy initialize.
             trace_len: int = len(trace)
-            self.trace_len = trace_len
             hypothesis_possibilities: int = hypothesis.shape[0]
-            self.hypothesis_possibilities = hypothesis_possibilities
 
             self.sum_h_t = np.zeros((hypothesis_possibilities, trace_len),
                                     dtype=np.float64)
