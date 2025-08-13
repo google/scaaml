@@ -40,8 +40,6 @@ class R:
         """
         # Number of seen traces D
         self.d: int = 0
-        # i indexes the hypothesis possible values
-        # j indexes the time dimension
 
         self.return_absolute_value: bool = return_absolute_value
 
@@ -83,6 +81,8 @@ class R:
 
         # D (so far)
         self.d += 1
+        # i indexes the hypothesis possible values
+        # j indexes the time dimension
 
         # \sum_{d=1}^{D} h_{d,i} t_{d,j}
         self.sum_h_t += np.einsum("i,j->ij", hypothesis, trace)
