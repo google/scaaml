@@ -110,16 +110,20 @@ class R:
         """
         # http://wiki.newae.com/Correlation_Power_Analysis
         # r_{i, j} = \frac{
-        #    D \sum_{d=1}^{D} h_{d,i} t_{d,j} - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
+        #    D \sum_{d=1}^{D} h_{d,i} t_{d,j}
+        #    - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
         # }{
         #    \sqrt{
-        #        \left( (\sum_{d=1}^{D} h_{d,i} )^2 - D \sum_{d=1}^{D} h_{d,i}^2 \right)
+        #        \left( (\sum_{d=1}^{D} h_{d,i} )^2
+        #               - D \sum_{d=1}^{D} h_{d,i}^2 \right)
         #        \cdot
-        #        \left( (\sum_{d=1}^{D} t_{d,j} )^2 - D \sum_{d=1}^{D} t_{d,j}^2 \right)
+        #        \left( (\sum_{d=1}^{D} t_{d,j} )^2
+        #               - D \sum_{d=1}^{D} t_{d,j}^2 \right)
         #    }
         # }
 
-        # nom_{i,j}:  D self.sum_h_t - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
+        # nom_{i,j} = D self.sum_h_t
+        #             - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
         nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
                                                   self.sum_t)
         if nom.shape != (self.hypothesis_possibilities, self.trace_len):
