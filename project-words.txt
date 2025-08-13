@@ -62,6 +62,8 @@ VICP
 WAVEDESC
 Zhang
 acqktp
+addinivalue
+addoption
 allclose
 arange
 argmax
@@ -130,6 +132,7 @@ matplotlib
 maxsplit
 maxtraces
 mbed
+modifyitems
 nbkeys
 ndarray
 newaxis

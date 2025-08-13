@@ -63,14 +63,10 @@ def test_cpa_with_leakage_model(
 
         # Simulate a trace
         bit_counts = [
-            LeakageModelAES128(
-                byte_index=i,
-                attack_point=attack_point_cls(),
-                use_hamming_weight=use_hamming_weight,
-            ).leakage_knowing_secrets(plaintext=plaintext, key=key)
+            cpa.models[i].leakage_knowing_secrets(plaintext=plaintext, key=key)
             for i in range(16)
         ]
-        bit_counts.extend([0 for _ in range(trace_len - len(bit_counts))])
+        bit_counts.extend([0] * (trace_len - len(bit_counts)))
         trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
         # np.bitwise_count requires NumPy>=2, CW requires <2
         trace *= random_signs
@@ -132,7 +128,7 @@ def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
 
         # Simulate a trace
         bit_counts = [int(x).bit_count() for x in key ^ plaintext]
-        bit_counts.extend([0 for _ in range(trace_len - len(bit_counts))])
+        bit_counts.extend([0] * (trace_len - len(bit_counts)))
         trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
         # np.bitwise_count requires NumPy>=2, CW requires <2
         trace *= random_signs
