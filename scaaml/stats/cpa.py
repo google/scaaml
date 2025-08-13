@@ -362,8 +362,12 @@ class CPA:
         f.set_size_inches(16, 16, forward=True)
         f.set_dpi(100)
         for byte_i in range(16):
+            # Indexes into the 4 by 4 grid.
+            row: int = byte_i // 4
+            column: int = byte_i % 4
+
             if logscale:
-                arr[byte_i // 4, byte_i % 4].set_yscale("log")
+                arr[row, column].set_yscale("log")
 
             x_values = range(1, self.update_counter + 1, self.subsample)
 
@@ -371,18 +375,18 @@ class CPA:
                 # skip the correct value
                 if value == target_values[byte_i]:
                     continue
-                arr[byte_i // 4, byte_i % 4].plot(
+                arr[row, column].plot(
                     x_values,
                     self.result[byte_i][value],
                     "gray",
                 )
-            arr[byte_i // 4, byte_i % 4].plot(
+            arr[row, column].plot(
                 x_values,
                 self.result[byte_i][target_values[byte_i]],
                 "red",
             )
-            arr[byte_i // 4,
-                byte_i % 4].set_xlabel(f"Traces combined for byte_{byte_i:02d}")
+            arr[row,
+                column].set_xlabel(f"Traces combined for byte_{byte_i:02d}")
         plt.savefig(experiment_name)
         f.clear()
         plt.close(f)
