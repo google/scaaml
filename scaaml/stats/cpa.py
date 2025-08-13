@@ -126,10 +126,6 @@ class R:
         #             - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
         nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
                                                   self.sum_t)
-        if nom.shape != (self.hypothesis_possibilities, self.trace_len):
-            raise ValueError(f"{nom.shape = } expected ("
-                             f"{self.hypothesis_possibilities}, "
-                             f"{self.trace_len})")
 
         # denominator squared
         den_a = (self.sum_h**2) - (self.d * self.sum_hh)  # i
@@ -138,15 +134,9 @@ class R:
         r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
 
         if self.return_absolute_value:
-            result = np.array(np.abs(r), dtype=np.float64)
+            return np.array(np.abs(r), dtype=np.float64)
         else:
-            result = np.array(r, dtype=np.float64)
-
-        if result.shape != (self.hypothesis_possibilities, self.trace_len):
-            raise ValueError(f"{result.shape = } expected ("
-                             f"{self.hypothesis_possibilities}, "
-                             f"{self.trace_len})")
-        return result
+            return np.array(r, dtype=np.float64)
 
 
 class CPA:
