@@ -38,7 +38,13 @@ class R:
           correlation is also detected. If set to False only positive
           correlation is detected.
         """
+        # Number of seen traces D
         self.d: int = 0
+        # i indexes the hypothesis possible values
+        self.hypothesis_possibilities: int
+        # j indexes the time dimension
+        self.trace_len: int
+
         self.return_absolute_value: bool = return_absolute_value
 
         # The following variables are initialized lazily when we know the
@@ -68,7 +74,10 @@ class R:
         if self.d == 0:
             # Lazy initialize.
             trace_len: int = len(trace)
+            self.trace_len = trace_len
             hypothesis_possibilities: int = hypothesis.shape[0]
+            self.hypothesis_possibilities = hypothesis_possibilities
+
             self.sum_h_t = np.zeros((hypothesis_possibilities, trace_len),
                                     dtype=np.float64)
             self.sum_h = np.zeros(hypothesis_possibilities, dtype=np.float64)
@@ -76,11 +85,22 @@ class R:
             self.sum_hh = np.zeros(hypothesis_possibilities, dtype=np.float64)
             self.sum_tt = np.zeros(trace_len, dtype=np.float64)
 
+        # D (so far)
         self.d += 1
+
+        # \sum_{d=1}^{D} h_{d,i} t_{d,j}
         self.sum_h_t += np.einsum("i,j->ij", hypothesis, trace)
+
+        # \sum_{d=1}^{D} h_{d, i}
         self.sum_h += hypothesis
+
+        # \sum_{d=1}^{D} t_{d, j}
         self.sum_t += trace
+
+        # \sum_{d=1}^{D} h_{d, i}^2
         self.sum_hh += hypothesis**2
+
+        # \sum_{d=1}^{D} t_{d, j}^2
         self.sum_tt += trace**2
 
     def guess(self) -> npt.NDArray[np.float64]:
@@ -88,9 +108,24 @@ class R:
         observed values. The expected shape is (different_target_secrets,
         trace_len).
         """
-        # nominator
+        # http://wiki.newae.com/Correlation_Power_Analysis
+        # r_{i, j} = \frac{
+        #    D \sum_{d=1}^{D} h_{d,i} t_{d,j} - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
+        # }{
+        #    \sqrt{
+        #        \left( (\sum_{d=1}^{D} h_{d,i} )^2 - D \sum_{d=1}^{D} h_{d,i}^2 \right)
+        #        \cdot
+        #        \left( (\sum_{d=1}^{D} t_{d,j} )^2 - D \sum_{d=1}^{D} t_{d,j}^2 \right)
+        #    }
+        # }
+
+        # nom_{i,j}:  D self.sum_h_t - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
         nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
                                                   self.sum_t)
+        if nom.shape != (self.hypothesis_possibilities, self.trace_len):
+            raise ValueError(f"{nom.shape = } expected ("
+                             f"{self.hypothesis_possibilities}, "
+                             f"{self.trace_len})")
 
         # denominator squared
         den_a = (self.sum_h**2) - (self.d * self.sum_hh)  # i
@@ -99,9 +134,15 @@ class R:
         r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
 
         if self.return_absolute_value:
-            return np.array(np.abs(r), dtype=np.float64)
+            result = np.array(np.abs(r), dtype=np.float64)
         else:
-            return np.array(r, dtype=np.float64)
+            result = np.array(r, dtype=np.float64)
+
+        if result.shape != (self.hypothesis_possibilities, self.trace_len):
+            raise ValueError(f"{result.shape = } expected ("
+                             f"{self.hypothesis_possibilities}, "
+                             f"{self.trace_len})")
+        return result
 
 
 class CPA:
@@ -320,15 +361,22 @@ class CPA:
             if logscale:
                 arr[byte_i // 4, byte_i % 4].set_yscale("log")
 
+            x_values = range(1, self.update_counter + 1, self.subsample)
+
             for value in range(256):
                 # skip the correct value
                 if value == target_values[byte_i]:
                     continue
-                arr[byte_i // 4, byte_i % 4].plot(self.result[byte_i][value],
-                                                  "gray")
-            arr[byte_i // 4,
-                byte_i % 4].plot(self.result[byte_i][target_values[byte_i]],
-                                 "red")
+                arr[byte_i // 4, byte_i % 4].plot(
+                    x_values,
+                    self.result[byte_i][value],
+                    "gray",
+                )
+            arr[byte_i // 4, byte_i % 4].plot(
+                x_values,
+                self.result[byte_i][target_values[byte_i]],
+                "red",
+            )
             arr[byte_i // 4,
                 byte_i % 4].set_xlabel(f"Traces combined for byte_{byte_i:02d}")
         plt.savefig(experiment_name)
