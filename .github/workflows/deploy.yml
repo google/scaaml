@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
     paths: [ website ]
-  merge_group:
+  merge_group:  # Needed for required workflows
   # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
@@ -23,12 +23,14 @@ concurrency:
 
 jobs:
   build:
+    # Run only on the upstream repository.
+    if: github.repository == 'google/scaaml'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v5
       - name: Install, build, and upload your site
-        uses: withastro/action@v4
+        uses: withastro/action@063f85a3c9fc861a0a5e5a956225d9031177eff9 # v4
         with:
           path: website # The root location of your Astro project inside the repository. (optional)
           # node-version: 20 # The specific version of Node that should be used to build your site. Defaults to 20. (optional)

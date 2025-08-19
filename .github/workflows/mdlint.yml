@@ -1,4 +1,7 @@
 name: markdownlint
+permissions:
+  contents: read
+  pull-requests: write
 on:
   push:
     paths:
@@ -13,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: DavidAnson/markdownlint-cli2-action@v20
+    - uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e # v20
       with:
         config: .markdownlint.json
         globs: |
