@@ -1,4 +1,7 @@
 name: pytest
+permissions:
+  contents: read
+  pull-requests: write
 on:
   push:
     paths:
@@ -15,7 +18,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.event_name != 'schedule'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
@@ -41,7 +44,7 @@ jobs:
   coverage:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
@@ -70,14 +73,14 @@ jobs:
           coverage run -m pytest
           coverage xml
       - name: Upload results
-        uses: coverallsapp/github-action@v2
+        uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2
         with:
           file: coverage.xml
 
   piptest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
