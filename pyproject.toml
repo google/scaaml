@@ -40,7 +40,6 @@ dependencies = [
     "picosdk",
     "pip",
     "pygments",
-    "pytest",
     "pyvisa",
     "pyvisa-py",
     "scipy",
