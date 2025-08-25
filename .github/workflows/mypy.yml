@@ -23,7 +23,7 @@ jobs:
       - name: Installing package
         run: |
           pip install --require-hashes --no-deps -r requirements.txt
-          pip install --upgrade -r test_requirements.txt
+          pip install --editable ".[dev]"
       - name: Register matcher
         run: echo ::add-matcher::./.github/python_matcher.json
       - name: Running mypy
