@@ -27,7 +27,7 @@ jobs:
       - name: Installing package
         run: |
           pip install --require-hashes --no-deps -r requirements.txt
-          pip install --upgrade -r test_requirements.txt
+          pip install --editable ".[dev]"
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
@@ -53,7 +53,7 @@ jobs:
       - name: Installing package
         run: |
           pip install --require-hashes --no-deps -r requirements.txt
-          pip install --upgrade -r test_requirements.txt
+          pip install --editable ".[dev]"
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
@@ -90,10 +90,7 @@ jobs:
         run: rm -rf scaaml/
       - name: Installing package
         run: |
-          pip install scaaml
-      - name: Installing package
-        run: |
-          pip install --upgrade -r test_requirements.txt
+          pip install "scaaml[dev]"
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
