@@ -40,7 +40,6 @@ dependencies = [
     "picosdk",
     "pip",
     "pygments",
-    "pytest",
     "pyvisa",
     "pyvisa-py",
     "scipy",
@@ -57,6 +56,16 @@ dependencies = [
 version = {attr = "scaaml.__version__"}
 
 [project.optional-dependencies]
+dev = [
+    "mypy",
+    "pydantic",
+    "pytest",
+    "pytest-cov",
+    "flake8",
+    "psutil",
+    "types-cryptography",
+    "types-tensorflow",
+]
 
 [project.scripts]
 
