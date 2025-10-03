@@ -515,9 +515,9 @@ iniconfig==2.1.0 \
     --hash=sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7 \
     --hash=sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760
     # via pytest
-keras==3.11.0 \
-    --hash=sha256:28babe8dc69370a2b7c3bc385be6c1f22d702b00b3c47cae62559b6f80d6073a \
-    --hash=sha256:f5dfeaf4fcaea180e032f7c1e373f1868961e2940dcfcaaf9a5b711baf41bd60
+keras==3.11.3 \
+    --hash=sha256:efda616835c31b7d916d72303ef9adec1257320bc9fd4b2b0138840fc65fb5b7 \
+    --hash=sha256:f484f050e05ee400455b05ec8c36ed35edc34de94256b6073f56cfe68f65491f
     # via tensorflow
 kiwisolver==1.4.8 \
     --hash=sha256:01c3d31902c7db5fb6182832713d3b4122ad9317c2c5877d0539227d96bb2e50 \
@@ -1366,9 +1366,9 @@ wrapt==1.17.2 \
     # via tensorflow
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==25.1 \
-    --hash=sha256:13b4aa0aaad055020a11bec8a1c2a70a2b2d080e12d89b962266029fff0a16ba \
-    --hash=sha256:272bdd1289f80165e9070a4f881e8f9e1001bbb50378561d1af20e49bf5a2200
+pip==25.2 \
+    --hash=sha256:578283f006390f85bb6282dffb876454593d637f5d1be494b5202ce4877e71f2 \
+    --hash=sha256:6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717
     # via scaaml (pyproject.toml)
 setuptools==80.9.0 \
     --hash=sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922 \
