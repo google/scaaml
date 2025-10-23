@@ -13,10 +13,11 @@
 # limitations under the License.
 """Utils common to various SCAAML components"""
 
+import importlib
 from multiprocessing import Pool
 from random import randint
-from typing import Any, Dict, List, Sequence
 import time
+from typing import Any, Dict, List, Sequence
 
 from glob import glob
 from termcolor import cprint
@@ -156,3 +157,20 @@ def from_categorical(predictions: Sequence[npt.ArrayLike]) -> List[np.intp]:
     "reverse of categorical"
     # note: doing it as a list is significantly faster than a single argmax
     return [np.argmax(p) for p in predictions]
+
+
+def is_module_present(module_name: str) -> bool:
+    """Return True iff `module_name` can be imported. As a side-efect the module
+    is imported.
+
+    Args:
+
+      module_name (str): The module which might or might not be importable.
+
+    Raises: does not raise.
+    """
+    try:
+        importlib.import_module(module_name)
+        return True
+    except ImportError:
+        return False

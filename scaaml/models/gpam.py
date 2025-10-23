@@ -29,7 +29,11 @@ GPAM model, see https://github.com/google/scaaml/tree/main/papers/2024/GPAM
 from collections import defaultdict
 from typing import Any, Union
 
-import networkx as nx
+# NetworkX is an optional dependency.
+try:
+    import networkx as nx
+except ImportError:
+    nx = None
 import tensorflow as tf
 import keras
 from tensorflow.keras import layers
@@ -527,8 +531,16 @@ def get_topological_order(
       depends on the value of ap_1.
 
     """
-    return nx.topological_sort(  # type: ignore[return-value]
-        get_dag(outputs=outputs, output_relations=output_relations))
+    if output_relations:
+        if nx is None:
+            raise ImportError("To use the relational heads please install "
+                              "networkx[default]")
+
+        # We need to create the heads in a topological order.
+        return nx.topological_sort(  # type: ignore[return-value]
+            get_dag(outputs=outputs, output_relations=output_relations))
+    else:
+        return list(outputs)
 
 
 def create_heads_outputs(  # type: ignore[no-any-unimported]
@@ -565,8 +577,10 @@ def create_heads_outputs(  # type: ignore[no-any-unimported]
 
     # Get iterator of outputs that are in topological order (if ap_2 depends on
     # ap_1 then ap_1 appears before ap_2).
-    topological_order = get_topological_order(outputs=outputs,
-                                              output_relations=output_relations)
+    topological_order = get_topological_order(
+        outputs=outputs,
+        output_relations=output_relations,
+    )
 
     # Create heads.
     for name in topological_order:
