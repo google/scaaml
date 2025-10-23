@@ -160,8 +160,8 @@ def from_categorical(predictions: Sequence[npt.ArrayLike]) -> List[np.intp]:
 
 
 def is_module_present(module_name: str) -> bool:
-    """Return True iff `module_name` can be imported. As a side-efect the module
-    is imported.
+    """Return True iff `module_name` can be imported. As a side-effect the
+    module is imported.
 
     Args:
 
