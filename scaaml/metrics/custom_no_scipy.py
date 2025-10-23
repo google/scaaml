@@ -20,9 +20,7 @@ Related metrics:
 """
 from typing import Any, Optional
 
-import numpy as np
-import keras
-from keras.metrics import Metric, MeanMetricWrapper, categorical_accuracy
+from keras.metrics import Metric
 
 
 class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
@@ -54,6 +52,7 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
     """
 
     def __init__(self, name: str = "SignificanceTest", **kwargs: Any) -> None:
+        super().__init__(name, **kwargs)
         raise ImportError("To use the SignificanceTest please install scipy")
 
     def update_state(self,

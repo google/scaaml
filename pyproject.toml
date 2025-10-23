@@ -53,14 +53,16 @@ capture = [
     "chipwhisperer",  # Capture pipeline.
 ]
 dev = [
+    "flake8",
     "mypy",
+    "psutil",
     "pydantic",
+    "pylint",
     "pytest",
     "pytest-cov",
-    "flake8",
-    "psutil",
     "types-cryptography",
     "types-tensorflow",
+    "yapf",
 ]
 extra = [
     "networkx[default]",  # Enable relational heads in the GPAM model.

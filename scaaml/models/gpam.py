@@ -497,7 +497,7 @@ def get_dag(
     """
     # Create graph of relations that will be topologically sorted and contains
     # all head names.
-    relation_graph: nx.DiGraph[str] = nx.DiGraph()
+    relation_graph: nx.DiGraph = nx.DiGraph()
     # Add all output names into the relation_graph (even if they appear in no
     # relations).
     for name in outputs:

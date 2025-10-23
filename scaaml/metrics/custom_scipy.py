@@ -22,7 +22,7 @@ from typing import Any, Optional
 
 import numpy as np
 import keras
-from keras.metrics import Metric, MeanMetricWrapper, categorical_accuracy
+from keras.metrics import Metric, categorical_accuracy
 import scipy
 
 

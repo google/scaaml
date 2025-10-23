@@ -22,8 +22,7 @@ from typing import Any, Optional
 
 import numpy as np
 import keras
-from keras.metrics import Metric, MeanMetricWrapper, categorical_accuracy
-import scipy
+from keras.metrics import Metric, MeanMetricWrapper
 
 
 def rank(y_true: Any, y_pred: Any, optimistic: bool = False) -> Any:
