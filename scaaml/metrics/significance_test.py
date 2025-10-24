@@ -97,6 +97,7 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
 
     def result(self) -> Any:
         """Return the result."""
+        # SciPy is an optional dependency.
         import scipy  # pylint: disable=import-outside-toplevel
 
         # Binomial distribution(n, p) -- how many successes out of n trials,
