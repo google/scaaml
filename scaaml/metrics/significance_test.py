@@ -23,7 +23,6 @@ from typing import Any, Optional
 import numpy as np
 import keras
 from keras.metrics import Metric, categorical_accuracy
-import scipy
 
 from scaaml.utils import requires
 
