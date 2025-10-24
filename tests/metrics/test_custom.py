@@ -241,7 +241,7 @@ def test_optimistic_with_all_different():
 
 @pytest.mark.skipif(
     not is_module_present("scipy"),
-    "SciPy is optional, skip test if not present.",
+    reason="SciPy is optional, skip test if not present.",
 )
 def test_h0_doc():
     m = SignificanceTest()
@@ -251,7 +251,7 @@ def test_h0_doc():
 
 @pytest.mark.skipif(
     not is_module_present("scipy"),
-    "SciPy is optional, skip test if not present.",
+    reason="SciPy is optional, skip test if not present.",
 )
 def test_h0_significant():
     N = 10
@@ -262,7 +262,7 @@ def test_h0_significant():
 
 @pytest.mark.skipif(
     not is_module_present("scipy"),
-    "SciPy is optional, skip test if not present.",
+    reason="SciPy is optional, skip test if not present.",
 )
 def test_h0_all_wrong():
     m = SignificanceTest()
@@ -272,7 +272,7 @@ def test_h0_all_wrong():
 
 @pytest.mark.skipif(
     not is_module_present("scipy"),
-    "SciPy is optional, skip test if not present.",
+    reason="SciPy is optional, skip test if not present.",
 )
 def test_h0_one_wrong():
     m = SignificanceTest()
