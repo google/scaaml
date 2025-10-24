@@ -73,8 +73,8 @@ class CaptureRunner(AbstractCaptureRunner):
         trace = cw.capture_trace(
             scope=scope,  # type: ignore[arg-type]
             target=target,
-            plaintext=plaintext,
-            key=key,
+            plaintext=plaintext,  # type: ignore[arg-type]
+            key=key,  # type: ignore[arg-type]
         )
 
         return trace

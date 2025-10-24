@@ -33,7 +33,7 @@ from typing import Any, Union
 try:
     import networkx as nx
 except ImportError:
-    nx = None
+    nx = None  # type: ignore[assignment]
 import tensorflow as tf
 import keras
 from tensorflow.keras import layers
@@ -497,7 +497,8 @@ def get_dag(
     """
     # Create graph of relations that will be topologically sorted and contains
     # all head names.
-    relation_graph: nx.DiGraph = nx.DiGraph()
+    relation_graph: nx.DiGraph[str]  # pylint: disable=unsubscriptable-object
+    relation_graph = nx.DiGraph()
     # Add all output names into the relation_graph (even if they appear in no
     # relations).
     for name in outputs:
