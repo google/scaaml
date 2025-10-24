@@ -191,7 +191,7 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-def requires(module_name: str):
+def requires(module_name: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A decorator which marks a function or a method which needs an optional
     module to function. The first call will import the module if installed
     otherwise it will raise an ImportError.

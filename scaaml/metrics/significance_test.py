@@ -95,9 +95,9 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
         # Update the number of possibilities.
         self.possibilities.assign(y_true.shape[-1])
 
-    @requires("scipy")
     def result(self) -> Any:
         """Return the result."""
+        import scipy  # pylint: disable=import-outside-toplevel
 
         # Binomial distribution(n, p) -- how many successes out of n trials,
         # each succeeds with probability p independently on others.
@@ -109,7 +109,7 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
         k = self.correct.numpy()
         n = self.seen.numpy()
         possibilities = self.possibilities.numpy()
-        return 1 - scipy.stats.binom.cdf(  # pylint: disable=undefined-variable
+        return 1 - scipy.stats.binom.cdf(
             k - 1,
             n,
             1 / possibilities,
