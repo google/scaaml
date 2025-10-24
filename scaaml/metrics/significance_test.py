@@ -25,12 +25,18 @@ import keras
 from keras.metrics import Metric, categorical_accuracy
 import scipy
 
+from scaaml.utils import requires
+
 
 class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
     """Calculates the probability that a random guess would get the same
     accuracy. Probability is in the interval [0, 1] (impossible to always). By
     convention one rejects the null hypothesis at a given p-value (say 0.005 if
     we want to be sure).
+
+    The method `SignificanceTest.result` requires SciPy to be installed. We
+    also mark the `__init__` so that users do not waste time without a chance
+    to get the result.
 
     Args:
       name: (Optional) String name of the metric instance.
@@ -54,6 +60,7 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
     ```
     """
 
+    @requires("scipy")
     def __init__(self, name: str = "SignificanceTest", **kwargs: Any) -> None:
         super().__init__(name=name, **kwargs)
         self.correct = self.add_weight(name="correct", initializer="zeros")
@@ -89,6 +96,7 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
         # Update the number of possibilities.
         self.possibilities.assign(y_true.shape[-1])
 
+    @requires("scipy")
     def result(self) -> Any:
         """Return the result."""
 

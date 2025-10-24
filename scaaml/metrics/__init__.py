@@ -17,11 +17,7 @@ from scaaml.metrics.custom import (
     MeanConfidence,
     MeanRank,
 )
-# SciPy is an optional dependency.
-try:
-    from scaaml.metrics.custom_scipy import SignificanceTest
-except ImportError:
-    from scaaml.metrics.custom_no_scipy import SignificanceTest
+from scaaml.metrics.significance_test import SignificanceTest
 
 __all__ = [
     "MaxRank",
