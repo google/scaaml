@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Custom metrics."""
-from scaaml.metrics.custom import SignificanceTest
-from scaaml.metrics.custom import MaxRank
-from scaaml.metrics.custom import MeanRank
-from scaaml.metrics.custom import MeanConfidence
+from scaaml.metrics.custom import (
+    MaxRank,
+    MeanConfidence,
+    MeanRank,
+)
+from scaaml.metrics.significance_test import SignificanceTest
 
-__all__ = ["SignificanceTest", "MaxRank", "MeanRank", "MeanConfidence"]
+__all__ = [
+    "MaxRank",
+    "MeanConfidence",
+    "MeanRank",
+    "SignificanceTest",
+]

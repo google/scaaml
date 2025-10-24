@@ -15,11 +15,19 @@
 import keras
 import numpy as np
 
-from scaaml.metrics import MeanConfidence
-from scaaml.metrics import SignificanceTest
-from scaaml.metrics import MaxRank, MeanRank
-from scaaml.metrics.custom import confidence
-from scaaml.metrics.custom import rank
+import pytest
+
+from scaaml.metrics import (
+    MaxRank,
+    MeanConfidence,
+    MeanRank,
+    SignificanceTest,
+)
+from scaaml.metrics.custom import (
+    confidence,
+    rank,
+)
+from scaaml.utils import is_module_present
 
 
 def rank_slow_1d(y_true, y_pred, optimistic) -> float:
@@ -231,12 +239,20 @@ def test_optimistic_with_all_different():
     assert (optimistic == pesimistic).all()
 
 
+@pytest.mark.skipif(
+    not is_module_present("scipy"),
+    reason="SciPy is optional, skip test if not present.",
+)
 def test_h0_doc():
     m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.6, 0.4]])
     assert np.isclose(m.result(), 0.25)
 
 
+@pytest.mark.skipif(
+    not is_module_present("scipy"),
+    reason="SciPy is optional, skip test if not present.",
+)
 def test_h0_significant():
     N = 10
     m = SignificanceTest()
@@ -244,12 +260,20 @@ def test_h0_significant():
     assert np.isclose(m.result(), 2**(-N))
 
 
+@pytest.mark.skipif(
+    not is_module_present("scipy"),
+    reason="SciPy is optional, skip test if not present.",
+)
 def test_h0_all_wrong():
     m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.9, 0.1], [0.4, 0.6]])
     assert np.isclose(m.result(), 1.)
 
 
+@pytest.mark.skipif(
+    not is_module_present("scipy"),
+    reason="SciPy is optional, skip test if not present.",
+)
 def test_h0_one_wrong():
     m = SignificanceTest()
     m.update_state([[0., 1.], [1., 0.]], [[0.1, 0.9], [0.4, 0.6]])

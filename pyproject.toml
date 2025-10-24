@@ -29,20 +29,13 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "Pillow",
-    "chipwhisperer",
-    "colorama",
     "cryptography",
     "matplotlib",
-    "networkx[default]",
     "numpy",
-    "pandas",
     "picosdk",
     "pip",
-    "pygments",
     "pyvisa",
     "pyvisa-py",
-    "scipy",
     "semver",
     "setuptools",
     "tabulate",
@@ -56,15 +49,24 @@ dependencies = [
 version = {attr = "scaaml.__version__"}
 
 [project.optional-dependencies]
+capture = [
+    "chipwhisperer",  # Capture pipeline.
+]
 dev = [
+    "flake8",
     "mypy",
+    "psutil",
     "pydantic",
+    "pylint",
     "pytest",
     "pytest-cov",
-    "flake8",
-    "psutil",
     "types-cryptography",
     "types-tensorflow",
+    "yapf",
+]
+extra = [
+    "networkx[default]",  # Enable relational heads in the GPAM model.
+    "scipy",  # Enable significance test metric.
 ]
 
 [project.scripts]

@@ -22,7 +22,7 @@ All one should need to install the package from
 [PyPI](https://pypi.org/project/scaaml/) is:
 
 ```bash
-pip install scaaml
+pip install "scaaml[capture,extra]"
 ```
 
 Note that this is the latest stable version of the package.
@@ -38,5 +38,5 @@ python3 -m venv my_env  # Create Python virtual environment
 source my_env/bin/activate  # Activate your virtual environment
 cd scaaml/  # Change directory to the cloned git repository
 python3 -m pip install --require-hashes -r requirements.txt  # Install dependencies
-python3 -m pip install --editable .  # Install SCAAML
+python3 -m pip install --editable ".[capture,extra]"  # Install SCAAML
 ```

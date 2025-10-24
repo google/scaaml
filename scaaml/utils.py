@@ -13,10 +13,20 @@
 # limitations under the License.
 """Utils common to various SCAAML components"""
 
+import functools
+import importlib
 from multiprocessing import Pool
 from random import randint
-from typing import Any, Dict, List, Sequence
 import time
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Sequence,
+    ParamSpec,
+    TypeVar,
+)
 
 from glob import glob
 from termcolor import cprint
@@ -156,3 +166,61 @@ def from_categorical(predictions: Sequence[npt.ArrayLike]) -> List[np.intp]:
     "reverse of categorical"
     # note: doing it as a list is significantly faster than a single argmax
     return [np.argmax(p) for p in predictions]
+
+
+def is_module_present(module_name: str) -> bool:
+    """Return True iff `module_name` can be imported. As a side-effect the
+    module is imported.
+
+    Args:
+
+      module_name (str): The module which might or might not be importable.
+
+    Raises: does not raise.
+    """
+    try:
+        importlib.import_module(module_name)
+        return True
+    except ImportError:
+        return False
+
+
+# Type specifications for the requires decorator (which does not change the
+# type of the function).
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def requires(module_name: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """A decorator which marks a function or a method which needs an optional
+    module to function. The first call will import the module if installed
+    otherwise it will raise an ImportError.
+
+    Performance penalty: The first call might be slower due to the deferred
+    import. There is an additional performance penalty due to import checking
+    in each call. It is visible in very fast functions however for most
+    functions it should be ok:
+
+    ```python
+    >>> N = 10_000_000
+    >>> f = lambda: 1
+    >>> timeit.timeit(lambda: f(), number=N)
+    0.6438868753612041
+    >>> f = requires("numpy")(f)
+    >>> timeit.timeit(lambda: f(), number=N)
+    6.547926515340805
+    ```
+    """
+
+    def decorator_requires(func: Callable[P, R]) -> Callable[P, R]:
+
+        @functools.wraps(func)
+        def wrapper_func(*args: P.args, **kwargs: P.kwargs) -> R:
+            if is_module_present(module_name):
+                return func(*args, **kwargs)
+            raise ImportError(f"{func.__qualname__} needs the module "
+                              f"{module_name}")
+
+        return wrapper_func
+
+    return decorator_requires
