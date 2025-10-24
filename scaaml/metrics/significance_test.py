@@ -109,7 +109,11 @@ class SignificanceTest(Metric):  # type: ignore[no-any-unimported,misc]
         k = self.correct.numpy()
         n = self.seen.numpy()
         possibilities = self.possibilities.numpy()
-        return 1 - scipy.stats.binom.cdf(k - 1, n, 1 / possibilities)
+        return 1 - scipy.stats.binom.cdf(  # pylint: disable=undefined-variable
+            k - 1,
+            n,
+            1 / possibilities,
+        )
 
     def reset_state(self) -> None:
         """Reset the state for new measurement."""
