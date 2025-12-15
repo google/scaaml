@@ -28,8 +28,8 @@ the community to independently replicate our results and build on them.
 
 ### Newly captured datasets
 
-| Name    | Trace length | Examples in train | test  | holdout | Download size (in TB) | Download and usage instructions                                           |
-| ------- | ------------ | ----------------: | ----- | ------- | --------------------: | ------------------------------------------------------------------------- |
+| Name    | Trace length | Examples in train | test  | holdout | Download size (in TB) | Download and usage instructions                                                |
+| ------- | ------------ | ----------------: | ----- | ------- | --------------------: | ------------------------------------------------------------------------------ |
 | ECC CM0 | 1,6M         | 57,344            | 8,192 | 8,192   | 0.2                   | [ECC CM0](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) |
 | ECC CM1 | 5M           | 194,544           | 8,192 | 8,192   | 1.5                   | [ECC CM1](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) |
 | ECC CM2 | 10M          | 122,880           | 8,192 | 8,192   | 2.1                   | [ECC CM2](https://github.com/google/scaaml/tree/main/papers/datasets/ECC/GPAM) |
