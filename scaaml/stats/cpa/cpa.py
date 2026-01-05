@@ -60,8 +60,6 @@ class R:
           hypothesis (list[int]): Hypothetical leakage for each possible secret
           value.
         """
-        trace = np.array(trace, dtype=np.float64)
-        hypothesis = np.array(hypothesis)
         assert len(trace.shape) == 1
         assert len(hypothesis.shape) == 1
 
@@ -130,7 +128,7 @@ class R:
         if self.return_absolute_value:
             return np.array(np.abs(r), dtype=np.float64)
         else:
-            return np.array(r, dtype=np.float64)
+            return r
 
 
 class CPA(CPABase):
@@ -165,7 +163,7 @@ class CPA(CPABase):
     def _update(
         self,
         trace: npt.NDArray[np.float32],
-        hypothesis: npt.NDArray[np.uint8],
+        hypothesis: npt.NDArray[np.uint32],
     ) -> None:
         assert len(self.r) == len(hypothesis)
         trace = np.array(trace, dtype=np.float64)

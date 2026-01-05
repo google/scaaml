@@ -139,7 +139,7 @@ class CPABase(ABC):
     def _update(
         self,
         trace: npt.NDArray[np.float32],
-        hypothesis: npt.NDArray[np.uint8],
+        hypothesis: npt.NDArray[np.uint32],
     ) -> None:
         """The actual update without checking the real key. User facing API is
         `CPABase.update`.
@@ -149,8 +149,8 @@ class CPABase(ABC):
           trace (npt.NDArray[np.float32]): The physical measurements (e.g.,
           power, EM over time).
 
-          hypothesis (ArrayLike): The leakage value given the guess. Assumed to
-          be in range(different_leakage_values). The shape is
+          hypothesis (npt.NDArray[np.uint32]): The leakage value given the
+          guess. Assumed to be in range(different_leakage_values). The shape is
           (different_target_secrets,).
         """
 
@@ -158,7 +158,7 @@ class CPABase(ABC):
         self,
         plaintext: npt.NDArray[np.uint8],
         ciphertext: npt.NDArray[np.uint8],
-    ) -> npt.NDArray[np.uint8]:
+    ) -> npt.NDArray[np.int32]:
         """Return the leakage value given the guess. Assumed to be in
         range(different_leakage_values). The shape is
         (16, different_target_secrets,) and dtype is np.int32.
