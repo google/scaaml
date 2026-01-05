@@ -128,7 +128,7 @@ class R:
         if self.return_absolute_value:
             return np.array(np.abs(r), dtype=np.float64)
         else:
-            return r
+            return np.array(r, dtype=np.float64)
 
 
 class CPA(CPABase):
@@ -166,10 +166,10 @@ class CPA(CPABase):
         hypothesis: npt.NDArray[np.uint32],
     ) -> None:
         assert len(self.r) == len(hypothesis)
-        trace = np.array(trace, dtype=np.float64)
+        trace64 = np.array(trace, dtype=np.float64)
 
         for byte_index in range(16):
             self.r[byte_index].update(
-                trace=trace,
+                trace=trace64,
                 hypothesis=hypothesis[byte_index],
             )

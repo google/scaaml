@@ -139,7 +139,7 @@ class CPABase(ABC):
     def _update(
         self,
         trace: npt.NDArray[np.float32],
-        hypothesis: npt.NDArray[np.uint32],
+        hypothesis: npt.NDArray[np.int32],
     ) -> None:
         """The actual update without checking the real key. User facing API is
         `CPABase.update`.
@@ -149,7 +149,7 @@ class CPABase(ABC):
           trace (npt.NDArray[np.float32]): The physical measurements (e.g.,
           power, EM over time).
 
-          hypothesis (npt.NDArray[np.uint32]): The leakage value given the
+          hypothesis (npt.NDArray[np.int32]): The leakage value given the
           guess. Assumed to be in range(different_leakage_values). The shape is
           (different_target_secrets,).
         """
