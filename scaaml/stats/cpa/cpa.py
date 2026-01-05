@@ -163,7 +163,7 @@ class CPA(CPABase):
     def _update(
         self,
         trace: npt.NDArray[np.float32],
-        hypothesis: npt.NDArray[np.uint32],
+        hypothesis: npt.NDArray[np.int32],
     ) -> None:
         assert len(self.r) == len(hypothesis)
         trace64 = np.array(trace, dtype=np.float64)
