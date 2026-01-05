@@ -151,7 +151,7 @@ class CPABase(ABC):
 
           hypothesis (npt.NDArray[np.int32]): The leakage value given the
           guess. Assumed to be in range(different_leakage_values). The shape is
-          (different_target_secrets,).
+          (16, different_target_secrets,).
         """
 
     def get_hypothesis(

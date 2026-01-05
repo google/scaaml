@@ -57,8 +57,8 @@ class R:
 
           trace (npt.NDArray[np.float64]): The trace wave observed.
 
-          hypothesis (list[int]): Hypothetical leakage for each possible secret
-          value.
+          hypothesis (npt.NDArray[np.int32]): Hypothetical leakage for each
+          possible secret value.
         """
         assert len(trace.shape) == 1
         assert len(hypothesis.shape) == 1
