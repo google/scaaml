@@ -168,7 +168,7 @@ class CPA(CPABase):
         hypothesis: npt.NDArray[np.uint8],
     ) -> None:
         assert len(self.r) == len(hypothesis)
-        trace = trace.astype(np.float64)
+        trace = np.array(trace, dtype=np.float64)
 
         for byte_index in range(16):
             self.r[byte_index].update(

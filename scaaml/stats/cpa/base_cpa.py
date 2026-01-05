@@ -133,7 +133,7 @@ class CPABase(ABC):
         Returns: How much each possible guess value corresponds to the observed
         values. The expected shape is (16, different_target_secrets).
         """
-        return np.max(self._guess(), axis=-1)
+        return np.array(np.max(self._guess(), axis=-1), dtype=np.float32)
 
     @abstractmethod
     def _update(
