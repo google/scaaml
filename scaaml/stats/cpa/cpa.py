@@ -14,13 +14,10 @@
 """CPA https://wiki.newae.com/Correlation_Power_Analysis
 """
 
-import math
-from typing import Callable, Optional
+from typing import Callable
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-from tabulate import tabulate
 
 from scaaml.stats.attack_points.aes_128 import LeakageModelAES128
 from scaaml.stats.cpa.base_cpa import CPABase
