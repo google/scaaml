@@ -127,7 +127,7 @@ def r_update(
     # Check the dimensions if debugging. This will work even across vmap, jit,
     # scan, etc.
     assert data.trace.shape == state["sum_t"].shape  # type: ignore[union-attr]
-    assert data.hypothesis.shape == state[
+    assert data.hypothesis.shape == state[  # type: ignore[union-attr]
         "sum_h"].shape  # type: ignore[union-attr]
 
     # D (so far)
@@ -173,7 +173,7 @@ def r_guess_with_time(
     """
     num_byte_indexes = 16
     different_target_secrets = 256
-    trace_len = state["sum_h_t"].shape[-1]
+    trace_len = state["sum_h_t"].shape[-1]  # type: ignore[union-attr]
     assert state["d"].shape == (1,)  # type: ignore[union-attr]
     assert state["sum_h_t"].shape == (  # type: ignore[union-attr]
         num_byte_indexes,
@@ -183,11 +183,11 @@ def r_guess_with_time(
     assert state["sum_h"].shape == (  # type: ignore[union-attr]
         num_byte_indexes,
         different_target_secrets,
-    )  # type: ignore[union-attr]
+    )
     assert state["sum_hh"].shape == (  # type: ignore[union-attr]
         num_byte_indexes,
         different_target_secrets,
-    )  # type: ignore[union-attr]
+    )
     assert state["sum_t"].shape == (trace_len,)  # type: ignore[union-attr]
     assert state["sum_tt"].shape == (trace_len,)  # type: ignore[union-attr]
 
