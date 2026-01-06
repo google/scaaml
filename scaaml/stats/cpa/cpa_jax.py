@@ -64,8 +64,8 @@ def get_initial_aggregate_multi_byte(
       num_byte_indexes (int): Defaults to 16 but could be more, e.g., in case
       of AES256.
 
-    Returns: A pytree representing state of online SNR computation for a single
-    byte index.
+    Returns: A pytree representing state of online CPA computation for all
+    byte indices.
 
     Keys and values:
 
