@@ -154,7 +154,7 @@ class CPA(CPABase):
             R(return_absolute_value=return_absolute_value) for _ in range(16)
         ]
 
-    def _guess(self) -> npt.NDArray[np.float32]:
+    def guess(self) -> npt.NDArray[np.float32]:
         return np.array(
             [self.r[byte_index].guess() for byte_index in range(16)],
             dtype=np.float32,

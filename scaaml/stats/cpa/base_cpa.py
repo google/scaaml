@@ -117,7 +117,7 @@ class CPABase(ABC):
         self.update_counter: int = 0
 
     @abstractmethod
-    def _guess(self) -> npt.NDArray[np.float32]:
+    def guess(self) -> npt.NDArray[np.float32]:
         """We might not want to check the result each update (e.g., for
         performance reasons).
 
@@ -126,14 +126,14 @@ class CPABase(ABC):
         trace_len).
         """
 
-    def _guess_no_time(self) -> npt.NDArray[np.float32]:
+    def guess_no_time(self) -> npt.NDArray[np.float32]:
         """We might not want to check the result each update (e.g., for
         performance reasons).
 
         Returns: How much each possible guess value corresponds to the observed
         values. The expected shape is (16, different_target_secrets).
         """
-        return np.array(np.max(self._guess(), axis=-1), dtype=np.float32)
+        return np.array(np.max(self.guess(), axis=-1), dtype=np.float32)
 
     @abstractmethod
     def _update(
@@ -217,7 +217,7 @@ class CPABase(ABC):
 
         # Fill in the result
         if self.update_counter % self.subsample == 0:
-            res = self._guess_no_time()
+            res = self.guess_no_time()
             assert res.shape == (
                 16,
                 self.models[0].different_target_secrets,
@@ -253,7 +253,7 @@ class CPABase(ABC):
         }
 
         # Forget time.
-        res = self._guess_no_time()
+        res = self.guess_no_time()
         assert res.shape == (
             16,
             self.models[0].different_target_secrets,
