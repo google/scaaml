@@ -27,6 +27,16 @@ class R:
     """Holds and updates intermediate values.
     """
 
+    __slots__ = (
+        "d",
+        "return_absolute_value",
+        "sum_h_t",
+        "sum_h",
+        "sum_t",
+        "sum_hh",
+        "sum_tt",
+    )
+
     def __init__(self, return_absolute_value: bool) -> None:
         """Initialize the computation.
 
