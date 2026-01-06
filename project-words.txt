@@ -7,6 +7,7 @@ Babuska
 Benadjila
 Bursztein
 CHES
+CUDA
 Cassiers
 Chmielewski
 DSOWINDOW
@@ -68,6 +69,7 @@ allclose
 arange
 argmax
 argmin
+argnames
 argsort
 ascad
 astrojs
@@ -203,6 +205,7 @@ udevadm
 usbutils
 vals
 vispy
+vmap
 vsintellicode
 webassets
 xlabel

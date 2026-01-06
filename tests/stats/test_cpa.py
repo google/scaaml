@@ -17,8 +17,8 @@ import numpy as np
 import pytest
 
 from scaaml.stats.cpa import CPA
-from scaaml.stats.cpa.cpa import CPA as CPANP
-from scaaml.stats.cpa.cpa_jax import CPA as CPAJAX
+from scaaml.stats.cpa.cpa import CPA as CPA_NP
+from scaaml.stats.cpa.cpa_jax import CPA as CPA_JAX
 from scaaml.stats.attack_points.aes_128.full_aes import encrypt
 from scaaml.stats.attack_points.aes_128.attack_points import *
 
@@ -117,7 +117,7 @@ def cpa_results_close(
         return
 
     trace_len: int = 17
-    cpa_np = CPANP(
+    cpa_np = CPA_NP(
         get_model=lambda i: LeakageModelAES128(
             byte_index=i,
             attack_point=attack_point_cls(),
@@ -125,7 +125,7 @@ def cpa_results_close(
         ),
         return_absolute_value=return_absolute_value,
     )
-    cpa_jax = CPAJAX(
+    cpa_jax = CPA_JAX(
         get_model=lambda i: LeakageModelAES128(
             byte_index=i,
             attack_point=attack_point_cls(),

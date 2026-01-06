@@ -19,8 +19,8 @@ otherwise falls back to the NumPy one.
 
 If a concrete version is needed use:
 ```python
-from scaaml.stats.cpa.cpa import CPA as CPANP
-from scaaml.stats.cpa.cpa_jax import CPA as CPAJAX
+from scaaml.stats.cpa.cpa import CPA
+# from scaaml.stats.cpa.cpa_jax import CPA
 ```
 """
 from importlib.metadata import PackageNotFoundError
