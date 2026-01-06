@@ -118,7 +118,7 @@ def get_initial_aggregate_multi_byte(
 
 
 @jax.jit
-def r_update(
+def r_update(  # type: ignore[no-any-unimported]
     state: dict[str, ArrayLike],
     data: UpdateData,
 ) -> Tuple[dict[str, ArrayLike], jnp.int32]:
@@ -128,7 +128,7 @@ def r_update(
     # scan, etc.
     assert data.trace.shape == state["sum_t"].shape  # type: ignore[union-attr]
     assert data.hypothesis.shape == state[  # type: ignore[union-attr]
-        "sum_h"].shape  # type: ignore[union-attr]
+        "sum_h"].shape
 
     # D (so far)
     d = state["d"] + 1
