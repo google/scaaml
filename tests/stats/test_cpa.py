@@ -17,6 +17,8 @@ import numpy as np
 import pytest
 
 from scaaml.stats.cpa import CPA
+from scaaml.stats.cpa.cpa import CPA as CPANP
+from scaaml.stats.cpa.cpa_jax import CPA as CPAJAX
 from scaaml.stats.attack_points.aes_128.full_aes import encrypt
 from scaaml.stats.attack_points.aes_128.attack_points import *
 
@@ -84,13 +86,14 @@ def test_cpa_with_leakage_model(
     )
 
     max_rank: int = 0
+    res = cpa.guess_no_time()
     for byte in range(16):
         target_value = cpa.models[byte].target_secret(
             key=key,
             plaintext=plaintext,
         )
-        res = np.max(cpa.r[byte].guess(), axis=1)
-        max_rank = max(int(np.sum(res >= res[target_value])), max_rank)
+        max_rank = max(int(np.sum(res[byte] >= res[byte][target_value])),
+                       max_rank)
     if random_correlation_sign and not return_absolute_value:
         assert max_rank > 20
     else:
@@ -100,6 +103,107 @@ def test_cpa_with_leakage_model(
         real_key=key,
         plaintext=plaintext,
         experiment_name=str(figure_path),
+    )
+
+
+def cpa_results_close(
+    random_correlation_sign,
+    return_absolute_value,
+    use_hamming_weight,
+    attack_point_cls,
+):
+    if attack_point_cls == Plaintext:
+        # Plaintext provides no information for us.
+        return
+
+    trace_len: int = 17
+    cpa_np = CPANP(
+        get_model=lambda i: LeakageModelAES128(
+            byte_index=i,
+            attack_point=attack_point_cls(),
+            use_hamming_weight=use_hamming_weight,
+        ),
+        return_absolute_value=return_absolute_value,
+    )
+    cpa_jax = CPAJAX(
+        get_model=lambda i: LeakageModelAES128(
+            byte_index=i,
+            attack_point=attack_point_cls(),
+            use_hamming_weight=use_hamming_weight,
+        ),
+        return_absolute_value=return_absolute_value,
+    )
+
+    key = np.random.randint(0, 256, size=16, dtype=np.uint8)
+
+    # Make sure that both positive and negative correlation works (might give
+    # 2* worse ranks).
+    if random_correlation_sign:
+        random_signs = np.random.choice(2, trace_len) * 2 - 1
+    else:
+        random_signs = np.ones(shape=trace_len)
+
+    for _ in range(100):
+        plaintext = np.random.randint(0, 256, size=16, dtype=np.uint8)
+
+        # Simulate a trace
+        bit_counts = [
+            cpa_np.models[i].leakage_knowing_secrets(
+                plaintext=plaintext,
+                key=key,
+            ) for i in range(16)
+        ]
+        bit_counts.extend([0] * (trace_len - len(bit_counts)))
+        trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
+        # np.bitwise_count requires NumPy>=2, CW requires <2
+        trace *= random_signs
+
+        cpa_np.update(
+            trace=trace,
+            plaintext=plaintext,
+            ciphertext=encrypt(plaintext=plaintext, key=key),
+            real_key=key,  # Just to check that the key is constant
+        )
+        cpa_jax.update(
+            trace=trace,
+            plaintext=plaintext,
+            ciphertext=encrypt(plaintext=plaintext, key=key),
+            real_key=key,  # Just to check that the key is constant
+        )
+
+    np.testing.assert_allclose(
+        cpa_jax.guess(),
+        cpa_np.guess(),
+        atol=1e-5,
+        rtol=0.2,
+    )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("random_correlation_sign", [True, False])
+@pytest.mark.parametrize("return_absolute_value", [True, False])
+@pytest.mark.parametrize("use_hamming_weight", [True, False])
+@pytest.mark.parametrize("attack_point_cls", AttackPointAES128.all_subclasses())
+def test_cpa_results_close_slow(
+    random_correlation_sign,
+    return_absolute_value,
+    use_hamming_weight,
+    attack_point_cls,
+):
+    cpa_results_close(
+        random_correlation_sign=random_correlation_sign,
+        return_absolute_value=return_absolute_value,
+        use_hamming_weight=use_hamming_weight,
+        attack_point_cls=attack_point_cls,
+    )
+
+
+def test_cpa_results_close_fast():
+    cpa_results_close(
+        random_correlation_sign=False,
+        return_absolute_value=False,
+        use_hamming_weight=True,
+        attack_point_cls=SubBytesIn,
     )
 
 
@@ -144,13 +248,13 @@ def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
         real_key=key,
         plaintext=plaintext,
     )
+    res = cpa.guess_no_time()
     for byte in range(16):
         target_value = cpa.models[byte].target_secret(
             key=key,
             plaintext=plaintext,
         )
-        res = np.max(cpa.r[byte].guess(), axis=1)
-        assert int(np.sum(res >= res[target_value])) <= 2
+        assert int(np.sum(res[byte] >= res[byte][target_value])) <= 2
 
     cpa.plot_cpa(
         real_key=key,
