@@ -25,9 +25,11 @@ from scaaml.stats.cpa.cpa import CPA
 from importlib.metadata import PackageNotFoundError
 
 try:
-    from scaaml.stats.cpa.cpa_jax import CPA  # JAX based
+    # JAX based if JAX is installed
+    from scaaml.stats.cpa.cpa_jax import CPA
 except PackageNotFoundError:
-    from scaaml.stats.cpa.cpa import CPA  # NumPy based
+    # NumPy based default
+    from scaaml.stats.cpa.cpa import CPA  # type: ignore[assignment]
 
 __all__ = [
     "CPA",

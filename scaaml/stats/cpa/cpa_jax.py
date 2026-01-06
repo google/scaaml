@@ -18,7 +18,7 @@ https://wiki.newae.com/Correlation_Power_Analysis
 """
 
 from functools import partial
-from typing import Callable, NamedTuple
+from typing import Callable, NamedTuple, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -121,13 +121,14 @@ def get_initial_aggregate_multi_byte(
 def r_update(
     state: dict[str, ArrayLike],
     data: UpdateData,
-) -> (dict[str, ArrayLike], jnp.int32):
+) -> Tuple[dict[str, ArrayLike], jnp.int32]:
     """Update the CPA aggregate state.
     """
     # Check the dimensions if debugging. This will work even across vmap, jit,
     # scan, etc.
-    assert data.trace.shape == state["sum_t"].shape
-    assert data.hypothesis.shape == state["sum_h"].shape
+    assert data.trace.shape == state["sum_t"].shape  # type: ignore[union-attr]
+    assert data.hypothesis.shape == state[
+        "sum_h"].shape  # type: ignore[union-attr]
 
     # D (so far)
     d = state["d"] + 1
@@ -173,16 +174,22 @@ def r_guess_with_time(
     num_byte_indexes = 16
     different_target_secrets = 256
     trace_len = state["sum_h_t"].shape[-1]
-    assert state["d"].shape == (1,)
-    assert state["sum_h_t"].shape == (
+    assert state["d"].shape == (1,)  # type: ignore[union-attr]
+    assert state["sum_h_t"].shape == (  # type: ignore[union-attr]
         num_byte_indexes,
         different_target_secrets,
         trace_len,
     )
-    assert state["sum_h"].shape == (num_byte_indexes, different_target_secrets)
-    assert state["sum_hh"].shape == (num_byte_indexes, different_target_secrets)
-    assert state["sum_t"].shape == (trace_len,)
-    assert state["sum_tt"].shape == (trace_len,)
+    assert state["sum_h"].shape == (  # type: ignore[union-attr]
+        num_byte_indexes,
+        different_target_secrets,
+    )  # type: ignore[union-attr]
+    assert state["sum_hh"].shape == (  # type: ignore[union-attr]
+        num_byte_indexes,
+        different_target_secrets,
+    )  # type: ignore[union-attr]
+    assert state["sum_t"].shape == (trace_len,)  # type: ignore[union-attr]
+    assert state["sum_tt"].shape == (trace_len,)  # type: ignore[union-attr]
 
     nom = (state["d"] * state["sum_h_t"]) - jnp.einsum(
         "ij,k->ijk", state["sum_h"], state["sum_t"])
@@ -211,25 +218,6 @@ def r_guess_no_time(
         ),
         axis=-1,
     )
-
-
-def print_ranks(full_guess: ArrayLike, real_key: ArrayLike) -> None:
-    """Prints how many target values had higher probability than the real
-    secret.
-
-    Args:
-
-      full_guess (ArrayLike): The probabilities of shape (16, 256) as returned
-      by `r_guess_no_time`.
-
-      real_key (ArrayLike): The real secret value of shape (16,) of np.uint8.
-    """
-    #print("Ranks of the real guessed values, the lower the better, 1 is top "
-    #      "prediction:")
-    print([
-        int(np.sum(full_guess[i, :] >= full_guess[i, real_key[i]]))
-        for i in range(16)
-    ])
 
 
 class CPA(CPABase):
@@ -321,7 +309,7 @@ class CPA(CPABase):
         # AES128
         self._num_byte_indexes: int = 16
 
-        self.aggregate = None
+        self.aggregate: dict[str, ArrayLike] | None = None
 
         self.aggregate_vmap = {
             "d": None,
@@ -337,7 +325,7 @@ class CPA(CPABase):
                 in_axes=(
                     self.aggregate_vmap,
                     UpdateData(
-                        trace=None,
+                        trace=None,  # type: ignore[arg-type]
                         hypothesis=0,
                     ),
                 ),
@@ -368,7 +356,9 @@ class CPA(CPABase):
         )
 
     def guess(self) -> npt.NDArray[np.float32]:
-        return r_guess_with_time(
+        assert self.aggregate is not None
+        return np.array(r_guess_with_time(
             state=self.aggregate,
             return_absolute_value=self.return_absolute_value,
-        )
+        ),
+                        dtype=np.float32)
