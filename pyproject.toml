@@ -54,6 +54,7 @@ capture = [
 ]
 dev = [
     "flake8",
+    "jax[cuda13]",
     "mypy",
     "psutil",
     "pydantic",

@@ -13,9 +13,21 @@
 # limitations under the License.
 """Correlation power analysis (CPA) module. This module is structured to
 support multiple backends (e.g., a GPU accelerated JAX implementation and a
-NumPy implementation). It currently provides the NumPy version.
+NumPy implementation). If JAX is installed defaults to JAX implementation
+otherwise falls back to the NumPy one.
+
+If a concrete version is needed use:
+```python
+from scaaml.stats.cpa.cpa import CPA
+# from scaaml.stats.cpa.cpa_jax import CPA
+```
 """
-from scaaml.stats.cpa.cpa import CPA  # NumPy based
+try:
+    # JAX based if JAX is installed
+    from scaaml.stats.cpa.cpa_jax import CPA
+except ImportError:
+    # NumPy based default
+    from scaaml.stats.cpa.cpa import CPA  # type: ignore[assignment]
 
 __all__ = [
     "CPA",
