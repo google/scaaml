@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2025-2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 """CPA https://wiki.newae.com/Correlation_Power_Analysis
 """
 
+from abc import ABC, abstractmethod
 import math
 from typing import Callable, Optional
 
@@ -25,117 +26,7 @@ from tabulate import tabulate
 from scaaml.stats.attack_points.aes_128 import LeakageModelAES128
 
 
-class R:
-    """Holds and updates intermediate values.
-    """
-
-    def __init__(self, return_absolute_value: bool) -> None:
-        """Initialize the computation.
-
-        Args:
-
-          return_absolute_value (bool): If set to True then negative
-          correlation is also detected. If set to False only positive
-          correlation is detected.
-        """
-        # Number of seen traces D
-        self.d: int = 0
-
-        self.return_absolute_value: bool = return_absolute_value
-
-        # The following variables are initialized lazily when we know the
-        # dimensions of the traces.
-        self.sum_h_t: npt.NDArray[np.float64]
-        self.sum_h: npt.NDArray[np.float64]
-        self.sum_t: npt.NDArray[np.float64]
-        self.sum_hh: npt.NDArray[np.float64]
-        self.sum_tt: npt.NDArray[np.float64]
-
-    def update(self, trace: npt.NDArray[np.float64],
-               hypothesis: npt.NDArray[np.int32]) -> None:
-        """Update with another trace.
-
-        Args:
-
-          trace (npt.NDArray[np.float64]): The trace wave observed.
-
-          hypothesis (list[int]): Hypothetical leakage for each possible secret
-          value.
-        """
-        trace = np.array(trace, dtype=np.float64)
-        hypothesis = np.array(hypothesis)
-        assert len(trace.shape) == 1
-        assert len(hypothesis.shape) == 1
-
-        if self.d == 0:
-            # Lazy initialize.
-            trace_len: int = len(trace)
-            hypothesis_possibilities: int = hypothesis.shape[0]
-
-            self.sum_h_t = np.zeros((hypothesis_possibilities, trace_len),
-                                    dtype=np.float64)
-            self.sum_h = np.zeros(hypothesis_possibilities, dtype=np.float64)
-            self.sum_t = np.zeros(trace_len, dtype=np.float64)
-            self.sum_hh = np.zeros(hypothesis_possibilities, dtype=np.float64)
-            self.sum_tt = np.zeros(trace_len, dtype=np.float64)
-
-        # D (so far)
-        self.d += 1
-        # i indexes the hypothesis possible values
-        # j indexes the time dimension
-
-        # \sum_{d=1}^{D} h_{d,i} t_{d,j}
-        self.sum_h_t += np.einsum("i,j->ij", hypothesis, trace)
-
-        # \sum_{d=1}^{D} h_{d, i}
-        self.sum_h += hypothesis
-
-        # \sum_{d=1}^{D} t_{d, j}
-        self.sum_t += trace
-
-        # \sum_{d=1}^{D} h_{d, i}^2
-        self.sum_hh += hypothesis**2
-
-        # \sum_{d=1}^{D} t_{d, j}^2
-        self.sum_tt += trace**2
-
-    def guess(self) -> npt.NDArray[np.float64]:
-        """Return how much each possible guess value corresponds to the
-        observed values. The expected shape is (different_target_secrets,
-        trace_len).
-        """
-        # http://wiki.newae.com/Correlation_Power_Analysis
-        # r_{i, j} = \frac{
-        #    D \sum_{d=1}^{D} h_{d,i} t_{d,j}
-        #    - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
-        # }{
-        #    \sqrt{
-        #        \left( (\sum_{d=1}^{D} h_{d,i} )^2
-        #               - D \sum_{d=1}^{D} h_{d,i}^2 \right)
-        #        \cdot
-        #        \left( (\sum_{d=1}^{D} t_{d,j} )^2
-        #               - D \sum_{d=1}^{D} t_{d,j}^2 \right)
-        #    }
-        # }
-
-        # nom_{i,j} = D self.sum_h_t
-        #             - \sum_{d=1}^{D} h_{d,i} \sum_{d=1}^{D} t_{d,j}
-        nom = (self.d * self.sum_h_t) - np.einsum("i,j->ij", self.sum_h,
-                                                  self.sum_t)
-
-        # denominator squared
-        den_a = (self.sum_h**2) - (self.d * self.sum_hh)  # i
-        den_b = (self.sum_t**2) - (self.d * self.sum_tt)  # j
-
-        r = nom / np.sqrt(np.einsum("i,j->ij", den_a, den_b))
-
-        if self.return_absolute_value:
-            return np.array(np.abs(r), dtype=np.float64)
-        else:
-            return np.array(r, dtype=np.float64)
-
-
-class CPA:
+class CPABase(ABC):
     """Do correlation power analysis.
     http://wiki.newae.com/Correlation_Power_Analysis
 
@@ -213,13 +104,11 @@ class CPA:
         self.models: list[LeakageModelAES128] = [
             get_model(byte_index) for byte_index in range(16)
         ]
+        self.return_absolute_value: bool = return_absolute_value
         self.result: dict[int, list[list[float]]] = {
             i: [[] for _ in range(256)] for i in range(16)
         }
         self.real_key: Optional[npt.NDArray[np.uint8]] = None
-        self.r: list[R] = [
-            R(return_absolute_value=return_absolute_value) for _ in range(16)
-        ]
 
         # Sample each `self.subsample` updates.
         if subsample < 1:
@@ -227,11 +116,77 @@ class CPA:
         self.subsample: int = subsample
         self.update_counter: int = 0
 
-    def update(self,
-               trace: npt.NDArray[np.float32],
-               plaintext: npt.NDArray[np.uint8],
-               ciphertext: npt.NDArray[np.uint8],
-               real_key: Optional[npt.NDArray[np.uint8]] = None) -> None:
+    @abstractmethod
+    def guess(self) -> npt.NDArray[np.float32]:
+        """We might not want to check the result each update (e.g., for
+        performance reasons).
+
+        Returns: How much each possible guess value corresponds to the observed
+        values. The expected shape is (16, different_target_secrets,
+        trace_len).
+        """
+
+    def guess_no_time(self) -> npt.NDArray[np.float32]:
+        """We might not want to check the result each update (e.g., for
+        performance reasons).
+
+        Returns: How much each possible guess value corresponds to the observed
+        values. The expected shape is (16, different_target_secrets).
+        """
+        return np.array(np.max(self.guess(), axis=-1), dtype=np.float32)
+
+    @abstractmethod
+    def _update(
+        self,
+        trace: npt.NDArray[np.float32],
+        hypothesis: npt.NDArray[np.int32],
+    ) -> None:
+        """The actual update without checking the real key. User facing API is
+        `CPABase.update`.
+
+        Args:
+
+          trace (npt.NDArray[np.float32]): The physical measurements (e.g.,
+          power, EM over time).
+
+          hypothesis (npt.NDArray[np.int32]): The leakage value given the
+          guess. Assumed to be in range(different_leakage_values). The shape is
+          (16, different_target_secrets,).
+        """
+
+    def get_hypothesis(
+        self,
+        plaintext: npt.NDArray[np.uint8],
+        ciphertext: npt.NDArray[np.uint8],
+    ) -> npt.NDArray[np.int32]:
+        """Return the leakage value given the guess. Assumed to be in
+        range(different_leakage_values). The shape is
+        (16, different_target_secrets,) and dtype is np.int32.
+
+        Args:
+
+          plaintext (npt.NDArray[np.uint8]): The 16 bytes of input.
+
+          ciphertext (npt.NDArray[np.uint8]): The 16 bytes of output.
+        """
+        return np.array(
+            [[
+                self.models[byte].leakage_from_guess(
+                    plaintext=plaintext,
+                    ciphertext=ciphertext,
+                    guess=i,
+                ) for i in range(self.models[byte].different_target_secrets)
+            ] for byte in range(16)],
+            dtype=np.int32,
+        )
+
+    def update(
+        self,
+        trace: npt.NDArray[np.float32],
+        plaintext: npt.NDArray[np.uint8],
+        ciphertext: npt.NDArray[np.uint8],
+        real_key: Optional[npt.NDArray[np.uint8]] = None,
+    ) -> None:
         """Update with a new example.
 
         Args:
@@ -251,34 +206,34 @@ class CPA:
                 self.real_key = real_key
             assert all(self.real_key == real_key)
 
-        for byte in range(16):
-            hypothesis: list[int] = [
-                self.models[byte].leakage_from_guess(
-                    plaintext=plaintext,
-                    ciphertext=ciphertext,
-                    guess=i,
-                ) for i in range(self.models[byte].different_target_secrets)
-            ]
-            self.r[byte].update(
-                trace=trace.astype(np.float64),
-                hypothesis=np.array(hypothesis, dtype=np.int32),
+        hypothesis = self.get_hypothesis(
+            plaintext=plaintext,
+            ciphertext=ciphertext,
+        )
+        self._update(
+            trace=trace,
+            hypothesis=hypothesis,
+        )
+
+        # Fill in the result
+        if self.update_counter % self.subsample == 0:
+            res = self.guess_no_time()
+            assert res.shape == (
+                16,
+                self.models[0].different_target_secrets,
             )
 
-            res = self.r[byte].guess()
-
-            # Forget time.
-            res = np.max(res, axis=1)
-            assert res.shape == (self.models[byte].different_target_secrets,)
-
-            # Fill in the result
-            if self.update_counter % self.subsample == 0:
+            for byte in range(16):
                 for value in range(self.models[byte].different_target_secrets):
-                    self.result[byte][value].append(float(res[value]))
+                    self.result[byte][value].append(float(res[byte][value]))
 
         self.update_counter += 1
 
-    def print_predictions(self, real_key: npt.NDArray[np.uint8],
-                          plaintext: npt.NDArray[np.uint8]) -> None:
+    def print_predictions(
+        self,
+        real_key: npt.NDArray[np.uint8],
+        plaintext: npt.NDArray[np.uint8],
+    ) -> bool:
         """Print a short prediction summary.
 
         Args:
@@ -287,6 +242,8 @@ class CPA:
           against.
 
           plaintext (npt.NDArray[np.uint8]): The input of AES.
+
+        Returns: True iff the key has been extracted.
         """
         statistics: dict[str, list[int]] = {
             "byte": [],
@@ -294,6 +251,14 @@ class CPA:
             "guessed": [],
             "rank": [],
         }
+
+        # Forget time.
+        res = self.guess_no_time()
+        assert res.shape == (
+            16,
+            self.models[0].different_target_secrets,
+        )
+
         for byte in range(16):
             target_value = self.models[byte].target_secret(
                 key=real_key,
@@ -301,11 +266,10 @@ class CPA:
             )
             statistics["byte"].append(byte)
             statistics["real"].append(target_value)
-            res = np.max(self.r[byte].guess(), axis=1)
-            assert res.shape == (self.models[byte].different_target_secrets,)
-            statistics["guessed"].append(int(np.argmax(res)))
-            # Compute rank
-            statistics["rank"].append(int(np.sum(res >= res[target_value])))
+            statistics["guessed"].append(int(np.argmax(res[byte])))
+            # Compute rank (optimistic)
+            statistics["rank"].append(
+                int(np.sum(res[byte] >= res[byte][target_value])))
 
         # Print intermediate result
         print()
@@ -318,12 +282,15 @@ class CPA:
             f"{security = }")
 
         print(tabulate([name] + values for name, values in statistics.items()))
+        return security == 0
 
-    def plot_cpa(self,
-                 real_key: npt.NDArray[np.uint8],
-                 plaintext: npt.NDArray[np.uint8],
-                 experiment_name: str = "cpa.png",
-                 logscale: bool = True) -> None:
+    def plot_cpa(
+        self,
+        real_key: npt.NDArray[np.uint8],
+        plaintext: npt.NDArray[np.uint8],
+        experiment_name: str = "cpa.png",
+        logscale: bool = True,
+    ) -> None:
         """Plot how does the real secret value change position among
         predictions when adding more examples.
 
