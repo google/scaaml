@@ -205,21 +205,6 @@ def r_guess_with_time(
     return r
 
 
-@partial(jax.jit, static_argnames=["return_absolute_value"])
-def r_guess_no_time(
-    state: dict[str, ArrayLike],
-    return_absolute_value: bool,
-) -> ArrayLike:
-    # Forget time axis.
-    return jnp.max(
-        r_guess_with_time(
-            state,
-            return_absolute_value=return_absolute_value,
-        ),
-        axis=-1,
-    )
-
-
 class CPA(CPABase):
     """Do correlation power analysis using JAX.
     http://wiki.newae.com/Correlation_Power_Analysis
