@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Correlation power analysis (CPA) module. This module is structured to
 support multiple backends (e.g., a GPU accelerated JAX implementation and a
 NumPy implementation). If JAX is installed defaults to JAX implementation
