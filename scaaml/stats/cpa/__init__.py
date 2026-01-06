@@ -22,12 +22,10 @@ from scaaml.stats.cpa.cpa import CPA
 # from scaaml.stats.cpa.cpa_jax import CPA
 ```
 """
-from importlib.metadata import PackageNotFoundError
-
 try:
     # JAX based if JAX is installed
     from scaaml.stats.cpa.cpa_jax import CPA
-except PackageNotFoundError:
+except ImportError:
     # NumPy based default
     from scaaml.stats.cpa.cpa import CPA  # type: ignore[assignment]
 
