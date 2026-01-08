@@ -180,12 +180,12 @@ holdout_config = {
         {
             "operation": "constants",
             "name": "key",
-            "length": 1,
+            "length": 16,
             "values": [
                 # Single key with hardcoded values:
                 [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ]
                 # Alternatively we could pick a random key:
-                #key = np.random.randint(low=0, high=256, size=16, dtype=np.int64)
+                # np.random.randint(low=0, high=256, size=16, dtype=np.int64)
             ]
         },
         {
