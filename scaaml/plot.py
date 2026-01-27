@@ -60,8 +60,7 @@ def plot_trace(trace: npt.NDArray[np.float64],
         plt.plot(np.repeat(np.average(trace), len(trace)))
 
     if plot_std:
-        plt.plot(
-            np.repeat(np.average(trace) + np.std(trace), len(trace)))
+        plt.plot(np.repeat(np.average(trace) + np.std(trace), len(trace)))
 
     if title:
         plt.title(title)
