@@ -13,7 +13,7 @@
 # limitations under the License.
 """Plotting functions."""
 
-from typing import Optional, Sequence, Union, cast
+from typing import Optional, Sequence, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -61,9 +61,7 @@ def plot_trace(trace: npt.NDArray[np.float64],
 
     if plot_std:
         plt.plot(
-            np.repeat(
-                cast(np.float64, np.average(trace)) +
-                cast(npt.NDArray[np.float64], np.std(trace)), len(trace)))
+            np.repeat(np.average(trace) + np.std(trace), len(trace)))
 
     if title:
         plt.title(title)
