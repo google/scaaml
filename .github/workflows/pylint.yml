@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: 'pip'
       - name: Check licence headers
         run: ./tools/check_copyright.sh
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
