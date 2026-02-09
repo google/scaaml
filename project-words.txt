@@ -109,7 +109,7 @@ explainability
 figsize
 firstrow
 frombuffer
-gsutil
+gcloud storage
 hardcopyarea
 howpublished
 htmlcov
