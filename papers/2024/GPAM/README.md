@@ -103,8 +103,8 @@ loaded_model = tf.keras.models.load_model(
 
 How to use with [sedpack](https://github.com/google/sedpack) coming soon (if
 you already downloaded the datasets four small json files per dataset will be
-needed, if you used `gcloud storage rsync` to download, these will be downloaded very
-fast).
+needed, if you used `gcloud storage rsync` to download, these will be downloaded
+very fast).
 
 For now see the tutorial
 [https://google.github.io/sedpack/tutorials/sca/gpam/](https://google.github.io/sedpack/tutorials/sca/gpam/).
