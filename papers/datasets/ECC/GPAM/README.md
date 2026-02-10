@@ -14,13 +14,13 @@ Learning](https://github.com/google/scaaml/tree/main/papers/2024/GPAM).
 
 ```bash
 # List available datasets
-gsutil ls gs://scaaml-public/datasets/ECC/GPAM
+gcloud storage ls gs://scaaml-public/datasets/ECC/GPAM
 # Show size of the directory
-gsutil du -sh gs://scaaml-public/datasets/ECC/GPAM
+gcloud storage du --summarize --readable-sizes gs://scaaml-public/datasets/ECC/GPAM
 
 # Download all (beware that the multiprocessing option -m can saturate your
 # network connection). Or download just the dataset you want.
-gsutil -m rsync -r gs://scaaml-public/datasets/ECC/GPAM .
+gcloud storage rsync --recursive gs://scaaml-public/datasets/ECC/GPAM .
 ```
 
 ## How to load and use a dataset
