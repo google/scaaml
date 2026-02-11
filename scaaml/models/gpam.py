@@ -41,12 +41,16 @@ from keras.src.backend import KerasTensor
 
 
 @keras.saving.register_keras_serializable()
-class Rescale(layers.Layer):  # type: ignore[type-arg]
+class Rescale(layers.Layer):  # type: ignore[no-any-unimported]
     """Rescale input to the interval [-1, 1].
     """
 
-    def __init__(self, trace_min: float, trace_delta: float,
-                 **kwargs: Any) -> None:
+    def __init__(
+        self,
+        trace_min: float,
+        trace_delta: float,
+        **kwargs: Any,
+    ) -> None:
         """Information for trace rescaling.
 
         Args:
@@ -59,14 +63,18 @@ class Rescale(layers.Layer):  # type: ignore[type-arg]
         self.trace_min: float = trace_min
         self.trace_delta: float = trace_delta
 
-    def call(self, inputs: KerasTensor, **kwargs: Any) -> KerasTensor:
+    def call(  # type: ignore[no-any-unimported]
+        self,
+        inputs: KerasTensor,
+        **kwargs: Any,
+    ) -> KerasTensor:
         """Rescale to the interval [-1, 1]."""
         del kwargs  # unused
         x = inputs
         x = 2 * ((x - self.trace_min) / self.trace_delta) - 1
         return x
 
-    def get_config(self) -> dict[str, Any]:
+    def get_config(self) -> Any:
         """Return the config to allow saving and loading of the model.
         """
         config = super().get_config()
@@ -78,7 +86,7 @@ class Rescale(layers.Layer):  # type: ignore[type-arg]
 
 
 @keras.saving.register_keras_serializable()
-class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
+class ScaledNorm(layers.Layer):  # type: ignore[no-any-unimported]
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
@@ -108,7 +116,10 @@ class ScaledNorm(layers.Layer):  # type: ignore[type-arg]
             trainable=True,
         )
 
-    def call(self, inputs: KerasTensor) -> KerasTensor:
+    def call(  # type: ignore[no-any-unimported]
+        self,
+        inputs: KerasTensor,
+    ) -> KerasTensor:
         """Return the output of this layer.
         """
         x = inputs
@@ -134,10 +145,10 @@ def clone_initializer(initializer: keras.initializers.Initializer) -> Any:
     """
     if isinstance(initializer, keras.initializers.Initializer):
         return initializer.__class__.from_config(initializer.get_config())
-    return initializer  # type: ignore[unreachable]
+    return initializer
 
 
-def rope(
+def rope(  # type: ignore[no-any-unimported]
     x: KerasTensor,
     axis: Union[list[int], int],
 ) -> KerasTensor:
@@ -165,7 +176,7 @@ def rope(
         spatial_shape = [shape[i] for i in axis]
         total_len = 1
         for i in spatial_shape:
-            total_len *= i  # type: ignore[operator]
+            total_len *= i
         position = keras.ops.reshape(
             keras.ops.cast(keras.ops.arange(total_len), np.float32),
             spatial_shape)
@@ -178,7 +189,7 @@ def rope(
     for i in range(axis[-1] + 1, len(shape) - 1, 1):
         position = keras.ops.expand_dims(position, axis=-1)
 
-    half_size = shape[-1] // 2  # type: ignore[operator]
+    half_size = shape[-1] // 2
     freq_seq = keras.ops.cast(keras.ops.arange(half_size),
                               np.float32) / float(half_size)
     inv_freq = 10000**-freq_seq
@@ -186,13 +197,13 @@ def rope(
     sin = keras.ops.cast(keras.ops.sin(sinusoid), dtype=x.dtype)
     cos = keras.ops.cast(keras.ops.cos(sinusoid), dtype=x.dtype)
     x1, x2 = keras.ops.split(x, 2, axis=-1)
-    return keras.ops.concatenate(  # type: ignore[no-any-return]
+    return keras.ops.concatenate(
         [x1 * cos - x2 * sin, x2 * cos + x1 * sin],
         axis=-1,
     )
 
 
-def toeplitz_matrix_rope(
+def toeplitz_matrix_rope(  # type: ignore[no-any-unimported]
     n: int,
     a: KerasTensor,
     b: KerasTensor,
@@ -204,7 +215,7 @@ def toeplitz_matrix_rope(
 
 
 @keras.saving.register_keras_serializable()
-class GAU(layers.Layer):
+class GAU(layers.Layer):  # type: ignore[misc,no-any-unimported]
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
 
