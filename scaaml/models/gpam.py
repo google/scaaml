@@ -200,11 +200,11 @@ def toeplitz_matrix_rope(
     """Obtain Toeplitz matrix using rope."""
     a = rope(keras.ops.tile(a[None, :], [n, 1]), axis=[0])
     b = rope(keras.ops.tile(b[None, :], [n, 1]), axis=[0])
-    return keras.ops.einsum("mk,nk->mn", a, b)  # type: ignore[no-any-return]
+    return keras.ops.einsum("mk,nk->mn", a, b)
 
 
 @keras.saving.register_keras_serializable()
-class GAU(layers.Layer):  # type: ignore[type-arg]
+class GAU(layers.Layer):
     """Gated Attention Unit layer introduced in Transformer
     Quality in Linear Time.
 
@@ -371,7 +371,9 @@ class GAU(layers.Layer):  # type: ignore[type-arg]
         x = self.proj2(x)
         return x + shortcut
 
-    def get_config(self) -> dict[str, Any]:
+    def get_config(self) -> Any:
+        """Returns the model config as a dictionary.
+        """
         config = super().get_config()
         config.update({
             "dim": self.dim,
