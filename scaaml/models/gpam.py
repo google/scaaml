@@ -167,7 +167,8 @@ def rope(
         for i in spatial_shape:
             total_len *= i  # type: ignore[operator]
         position = keras.ops.reshape(
-            keras.ops.cast(keras.ops.arange(total_len), np.float32), spatial_shape)
+            keras.ops.cast(keras.ops.arange(total_len), np.float32),
+            spatial_shape)
     else:
         raise ValueError(f"Unsupported shape: {shape}")
 
@@ -178,7 +179,8 @@ def rope(
         position = keras.ops.expand_dims(position, axis=-1)
 
     half_size = shape[-1] // 2  # type: ignore[operator]
-    freq_seq = keras.ops.cast(keras.ops.arange(half_size), np.float32) / float(half_size)
+    freq_seq = keras.ops.cast(keras.ops.arange(half_size),
+                              np.float32) / float(half_size)
     inv_freq = 10000**-freq_seq
     sinusoid = keras.ops.einsum("...,d->...d", position, inv_freq)
     sin = keras.ops.cast(keras.ops.sin(sinusoid), dtype=x.dtype)
