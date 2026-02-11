@@ -41,7 +41,7 @@ from keras.src.backend import KerasTensor
 
 
 @keras.saving.register_keras_serializable()
-class Rescale(layers.Layer):  # type: ignore[no-any-unimported]
+class Rescale(layers.Layer):  # type: ignore[misc,no-any-unimported]
     """Rescale input to the interval [-1, 1].
     """
 
@@ -86,7 +86,7 @@ class Rescale(layers.Layer):  # type: ignore[no-any-unimported]
 
 
 @keras.saving.register_keras_serializable()
-class ScaledNorm(layers.Layer):  # type: ignore[no-any-unimported]
+class ScaledNorm(layers.Layer):  # type: ignore[misc,no-any-unimported]
     """ScaledNorm layer.
 
     Transformers without Tears: Improving the Normalization of Self-Attention
@@ -128,7 +128,7 @@ class ScaledNorm(layers.Layer):  # type: ignore[no-any-unimported]
         x = x * keras.ops.rsqrt(mean_square + self._epsilon)
         return x * self._scale
 
-    def get_config(self) -> dict[str, Any]:
+    def get_config(self) -> Any:
         """Return the config to allow saving and loading of the model.
         """
         config = super().get_config()
@@ -139,7 +139,8 @@ class ScaledNorm(layers.Layer):  # type: ignore[no-any-unimported]
         return config
 
 
-def clone_initializer(initializer: keras.initializers.Initializer) -> Any:
+def clone_initializer(  # type: ignore[no-any-unimported]
+    initializer: keras.initializers.Initializer,) -> Any:
     """Clone an initializer (if an initializer is reused the generated
     weights are the same).
     """
