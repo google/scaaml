@@ -35,10 +35,32 @@ def test_cpa_with_leakage_model(
     random_correlation_sign: bool,
     return_absolute_value: bool,
     use_hamming_weight: bool,
-    attack_point_cls: AttackPointAES128,
+    attack_point_cls: type[AttackPointAES128],
     scale: float,
     tmp_path: Path,
 ):
+    """A test almost everything. Run as `python -m pytest --run-slow`.
+
+    Args:
+
+      random_correlation_sign (bool): If set the correlation coefficient can be
+      either positive or negative (for each byte index independently).
+
+      return_absolute_value (bool): Should CPA return absolute value of the
+      correlation?
+
+      use_hamming_weight (bool): Correlate with Hamming weight as opposed to
+      the actual byte value.
+
+      attack_point_cls (type[AttackPointAES128]): A subclass of
+      AttackPointAES128.
+
+      scale (float): The standard deviation of the random noise (normal
+      centered at zero). When zero the prediction is expected to recover the
+      key.
+
+      tmp_path (Path): Save the figure here.
+    """
     if attack_point_cls == Plaintext:
         # Plaintext provides no information for us.
         return
