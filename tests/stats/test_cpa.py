@@ -233,7 +233,12 @@ def test_cpa_results_close_fast():
     )
 
 
-def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
+def cpa_try(
+    figure_path,
+    return_absolute_value,
+    random_correlation_sign,
+    scale: float = 1.5,
+) -> None:
     trace_len: int = 23
     cpa = CPA(
         get_model=lambda i: LeakageModelAES128(
@@ -259,7 +264,7 @@ def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
         # Simulate a trace
         bit_counts = [int(x).bit_count() for x in key ^ plaintext]
         bit_counts.extend([0] * (trace_len - len(bit_counts)))
-        trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
+        trace = bit_counts + np.random.normal(scale=scale, size=trace_len)
         # np.bitwise_count requires NumPy>=2, CW requires <2
         trace *= random_signs
 
@@ -295,6 +300,16 @@ def test_cpa(tmp_path):
         figure_path=tmp_path,
         return_absolute_value=True,
         random_correlation_sign=True,
+    )
+
+
+def test_cpa_rank_zero(tmp_path):
+    # Should recover the whole key.
+    cpa_try(
+        figure_path=tmp_path,
+        return_absolute_value=False,
+        random_correlation_sign=False,
+        scale=0.0,
     )
 
 
