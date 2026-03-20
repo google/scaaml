@@ -275,8 +275,10 @@ class CPABase(ABC):
         print()
         current_ranks = statistics["rank"]
         # Estimate of log2 of how many keys we need to try to get the correct
-        # one.
-        security = math.log2(math.prod(current_ranks))
+        # one. Make sure to handle the case of rank all zeros (all bytes
+        # correct). Intuitively in this case we need to try at least the
+        # correct key.
+        security = math.log2(1 + math.prod(current_ranks))
         print(
             f"Traces: {self.update_counter} mean_rank {np.mean(current_ranks)} "
             f"{security = }")
