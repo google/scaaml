@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
 import numpy as np
 
 import pytest
@@ -28,13 +30,37 @@ from scaaml.stats.attack_points.aes_128.attack_points import *
 @pytest.mark.parametrize("return_absolute_value", [True, False])
 @pytest.mark.parametrize("use_hamming_weight", [True, False])
 @pytest.mark.parametrize("attack_point_cls", AttackPointAES128.all_subclasses())
+@pytest.mark.parametrize("scale", [0.0, 1.5])
 def test_cpa_with_leakage_model(
-    random_correlation_sign,
-    return_absolute_value,
-    use_hamming_weight,
-    attack_point_cls,
-    tmp_path,
+    random_correlation_sign: bool,
+    return_absolute_value: bool,
+    use_hamming_weight: bool,
+    attack_point_cls: type[AttackPointAES128],
+    scale: float,
+    tmp_path: Path,
 ):
+    """A test almost everything. Run as `python -m pytest --run-slow`.
+
+    Args:
+
+      random_correlation_sign (bool): If set the correlation coefficient can be
+      either positive or negative (for each byte index independently).
+
+      return_absolute_value (bool): Should CPA return absolute value of the
+      correlation?
+
+      use_hamming_weight (bool): Correlate with Hamming weight as opposed to
+      the actual byte value.
+
+      attack_point_cls (type[AttackPointAES128]): A subclass of
+      AttackPointAES128.
+
+      scale (float): The standard deviation of the random noise (normal
+      centered at zero). When zero the prediction is expected to recover the
+      key.
+
+      tmp_path (Path): Save the figure here.
+    """
     if attack_point_cls == Plaintext:
         # Plaintext provides no information for us.
         return
@@ -69,7 +95,7 @@ def test_cpa_with_leakage_model(
             for i in range(16)
         ]
         bit_counts.extend([0] * (trace_len - len(bit_counts)))
-        trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
+        trace = bit_counts + np.random.normal(scale=scale, size=trace_len)
         # np.bitwise_count requires NumPy>=2, CW requires <2
         trace *= random_signs
 
@@ -94,7 +120,7 @@ def test_cpa_with_leakage_model(
         )
         max_rank = max(int(np.sum(res[byte] >= res[byte][target_value])),
                        max_rank)
-    if random_correlation_sign and not return_absolute_value:
+    if random_correlation_sign and not return_absolute_value and scale:
         assert max_rank > 20
     else:
         assert max_rank <= 2
@@ -207,7 +233,12 @@ def test_cpa_results_close_fast():
     )
 
 
-def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
+def cpa_try(
+    figure_path,
+    return_absolute_value,
+    random_correlation_sign,
+    scale: float = 1.5,
+) -> None:
     trace_len: int = 23
     cpa = CPA(
         get_model=lambda i: LeakageModelAES128(
@@ -233,7 +264,7 @@ def cpa_try(figure_path, return_absolute_value, random_correlation_sign):
         # Simulate a trace
         bit_counts = [int(x).bit_count() for x in key ^ plaintext]
         bit_counts.extend([0] * (trace_len - len(bit_counts)))
-        trace = bit_counts + np.random.normal(scale=1.5, size=trace_len)
+        trace = bit_counts + np.random.normal(scale=scale, size=trace_len)
         # np.bitwise_count requires NumPy>=2, CW requires <2
         trace *= random_signs
 
@@ -269,6 +300,16 @@ def test_cpa(tmp_path):
         figure_path=tmp_path,
         return_absolute_value=True,
         random_correlation_sign=True,
+    )
+
+
+def test_cpa_rank_zero(tmp_path):
+    # Should recover the whole key.
+    cpa_try(
+        figure_path=tmp_path,
+        return_absolute_value=False,
+        random_correlation_sign=False,
+        scale=0.0,
     )
 
 
