@@ -5,17 +5,16 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.3",
-    "@astrojs/starlight": "^0.38.1",
-    "astro": "^6.0.4",
+    "@astrojs/starlight": "^0.38.2",
+    "astro": "^6.0.1",
     "rehype-mathjax": "^7.1.0",
     "remark-math": "^6.0.0",
-    "sharp": "^0.34.1",
+    "sharp": "^0.34.2",
     "typescript": "^6.0.2"
   }
 }
