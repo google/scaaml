@@ -202,7 +202,7 @@ class GAU(layers.Layer):
         self.beta = tf.Variable(lambda: self.ZEROS_INITIALIZER(
             shape=[2, self.shared_dim], dtype=tf.float32))
 
-    def call(self, x, training=False):
+    def call(self, x, training: bool=False):
 
         shortcut = x
         x = self.norm(x)
@@ -510,7 +510,7 @@ def get_model(inputs, outputs, output_relations, trace_len: int,
     return model
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Train GPAM model for ECC CM1")
     parser.add_argument(
         "--dataset_path",

@@ -19,7 +19,7 @@ https://docs.pytest.org/en/latest/example/simple.html#control-skipping-of-tests-
 import pytest
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser) -> None:
     parser.addoption(
         "--run-slow",
         action="store_true",
@@ -28,14 +28,14 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config) -> None:
     config.addinivalue_line(
         "markers",
         "slow: mark test as slow to run",
     )
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config, items) -> None:
     if config.getoption("--run-slow"):
         # --run-slow given in cli: do not skip slow tests
         return
