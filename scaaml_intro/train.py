@@ -29,7 +29,7 @@ from scaaml.utils import get_num_gpu
 from scaaml.utils import tf_cap_memory
 
 
-def train_model(config):
+def train_model(config) -> None:
     tf_cap_memory()
     algorithm = config["algorithm"]
     train_glob = f"datasets/{algorithm}/train/*"
