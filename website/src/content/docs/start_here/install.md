@@ -30,7 +30,8 @@ If you want the bleeding edge features install from source instead.
 
 ## Installing from Source
 
-One can always opt for installation from the source.
+One can always opt for installation from the source. In this case you most
+likely also want to install the `dev` extra dependencies.
 
 ```bash
 git clone github.com/google/scaaml/  # Clone the repository
@@ -38,5 +39,5 @@ python3 -m venv my_env  # Create Python virtual environment
 source my_env/bin/activate  # Activate your virtual environment
 cd scaaml/  # Change directory to the cloned git repository
 python3 -m pip install --require-hashes -r requirements.txt  # Install dependencies
-python3 -m pip install --editable ".[capture,extra]"  # Install SCAAML
+python3 -m pip install --editable ".[capture,dev,extra]"  # Install SCAAML
 ```
