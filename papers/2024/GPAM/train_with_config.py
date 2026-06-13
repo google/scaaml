@@ -150,6 +150,7 @@ def main() -> None:
         "scaaml_version": scaaml.__version__,
         "history": history.history,
         "train_duration [s]": train_duration,
+        "Keras backend": keras.backend.backend(),
     }
     if args.result_file:
         with open(args.result_file, "w", encoding="utf-8") as f:
