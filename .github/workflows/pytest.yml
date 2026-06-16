@@ -31,8 +31,8 @@ jobs:
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
-          wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
-          sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
+          wget -O- https://labs.picotech.com/Release.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/picotech-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/picotech-archive-keyring.gpg] https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" | sudo tee /etc/apt/sources.list.d/picoscope7.list
           sudo apt-get update
           sudo apt-get install libps6000a
       - name: Installing picosdk package
@@ -57,8 +57,8 @@ jobs:
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
-          wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
-          sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
+          wget -O- https://labs.picotech.com/Release.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/picotech-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/picotech-archive-keyring.gpg] https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" | sudo tee /etc/apt/sources.list.d/picoscope7.list
           sudo apt-get update
           sudo apt-get install libps6000a
       - name: Installing picosdk package
@@ -94,8 +94,8 @@ jobs:
       - name: Install workflow dependencies
         run: |
           # Install PS drivers
-          wget -O - https://labs.picotech.com/Release.gpg.key | sudo apt-key add -
-          sudo bash -c 'echo "deb https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" >/etc/apt/sources.list.d/picoscope7.list'
+          wget -O- https://labs.picotech.com/Release.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/picotech-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/picotech-archive-keyring.gpg] https://labs.picotech.com/rc/picoscope7/debian/ picoscope main" | sudo tee /etc/apt/sources.list.d/picoscope7.list
           sudo apt-get update
           sudo apt-get install libps6000a
       - name: Installing picosdk package
