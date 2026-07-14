@@ -21,7 +21,7 @@ jobs:
           # We need all history to list all changed files.
           fetch-depth: 0
       - name: Set up node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
       - name: Install cspell
