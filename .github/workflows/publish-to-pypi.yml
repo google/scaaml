@@ -80,18 +80,21 @@ jobs:
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        REF_NAME: ${{ github.ref_name }}
+        REPOSITORY: ${{ github.repository }}
       run: >-
-        gh release create
-        '${{ github.ref_name }}'
-        --repo '${{ github.repository }}'
+        gh release create "$REF_NAME"
+        --repo "$REPOSITORY"
         --notes ""
     - name: Upload artifact signatures to GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        REF_NAME: ${{ github.ref_name }}
+        REPOSITORY: ${{ github.repository }}
       # Upload to GitHub Release using the `gh` CLI.
       # `dist/` contains the built packages, and the
       # sigstore-produced signatures and certificates.
       run: >-
-        gh release upload
-        '${{ github.ref_name }}' dist/**
-        --repo '${{ github.repository }}'
+        gh release upload "$REF_NAME"
+        dist/**
+        --repo "$REPOSITORY"
