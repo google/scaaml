@@ -1,7 +1,4 @@
 name: pylint
-permissions:
-  contents: read
-  pull-requests: write
 on:
   push:
     paths:
@@ -13,6 +10,9 @@ on:
 jobs:
   copyright_header:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Set up Python 3.11
@@ -25,6 +25,9 @@ jobs:
 
   pylint:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         python-version: ['3.11', '3.12', '3.13']
