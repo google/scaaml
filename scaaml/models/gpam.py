@@ -163,8 +163,8 @@ def rope(
         total_len = 1
         for i in spatial_shape:
             total_len *= i  # type: ignore[operator]
-        position = tf.reshape(
-            tf.cast(tf.range(total_len, delta=1.0), tf.float32), spatial_shape)
+        position = tf.reshape(tf.cast(tf.range(total_len, delta=1), tf.float32),
+                              spatial_shape)
     else:
         raise ValueError(f"Unsupported shape: {shape}")
 
@@ -176,7 +176,7 @@ def rope(
 
     half_size = shape[-1] // 2  # type: ignore[operator]
     freq_seq = tf.cast(tf.range(half_size), tf.float32) / float(half_size)
-    inv_freq = 10000**-freq_seq
+    inv_freq = 10_000**-freq_seq  # type: ignore[operator]
     sinusoid = tf.einsum("...,d->...d", position, inv_freq)
     sin = tf.cast(tf.sin(sinusoid), dtype=x.dtype)
     cos = tf.cast(tf.cos(sinusoid), dtype=x.dtype)
