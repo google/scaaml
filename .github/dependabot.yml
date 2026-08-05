@@ -12,10 +12,6 @@ multi-ecosystem-groups:
       time: "08:00"
       timezone: "Europe/Zurich"
     labels: ["dependencies"]
-    cooldown:
-      default-days: 5
-      semver-minor-days: 7
-      semver-patch-days: 3
 
   code:
     schedule:
@@ -24,10 +20,6 @@ multi-ecosystem-groups:
       time: "08:00"
       timezone: "Europe/Zurich"
     labels: ["dependencies"]
-    cooldown:
-      default-days: 5
-      semver-minor-days: 7
-      semver-patch-days: 3
 
 
 updates:
@@ -44,6 +36,10 @@ updates:
       # Filter out semver patches updates to reduce the frequency of updates
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -56,6 +52,10 @@ updates:
         update-types:
           - "version-update:semver-patch"
           - "version-update:semver-minor"
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -69,4 +69,8 @@ updates:
       # Filter out semver patches updates to reduce the frequency of updates
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
