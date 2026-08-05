@@ -164,7 +164,7 @@ def rope(
         for i in spatial_shape:
             total_len *= i  # type: ignore[operator]
         position = tf.reshape(
-            tf.cast(tf.range(total_len, delta=1.0), tf.float32), spatial_shape)
+            tf.cast(tf.range(total_len, delta=1), tf.float32), spatial_shape)
     else:
         raise ValueError(f"Unsupported shape: {shape}")
 
