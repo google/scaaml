@@ -4,63 +4,64 @@
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 
 version: 2
+multi-ecosystem-groups:
+  infra:
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Zurich"
+    labels: ["dependencies"]
+
+  code:
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Zurich"
+    labels: ["dependencies"]
+
+
 updates:
   - package-ecosystem: "npm"
     directory: "/website"
-    labels:
-      - "dependencies"
-      - "javascript"
-    # Run every Monday
-    schedule:
-      interval: "weekly"
-      timezone: "Europe/Zurich"
-    # Group PRs to avoid having to rebase/merge too many
-    groups:
-      dependabot:
-        patterns:
-          - "*"
+    patterns: ["*"]
+    multi-ecosystem-group: "infra"
+    labels: ["javascript"]
     # Only care about our direct dependencies
     allow:
       - dependency-type: "direct"
+
     ignore:
       # Filter out semver patches updates to reduce the frequency of updates
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    labels:
-      - "dependencies"
-      - "CI"
-    # Run every Monday
-    schedule:
-      interval: "weekly"
-      timezone: "Europe/Zurich"
-    groups:
-      dependabot:
-        patterns:
-          - "*"
+    patterns: ["*"]
+    multi-ecosystem-group: "infra"
+    labels: ["CI"]
     ignore:
       - dependency-name: "*"
         # For github-actions, we only care about major version update
         update-types:
           - "version-update:semver-patch"
           - "version-update:semver-minor"
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
   - package-ecosystem: "pip"
     directory: "/"
-    labels:
-      - "dependencies"
-      - "python"
-    # Run every Monday
-    schedule:
-      interval: "weekly"
-      timezone: "Europe/Zurich"
-    # Group PRs to avoid having to rebase/merge too many
-    groups:
-      dependabot:
-        patterns:
-          - "*"
+    patterns: ["*"]
+    multi-ecosystem-group: "code"
+    labels: ["python"]
     # Only care about our direct dependencies
     allow:
       - dependency-type: "direct"
@@ -68,4 +69,8 @@ updates:
       # Filter out semver patches updates to reduce the frequency of updates
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
+    cooldown:
+      default-days: 5
+      semver-minor-days: 7
+      semver-patch-days: 3
 
