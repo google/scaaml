@@ -9,6 +9,7 @@ framework dedicated to side-channel attacks. It is written in python and run on
 top of TensorFlow 2.x.
 
 [![Coverage Status](https://coveralls.io/repos/github/google/scaaml/badge.svg?branch=main)](https://coveralls.io/github/google/scaaml?branch=main)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/google/scaaml/badge)](https://scorecard.dev/viewer/?uri=github.com/google/scaaml)
 
 ## Latest Updates
 
