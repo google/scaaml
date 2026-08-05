@@ -176,7 +176,7 @@ def rope(
 
     half_size = shape[-1] // 2  # type: ignore[operator]
     freq_seq = tf.cast(tf.range(half_size), tf.float32) / float(half_size)
-    inv_freq = 10000**-freq_seq
+    inv_freq = (-freq_seq).__rpow__(10_000)  # equiv to: 10_000**-freq_seq
     sinusoid = tf.einsum("...,d->...d", position, inv_freq)
     sin = tf.cast(tf.sin(sinusoid), dtype=x.dtype)
     cos = tf.cast(tf.cos(sinusoid), dtype=x.dtype)
