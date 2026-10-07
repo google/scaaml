@@ -499,9 +499,9 @@ class Dataset:
             ipt = copy.deepcopy(dataset.measurements_info[name])
             inputs[name] = ipt
 
-            inputs[name]["min"] = tf.constant(dataset.min_values[name])
-            inputs[name]["max"] = tf.constant(dataset.max_values[name])
-            delta = tf.constant(inputs[name]["max"] - inputs[name]["min"])
+            inputs[name]["min"] = dataset.min_values[name]
+            inputs[name]["max"] = dataset.max_values[name]
+            delta = inputs[name]["max"] - inputs[name]["min"]
             inputs[name]["delta"] = delta
 
         # output construction
