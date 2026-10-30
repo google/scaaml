@@ -48,7 +48,7 @@ four steps:
     $$c_i = \text{base\_cycles}[\text{pc}_i] + \mathbb{I}[\text{cond\_taken}_i]
     \cdot \text{taken\_extra\_cycles}[\text{pc}_i] + \text{hw\_stall}[i] +
     \Delta c_{\text{cold}}(i)$$
-    where $$\text{cond\_taken}_i \iff \text{is\_cond}[\text{pc}_i] 
+    where $$\text{cond\_taken}_i \iff \text{is\_cond}[\text{pc}_i]
     \land (\text{PC}_{i+1} \neq \text{PC}_i + \text{size}[\text{pc}_i])$$,
     and $\Delta c_{\text{cold}}(i) = +9$ on the first invocation of
     `makesmallperm` ($0$ thereafter).
@@ -62,7 +62,8 @@ four steps:
     After `decrypt` executes `bx lr` (`~95,239` cycles), the remaining
     $\sim 2,314$ samples up to the fixed hardware capture window
     (`97,553` samples) hold the final idle register Hamming weight.
-4.  **ChipWhisperer shunt polarity, mean-amplitude matching, and white Gaussian noise**:
+4.  **ChipWhisperer shunt polarity, mean-amplitude matching, and white Gaussian**
+    **noise**:
     $$\text{trace1}[t] = \operatorname{round}\!\Big(1584.411 + (-16.0)
     \cdot\big(\text{stretched}[t] - \mu_{\text{HW,ref}}\big) +
     \varepsilon_t\Big), \qquad \varepsilon_t \stackrel{\text{i.i.d.}}{\sim}
