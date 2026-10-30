@@ -1,0 +1,9 @@
+numpy>=2.0.0
+matplotlib>=3.8.0
+sedpack==0.2.0
+unicorn==2.1.4
+capstone==5.0.9
+pyelftools>=0.31
+pycryptodome>=3.20.0
+lz4>=4.3.0
+rich>=13.0.0

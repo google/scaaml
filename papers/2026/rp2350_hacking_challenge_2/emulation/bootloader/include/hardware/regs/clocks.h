@@ -1,0 +1,3 @@
+#ifndef _HARDWARE_REGS_CLOCKS_H
+#define _HARDWARE_REGS_CLOCKS_H
+#endif

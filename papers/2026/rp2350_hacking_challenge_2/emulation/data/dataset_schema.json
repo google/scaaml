@@ -1,0 +1,229 @@
+{
+  "metadata": {
+    "description": "RP2350 Masked AES-256 CTR Side-Channel Profiling & Evaluation Dataset",
+    "dataset_license": "https://creativecommons.org/licenses/by/4.0/",
+    "dataset_version": "1.0.0",
+    "download_from": "",
+    "custom_metadata": {
+      "target": "RP2350 Hacking Challenge 2",
+      "implementation": "aes_ctr_asm",
+      "nb_blocks": 2,
+      "warmup_captures_per_key": 10,
+      "total_traces": 148890,
+      "adc_samples": 97553,
+      "scope": {
+        "name": "ChipWhisperer Husky Plus",
+        "sn": "50203220325531583330313236303031",
+        "fw_version": "1.2.0",
+        "cw_version": "7.0.0",
+        "is_husky_plus": true,
+        "hw_max_samples": 346246,
+        "gain_db": 36.5596,
+        "adc_samples": 97553
+      },
+      "splits_info": {
+        "train": {
+          "role": "profiling / training",
+          "num_keys": 256,
+          "traces_per_key": 256,
+          "num_traces": 65536,
+          "key_mode": "fixed_per_key_group",
+          "tracewhisperer_captured": true
+        },
+        "test": {
+          "role": "validation (10% of train)",
+          "alias": [
+            "val",
+            "validation"
+          ],
+          "num_traces": 6554,
+          "key_mode": "random",
+          "tracewhisperer_captured": true
+        },
+        "holdout": {
+          "role": "attack evaluation",
+          "num_keys": 100,
+          "traces_per_key": 768,
+          "num_traces": 76800,
+          "key_mode": "fixed_per_key_group",
+          "tracewhisperer_captured": true
+        }
+      },
+      "poi_analysis_budgets": {
+        "mangard_cpa_theoretical": 164,
+        "safety_margin_factor": 2.5,
+        "recommended_attack_traces_per_key": 768
+      },
+      "trace2_reconstructed": true,
+      "trace2_canonical_decrypt_cycles": 81253
+    },
+    "sedpack_version": "0.1.4"
+  },
+  "dataset_structure": {
+    "saved_data_description": [
+      {
+        "name": "trace1",
+        "dtype": "int16",
+        "shape": [
+          97553
+        ],
+        "custom_metadata": {
+          "type": "power",
+          "description": "Raw un-cut ChipWhisperer Husky ADC waveform encompassing all POIs",
+          "unit": "adc_raw"
+        }
+      },
+      {
+        "name": "trace2",
+        "dtype": "int16",
+        "shape": [
+          97553
+        ],
+        "custom_metadata": {
+          "type": "power_canonical",
+          "description": "Canonical de-jittered and un-permuted power waveform computed from trace1 using TraceWhisperer DWT/ETMv4 streams",
+          "unit": "adc_raw"
+        }
+      },
+      {
+        "name": "plaintext",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "AES-CTR input plaintext block"
+        }
+      },
+      {
+        "name": "ciphertext",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "AES-CTR output ciphertext block"
+        }
+      },
+      {
+        "name": "iv",
+        "dtype": "uint8",
+        "shape": [
+          16
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "AES-CTR 16-byte initialization vector"
+        }
+      },
+      {
+        "name": "iv_salt",
+        "dtype": "uint8",
+        "shape": [
+          16
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "16-byte random IV salt (XORed with IV)"
+        }
+      },
+      {
+        "name": "key",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "AES-256 32-byte master key"
+        }
+      },
+      {
+        "name": "key_a",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "4-way Boolean key share Sa"
+        }
+      },
+      {
+        "name": "key_b",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "4-way Boolean key share Sb"
+        }
+      },
+      {
+        "name": "key_c",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "4-way Boolean key share Sc"
+        }
+      },
+      {
+        "name": "key_d",
+        "dtype": "uint8",
+        "shape": [
+          32
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "4-way Boolean key share Sd"
+        }
+      },
+      {
+        "name": "round_keys",
+        "dtype": "uint8",
+        "shape": [
+          15,
+          16
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "15 expanded AES-256 round keys"
+        }
+      },
+      {
+        "name": "intermediate_shares",
+        "dtype": "uint8",
+        "shape": [
+          4,
+          16
+        ],
+        "custom_metadata": {
+          "max_val": 256,
+          "description": "Round 0 4-way initial state shares"
+        }
+      },
+      {
+        "name": "tracewhisperer",
+        "dtype": "str",
+        "shape": [],
+        "custom_metadata": {
+          "type": "tracewhisperer_json",
+          "description": "JSON-encoded CoreSight Stream 1 (DWT/ITM) and Stream 2 (ETMv4) packets"
+        }
+      }
+    ],
+    "compression": "LZ4",
+    "examples_per_shard": 64,
+    "shard_file_type": "fb",
+    "hash_checksum_algorithms": [
+      "sha256"
+    ]
+  },
+  "splits": {}
+}
