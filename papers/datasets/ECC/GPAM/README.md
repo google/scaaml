@@ -10,7 +10,7 @@ Learning](https://github.com/google/scaaml/tree/main/papers/2024/GPAM).
 
 ## Where to download
 
-[Install gsutil](https://cloud.google.com/storage/docs/gsutil_install).
+[Install Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install-sdk).
 
 ```bash
 # List available datasets
