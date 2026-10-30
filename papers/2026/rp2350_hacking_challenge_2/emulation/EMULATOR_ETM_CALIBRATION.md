@@ -29,7 +29,8 @@ $i \in \{0, \dots, N_{\text{insn}}-1\}$ ($N_{\text{insn}} \approx 66,598$ for a
 3.  `hw_stall[i]` $= \Delta c_{\text{udiv}}(i) + \Delta c_{\text{APB}}(i)$ —
     **dynamic** runtime bus/execution wait states:
     -   `udiv r2, r3, r2` inside `gen_rand_sha`:
-        $\Delta c_{\text{udiv}} = \lfloor (31 - \operatorname{ clz }(\texttt{r3})) / 4 \rfloor \in \{0, 1, 2, 3\}$
+        $$\Delta c_{\text{udiv}} = \lfloor (31 - \operatorname{ clz }
+        (\texttt{r3})) / 4 \rfloor \in \{0, 1, 2, 3\}$$
         data-dependent Cortex-M33 divider cycles (the firmware's `SH_JITTER` /
         `CK_JITTER` countermeasure);
     -   APB peripheral polling stalls on `TRNG_BUSY` (`+1` cycle on final poll
@@ -44,8 +45,11 @@ converts the instruction sequence into a `97,553`-sample `int16` ADC trace in
 four steps:
 
 1.  **Per-instruction cycle count $c_i \ge 1$**:
-    $$c_i = \text{base\_cycles}[\text{pc}_i] + \mathbb{I}[\text{cond\_taken}_i] \cdot \text{taken\_extra\_cycles}[\text{pc}_i] + \text{hw\_stall}[i] + \Delta c_{\text{cold}}(i)$$
-    where $\text{cond\_taken}_i \iff \text{is\_cond}[\text{pc}_i] \land (\text{PC}_{i+1} \neq \text{PC}_i + \text{size}[\text{pc}_i])$,
+    $$c_i = \text{base\_cycles}[\text{pc}_i] + \mathbb{I}[\text{cond\_taken}_i]
+    \cdot \text{taken\_extra\_cycles}[\text{pc}_i] + \text{hw\_stall}[i] +
+    \Delta c_{\text{cold}}(i)$$
+    where $$\text{cond\_taken}_i \iff \text{is\_cond}[\text{pc}_i] 
+    \land (\text{PC}_{i+1} \neq \text{PC}_i + \text{size}[\text{pc}_i])$$,
     and $\Delta c_{\text{cold}}(i) = +9$ on the first invocation of
     `makesmallperm` ($0$ thereafter).
 2.  **Piecewise-constant cycle stretching (`np.repeat`)**:
@@ -59,7 +63,10 @@ four steps:
     $\sim 2,314$ samples up to the fixed hardware capture window
     (`97,553` samples) hold the final idle register Hamming weight.
 4.  **ChipWhisperer shunt polarity, mean-amplitude matching, and white Gaussian noise**:
-    $$\text{trace1}[t] = \operatorname{round}\!\Big(1584.411 + (-16.0)\cdot\big(\text{stretched}[t] - \mu_{\text{HW,ref}}\big) + \varepsilon_t\Big), \qquad \varepsilon_t \stackrel{\text{i.i.d.}}{\sim} \mathcal{N}(0, 25.0^2)$$
+    $$\text{trace1}[t] = \operatorname{round}\!\Big(1584.411 + (-16.0)
+    \cdot\big(\text{stretched}[t] - \mu_{\text{HW,ref}}\big) +
+    \varepsilon_t\Big), \qquad \varepsilon_t \stackrel{\text{i.i.d.}}{\sim}
+    \mathcal{N}(0, 25.0^2)$$
     where $1584.411$ matches the empirical DC mean of the real ChipWhisperer
     Husky dataset (`rp2350_aesctr_small_fixed/train`), $-16.0\,\text{ADC/bit}$
     models the negative-going resistive shunt voltage drop on higher current

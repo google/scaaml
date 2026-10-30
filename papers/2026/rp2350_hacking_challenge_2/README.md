@@ -20,8 +20,9 @@ This provides:
     [rp2350_hacking_challenge_2](firmware/build/rp2350_hacking_challenge_2.elf)
 -   Unicorn based emulation tooling under [`emulation/`](emulation/)
 
+---
 
-**Important**: If you compile the firmware yourself, you will need to recalculate
+**Important**: If you compile the firmware yourself, you may need to recalculate
 some memory address for the dataset capture script. These are needed to properly
 configure ETMv4 and DWT units if you want to capture `train` and `test` splits of
 the dataset.
