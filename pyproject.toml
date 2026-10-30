@@ -78,3 +78,11 @@ extra = [
 
 [tool.setuptools.package-data]
 scaaml = ["py.typed"]
+
+[tool.yapf]
+based_on_style = "google"
+
+[tool.yapfignore]
+ignore_patterns = [
+    "papers/**/*.py"
+]

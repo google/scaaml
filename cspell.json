@@ -16,6 +16,7 @@
     "node_modules",
     "/project-words.txt",
     "/tests",
+    "/papers",
     "/.github",
     ".pylintrc",
     "cspell.json",
