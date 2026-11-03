@@ -11,6 +11,7 @@ scald/archive/
 scald/deprecated/
 scald/tmp/
 *.zip
+!PCBs/*.zip
 .vscode/
 # Byte-compiled / optimized / DLL files
 __pycache__/
