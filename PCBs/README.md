@@ -35,4 +35,3 @@ Trace and SWD.
 **Changelog**:
 
 -   v0.2: added a solder bridge (normally open) on VTref
-
