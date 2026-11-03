@@ -13,21 +13,18 @@ This adapter board connects to the CW313 board over the JTAG and TRACE
 connectors and provides the standard Samtech 20-pin connector to connect
 to a Segger J-Trace or to an Orbtrace device.
 
-
 **Changelog**:
 
-- v0.2: added a solder bridge on VTref
-
+-   v0.2: added a solder bridge on VTref
 
 ### CW313 Trace to Husky
 
 This adapter board connects to the CW313 board over the JTAG and TRACE
-connectors and provides a HE-10 20-pin connector that mathes the pinout for JTAG
-and TRACE on a ChipWhisperer&reg; Husky/HuskyPlus.
+connectors and provides a HE-10 20-pin connector that mathces the pinout for
+JTAG and TRACE on a ChipWhisperer&reg; Husky/HuskyPlus.
 
 A standard ribbon cable such as the one shipped with ChipWhisperer&reg; devices
 can be used.
-
 
 ### Husky to Segger
 
@@ -37,6 +34,5 @@ Trace and SWD.
 
 **Changelog**:
 
-- v0.2: added a solder bridge (normally open) on VTref
-
+-   v0.2: added a solder bridge (normally open) on VTref
 
