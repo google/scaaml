@@ -3,7 +3,7 @@
 Here we publish gerber files and/or schematics of PCBs we developed.
 
 They all are released under a Creative Commons Attribution 4.0
-[CC-BY-40 license](https://creativecommons.org/licenses/by/4.0/)
+[CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/)
 
 ## List of PCBs
 
@@ -20,7 +20,7 @@ to a Segger J-Trace or to an Orbtrace device.
 ### CW313 Trace to Husky
 
 This adapter board connects to the CW313 board over the JTAG and TRACE
-connectors and provides a HE-10 20-pin connector that mathces the pinout for
+connectors and provides a HE-10 20-pin connector that matches the pinout for
 JTAG and TRACE on a ChipWhisperer&reg; Husky/HuskyPlus.
 
 A standard ribbon cable such as the one shipped with ChipWhisperer&reg; devices
