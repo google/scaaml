@@ -25,6 +25,7 @@ HWAES
 IACR
 INVSHIFT
 Invernizzi
+JTAG
 Junwei
 Karel
 Král
@@ -37,14 +38,17 @@ Masure
 Moghimi
 Momin
 Neumaier
+Orbtrace
 Picod
 Prouff
 Pylance
 RDWR
 Ryad
 Rémi
+Samtech
 SBOX
 SBREV
+Segger
 Spyder
 Standaert
 Strullu
